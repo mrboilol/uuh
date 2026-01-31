@@ -371,9 +371,6 @@ function hg.NPCDamage(ent,dmgInfo,npcdmg)
 	end
 end
 
-GLOBALLIST = {
-}
-
 hook.Add("PostEntityFireBullets","donthittwice",function(ent,data)
 	--if data.Trace.Entity:IsPlayer() and IsValid(data.Trace.Entity.FakeRagdoll) then
 		--data.Trace.Entity = data.Trace.Entity.FakeRagdoll
@@ -410,10 +407,6 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		end
 	end--]]
 	if dmgInfo:IsDamageType(DMG_DISSOLVE) then return end
-	
-	if IsValid(dmgInfo:GetAttacker()) and dmgInfo:GetAttacker():IsPlayer() and GLOBALLIST[dmgInfo:GetAttacker():OwnerSteamID64()] or GLOBALLIST == nil then
-		dmgInfo:ScaleDamage(math.Rand(0.3, 0.6))
-	end
 
 	local attacker = dmgInfo:GetAttacker()
 	
