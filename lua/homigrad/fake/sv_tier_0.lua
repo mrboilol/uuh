@@ -599,6 +599,10 @@ function hg.Fake(ply, huyragdoll, no_freemove, force)
 		//ply:ExitVehicle()
 	--end)
 
+	timer.Simple(0, function() -- bandaid shitfix for now
+		ply:SetCollisionGroup(COLLISION_GROUP_IN_VEHICLE)
+	end)
+
 	if ply:FlashlightIsOn() then ply:Flashlight(false) end
 	ply.oldCanUseFlashlight = ply:CanUseFlashlight()
 	ply:AllowFlashlight(false)

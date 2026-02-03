@@ -339,7 +339,7 @@ net.Receive("hg_phrase", function(len, ply)
 	local pitch = nil
 
 	-- overrides
-	override_ent, override_phrase, override_muffed, override_pitch = hook.Run("HG_ReplacePhrase", ent, phrase, muffed, pitch)
+	local override_ent, override_phrase, override_muffed, override_pitch = hook.Run("HG_ReplacePhrase", ent, phrase, muffed, pitch)
 	if override_ent ~= nil then
 		ent, phrase, muffed, pitch = override_ent, override_phrase, override_muffed, override_pitch
 	end
