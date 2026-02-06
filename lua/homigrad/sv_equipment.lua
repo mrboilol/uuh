@@ -264,7 +264,7 @@ local function protec(org, bone, dmg, dmgInfo, placement, armor, scale, scalepro
 	dmgInfo:SetDamageType(DMG_CLUB)
 	dmgInfo:SetDamageForce(dmgInfo:GetDamageForce() * 0.4)
 	dmgInfo:ScaleDamage(0.2)
-	
+
 	return 0.9
 end
 
