@@ -5,10 +5,9 @@ local util_TraceHull = util.TraceHull
 local IsValid = IsValid
 local CurTime = CurTime
 
--- setnigs
-local TUMBLE_SPEED_THRESHOLD = 250 -- how much speed for start trip
-local TUMBLE_COOLDOWN = 2 -- cooldown
-local GAP_CHECK_DIST = 50 -- uuh im too lazy to write the rest
+local TUMBLE_SPEED_THRESHOLD = 250
+local TUMBLE_COOLDOWN = 2
+local GAP_CHECK_DIST = 50 
 local WALL_CHECK_DIST = 20
 local WALL_CHECK_HEIGHT = 10 
 
@@ -29,14 +28,10 @@ hook.Add("Think", "stanleytumbler", function()
         local speed = velocity:Length2D()
         local org = ply.organism or {}
         local consciousness = org.consciousness or 1
-        local health = ply:Health()
-        local maxHealth = ply:GetMaxHealth()
         local fear = org.fear or 0
         local stamina = org.stamina and org.stamina[1] or 100
-
         local effectiveThreshold = TUMBLE_SPEED_THRESHOLD
         effectiveThreshold = effectiveThreshold * math.Clamp(consciousness, 0.5, 1.0)
-        effectiveThreshold = effectiveThreshold * math.Clamp(health / maxHealth, 0.5, 1.0)
         
         if stamina < 20 then
             effectiveThreshold = effectiveThreshold * 0.8
@@ -45,14 +40,11 @@ hook.Add("Think", "stanleytumbler", function()
         if speed < effectiveThreshold then continue end
 
 
-        local tripChance = BASE_TRIP_CHANCE
+        local speedExcess = math.max(0, speed - effectiveThreshold)
+        local tripChance = BASE_TRIP_CHANCE + (speedExcess * 0.005)
         tripChance = tripChance + (1 - consciousness) * 0.5
-        tripChance = tripChance + (1 - (health / maxHealth)) * 0.3
         tripChance = tripChance + (math.Clamp(fear, 0, 100) / 100) * 0.2
         
-        tripChance = math.Clamp(tripChance, 0, MAX_TRIP_CHANCE)
-
-        -- Collision Detection
         local shouldTrip = false
         local tripType = "none"
 
@@ -64,17 +56,44 @@ hook.Add("Think", "stanleytumbler", function()
 
         local trWall = util_TraceHull({
             start = pos + Vector(0,0,5),
-            endpos = pos + Vector(0,0,5) + forward * WALL_CHECK_DIST,
-            mins = Vector(-5,-5,0),
-            maxs = Vector(5,5,10),
+            endpos = pos + Vector(0,0,5) + forward * 20,
+            mins = ply:OBBMins(),
+            maxs = ply:OBBMaxs(),
             filter = ply,
-            mask = MASK_SOLID
+            mask = MASK_PLAYERSOLID
         })
 
         if trWall.Hit then
              if trWall.HitNormal.z < 0.7 then
-                 shouldTrip = true
-                 tripType = "wall"
+                 local ent = trWall.Entity
+                 local isEntity = IsValid(ent) and (ent:IsPlayer() or ent:IsNPC() or ent:IsRagdoll())
+                 
+                 if isEntity then
+                     tripType = "ragdoll"
+                     shouldTrip = true
+                     tripChance = tripChance + 0.5 
+                 else
+                     local highTraceHeight = 35
+                     local trHigh = util_TraceLine({
+                         start = pos + Vector(0,0,highTraceHeight),
+                         endpos = pos + Vector(0,0,highTraceHeight) + forward * 30,
+                         filter = ply,
+                         mask = MASK_PLAYERSOLID
+                     })
+                     
+                     local speedFactor = math.Clamp((speed - 250) / 300, 0, 1)
+                     
+                     local wallChance = speedFactor
+                     if not trHigh.Hit then
+                         wallChance = wallChance * 0.1
+                     end
+                     
+                     if wallChance > 0 then
+                         shouldTrip = true
+                         tripType = "wall"
+                         tripChance = tripChance + wallChance
+                     end
+                 end
              end
         end
 
@@ -90,8 +109,11 @@ hook.Add("Think", "stanleytumbler", function()
             if not trGround.Hit then
                 shouldTrip = true
                 tripType = "gap"
+                tripChance = tripChance + 0.2
             end
         end
+
+        tripChance = math.Clamp(tripChance, 0, MAX_TRIP_CHANCE)
 
         if shouldTrip then
             if math.random() < tripChance then
