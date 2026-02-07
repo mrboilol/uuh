@@ -104,6 +104,17 @@ function hg.organism.AddNaturalAdrenaline(org, fAmount)
 	org.adrenalineStorage = org.adrenalineStorage - amt
 	org.nextAdrenalineRegen = CurTime() + 30
 end
+--melee 67
+function hg.organism.AddAttackAdrenaline(org, damage)
+	if not org then return end
+	
+	local gain = math.min(damage, 50) * 0.02 
+	
+	local naturalGain = gain * 0.5
+	org.adrenaline = math.min(org.adrenaline + naturalGain, 5)
+	local reserveGain = gain * 0.5
+	hg.organism.AddNaturalAdrenaline(org, reserveGain)
+end
 
 local entMeta = FindMetaTable("Entity")
 

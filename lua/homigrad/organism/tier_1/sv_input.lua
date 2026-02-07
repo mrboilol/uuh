@@ -409,6 +409,15 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	
 	local org = ent.organism
 
+	-- Adrenaline gain for attacker (Melee/Gun attacks)
+	if IsValid(attacker) and attacker:IsPlayer() and attacker.organism and ent ~= attacker then
+		local dmgType = dmgInfo:GetDamageType()
+		if bit.band(dmgType, DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH + DMG_CLUB) ~= 0 then
+			local dmg = dmgInfo:GetDamage()
+			hg.organism.AddAttackAdrenaline(attacker.organism, dmg)
+		end
+	end
+
 	-- Glass damage to ragdoll...
 	if IsValid(ent) and string.find(ent:GetClass(),"break") and 
 		ent:GetBrushSurfaces() and ent:GetBrushSurfaces()[1] and string.find(ent:GetBrushSurfaces()[1]:GetMaterial():GetName(),"glass") and 
