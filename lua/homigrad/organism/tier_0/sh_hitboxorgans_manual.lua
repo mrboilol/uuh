@@ -557,13 +557,15 @@ function hg.organism.GetHitBoxOrgans(model, ent)
 	return (models_female[model] and female) or male
 end
 
-util.AddNetworkString("HitboxesGetOrgans")
+if SERVER then
+    util.AddNetworkString("HitboxesGetOrgans")
 
-concommand.Add("hg_show_organs",function(ply, cmd, args)
-	if ply:IsSuperAdmin() then
-		net.Start("HitboxesGetOrgans")
-			net.WriteTable(male)
-			net.WriteTable(female)
-		net.Send(ply)
-	end
-end)
+    concommand.Add("hg_show_organs",function(ply, cmd, args)
+        if ply:IsSuperAdmin() then
+            net.Start("HitboxesGetOrgans")
+                net.WriteTable(male)
+                net.WriteTable(female)
+            net.Send(ply)
+        end
+    end)
+end
