@@ -335,9 +335,8 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
 	-- Nose breakage threshold
 	if oldDmg < 0.5 and org.nose >= 0.5 then
 		if IsValid(org.owner) then
-			-- Nose broken
+			-- blyat
 			local broken_nose_msg = {
-				"FUCK- HE HIT ME GOOD",
 				"AGH- MY NOSE IS BROKEN",
 				"MY NOSE... IT'S BROKEN!",
 				"DAMMIT, MY NOSE!"
