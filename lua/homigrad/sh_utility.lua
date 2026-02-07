@@ -108,6 +108,43 @@ hg.ConVars = hg.ConVars or {}
 	end
 --//
 
+--\\ PlayCustomTinnitus Ported from MCity Leak
+local plymeta = FindMetaTable("Player")
+
+if SERVER then
+	util.AddNetworkString("send_custom_tinnitus")
+	util.AddNetworkString("stop_custom_tinnitus")
+	
+	function plymeta:PlayCustomTinnitus(soundFile)
+		net.Start("send_custom_tinnitus")
+		net.WriteString(soundFile)
+		net.Send(self)
+	end
+	
+	function plymeta:StopCustomTinnitus()
+		if not IsValid(self) then return end
+		net.Start("stop_custom_tinnitus")
+		net.Send(self)
+	end
+end
+
+if CLIENT then
+	net.Receive("send_custom_tinnitus",function()
+		local soundFile = net.ReadString()
+		LocalPlayer():EmitSound(soundFile, 75, 100, 1, CHAN_AUTO)
+	end)
+	
+	net.Receive("stop_custom_tinnitus",function()
+		-- Stop all tinnitus sounds on all channels
+		local ply = LocalPlayer()
+		if IsValid(ply) then
+			ply:StopSound("tinnitus.wav")
+			ply:StopSound("tinnituslong.wav")
+		end
+	end)
+end
+--//
+
 --\\ BoneMatrix func
 	local function setbonematrix(self, bone, matrix)
 		do return end

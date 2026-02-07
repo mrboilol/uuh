@@ -1101,8 +1101,11 @@ if CLIENT then
 		local pos = net.ReadVector()
 		local time = net.ReadFloat()
 		local size = net.ReadInt(20)
+        local color = net.ReadColor()
+        local mat = net.ReadString()
+        if mat == "" then mat = nil end
 		if not IsValid(lply) then return end
-		hg.AddFlash(hg.eye(lply), 1, pos, time, size)
+		hg.AddFlash(hg.eye(lply), 1, pos, time, size, color, mat)
 	end)
 end
 
@@ -1129,6 +1132,27 @@ local armorNames = {
 	["ego_equalizer"] = "[HE] Equalizer",
 	["helmet6"] = "SWAT Balistic Helmet",
 	["gordon_helmet"] = "HEV Suit Helmet",
+	["vest9"] = "Ars Arma CPC Mod.2",
+	["vest10"] = "Eagle Industries MMAC",
+	["vest11"] = "Osprey MK4A (Protection)",
+	["vest12"] = "Shellback Tactical Banshee",
+	["vest13"] = "NFM THOR Integrated Carrier",
+	["vest14"] = "BAE Systems RBAV-AF",
+	["vest15"] = "Ars Arma A18 Skanda",
+	["vest16"] = "Korund-VM",
+	["vest17"] = "Redut-M",
+	["vest18"] = "Crye Precision CPC",
+	["vest19"] = "IOTV Gen4",
+	["helmet8"] = "UN Helmet",
+	["helmet9"] = "Ops-Core FAST MT (Black)",
+	["helmet10"] = "HighCom Striker ULACH",
+	["helmet11"] = "Ops-Core FAST MT (Tan)",
+	["helmet12"] = "HighCom Striker ULACH (Black)",
+	["helmet13"] = "HighCom Striker ULACH (Coyote)",
+	["helmet14"] = "Diamond Age Bastion",
+	["helmet15"] = "Galvion Caiman",
+	["helmet16"] = "MSA MICH 2001",
+	["helmet17"] = "MSA Gallet TC 800"
 }
 hg.armorNames = armorNames
 local armorIcons = {

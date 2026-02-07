@@ -4,6 +4,7 @@ local function isCrush(dmgInfo)
 end
 
 local function damageOrgan(org, dmg, dmgInfo, key)
+	if not org or not org[key] then return 0 end
 	local prot = math.max(0.3 - org[key],0)
 	local oldval = org[key]
 	org[key] = math.Round(math.min(org[key] + dmg * (isCrush(dmgInfo) and 1 or 3), 1), 3)
@@ -18,6 +19,7 @@ end
 
 local input_list = hg.organism.input_list
 input_list.heart = function(org, bone, dmg, dmgInfo)
+	if not org or not org.heart then return 0 end
 	local oldDmg = org.heart
 
 	local result = damageOrgan(org, dmg * 0.3, dmgInfo, "heart")
@@ -31,6 +33,7 @@ input_list.heart = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.liver = function(org, bone, dmg, dmgInfo)
+	if not org or not org.liver then return 0 end
 	local oldDmg = org.liver
 	local prot = math.max(0.3 - org.liver,0)
 	
@@ -59,6 +62,7 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.stomach = function(org, bone, dmg, dmgInfo)
+	if not org or not org.stomach then return 0 end
 	local oldDmg = org.stomach
 
 	local result = damageOrgan(org, dmg, dmgInfo, "stomach")
@@ -70,6 +74,7 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.intestines = function(org, bone, dmg, dmgInfo)
+	if not org or not org.intestines then return 0 end
 	local oldDmg = org.intestines
 
 	local result = damageOrgan(org, dmg, dmgInfo, "intestines")
@@ -104,6 +109,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.brain = function(org, bone, dmg, dmgInfo)
+	if not org or not org.brain then return 0 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 50 end
 	local oldDmg = org.brain
 	local result = damageOrgan(org, dmg * 1, dmgInfo, "brain")
@@ -168,6 +174,7 @@ local arteryMessages ={
 }
 
 local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
+	if not org or not org[artery] then return 0 end
 	if isCrush(dmgInfo) then return 1 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
 	if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
@@ -206,6 +213,7 @@ input_list.rlegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) r
 input_list.llegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("llegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.lungsL = function(org, bone, dmg, dmgInfo)
+	if not org or not org.lungsL then return 0 end
 	local prot = math.max(0.3 - org.lungsL[1],0)
 	local oldval = org.lungsL[1]
 
@@ -222,6 +230,7 @@ input_list.lungsL = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.lungsR = function(org, bone, dmg, dmgInfo)
+	if not org or not org.lungsR then return 0 end
 	local oldval = org.lungsR[1]
 
 	hg.AddHarmToAttacker(dmgInfo, (dmg * 0.25), "Lung right damage harm")
@@ -237,6 +246,7 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 end
 --im so funny fr fr
 input_list.trachea = function(org, bone, dmg, dmgInfo)
+	if not org or not org.trachea then return 0 end
 	local oldDmg = org.trachea
 
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 5 end
@@ -251,6 +261,7 @@ input_list.trachea = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.eyeL = function(org, bone, dmg, dmgInfo)
+	if not org or not org.eyeL then return 0 end
 	local oldDmg = org.eyeL or 0
 	local result = damageOrgan(org, dmg * 1.5, dmgInfo, "eyeL") -- eyes are more fragile now
 
@@ -290,6 +301,7 @@ input_list.eyeL = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.eyeR = function(org, bone, dmg, dmgInfo)
+	if not org or not org.eyeR then return 0 end
 	local oldDmg = org.eyeR or 0
 	local result = damageOrgan(org, dmg * 1.5, dmgInfo, "eyeR") -- eyes are more fragile now
 
@@ -329,6 +341,7 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.nose = function(org, bone, dmg, dmgInfo)
+	if not org or not org.nose then return 0 end
 	local oldDmg = org.nose or 0
 	local result = damageOrgan(org, dmg * 2, dmgInfo, "nose") -- nose is sensitive
 
@@ -369,4 +382,5 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
 	return result
 end
 
-input_list.rarmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone * 1.25, dmg, dmgInfo, "rarm", boneindex, dir, hit, ricochet) end
+-- input_list.rarmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone * 1.25, dmg, dmgInfo, "rarm", boneindex, dir, hit, ricochet) end
+-- Note: 'arms' function is undefined in this file scope. This definition is redundant or incorrect here.

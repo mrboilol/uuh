@@ -48,37 +48,21 @@ male["ValveBiped.Bip01_Head1"] = {
 		Color(255, 0, 255)
 	},
 	{
-		"eyeL", -- Left Eye
+		"eyeL",
 		nil,
-		Vector(6.5, -1.8, 1.2),
+		Vector(4.1, -3.4, 1.5), -- moved slightly forward and slightly down
 		Angle(0, 0, 0),
-		Vector(0.5, 0.5, 0.5),
-		Color(0, 255, 255)
+		Vector(1.3, 1.3, 1.3), -- slightly larger for more hits
+		Color(100, 180, 255)
 	},
 	{
-		"eyeR", -- Right Eye
+		"eyeR",
 		nil,
-		Vector(6.5, -1.8, -1.2),
+		Vector(4.1, -3.4, -1.5), -- moved slightly forward and slightly down
 		Angle(0, 0, 0),
-		Vector(0.5, 0.5, 0.5),
-		Color(0, 255, 255)
+		Vector(1.3, 1.3, 1.3), -- slightly larger for more hits
+		Color(100, 180, 255)
 	},
-	{
-		"nose", -- Nose
-		nil,
-		Vector(6.8, -1.8, 0),
-		Angle(0, 0, 0),
-		Vector(0.5, 1, 0.8),
-		Color(255, 165, 0) -- Orange color for nose
-	},
-}
-
-local spine = 0.25
-male["ValveBiped.Bip01_Neck1"] = {
-	{
-		"spine3", --spine3 neck
-		spine,
-		Vector(1, 1, 0),
 		Angle(0, 0, 0),
 		Vector(2, 0.5, 0.5),
 		Color(0, 125, 0)
@@ -397,6 +381,30 @@ female["ValveBiped.Bip01_Head1"] = {
 		Vector(1.6, 2.1, 1.7),
 		Color(255, 0, 255)
 	},
+	{
+		"eyeL",
+		nil,
+		Vector(3.1, -1.9, 1.4),
+		Angle(0, 0, 0),
+		Vector(1.2, 1.2, 1.2),
+		Color(100, 180, 255)
+	},
+	{
+		"eyeR",
+		nil,
+		Vector(3.1, -1.9, -1.4),
+		Angle(0, 0, 0),
+		Vector(1.2, 1.2, 1.2),
+		Color(100, 180, 255)
+	},
+	{
+		"nose",
+		nil,
+		Vector(2.2, -2.5, 0),
+		Angle(0, 0, 0),
+		Vector(1.1, 1.1, 1.1),
+		Color(0, 255, 255)
+	},
 }
 
 female["ValveBiped.Bip01_Neck1"] = {
@@ -449,7 +457,8 @@ hg.organism.translationTbl = {
 	["vest3"] = "Armored vest",
 	["vest2"] = "Armored vest",
 	["vest1"] = "Armored vest",
-	["vest1"] = "Armored vest",
+	["vest1"] = "A",
+	["nose"] = "Nosermored vest",
 	["spine2"] = "Upper spine",
 	["spineartery"] = "Spine artery",
 	["chest"] = "Ribs",

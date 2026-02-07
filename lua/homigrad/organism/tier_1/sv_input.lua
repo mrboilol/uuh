@@ -309,6 +309,7 @@ end)
 --util.AddNetworkString("tracePosesSend")
 --util.AddNetworkString("wound_debug")
 util.AddNetworkString("hg_bloodimpact")
+util.AddNetworkString("AddFlash")
 --util.AddNetworkString("blood particle explode")
 util.AddNetworkString("bloodsquirt")
 
@@ -882,6 +883,21 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	
 	if ply or org.fakePlayer then
 		hook_Run("HomigradDamage", org.fakePlayer and ent or ply, dmgInfo, bonetohitgroup[bonename], ent, attacker.harm, hitBoxs, inputHole)
+		
+		-- Red flash and directional texture on damage
+		local victim = org.fakePlayer and ent or ply
+		if IsValid(victim) and victim:IsPlayer() and not victim:GetNetVar("headcrab") then
+			local damagePos = dmgInfo:GetDamagePosition()
+			if damagePos == vector_origin then damagePos = victim:GetPos() end
+			
+			net.Start("AddFlash")
+				net.WriteVector(damagePos)
+				net.WriteFloat(0.5) -- Duration
+				net.WriteInt(50, 20) -- Size/Intensity (arbitrary scale)
+                net.WriteColor(Color(255, 0, 0)) -- Red
+                net.WriteString("sprites/light_glow02_add") -- Headtrauma texture
+			net.Send(victim)
+		end
 	end
 	
 	attacker.harm = 0

@@ -625,7 +625,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		
 		if o2 > 20 then
 			if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
-				sound.PlayFile("sound/zbattle/end.ogg", "noblock noplay", function(station)
+				sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
 					if IsValid(station) then
 						station:SetVolume(0)
 						station:Play()
@@ -638,10 +638,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				DespairStation:SetVolume(math.Clamp((o2 - 20) / 100, 0, 0.6))
 			end
 
-			-- scav rototype so silly guppy bleehhh
 			if o2 > 50 and !org.otrub then
 				if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
-					sound.PlayFile("sound/niggaurcooked.ogg", "noblock noplay", function(station)
+					sound.PlayFile("sound/scav/despair.ogg", "noblock noplay", function(station)
 						if IsValid(station) then
 							station:SetVolume(0)
 							station:Play()
@@ -741,6 +740,23 @@ net.Receive("headtrauma_flash", function()
 	})
 end)
 
+net.Receive("AddFlash", function()
+	local pos = net.ReadVector()
+	local duration = net.ReadFloat()
+	local size = net.ReadInt(20)
+	local color = net.ReadColor()
+	local texture = net.ReadString()
+
+	table.insert(headTraumaFlashes, {
+		pos = pos,
+		duration = duration,
+		size = size,
+		startTime = CurTime(),
+		color = color,
+		mat = Material(texture)
+	})
+end)
+
 local flashMat = Material("sprites/light_glow02_add")
 
 hook.Add("PostDrawTranslucentRenderables", "HG_DrawHeadTraumaFlashes", function()
@@ -749,8 +765,6 @@ hook.Add("PostDrawTranslucentRenderables", "HG_DrawHeadTraumaFlashes", function(
 	local curTime = CurTime()
 	local toRemove = {}
 	
-	render.SetMaterial(flashMat)
-	
 	for i, flash in ipairs(headTraumaFlashes) do
 		local elapsed = curTime - flash.startTime
 		if elapsed >= flash.duration then
@@ -758,8 +772,10 @@ hook.Add("PostDrawTranslucentRenderables", "HG_DrawHeadTraumaFlashes", function(
 		else
 			local alpha = 1 - (elapsed / flash.duration)
 			local size = flash.size * alpha
-			local color = Color(255, 255, 255, 255 * alpha)
+			local col = flash.color or Color(255, 255, 255)
+			local color = Color(col.r, col.g, col.b, 255 * alpha)
 			
+			render.SetMaterial(flash.mat or flashMat)
 			render.DrawSprite(flash.pos, size, size, color)
 		end
 	end

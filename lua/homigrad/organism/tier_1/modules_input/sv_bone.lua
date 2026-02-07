@@ -124,7 +124,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		-- oooooooooooooooooowwww
 		if org.isPly and org[key.."amputated"] then
-			org.owner:Notify(dismember_leg[math.random(#dismember_leg)], true, "dismember_"..key, 3)
+			if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_leg[math.random(#dismember_leg)], true, "dismember_"..key, 3) end
 		end
 
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil) end
@@ -207,7 +207,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 
 		if org.isPly and org[key.."amputated"] then
-			org.owner:Notify(dismember_arm[math.random(#dismember_arm)], true, "dismember_"..key, 3)
+			if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_arm[math.random(#dismember_arm)], true, "dismember_"..key, 3) end
 		end
 
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil) end
@@ -286,7 +286,7 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 
 	if org[name] >= hg.organism[name2] and org.isPly then
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
-		org.owner:Notify(huyasd[name], true, name, 2)
+		if hg.CreateNotification then hg.CreateNotification(org.owner, huyasd[name], true, name, 2) end
 		org.painadd = org.painadd + 25
 	end
 	
@@ -411,7 +411,7 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 
 	hg.AddHarmToAttacker(dmgInfo, (org.jaw - oldDmg) * 3, "Jaw bone damage harm")
 
-	if org.jaw == 1 and (org.jaw - oldDmg) > 0 and org.isPly then org.owner:Notify(jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end
+	if org.jaw == 1 and (org.jaw - oldDmg) > 0 and org.isPly then if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end end
 
 	local dislocated = (org.jaw - oldDmg) > math.Rand(0.1, 0.3)
 
@@ -509,7 +509,7 @@ hook.Add("CanListenOthers", "CantHaveShitInDetroit", function(output, input, isC
 	if IsValid(output) and (output.organism.jaw == 1 or output.organism.jawdislocation) and output:Alive() and (output:IsSpeaking() or isChat) then
 		-- and !isChat and output:IsSpeaking()
 		output.organism.painadd = output.organism.painadd + 2 * (output:IsSpeaking() and 1 or (isChat and 5 or 0))
-		output:Notify("My jaw is really hurting when I speak.", 60, "painfromjawspeak", 0, nil, Color(255, 210, 210))
+		if hg.CreateNotification then hg.CreateNotification(output, "My jaw is really hurting when I speak.", true, "painfromjawspeak", 4, nil, Color(255, 210, 210)) end
 	end
 end)
 
@@ -723,7 +723,7 @@ input_list.chest = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 		org.brokenribs = math.Round(org.chest * 3)
 		
 		if org.brokenribs > 0 then
-			org.owner:Notify(ribs[math.random(#ribs)], 5, "ribs", 4)
+			if hg.CreateNotification then hg.CreateNotification(org.owner, ribs[math.random(#ribs)], 5, "ribs", 4) end
 
 			org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
 
@@ -744,7 +744,7 @@ input_list.pelvis = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoc
 	hg.AddHarmToAttacker(dmgInfo, (org.pelvis - oldDmg) / 2, "Pelvis bone damage harm")
 
 	if org.isPly and org.pelvis == 1 then
-		org.owner:Notify("MY PELVIS HURTS A LOT.", true, "pelvis", 4)
+		if hg.CreateNotification then hg.CreateNotification(org.owner, "MY PELVIS HURTS A LOT.", true, "pelvis", 4) end
 	end
 
 	return result
