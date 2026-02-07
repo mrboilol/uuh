@@ -57,7 +57,7 @@ SWEP.WepSelectIcon2 = Material("entities/arc9_eft_ks23.png")
 SWEP.WepSelectIcon2box = true
 SWEP.IconOverride = "entities/arc9_eft_ks23.png"
 
-SWEP.LocalMuzzlePos = Vector(26,0.09,5.098)
+SWEP.LocalMuzzlePos = Vector(32,0.09,5.098)
 SWEP.LocalMuzzleAng = Angle(0.2,-0.0,0)
 SWEP.WeaponEyeAngles = Angle(-0.7,0.1,0)
 

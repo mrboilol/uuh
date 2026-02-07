@@ -2509,6 +2509,7 @@ duplicator.Allow( "homigrad_base" )
 			else
 				anim = ACT_HL2MP_RUN_FAST
 			end
+
 			return anim, -1
 		end
 	end)

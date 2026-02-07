@@ -92,6 +92,7 @@ end
 
 
 CLASS.NoFreeze = true
+CLASS.CanEmitRNDSound = false
 
 local function giveSubClassLoadout(ply, subclass)
     local config = combine_subclasses[subclass] or combine_subclasses["default"]

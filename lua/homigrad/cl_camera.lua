@@ -192,6 +192,11 @@ function HGAddView(ply, origin, angles, velLen)
 			ply.MovementInertiaAddView.p = 0
 		end
 	end
+
+	local ply_override, origin_override, angles_override = hook.Run("HGAddView", ply, origin, angles)
+	if origin_override ~= nil then
+		origin, angles = origin_override, angles_override
+	end
 	
 	return origin, angles
 end

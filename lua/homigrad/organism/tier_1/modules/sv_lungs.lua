@@ -280,6 +280,10 @@ module[2] = function(owner, org, timeValue)
 		end
 	end
 
+	if org.lungsL[1] == 1 and org.lungsR[1] == 1 then
+		org.lungsfunction = false
+	end
+
 	if o2[1] == 0 then
 		if math.random(50) == 1 then
 			org.lungsfunction = false
