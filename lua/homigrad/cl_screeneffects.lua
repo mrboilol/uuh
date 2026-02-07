@@ -248,6 +248,32 @@ local lobotomy_mats = {
 	[8] = Material("overlays/tallflash3.png")
 }
 
+local LEFT_EYE_GONE_OVERLAY = Material("overlays/lefteyegone.png")
+local RIGHT_EYE_GONE_OVERLAY = Material("overlays/righteyegone.png")
+
+hook.Add("RenderScreenspaceEffects", "HG_DrawEyeLossOverlay", function()
+	local ply = LocalPlayer()
+	if not IsValid(ply) or not ply:Alive() then return end
+	
+	local org = ply.organism
+	if not org then return end
+	
+	local leftEyeGone = (org.eyeL or 0) >= 1
+	local rightEyeGone = (org.eyeR or 0) >= 1
+	
+	if leftEyeGone then
+		surface.SetDrawColor(255, 255, 255, 255)
+		surface.SetMaterial(LEFT_EYE_GONE_OVERLAY)
+		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+	end
+	
+	if rightEyeGone then
+		surface.SetDrawColor(255, 255, 255, 255)
+		surface.SetMaterial(RIGHT_EYE_GONE_OVERLAY)
+		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+	end
+end)
+
 local function stopthings()
 	PainLerp = 0
 	O2Lerp = 0
@@ -271,6 +297,11 @@ local function stopthings()
 	if IsValid(NoiseStation2) then
 		NoiseStation2:Stop()
 		NoiseStation2 = nil
+	end
+
+	if IsValid(DespairStation) then
+		DespairStation:Stop()
+		DespairStation = nil
 	end
 
 	if IsValid(BrainTraumaStation) then
@@ -592,53 +623,88 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.SetMaterial(noiseMat)
 		render.DrawScreenQuad()
 		
-		if o2 > 50 and !org.otrub then
-			if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
-				sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
+		if o2 > 20 then
+			if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
+				sound.PlayFile("sound/zbattle/end.ogg", "noblock noplay", function(station)
 					if IsValid(station) then
 						station:SetVolume(0)
 						station:Play()
-						station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
-						NoiseStation2 = station
+						DespairStation = station
 						station:EnableLooping(true)
 					end
 				end)
 			end
+			if IsValid(DespairStation) then
+				DespairStation:SetVolume(math.Clamp((o2 - 20) / 100, 0, 0.6))
+			end
+
+			-- scav rototype so silly guppy bleehhh
+			if o2 > 50 and !org.otrub then
+				if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
+					sound.PlayFile("sound/niggaurcooked.ogg", "noblock noplay", function(station)
+						if IsValid(station) then
+							station:SetVolume(0)
+							station:Play()
+							station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
+							NoiseStation2 = station
+							station:EnableLooping(true)
+						end
+					end)
+				end
+				
+				if IsValid(NoiseStation2) then
+					NoiseStation2:SetVolume(math.Clamp((o2 - 50) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 0.25))
+				end
+			else
+				if IsValid(NoiseStation2) then
+					NoiseStation2:SetVolume(0)
+				end
+			end
 			
-			if IsValid(NoiseStation2) then
-				NoiseStation2:SetVolume(math.Clamp((o2 - 50) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 0.25))
+			if org.otrub then
+				if !IsValid(NoiseStation) or NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
+					sound.PlayFile("sound/zbattle/unconscious_type_beat.ogg", "noblock noplay", function(station)
+						if IsValid(station) then
+							station:SetVolume(0)
+							station:Play()
+							station:SetTime(math.min(brain / 0.5 * station:GetLength(), 200))
+							NoiseStation = station
+							station:EnableLooping(true)
+						end
+					end)
+				end
+
+				if IsValid(NoiseStation) then
+					NoiseStation:SetVolume(math.Clamp((o2 - 30) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 1))
+				end
+			else
+				if IsValid(NoiseStation) then
+					NoiseStation:SetVolume(0)
+				end
 			end
 		else
+			if IsValid(DespairStation) then
+				DespairStation:SetVolume(0)
+			end
+			if IsValid(NoiseStation) then
+				NoiseStation:SetVolume(0)
+			end
 			if IsValid(NoiseStation2) then
 				NoiseStation2:SetVolume(0)
 			end
 		end
-		
-		if o2 > 20 and org.otrub then
-			if !IsValid(NoiseStation) or NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
-				sound.PlayFile("sound/zbattle/unconscious_type_beat.ogg", "noblock noplay", function(station)
-					if IsValid(station) then
-						station:SetVolume(0)
-						station:Play()
-						station:SetTime(math.min(brain / 0.5 * station:GetLength(), 200))
-						NoiseStation = station
-						station:EnableLooping(true)
-					end
-				end)
-			end
-
-			if IsValid(NoiseStation) then
-				NoiseStation:SetVolume(math.Clamp((o2 - 30) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 1))
-			end
-		else
-			if IsValid(NoiseStation) then
-				NoiseStation:SetVolume(0)
-			end
-		end
 	else
+		if IsValid(DespairStation) then
+			DespairStation:Stop()
+			DespairStation = nil
+		end
 		if IsValid(NoiseStation) then
 			NoiseStation:Stop()
 			NoiseStation = nil
+		end
+		if IsValid(NoiseStation2) then
+			NoiseStation2:Stop()
+			NoiseStation2 = nil
 		end
 	end
 end)
@@ -653,4 +719,52 @@ hook.Add("Player Spawn", "ItDoesntNow", function(ply)
 	if ply != lply then return end
 
 	stopthings()
+end)
+
+net.Receive("hg_play_client_sound", function()
+	local soundPath = net.ReadString()
+	surface.PlaySound(soundPath)
+end)
+
+local headTraumaFlashes = {}
+
+net.Receive("headtrauma_flash", function()
+	local pos = net.ReadVector()
+	local duration = net.ReadFloat()
+	local size = net.ReadInt(20)
+	
+	table.insert(headTraumaFlashes, {
+		pos = pos,
+		duration = duration,
+		size = size,
+		startTime = CurTime()
+	})
+end)
+
+local flashMat = Material("sprites/light_glow02_add")
+
+hook.Add("PostDrawTranslucentRenderables", "HG_DrawHeadTraumaFlashes", function()
+	if #headTraumaFlashes == 0 then return end
+	
+	local curTime = CurTime()
+	local toRemove = {}
+	
+	render.SetMaterial(flashMat)
+	
+	for i, flash in ipairs(headTraumaFlashes) do
+		local elapsed = curTime - flash.startTime
+		if elapsed >= flash.duration then
+			table.insert(toRemove, i)
+		else
+			local alpha = 1 - (elapsed / flash.duration)
+			local size = flash.size * alpha
+			local color = Color(255, 255, 255, 255 * alpha)
+			
+			render.DrawSprite(flash.pos, size, size, color)
+		end
+	end
+	
+	for i = #toRemove, 1, -1 do
+		table.remove(headTraumaFlashes, toRemove[i])
+	end
 end)

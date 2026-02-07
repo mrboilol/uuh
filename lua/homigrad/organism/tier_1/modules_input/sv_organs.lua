@@ -77,6 +77,20 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
 
 	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 2
+	-- mcici disembolwer
+	if org.isPly then
+		local severeDamage = dmg > 0.8
+		local isSlash = dmgInfo:IsDamageType(DMG_SLASH)
+		local isBullet = dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)
+		
+		if severeDamage and (isSlash or isBullet) then
+			local chance = isSlash and 70 or 30
+			if math.random(100) <= chance then
+				hg.AttachStomachGore(org.owner)
+			end
+		end
+	end
+	
 	return result
 end
 
@@ -90,9 +104,9 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 	if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
 		ParticleEffect( "headshot", dmgInfo:GetDamagePosition(), dmgInfo:GetDamageForce():GetNormalized():Angle() )
 	end
-
+-- i wonder what this does
 	if org.brain >= 0.01 and (org.brain - oldDmg) > 0.01 and math.random(3) == 1 then
-		--hg.applyFencingToPlayer(org.owner, org)
+		hg.applyFencingToPlayer(org.owner, org)
 		org.shock = 70
 
 		timer.Simple(0.1, function()
@@ -181,7 +195,7 @@ input_list.rarmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) r
 input_list.larmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("larmartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.rlegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("rlegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.llegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("llegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
-input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return 0 end--hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.lungsL = function(org, bone, dmg, dmgInfo)
 	local prot = math.max(0.3 - org.lungsL[1],0)
 	local oldval = org.lungsL[1]
@@ -212,9 +226,8 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 
 	return 0//isCrush(dmgInfo) and 1 or prot
 end
-
+--im so funny fr fr
 input_list.trachea = function(org, bone, dmg, dmgInfo)
-	do return 0 end
 	local oldDmg = org.trachea
 
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 5 end
@@ -223,7 +236,129 @@ input_list.trachea = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.trachea - oldDmg) * 8, "Trachea damage harm")
 
-	//org.internalBleed = org.internalBleed + dmg * 2
+    org.internalBleed = org.internalBleed + dmg * 2
 
 	return result
 end
+
+input_list.eyeL = function(org, bone, dmg, dmgInfo)
+	local oldDmg = org.eyeL or 0
+	local result = damageOrgan(org, dmg * 1.5, dmgInfo, "eyeL") -- eyes are more fragile now
+
+	hg.AddHarmToAttacker(dmgInfo, math.max(org.eyeL - oldDmg, 0) * 6, "Left eye damage harm")
+
+	if hg.organism.enhancedPain then
+		hg.organism.enhancedPain.applyPain(org, dmg * 35, dmgInfo, "eyeL", false)
+	else
+		org.painadd = org.painadd + dmg * 35
+	end
+	org.shock = org.shock + dmg * 10
+	org.disorientation = org.disorientation + dmg * 2
+
+	-- bleed from any damaging hit type
+	org.bleed = org.bleed + dmg * 0.8
+
+	org.pulse = math.min(org.pulse + dmg * 8, 180)
+
+	-- eye popped: play short-range cue
+	if oldDmg < 1 and org.eyeL >= 1 then
+		if IsValid(org.owner) then
+			net.Start("hg_play_client_sound")
+			net.WriteString("cuteye.ogg")
+			net.Send(org.owner)
+		end
+	elseif org.eyeL > 0.1 then
+		-- Slight disorientation for eye damage
+		org.disorientation = math.min(org.disorientation + dmg * 0.5, 0.5)
+	end
+
+	-- Small chance to block brain damage (20%)
+	if math.random(100) <= 20 then
+		return 1
+	end
+
+	return result
+end
+
+input_list.eyeR = function(org, bone, dmg, dmgInfo)
+	local oldDmg = org.eyeR or 0
+	local result = damageOrgan(org, dmg * 1.5, dmgInfo, "eyeR") -- eyes are more fragile now
+
+	hg.AddHarmToAttacker(dmgInfo, math.max(org.eyeR - oldDmg, 0) * 6, "Right eye damage harm")
+
+	if hg.organism.enhancedPain then
+		hg.organism.enhancedPain.applyPain(org, dmg * 35, dmgInfo, "eyeR", false)
+	else
+		org.painadd = org.painadd + dmg * 35
+	end
+	org.shock = org.shock + dmg * 10
+	org.disorientation = org.disorientation + dmg * 2
+
+	-- bleed from any damaging hit type
+	org.bleed = org.bleed + dmg * 0.8
+
+	org.pulse = math.min(org.pulse + dmg * 8, 180)
+
+	-- eye popped: play short-range cue
+	if oldDmg < 1 and org.eyeR >= 1 then
+		if IsValid(org.owner) then
+			net.Start("hg_play_client_sound")
+			net.WriteString("cuteye.ogg")
+			net.Send(org.owner)
+		end
+	elseif org.eyeR > 0.1 then
+		-- Slight disorientation for eye damage
+		org.disorientation = math.min(org.disorientation + dmg * 0.5, 0.5)
+	end
+
+	-- Small chance to block brain damage (20%)
+	if math.random(100) <= 20 then
+		return 1
+	end
+
+	return result
+end
+
+input_list.nose = function(org, bone, dmg, dmgInfo)
+	local oldDmg = org.nose or 0
+	local result = damageOrgan(org, dmg * 2, dmgInfo, "nose") -- nose is sensitive
+
+	-- Nose breakage threshold
+	if oldDmg < 0.5 and org.nose >= 0.5 then
+		if IsValid(org.owner) then
+			-- Nose broken
+			local broken_nose_msg = {
+				"FUCK- HE HIT ME GOOD",
+				"AGH- MY NOSE IS BROKEN",
+				"MY NOSE... IT'S BROKEN!",
+				"DAMMIT, MY NOSE!"
+			}
+			org.owner:Notify(broken_nose_msg[math.random(#broken_nose_msg)], true, "nose_broken", 2)
+			org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+			
+			-- Pain increase
+			if hg.organism.enhancedPain then
+				hg.organism.enhancedPain.applyPain(org, 25, dmgInfo, "nose", false)
+			else
+				org.painadd = org.painadd + 25
+			end
+			
+			-- Disorientation (similar to eye damage)
+			org.disorientation = math.min(org.disorientation + 0.5, 1.0)
+			
+			-- Bleeding effect
+			org.bleed = org.bleed + 0.5
+			
+			-- Visual bleeding could be handled here if we have a specific nose bleed particle/net message
+			-- For now, using generic blood impact via damage info scaling or relying on client side blood
+		end
+	end
+	
+	if org.nose > 0.1 then
+		org.painadd = org.painadd + dmg * 5
+	end
+
+	return result
+end
+
+input_list.rarmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone * 1.25, dmg, dmgInfo, "rarm", boneindex, dir, hit, ricochet) end

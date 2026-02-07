@@ -47,6 +47,30 @@ male["ValveBiped.Bip01_Head1"] = {
 		Vector(1.6, 2.1, 1.7),
 		Color(255, 0, 255)
 	},
+	{
+		"eyeL", -- Left Eye
+		nil,
+		Vector(6.5, -1.8, 1.2),
+		Angle(0, 0, 0),
+		Vector(0.5, 0.5, 0.5),
+		Color(0, 255, 255)
+	},
+	{
+		"eyeR", -- Right Eye
+		nil,
+		Vector(6.5, -1.8, -1.2),
+		Angle(0, 0, 0),
+		Vector(0.5, 0.5, 0.5),
+		Color(0, 255, 255)
+	},
+	{
+		"nose", -- Nose
+		nil,
+		Vector(6.8, -1.8, 0),
+		Angle(0, 0, 0),
+		Vector(0.5, 1, 0.8),
+		Color(255, 165, 0) -- Orange color for nose
+	},
 }
 
 local spine = 0.25
@@ -300,6 +324,30 @@ female["ValveBiped.Bip01_Head1"] = {
 		Vector(1.6, 2.1, 1.7),
 		Color(255, 0, 255)
 	},
+	{
+		"eyeL", -- Left Eye
+		nil,
+		Vector(5.5, -0.2, 1.1),
+		Angle(0, 0, 0),
+		Vector(0.5, 0.5, 0.5),
+		Color(0, 255, 255)
+	},
+	{
+		"eyeR", -- Right Eye
+		nil,
+		Vector(5.5, -0.2, -1.1),
+		Angle(0, 0, 0),
+		Vector(0.5, 0.5, 0.5),
+		Color(0, 255, 255)
+	},
+	{
+		"nose", -- Nose
+		nil,
+		Vector(5.8, -0.2, 0),
+		Angle(0, 0, 0),
+		Vector(0.5, 1, 0.8),
+		Color(255, 165, 0) -- Orange color for nose
+	},
 }
 
 female["ValveBiped.Bip01_Neck1"] = {
@@ -383,6 +431,9 @@ hg.organism.translationTbl = {
 	["spine1"] = "Lower spine",
 	["pelvis"] = "Pelvis",
 	["intestines"] = "Intestines",
+	["eyeL"] = "Left eye",
+	["eyeR"] = "Right eye",
+	["nose"] = "Nose",
 	["rarmdown"] = "Right forearm",
 	["rarmup"] = "Right upperarm",
 	["rarmartery"] = "Right arm artery",
