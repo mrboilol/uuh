@@ -26,6 +26,9 @@ hook.Add("Org Clear", "Main", function(org)
 	org.skull = 0
 	org.stomach = 0
 	org.intestines = 0
+	org.eyeL = 0
+	org.eyeR = 0
+	org.nose = 0
 
 	org.thiamine = 0
 
@@ -580,6 +583,9 @@ hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 	org.lungsR[2] = math.max(org.lungsR[2] - regen, 0)
 	org.lungsL[2] = math.max(org.lungsL[2] - regen, 0)
 	org.brain = math.max(org.brain - regen, 0)
+	org.eyeL = math.max(org.eyeL - regen, 0)
+	org.eyeR = math.max(org.eyeR - regen, 0)
+	org.nose = math.max(org.nose - regen, 0)
 
 	org.hungry = 0
 
