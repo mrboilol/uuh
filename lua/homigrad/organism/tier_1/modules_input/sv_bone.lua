@@ -128,6 +128,17 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		end
 
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil) end
+		
+		-- Gruesome fracture logic
+		if dmg > 1.5 or (oldDmg > 0.8 and dmg > 0.5) then
+			org.painadd = org.painadd + 40
+			org.immobilization = org.immobilization + 20
+			org[key.."gruesome"] = true
+			
+			if org.isPly then
+				org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO) -- Fallback handled if missing
+			end
+		end
 
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
@@ -142,6 +153,17 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.fearadd = org.fearadd + 0.5
 
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_leg[math.random(#dislocated_leg)], 1, "dislocated"..key, 1, nil, nil) end
+		
+		-- Gruesome dislocation logic
+		if dmg > 0.8 then
+			org.painadd = org.painadd + 30
+			org.immobilization = org.immobilization + 15
+			org[key.."gruesome_dislocation"] = true
+			
+			if org.isPly then
+				org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO) -- Fallback handled if missing
+			end
+		end
 
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
@@ -190,6 +212,16 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil) end
 
+		-- Gruesome fracture logic
+		if dmg > 1.5 or (oldDmg > 0.8 and dmg > 0.5) then
+			org.painadd = org.painadd + 40
+			org[key.."gruesome"] = true
+			
+			if org.isPly then
+				org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
+			end
+		end
+
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
 		//broken
@@ -202,6 +234,16 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.fearadd = org.fearadd + 0.5
 
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_arm[math.random(#dislocated_arm)], 1, "dislocated"..key, 1, nil, nil) end
+
+		-- Gruesome dislocation logic
+		if dmg > 0.8 then
+			org.painadd = org.painadd + 30
+			org[key.."gruesome_dislocation"] = true
+			
+			if org.isPly then
+				org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO)
+			end
+		end
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)

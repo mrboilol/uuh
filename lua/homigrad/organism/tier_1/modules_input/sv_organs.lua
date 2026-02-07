@@ -87,6 +87,15 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 			local chance = isSlash and 70 or 30
 			if math.random(100) <= chance then
 				hg.AttachStomachGore(org.owner)
+				
+				local gut_msg = {
+					"OH GOD- MY GUTS!",
+					"IT'S SPILLING OUT! MY INSIDES ARE SPILLING OUT!",
+					"FUCK! I CAN SEE MY INTESTINES!",
+					"HELP! I'M DISEMBOWELED!",
+					"MY STOMACH IS OPEN! GOD HELP ME!"
+				}
+				org.owner:Notify(gut_msg[math.random(#gut_msg)], true, "disembowel", 3)
 			end
 		end
 	end
