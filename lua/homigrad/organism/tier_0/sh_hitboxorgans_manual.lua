@@ -63,6 +63,22 @@ male["ValveBiped.Bip01_Head1"] = {
 		Vector(1.3, 1.3, 1.3), -- slightly larger for more hits
 		Color(100, 180, 255)
 	},
+	{
+		"nose",
+		nil,
+		Vector(3.2, -4.0, 0),
+		Angle(0, 0, 0),
+		Vector(1.2, 1.2, 1.2),
+		Color(0, 255, 255)
+	},
+}
+
+local spine = 0.25
+male["ValveBiped.Bip01_Neck1"] = {
+	{
+		"spine3", --spine3 neck
+		spine,
+		Vector(1, 1, 0),
 		Angle(0, 0, 0),
 		Vector(2, 0.5, 0.5),
 		Color(0, 125, 0)
