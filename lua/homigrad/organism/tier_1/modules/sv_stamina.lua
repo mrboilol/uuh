@@ -81,8 +81,8 @@ module[2] = function(owner, org, timeValue)
 	//local old = stamina[1]
 	stamina[1] = min(stamina[1] + stamina.regen * timeValue * 9 * 1.5 * math.max(org.stamina[1] / org.stamina.max, 0.2) ^ 0.5 * (org.adrenaline / 16 + 1) * (org.satiety/700 + 1) * ((owner:IsPlayer() and owner:Crouching() and velLen < 0.1) and 1.1 or 1) * (org.holdingbreath and 0 or 1) * (org.lungsfunction and 1 or 0), stamina.max)
 
-	-- local painfrommoving = (stamina[1] < 150 and 1 or 0) * (stamina[1] - old) * (org.chest)
-	-- org.painadd = org.painadd + painfrommoving * timeValue * 5
+	 local painfrommoving = (stamina[1] < 150 and 1 or 0) * (stamina[1] - old) * (org.chest)
+	 org.painadd = org.painadd + painfrommoving * timeValue * 5
 
 	if org.nextAdrenalineRegen and org.nextAdrenalineRegen < CurTime() then
 		org.adrenalineStorage = math.Approach(org.adrenalineStorage, 5, timeValue / 60 * (org.satiety * 0.01 + 1))
@@ -108,11 +108,11 @@ end
 function hg.organism.AddAttackAdrenaline(org, damage)
 	if not org then return end
 	
-	local gain = math.min(damage, 50) * 0.005 
+	local gain = math.min(damage, 50) * 0.01 
 	
-	local naturalGain = gain * 0.5
+	local naturalGain = gain * 0.8
 	org.adrenaline = math.min(org.adrenaline + naturalGain, 5)
-	local reserveGain = gain * 0.5
+	local reserveGain = gain * 0.2
 	hg.organism.AddNaturalAdrenaline(org, reserveGain)
 end
 

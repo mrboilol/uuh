@@ -723,8 +723,8 @@ end
 local ribs = {
 	"One of my ribs is definitively broken.",
 	"My chest is missing a rib.",
-	"Yep, one of my ribs is broken.",
-	"Shit- My chest is snapped.",
+	"I think i broke something inside...",
+	"Shit... My chest is snapped.",
 }
 
 input_list.chest = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet)	

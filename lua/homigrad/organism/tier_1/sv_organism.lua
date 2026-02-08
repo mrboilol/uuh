@@ -29,6 +29,7 @@ hook.Add("Org Clear", "Main", function(org)
 	org.eyeL = 0
 	org.eyeR = 0
 	org.nose = 0
+	org.trachea = 0
 
 	org.thiamine = 0
 
@@ -41,6 +42,17 @@ hook.Add("Org Clear", "Main", function(org)
 	org.rarmdislocation = false
 	org.larmdislocation = false
 	org.jawdislocation = false
+    
+    -- oopsies
+    org.lleggruesome = false
+    org.rleggruesome = false
+    org.rarmgruesome = false
+    org.larmgruesome = false
+    
+    org.lleggruesome_dislocation = false
+    org.rleggruesome_dislocation = false
+    org.rarmgruesome_dislocation = false
+    org.larmgruesome_dislocation = false
 
 	org.llegamputated = false
 	org.rlegamputated = false
@@ -484,6 +496,22 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
 		if org.trachea < 1 then org.trachea = math.Approach(org.trachea, 0, naturalHeal) end
 	end
+
+    local critical_organs = 0
+	if org.liver >= 1 then critical_organs = critical_organs + 1 end
+	if org.heart >= 1 then critical_organs = critical_organs + 1 end
+	if org.stomach >= 1 then critical_organs = critical_organs + 1 end
+	if org.intestines >= 1 then critical_organs = critical_organs + 1 end
+	if org.lungsR[1] >= 1 then critical_organs = critical_organs + 1 end
+	if org.lungsL[1] >= 1 then critical_organs = critical_organs + 1 end
+    if org.trachea >= 1 then critical_organs = critical_organs + 1 end
+
+    local is_critical = (org.blood < 1500) or (critical_organs >= 3)
+    
+    if is_critical then
+        org.brain = math.min(org.brain + timeValue / 60, 1)
+        org.shock = org.shock + timeValue * 5
+    end
 
 	if org.otrub and isPly and org.owner:Alive() then
 		//org.owner:ScreenFade(SCREENFADE.PURGE, color_black, 0.5, 0)

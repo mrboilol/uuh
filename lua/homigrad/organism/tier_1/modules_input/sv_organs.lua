@@ -46,7 +46,7 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.liver - oldDmg) * 3, "Liver damage harm")
 	
 	org.shock = org.shock + dmg * 20
-	org.painadd = org.painadd + dmg * 35
+	org.painadd = org.painadd + dmg * 50
 	
 	org.liver = math.min(org.liver + dmg, 1)
 	local harmed = (org.liver - oldDmg)
@@ -60,7 +60,7 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 		end)
 	end
 
-	org.internalBleed = org.internalBleed + harmed * 4
+	org.internalBleed = org.internalBleed + harmed * 10
 	
 	dmgInfo:ScaleDamage(0.8)
 
@@ -74,8 +74,10 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 	local result = damageOrgan(org, dmg, dmgInfo, "stomach")
 
 	hg.AddHarmToAttacker(dmgInfo, (org.stomach - oldDmg) * 2, "Stomach damage harm")
+    
+    org.painadd = org.painadd + dmg * 40
 	
-	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 2
+	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 8
 	return result
 end
 
@@ -86,8 +88,10 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 	local result = damageOrgan(org, dmg, dmgInfo, "intestines")
 
 	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
+    
+    org.painadd = org.painadd + dmg * 40
 
-	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 2
+	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 8
 	-- mcici disembolwer
 	if org.isPly then
 		local severeDamage = dmg > 0.8
@@ -370,6 +374,10 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
 			net.Start("hg_play_client_sound")
 			net.WriteString("cuteye.ogg")
 			net.Send(org.owner)
+
+            net.Start("hg_play_client_sound")
+			net.WriteString("eyegone.mp3")
+			net.Send(org.owner)
             
             -- Red flash
             net.Start("AddFlash")
@@ -396,7 +404,7 @@ end
 input_list.nose = function(org, bone, dmg, dmgInfo)
 	if not org or not org.nose then return 0 end
 	local oldDmg = org.nose or 0
-	local result = damageOrgan(org, dmg * 2, dmgInfo, "nose") -- nose is sensitive
+	local result = damageOrgan(org, dmg * 3, dmgInfo, "nose") -- nose is sensitive
 
 	-- Nose breakage threshold
 	if oldDmg < 0.5 and org.nose >= 0.5 then
@@ -404,9 +412,9 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
 		if IsValid(org.owner) then
 			-- blyat
 			local broken_nose_msg = {
-				"AGH- MY NOSE IS BROKEN",
-				"MY NOSE... IT'S BROKEN!",
-				"DAMMIT, MY NOSE!"
+				"My nose feels split in two.",
+				"Fuck... I think my nose is broken.",
+				"I smell a lot of copper..."
 			}
 			org.owner:Notify(broken_nose_msg[math.random(#broken_nose_msg)], true, "nose_broken", 2)
 			org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)

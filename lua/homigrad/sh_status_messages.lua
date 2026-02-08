@@ -311,7 +311,24 @@ function hg.likely_to_phrase(ply)
 		--or (fear > 0.5 and 0.7)
 		or (brain > 0.1 and brain * 5)
 		or (fear < -0.5 and 0.05)
-		or -0.1
+		or 0.02 -- Random thoughts
+end
+
+local function ScrambleText(text, intensity)
+    local newText = ""
+    for i = 1, #text do
+        local char = text[i]
+        if math.random() < intensity then
+            if math.random(2) == 1 then
+                newText = newText .. char .. "-" .. char
+            else
+                newText = newText .. allowedchars[math.random(#allowedchars)]
+            end
+        else
+            newText = newText .. char
+        end
+    end
+    return newText
 end
 
 function IsAimedAt(ply)
@@ -391,22 +408,26 @@ local function get_status_message(ply)
 		end
 	elseif after_unconscious_notify then
 		most_wanted_phraselist = after_unconscious
-	elseif hg.nothing_happening(ply) then
+	elseif hg.nothing_happening(ply) or math.random(3) == 1 then -- Trigger random phrases more often
 		most_wanted_phraselist = random_phrase
 
 		if hungry and hungry > 25 and math.random(5) == 1 then
 			most_wanted_phraselist = hungry > 45 and very_hungry or hungry_a_bit
 		end
-	elseif hg.fearful(ply) then
+	elseif hg.fearful(ply) or math.random(5) == 1 then -- Trigger fearful phrases randomly
 		most_wanted_phraselist = ((IsAimedAt(ply) > 0.9) and is_aimed_at_phrases or (math.random(10) == 1 and fear_hurt_ironic or fear_phrases))
 	end
 
-	if brain > 0.1 then
-		most_wanted_phraselist = brain < 0.2 and slight_braindamage_phraselist or braindamage_phraselist
+	if brain > 0.3 then
+		most_wanted_phraselist = brain < 0.5 and slight_braindamage_phraselist or braindamage_phraselist
 	end
 	
 	if most_wanted_phraselist then
 		str = most_wanted_phraselist[math.random(#most_wanted_phraselist)]
+
+        if brain > 0.1 then
+            str = ScrambleText(str, brain * 0.3)
+        end
 
 		return str
 	else
