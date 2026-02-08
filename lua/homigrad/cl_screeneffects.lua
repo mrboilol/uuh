@@ -1,5 +1,3 @@
-local lply = LocalPlayer()
-
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
 	if not sun then return end
@@ -127,10 +125,14 @@ local LayerSetWeight = postprs.LayerSetWeight
 local CurTime = CurTime
 local timecheck = CurTime()
 hook.Add("Post Processing", "Main", function()
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
+	
 	//if potatopc:GetInt() >= 1 then return end
 	//if !lply:Alive() then return end
 	local ply = lply:Alive() and lply or lply:GetNWEntity("spect")
 	if !IsValid(ply) then return end
+	
 	local waterLevel = oldWaterLevel
 	if timecheck < CurTime() then
 		local pos = hg.eye(lply)
@@ -188,7 +190,8 @@ local haloents = {
 
 --[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсветкой всего в радиусе
 	local pickuphalo = {}
-	 
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
 	local lpos = lply:GetPos()
 	for _, ent in ipairs(ents.FindInSphere(lpos, 256)) do
 		if IsValid(ent) and (haloents[ent.Base] or haloents[ent:GetClass()]) and not IsValid(ent:GetOwner()) then
@@ -204,7 +207,8 @@ end )]]
 
 --[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсвечиванием только когда смотришь
 	local pickuphalo = {}
-	 
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
 	local tr = hg.eyeTrace(lply,72)
 	if IsValid(tr.Entity) and haloents[tr.Entity.Base] then
 		table.insert(pickuphalo, tr.Entity)
@@ -284,7 +288,10 @@ local function stopthings()
 	tempLerp = 36.6
 	consciousnessLerp = 1
 
-	lply.tinnitus = 0
+	local lply = LocalPlayer()
+	if IsValid(lply) then
+		lply.tinnitus = 0
+	end
 	
 	--[[if IsValid(PainStation) then
 		PainStation:Stop()
@@ -348,11 +355,15 @@ local stations = {
 	0.15,
 	0.22,
 	0.27,
+	0.33,
 }
 
 local choosera = 1
 local tempolerp = 0
 hook.Add("Post Post Processing", "ItHurts", function()
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
+
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	
 	if IsValid(PainStation) then
@@ -711,12 +722,14 @@ hook.Add("Post Post Processing", "ItHurts", function()
 end)
 
 hook.Add("Player_Death", "ItDoesntNow", function(ply)
+	local lply = LocalPlayer()
 	if !((ply == lply) or (ply == lply:GetNWEntity("spect"))) then return end
 
 	stopthings()
 end)
 
 hook.Add("Player Spawn", "ItDoesntNow", function(ply)
+	local lply = LocalPlayer()
 	if ply != lply then return end
 
 	stopthings()

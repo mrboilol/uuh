@@ -762,6 +762,22 @@ function SWEP:MultiplyDMG(owner, ent, vellen, mul)
     if owner:IsBerserk() then
         mul = mul * (1 + owner.organism.berserk)
     end
+    
+    if owner.organism.fractures and (owner.organism.fractures.rarm or owner.organism.fractures.larm) then
+        mul = mul * 0.5
+    end
+    
+    local tourniquets = owner.GetNetVar and owner:GetNetVar("Tourniquets") or owner.tourniquets
+    if tourniquets then
+            for _, t in pairs(tourniquets) do
+            local b = t[3]
+            if b == "ValveBiped.Bip01_L_UpperArm" or b == "ValveBiped.Bip01_L_Forearm" or
+                b == "ValveBiped.Bip01_R_UpperArm" or b == "ValveBiped.Bip01_R_Forearm" then
+                mul = mul * 0.75
+                break
+            end
+        end
+    end
 
     return mul
 end
