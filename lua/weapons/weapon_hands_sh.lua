@@ -1524,7 +1524,7 @@ function SWEP:AttackFront(special_attack, rand)
 				local snd = "Flesh.ImpactHard"
 				if isZomb then
 					snd = "npc/zombie/claw_strike"..math.random(3)..".wav"
-				elseif owner.PlayerClassName == "furry" then then
+				elseif owner.PlayerClassName == "furry" then
 					snd = "pwb/weapons/knife/hit"..math.random(4)..".wav"
 				end
 				sound.Play(snd, HitPos, 65, math.random(90, 110))
