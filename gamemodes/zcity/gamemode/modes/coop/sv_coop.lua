@@ -60,10 +60,14 @@ MODE.LootTable = {
         {5,"ent_ammo_12.7x108mm"},
         {7,"ent_ammo_7.62x39mm"},
         {7,"ent_ammo_5.45x39mm"},
+        {6,"ent_ammo_rpg-7projectile"},
         
         {8,"weapon_bigconsumable"},
 		{7,"weapon_painkillers"},
 		{6,"weapon_bigbandage_sh"},
+        {5,"weapon_morphine"},
+        {5,"weapon_naloxone"},
+        {4,"weapon_mannitol"},
         
         {9,"weapon_hk_usp"},
         {8,"weapon_revolver357"},
@@ -479,7 +483,7 @@ local function CanPossessNPC(ply, npc)
     if ply:Alive() then return false end
     if CurrentRound().name ~= "coop" then return false end
     if not coop_rts:GetBool() then return false end
-    if ply.hasUsedRTS and not ply:IsAdmin() then return false end
+    --if ply.hasUsedRTS and not ply:IsAdmin() then return false end
     
     local npcClass = npc:GetClass()
     if friendlyNPCClasses[npcClass] then return true end
@@ -580,7 +584,7 @@ hook.Add("PlayerButtonDown", "checks", function(ply, button)
     if CurrentRound().name ~= "coop" then return end
     if not coop_rts:GetBool() then return end
     if ply:Alive() then return end
-    if ply.hasUsedRTS and not ply:IsAdmin() then return end
+    --if ply.hasUsedRTS and not ply:IsAdmin() then return end
     
     local observeTarget = ply:GetObserverTarget()
     local searchPos
