@@ -1211,7 +1211,7 @@ function hg.GoreCalc(ent, ply)
 			headboom_mdl = ClientsideModel(grub)
 			headboom_mdl:SetNoDraw(true)
 			--headboom_mdl:SetModel("models/grub_nugget_small.mdl")
-			headboom_mdl:SetSubMaterial(0, "models/flesh")
+			--headboom_mdl:SetSubMaterial(0, "models/flesh")
 			headboom_mdl:SetModelScale(0.8)
 		end
 		

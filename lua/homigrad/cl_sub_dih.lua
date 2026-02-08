@@ -25,8 +25,8 @@ hook.Add("HUDPaint", "subrosa", function()
         plyModel:SetNoDraw(true)
     end
 
-    if plyModel:GetModel() ~= ply:GetModel() then
-        plyModel:SetModel(ply:GetModel())
+    if plyModel:GetModel() ~= (isFaking and ragdoll:GetModel() or ply:GetModel()) then
+        plyModel:SetModel(isFaking and ragdoll:GetModel() or ply:GetModel())
     end
 
     plyModel:SetPos(Vector(0, 0, 0))
@@ -34,6 +34,17 @@ hook.Add("HUDPaint", "subrosa", function()
     
     local sourceEnt = isFaking and ragdoll or ply
     
+    if not isFaking then
+        plyModel:SetSequence(ply:GetSequence())
+        plyModel:SetCycle(ply:GetCycle())
+        plyModel:SetPlaybackRate(ply:GetPlaybackRate())
+
+        for i = 0, ply:GetNumPoseParameters() - 1 do
+            local name = ply:GetPoseParameterName(i)
+            plyModel:SetPoseParameter(name, ply:GetPoseParameter(i))
+        end
+    end
+
     local rootBone = sourceEnt:LookupBone("ValveBiped.Bip01_Pelvis")
     if not rootBone then rootBone = 0 end
 
@@ -59,7 +70,7 @@ hook.Add("HUDPaint", "subrosa", function()
     local w, h = ScrW(), ScrH()
     local size = h * 0.25
     local x = w / 2 - size / 2
-    local y = h * 0.65 -- Below middle
+    local y = h * 0.65 
 
     render.MaterialOverride(matWhite)
     render.SetColorModulation(1, 1, 1)

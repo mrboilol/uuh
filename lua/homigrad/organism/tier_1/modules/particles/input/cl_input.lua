@@ -39,7 +39,7 @@ local function addBloodPart(pos, vel, mat, w, h, artery, kishki, owner)
 
 	if #hg.bloodparticles1 > 200 then table.remove(hg.bloodparticles1, 1) end
 	
-	hg.bloodparticles1[#hg.bloodparticles1 + 1] = {pos, pos2, vel, mat or mat_huy, w or 2, h or 2, CurTime(), artery = artery, kishki = kishki, owner = owner, start_velocity = IsValid(owner) and owner:GetVelocity() or vector_origin}
+	hg.bloodparticles1[#hg.bloodparticles1 + 1] = {pos, pos2, vel, mat or mat_huy, w or 2, h or 2, CurTime(), artery = artery, kishki = false, owner = owner, start_velocity = IsValid(owner) and owner:GetVelocity() or vector_origin}
 end
 
 local function addBloodPart2(pos, vel, mat, w, h, time, water, owner)
@@ -102,7 +102,7 @@ local function explode(pos, size, force)
 			dir:Rotate(Angle(h * y * Rand(0.9, 1.1), w * x * Rand(0.9, 1.1), 0))
 			dir[3] = dir[3] + Rand(0.5, 1.5)
 			dir:Mul(250 * size)
-			addBloodPart(pos, force * 0.2 + dir, mat_huy, math.Rand(5,10), math.Rand(5,10), false, true)
+			addBloodPart(pos, (force or Vector(0,0,0)) * 0.2 + dir, mat_huy, math.Rand(5,10), math.Rand(5,10), false, true)
 		end
 	end
 end
