@@ -455,20 +455,34 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		end
 	end
 
-	if org.brain < 0.4 then
-		local naturalHeal = org.thiamine > 0 and timeValue / 480 or timeValue / 1800
-		-- full heal in ~30 minutes (really fast tho) -- Ну не идет столько раунд даже в каких-нибудь скраперсах ну какой даун это придумал
-		-- 8 minutes with thiamine -- ДАЖЕ СТОЛЬКО НЕ ВСЕГДА ДЛИТСЯ
+	org.thiamine = math.Approach(org.thiamine, 0, timeValue / 240)
 
-		org.thiamine = math.Approach(org.thiamine, 0, timeValue / 240)
-		-- you'd need to give 1 thiamine each 4 minutes
-
+	if org.thiamine > 0 then
+		local naturalHeal = timeValue / 480
+		
 		if org.liver < 1 then org.liver = math.Approach(org.liver, 0, naturalHeal) end
 		if org.heart < 1 then org.heart = math.Approach(org.heart, 0, naturalHeal) end
 		if org.stomach < 1 then org.stomach = math.Approach(org.stomach, 0, naturalHeal) end
 		if org.intestines < 1 then org.intestines = math.Approach(org.intestines, 0, naturalHeal) end
 		if org.lungsR[1] < 1 then org.lungsR[1] = math.Approach(org.lungsR[1], 0, naturalHeal) end
 		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
+		if org.trachea < 1 then org.trachea = math.Approach(org.trachea, 0, naturalHeal) end
+		
+		if org.thiamine > 0.8 then
+			naturalHeal = naturalHeal * 2
+			
+			if org.brain < 1 then org.brain = math.Approach(org.brain, 0, naturalHeal) end
+		end
+	elseif org.brain < 0.4 then
+		local naturalHeal = timeValue / 1800
+		
+		if org.liver < 1 then org.liver = math.Approach(org.liver, 0, naturalHeal) end
+		if org.heart < 1 then org.heart = math.Approach(org.heart, 0, naturalHeal) end
+		if org.stomach < 1 then org.stomach = math.Approach(org.stomach, 0, naturalHeal) end
+		if org.intestines < 1 then org.intestines = math.Approach(org.intestines, 0, naturalHeal) end
+		if org.lungsR[1] < 1 then org.lungsR[1] = math.Approach(org.lungsR[1], 0, naturalHeal) end
+		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
+		if org.trachea < 1 then org.trachea = math.Approach(org.trachea, 0, naturalHeal) end
 	end
 
 	if org.otrub and isPly and org.owner:Alive() then

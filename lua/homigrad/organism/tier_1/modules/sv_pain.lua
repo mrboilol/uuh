@@ -121,9 +121,9 @@ module[2] = function(owner, org, timeValue)
 	org.naloxone = Approach(org.naloxone, org.naloxoneadd > 0 and 4 or 0, org.naloxoneadd > 0 and timeValue / 30 or timeValue / 60)
 	org.naloxoneadd = Approach(org.naloxoneadd, 0, timeValue / 15)
 	
-	--if owner.suiciding and org.adrenaline < 1.5 then
-	--	org.adrenalineAdd = Approach(org.adrenalineAdd, 4, timeValue / 5)
-	--end
+	if owner.suiciding and org.adrenaline < 1.5 then
+		org.adrenalineAdd = Approach(org.adrenalineAdd, 4, timeValue / 5)
+	end
 
 	if org.adrenalineAdd > 0 then
 		org.adrenaline = Approach(org.adrenaline, 4, timeValue / 5)
