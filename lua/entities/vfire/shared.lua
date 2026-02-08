@@ -925,6 +925,13 @@ if SERVER then
 	hg = hg or {}
 	hg.particles = hg.particles or {}
 
+	vfireallowspreadon = {
+		[MAT_GRASS] = true,
+		[MAT_WOOD] = true,
+		[MAT_TILE] = true,
+		[MAT_PLASTIC] = true,
+	}
+
 	function ENT:SpreadThink(ran)
 		-- Attempt to spread
 		if vFireEnableSpread then
@@ -989,7 +996,7 @@ if SERVER then
 					local pos = self:GetPos() + offset
 					local tr = util.QuickTrace(pos, dir)
 					local ent = tr.Entity
-					if tr.Hit and (tr.Fraction > 0 or IsValid(ent)) then
+					if tr.Hit and vfireallowspreadon[tr.MatType] and (tr.Fraction > 0 or IsValid(ent)) then
 
 						if vFireIsVFireEnt(ent) then return end
 

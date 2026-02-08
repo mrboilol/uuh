@@ -231,6 +231,8 @@ function hg.TransferItems(ply,ragdoll)
 		ply:SetNetVar("Inventory",{})
 		ply.inventory = ply:GetNetVar("Inventory",{})
 
+        hook.Run("ItemsTransfered",ply,ragdoll)
+
 		ragdoll:SetNetVar("Armor",ply.armors)
 		ragdoll.armors = ragdoll:GetNetVar("Armor",{})
 		ragdoll:SetNetVar("HideArmorRender", ply:GetNetVar("HideArmorRender", false))
@@ -239,8 +241,6 @@ function hg.TransferItems(ply,ragdoll)
 		ply.armors = ply:GetNetVar("Armor",{})
 		
 		hg.SyncWeapons()
-
-        hook.Run("ItemTransfered",ply,ragdoll)
 	end
 end
 

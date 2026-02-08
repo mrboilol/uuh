@@ -124,6 +124,22 @@ if CLIENT then
 			weight = fontW,
 			antialias = fontAntiAliasing
 		})
+
+		surface.CreateFont("ZB_ProotOSChat", {
+			font = "Ari-W9500",
+			size = ScreenScale(size),
+			extended = true,
+			weight = fontW,
+			antialias = fontAntiAliasing
+		})
+
+		surface.CreateFont("BerserkChatFont", {
+			font = "Who asks Satan",
+			size = ScreenScale(size + 3),
+			extended = true,
+			weight = 0,
+			antialias = fontAntiAliasing
+		})
 	end
 
 	cvars.AddChangeCallback("zchat_fontsize", function()
@@ -142,6 +158,11 @@ if CLIENT then
 	end)
 
 	cvars.AddChangeCallback("zchat_fontweight", function()
+		LoadFonts()
+		CreateChat()
+	end)
+
+	concommand.Add("zchat_reload", function()
 		LoadFonts()
 		CreateChat()
 	end)
