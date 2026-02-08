@@ -183,7 +183,7 @@ end
 function SWEP:CreateFake() end
 
 local function ExplodeTheItem(self,ent)
-	if not IsValid(ent) then self:Remove() end
+	if not IsValid(ent) then self:Remove() return end
 
 	local ent = ent
 

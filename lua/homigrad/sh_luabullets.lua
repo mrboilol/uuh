@@ -412,7 +412,7 @@ local function Damage(bDoDebugHit, bStartedWater, bEndNotWater, iFlags, iDamage,
 		// Damage specified by function parameter
 		local info = DamageInfo()
 			info:SetAttacker(IsValid(pAttacker) and pAttacker or game.GetWorld())
-			info:SetInflictor(pInflictor)
+			info:SetInflictor(IsValid(pInflictor) and pInflictor or info:GetAttacker())
 			info:SetDamage(iActualDamage)
 			info:SetDamageType(iAmmoDamageType)
 			info:SetDamagePosition(vHitPos)

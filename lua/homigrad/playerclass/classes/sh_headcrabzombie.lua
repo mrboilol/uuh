@@ -177,7 +177,7 @@ function CLASS.Think(self)
 
 	--\\ Only hands will be active..
 	local wep = self:GetActiveWeapon()
-	if IsValid(wep) and wep:GetClass() ~= "weapon_hands_sh" then
+	if IsValid(wep) and wep ~= NULL and wep:GetClass() ~= "weapon_hands_sh" then
 		if self:HasWeapon("weapon_hands_sh") then
 			self:SelectWeapon("weapon_hands_sh")
 		else

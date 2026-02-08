@@ -72,9 +72,9 @@ function ENT:ReciveData(ply,equipment)
 	self:SetSkin(self.skin)
 end
 
-hook.Add("ItemTransfered","TransferMats",function(ply, ragdoll)
-	local armors = ragdoll:GetNetVar("Armor",{})
-	for k,v in ipairs(armors) do
+hook.Add("ItemsTransfered","TransferMats",function(ply, ragdoll)
+	local armors = ply:GetNetVar("Armor",{})
+	for k,v in pairs(armors) do
 		ragdoll:SetNWString("ArmorMaterials" .. v, ply:GetNWString("ArmorMaterials" .. v))
 		ply:SetNWString("ArmorMaterials" .. v, nil)
 
