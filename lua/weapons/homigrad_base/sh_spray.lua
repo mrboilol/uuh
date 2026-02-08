@@ -26,6 +26,21 @@ function SWEP:GetPrimaryMul()
 	local mul = ((0.5) + math_max(self.Primary.Force / 110 - 1, 0)) * (owner.Crouching and owner:Crouching() and self.CrouchMul or 1) * (self.attachments and self.attachments.barrel and self.attachments.barrel[1] ~= "empty" and 0.75 or 1)
 	self:ApplyForce(mul)
 	mul = (mul or 0) * (self.Supressor and 0.75 or 1) * (owner.organism and owner.organism.recoilmul or 1)
+    
+    if owner.GetNetVar then
+        local tourniquets = owner:GetNetVar("Tourniquets")
+        if tourniquets then
+            for _, t in pairs(tourniquets) do
+                local b = t[3]
+                if b == "ValveBiped.Bip01_L_UpperArm" or b == "ValveBiped.Bip01_L_Forearm" or
+                   b == "ValveBiped.Bip01_R_UpperArm" or b == "ValveBiped.Bip01_R_Forearm" then
+                    mul = mul * 1.5
+                    break
+                end
+            end
+        end
+    end
+
 	return mul
 end
 

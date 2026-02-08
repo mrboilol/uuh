@@ -182,13 +182,27 @@ module[2] = function(owner, org, mulTime)
 	
 	if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end
 	
+	-- Ischemia: Low blood damages organs slowly
+	if org.blood < 3000 then
+		local ischemia_damage = (3000 - org.blood) / 3000 * mulTime * 0.05
+		if ischemia_damage > 0 then
+			org.brain = math.min(org.brain + ischemia_damage * 0.01, 1) -- too op grr
+			org.heart = math.min(org.heart + ischemia_damage * 0.05, 1)
+			org.liver = math.min(org.liver + ischemia_damage * 0.02, 1)
+			org.stomach = math.min(org.stomach + ischemia_damage * 0.02, 1)
+			org.intestines = math.min(org.intestines + ischemia_damage * 0.02, 1)
+			org.lungsL[1] = math.min(org.lungsL[1] + ischemia_damage * 0.02, 1)
+			org.lungsR[1] = math.min(org.lungsR[1] + ischemia_damage * 0.02, 1)
+		end
+	end
+	
 	if (org.internalBleed > 1 or org.pneumothorax > 0) and org.blood > 2000 and org.o2[1] > 0 then
 		org.wantToVomit = org.wantToVomit or 0
 
 		org.wantToVomit = org.wantToVomit + math.Rand(0, org.internalBleed / 1000 + org.pneumothorax / 200) * mulTime * 5
 		
 		if org.wantToVomit > 0.90 then
-			//owner:Notify(about_to_puke[math.random(#about_to_puke)], 15, "internalbleed_pre")
+			owner:Notify(about_to_puke[math.random(#about_to_puke)], 15, "internalbleed_pre")
 		end
 	end
 

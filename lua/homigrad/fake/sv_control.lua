@@ -391,6 +391,18 @@ hook.Add("Think", "Fake", function()
 		
 		if not wep.RagdollFunc then
 			local force = math.max(1 - org.larm / 1.3, 0)
+			if org.larmgruesome or org.larmgruesome_dislocation then force = force * 0.2 end
+            
+            if ragdoll.tourniquets then
+                for _, t in pairs(ragdoll.tourniquets) do
+                    local b = t[3]
+                    if b == "ValveBiped.Bip01_L_UpperArm" or b == "ValveBiped.Bip01_L_Forearm" then
+                        force = force * 0.75
+                        break
+                    end
+                end
+            end
+
 			if !IsValid(ragdoll.ConsLH) and (ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or ((ishgweapon(wep) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2))) then// || ply:InVehicle() then
 				if org.canmove then
 					//if !ply:InVehicle() then
@@ -500,6 +512,17 @@ hook.Add("Think", "Fake", function()
 			end
 
 			local force = math.max(1 - org.rarm / 1.3, 0)
+			if org.rarmgruesome or org.rarmgruesome_dislocation then force = force * 0.2 end
+            
+            if ragdoll.tourniquets then
+                for _, t in pairs(ragdoll.tourniquets) do
+                    local b = t[3]
+                    if b == "ValveBiped.Bip01_R_UpperArm" or b == "ValveBiped.Bip01_R_Forearm" then
+                        force = force * 0.75 -- nunca digas vosotros
+                        break
+                    end
+                end
+            end
 
 			if !IsValid(ragdoll.ConsRH) and ply:KeyDown(IN_ATTACK2) or ((ishgweapon(wep) or wep.ismelee2) and ply:KeyDown(IN_USE)) then// || ply:InVehicle() then
 				if org.canmove then
@@ -565,7 +588,7 @@ hook.Add("Think", "Fake", function()
 
 			if org.stamina[1] < 2 then
 				ply.HandsStun = CurTime() + 2
-				--ply:Notify(math.random(1,2) == 1 and "SHIT!" or "OH NOO!", 2, "ragdoll_fall", 0, nil, Color(255, 0, 0))
+				ply:Notify(math.random(1,2) == 1 and "SHIT!" or "OH NOO!", 2, "ragdoll_fall", 0, nil, Color(255, 0, 0))
 			end
 
 			if org.stamina[1] < 50 and (IsValid(ragdoll.ConsRH) or IsValid(ragdoll.ConsLH)) then

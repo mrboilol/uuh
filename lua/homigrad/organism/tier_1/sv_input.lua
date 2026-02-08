@@ -314,6 +314,7 @@ util.AddNetworkString("AddFlash")
 util.AddNetworkString("bloodsquirt")
 
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"enable developer mode (enables damage traces)",0,1)
+CreateConVar("hg_isshitworking", "0", FCVAR_REPLICATED, "Debug mode for damage flashes")
 
 local npcDmg = {
 	npc_combine_s = {
@@ -392,6 +393,7 @@ function hg.AddHarm(ply, harm, reason)
 end
 
 local net, math, hg, IsValid = net, math, hg, IsValid
+util.AddNetworkString("hg_damage_flash")
 local takeRagdollDamage
 hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	--[[if dmgInfo:IsDamageType(DMG_BULLET) then
@@ -608,6 +610,11 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	attacker.harm = dmgInfo:GetDamage() / 100
 	
 	if ply or org.fakePlayer then
+		if IsValid(ply) and ply:IsPlayer() then
+			net.Start("hg_damage_flash")
+			net.WriteFloat(dmgInfo:GetDamage())
+			net.Send(ply)
+		end
 		hook_Run("PreHomigradDamage", org.fakePlayer and ent or ply, dmgInfo, hitgroup, ent, attacker.harm, hitBoxs, inputHole)
 	end
 	
@@ -655,19 +662,19 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		end
 	end
 	--//
-
+--what does this do
 	if inputHole and #inputHole > 0 and dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT) then
 		ent.bloodamt2 = ent.bloodamt2 or 0
 		ent.bloodamt2 = ent.bloodamt2 + 1
 
 		timer.Simple(0,function()
 			timer.Create("Blood_burst_input"..ent:EntIndex(),0.02,1,function()
-				--[[net.Start("hg_bloodimpact")
+				net.Start("hg_bloodimpact")
 				net.WriteVector(inputHole[1])
 				net.WriteVector(dir / 2)
 				net.WriteFloat(dmg)
 				net.WriteInt(ent.bloodamt2,8)
-				net.Broadcast()--]]
+				net.Broadcast()
 				ent.bloodamt2 = 0
 			end)
 		end)
@@ -680,7 +687,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		ent.bloodamt = ent.bloodamt + 1
 		
 		timer.Simple(0,function()
-			/*if IsValid(ent) then
+			if IsValid(ent) then
 				timer.Create("Blood_burst"..ent:EntIndex(),0.02,1,function()
 					if IsValid(ent) and ent.bloodamt then
 						net.Start("hg_bloodimpact")
@@ -692,7 +699,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 						ent.bloodamt = 0
 					end
 				end)
-			end*/
+			end
 
 			if bullet and false then
 				local mul = distance / pen
@@ -884,19 +891,24 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	if ply or org.fakePlayer then
 		hook_Run("HomigradDamage", org.fakePlayer and ent or ply, dmgInfo, bonetohitgroup[bonename], ent, attacker.harm, hitBoxs, inputHole)
 		
-		-- Red flash and directional texture on damage
 		local victim = org.fakePlayer and ent or ply
-		if IsValid(victim) and victim:IsPlayer() and not victim:GetNetVar("headcrab") then
-			local damagePos = dmgInfo:GetDamagePosition()
-			if damagePos == vector_origin then damagePos = victim:GetPos() end
-			
-			net.Start("AddFlash")
-				net.WriteVector(damagePos)
-				net.WriteFloat(0.5) -- Duration
-				net.WriteInt(50, 20) -- Size/Intensity (arbitrary scale)
-                net.WriteColor(Color(255, 0, 0)) -- Red
-                net.WriteString("sprites/light_glow02_add") -- Headtrauma texture
-			net.Send(victim)
+		if IsValid(victim) and victim:IsPlayer() then
+            -- Head trauma flash on head hits
+            if hitgroup == HITGROUP_HEAD then
+                net.Start("headtrauma_flash")
+                net.WriteVector(dmgInfo:GetDamagePosition())
+                net.WriteFloat(1.0) -- Duration
+                net.WriteInt(50, 20) -- Size
+                net.Send(victim)
+                
+                if GetConVar("hg_isshitworking"):GetBool() then
+                    victim:ChatPrint("[HG Debug] Head Trauma Flash Triggered!")
+                end
+            end
+            
+            if GetConVar("hg_isshitworking"):GetBool() then
+                 victim:ChatPrint("[HG Debug] Red Flash Triggered! Dmg: " .. math.Round(dmgInfo:GetDamage(), 1))
+            end
 		end
 	end
 	
@@ -1096,14 +1108,14 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 			if (hitgroup ~= HITGROUP_HEAD) then
 				if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
-					--local effdata = EffectData()
-					--effdata:SetOrigin( dmgPos )
-					--effdata:SetRadius(0)
-					--effdata:SetMagnitude(0)
-					--effdata:SetScale(0)
-					--util.Effect("BloodImpact",effdata)
+					local effdata = EffectData()
+					effdata:SetOrigin( dmgPos )
+					effdata:SetRadius(0)
+					effdata:SetMagnitude(0)
+					effdata:SetScale(0)
+					util.Effect("BloodImpact",effdata)
 				else
-					--ParticleEffect( "headshot", dmgPos, dirCool:Angle() )
+					ParticleEffect( "headshot", dmgPos, dirCool:Angle() )
 				end
 			end	
 		end

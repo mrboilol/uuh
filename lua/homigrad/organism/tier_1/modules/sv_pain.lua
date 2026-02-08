@@ -39,7 +39,7 @@ module[2] = function(owner, org, timeValue)
 	org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
 
 	if org.shock > org.shock_turn * 1.5 * analgesiaMul * painkillerMul then
-		--org.needfake = true
+		org.needfake = true
 	end
 
 	org.pain_turn = org.otrub and adrenalineMul * 80 or adrenalineMul * 90
@@ -93,7 +93,7 @@ module[2] = function(owner, org, timeValue)
 		org.needotrub = true
 	end
 
-	if org.consciousness < 0.4 then
+	if org.consciousness < math.Rand(0.3, 0.5) then
 		org.needfake = true
 	end
 
@@ -150,7 +150,7 @@ module[2] = function(owner, org, timeValue)
 	end
 
 	if org.pain > 100 then
-		--org.needfake = true
+		org.needfake = true
 	end
 
 	//local tempo = math.Clamp(5 - (org.temperature - 31), 0, 15)

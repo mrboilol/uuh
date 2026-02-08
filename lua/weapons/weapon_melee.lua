@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.PrintName = "Combat Knife"
 SWEP.Instructions = "A military grade combat knife designed to neutralize the enemy during combat operations and special operations."
 SWEP.Category = "Weapons - Melee"
@@ -1209,6 +1209,16 @@ function SWEP:CustomThink()
             local shouldhit = (IsValid(ent) or ent:IsWorld())
 
             local dmg = math.random(self.DamageSecondary - 3, self.DamageSecondary + 3)
+
+            if owner.organism then
+                local org = owner.organism
+                local armBroken = (self.setrh and (org.rarmgruesome or org.rarmgruesome_dislocation)) or (self.setlh and (org.larmgruesome or org.larmgruesome_dislocation))
+                if armBroken then
+                    dmg = dmg * 0.5
+                elseif (self.setrh and org.rarm >= 1) or (self.setlh and org.larm >= 1) then
+                    dmg = dmg * 0.7
+                end
+            end
 
             if !shouldhit then
                 goto meleeskip2

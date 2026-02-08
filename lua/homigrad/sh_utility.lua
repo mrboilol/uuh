@@ -1863,6 +1863,25 @@ local IsValid = IsValid
 		k = k * (math.min((org.adrenaline or 0) / 24, 0.3) + 1)
 		k = k * math.Clamp((org.lleg and org.lleg >= 0.5 and math.max(1 - org.lleg, 0.6) or 1) * (org.lleg and org.rleg >= 0.5 and math.max(1 - org.rleg, 0.6) or 1) * ((org.analgesia * 1 + 1)), 0, 1)
 		k = k * (org.llegdislocation and 0.75 or 1) * (org.rlegdislocation and 0.75 or 1)
+		
+		-- Gruesome breaks affect movement speed (legs)
+		if org.lleggruesome then k = k * 0.5 end
+		if org.rleggruesome then k = k * 0.5 end
+		if org.lleggruesome_dislocation then k = k * 0.6 end
+		if org.rleggruesome_dislocation then k = k * 0.6 end
+		
+        local tourniquets = ply:GetNetVar("Tourniquets")
+        if tourniquets then
+            for _, t in pairs(tourniquets) do
+                local b = t[3]
+                if b == "ValveBiped.Bip01_L_Thigh" or b == "ValveBiped.Bip01_L_Calf" then
+                    k = k * 0.85
+                elseif b == "ValveBiped.Bip01_R_Thigh" or b == "ValveBiped.Bip01_R_Calf" then
+                    k = k * 0.85
+                end
+            end
+        end
+
 		k = k * (org.pelvis == 1 and 0.4 or 1)
 		k = k * ((IsValid(ply:GetNetVar("carryent")) or IsValid(ply:GetNetVar("carryent2"))) and math.Clamp(50 / math.max(ply:GetNetVar("carrymass", 0) + ply:GetNetVar("carrymass2", 0), 1), 0.5, 1) or 1)
 		k = k * math.Clamp(20 / ((org.pain or 0) + 1), 0.01, 1)

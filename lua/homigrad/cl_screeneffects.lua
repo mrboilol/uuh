@@ -1,3 +1,5 @@
+local lply = LocalPlayer()
+
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
 	if not sun then return end
@@ -783,4 +785,20 @@ hook.Add("PostDrawTranslucentRenderables", "HG_DrawHeadTraumaFlashes", function(
 	for i = #toRemove, 1, -1 do
 		table.remove(headTraumaFlashes, toRemove[i])
 	end
+end)
+
+local damageFlashLerp = 0
+if CLIENT then
+    net.Receive("hg_damage_flash", function()
+        local dmg = net.ReadFloat()
+        damageFlashLerp = math.min(damageFlashLerp + math.Clamp(dmg / 20, 0.2, 0.5), 0.8)
+    end)
+end
+
+hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
+    if damageFlashLerp > 0.01 then
+        damageFlashLerp = math.Approach(damageFlashLerp, 0, FrameTime() * 0.5)
+        surface.SetDrawColor(255, 0, 0, damageFlashLerp * 150)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    end
 end)

@@ -131,12 +131,22 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		
 		-- Gruesome fracture logic
 		if dmg > 1.5 or (oldDmg > 0.8 and dmg > 0.5) then
+			if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Gruesome Fracture: " .. key) end
 			org.painadd = org.painadd + 40
 			org.immobilization = org.immobilization + 20
 			org[key.."gruesome"] = true
 			
 			if org.isPly then
 				org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO) -- Fallback handled if missing
+                
+                -- Red flash
+                net.Start("AddFlash")
+                net.WriteVector(org.owner:EyePos())
+                net.WriteFloat(0.5)
+                net.WriteInt(50, 20)
+                net.WriteColor(Color(255, 0, 0))
+                net.WriteString("sprites/light_glow02_add")
+                net.Send(org.owner)
 			end
 		end
 
@@ -156,6 +166,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		
 		-- Gruesome dislocation logic
 		if dmg > 0.8 then
+			if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Gruesome Dislocation: " .. key) end
 			org.painadd = org.painadd + 30
 			org.immobilization = org.immobilization + 15
 			org[key.."gruesome_dislocation"] = true
@@ -219,6 +230,15 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			
 			if org.isPly then
 				org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
+                
+                -- Red flash
+                net.Start("AddFlash")
+                net.WriteVector(org.owner:EyePos())
+                net.WriteFloat(0.5)
+                net.WriteInt(50, 20)
+                net.WriteColor(Color(255, 0, 0))
+                net.WriteString("sprites/light_glow02_add")
+                net.Send(org.owner)
 			end
 		end
 
@@ -583,7 +603,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	end
 
 
-    if (org.skull - oldDmg) > 0.08 then 
+    if (org.skull - oldDmg) > 0.01 or dmg > 0.01 then 
 
         local disorientationAdd = math.min(dmg * 1.2, 1.5)
         org.disorientation = math.min(org.disorientation + disorientationAdd, 1.5)
@@ -701,10 +721,10 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 end
 
 local ribs = {
-	"I THINK I BROKE A RIB",
-	"MY CHEST IS PAINING",
-	"ONE OF MY RIBS BROKE",
-	"FUCK- MY CHEST SNAPPED",
+	"One of my ribs is definitively broken.",
+	"My chest is missing a rib.",
+	"Yep, one of my ribs is broken.",
+	"Shit- My chest is snapped.",
 }
 
 input_list.chest = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet)	
@@ -744,7 +764,7 @@ input_list.pelvis = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoc
 	hg.AddHarmToAttacker(dmgInfo, (org.pelvis - oldDmg) / 2, "Pelvis bone damage harm")
 
 	if org.isPly and org.pelvis == 1 then
-		if hg.CreateNotification then hg.CreateNotification(org.owner, "MY PELVIS HURTS A LOT.", true, "pelvis", 4) end
+		if hg.CreateNotification then hg.CreateNotification(org.owner, "Ohh fuck... I think my pelvis is broken.", true, "pelvis", 4) end
 	end
 
 	return result

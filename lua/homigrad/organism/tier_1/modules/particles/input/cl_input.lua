@@ -196,7 +196,7 @@ net.Receive("bloodsquirt", function()
 	timer.Adjust(name, 0)
 end)
 
---net.Receive("blood particle explode", function() explode(net.ReadVector()) end)
+net.Receive("blood particle explode", function() explode(net.ReadVector()) end)
 
 --[[concommand.Add("testpart", function()
 	if not LocalPlayer():IsAdmin() then return end

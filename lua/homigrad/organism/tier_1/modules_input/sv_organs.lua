@@ -1,4 +1,10 @@
 --local Organism = hg.organism
+if SERVER then
+    util.AddNetworkString("hg_play_client_sound")
+    util.AddNetworkString("blood particle explode")
+    CreateConVar("hg_isshitworking", "0", FCVAR_SERVER_CAN_EXECUTE, "Debug biological events", 0, 1)
+end
+
 local function isCrush(dmgInfo)
 	return not dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH + DMG_BLAST)
 end
@@ -140,6 +146,33 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 	org.disorientation = org.disorientation + dmg * 1
 	org.shock = org.shock + dmg * 3
 	org.painadd = org.painadd + dmg * 10
+	
+	if dmg > 0.01 and org.isPly then
+		local tp = org.owner
+		if IsValid(tp) and tp:IsPlayer() then
+			local flashTime = math.Clamp(0.2 + dmg * 0.5, 0.2, 0.8)
+			local flashSize = math.Clamp(1000 + dmg * 1000, 1000, 2000)
+			local eyePos = tp:EyePos()
+			local ang = tp:EyeAngles()
+			local worldPos = eyePos + ang:Forward() * 16
+			
+			tp.HeadDisorientFlashCooldown = tp.HeadDisorientFlashCooldown or 0
+			if tp.HeadDisorientFlashCooldown < CurTime() then
+				net.Start("headtrauma_flash")
+					net.WriteVector(worldPos)
+					net.WriteFloat(flashTime)
+					net.WriteInt(flashSize, 20)
+				net.Send(tp)
+				
+				net.Start("hg_play_client_sound")
+				net.WriteString("concussion"..math.random(1,4)..".mp3")
+				net.Send(tp)
+				
+				tp.HeadDisorientFlashCooldown = CurTime() + 0.2
+			end
+		end
+	end
+	
 	return result
 end
 
@@ -282,10 +315,20 @@ input_list.eyeL = function(org, bone, dmg, dmgInfo)
 
 	-- eye popped: play short-range cue
 	if oldDmg < 1 and org.eyeL >= 1 then
+		if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Left Eye Destroyed") end
 		if IsValid(org.owner) then
 			net.Start("hg_play_client_sound")
 			net.WriteString("cuteye.ogg")
 			net.Send(org.owner)
+            
+            -- Red flash
+            net.Start("AddFlash")
+            net.WriteVector(org.owner:EyePos())
+            net.WriteFloat(0.5)
+            net.WriteInt(50, 20)
+            net.WriteColor(Color(255, 0, 0))
+            net.WriteString("sprites/light_glow02_add")
+            net.Send(org.owner)
 		end
 	elseif org.eyeL > 0.1 then
 		-- Slight disorientation for eye damage
@@ -322,10 +365,20 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
 
 	-- eye popped: play short-range cue
 	if oldDmg < 1 and org.eyeR >= 1 then
+		if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Right Eye Destroyed") end
 		if IsValid(org.owner) then
 			net.Start("hg_play_client_sound")
 			net.WriteString("cuteye.ogg")
 			net.Send(org.owner)
+            
+            -- Red flash
+            net.Start("AddFlash")
+            net.WriteVector(org.owner:EyePos())
+            net.WriteFloat(0.5)
+            net.WriteInt(50, 20)
+            net.WriteColor(Color(255, 0, 0))
+            net.WriteString("sprites/light_glow02_add")
+            net.Send(org.owner)
 		end
 	elseif org.eyeR > 0.1 then
 		-- Slight disorientation for eye damage
@@ -347,6 +400,7 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
 
 	-- Nose breakage threshold
 	if oldDmg < 0.5 and org.nose >= 0.5 then
+		if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Nose Broken") end
 		if IsValid(org.owner) then
 			-- blyat
 			local broken_nose_msg = {
@@ -356,6 +410,15 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
 			}
 			org.owner:Notify(broken_nose_msg[math.random(#broken_nose_msg)], true, "nose_broken", 2)
 			org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+            
+            -- Red flash
+            net.Start("AddFlash")
+            net.WriteVector(org.owner:EyePos())
+            net.WriteFloat(0.5)
+            net.WriteInt(50, 20)
+            net.WriteColor(Color(255, 0, 0))
+            net.WriteString("sprites/light_glow02_add")
+            net.Send(org.owner)
 			
 			-- Pain increase
 			if hg.organism.enhancedPain then
