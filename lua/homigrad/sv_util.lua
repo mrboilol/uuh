@@ -1533,14 +1533,14 @@ hook.Add("Org Think", "BodyTemperature", function(owner, org, timeValue) -- пе
 		start = ent:GetPos() + vector_up * 15,
 		endpos = ent:GetPos() + vector_up * 999999,
 		mask = MASK_SOLID_BRUSHONLY
-	} ).HitSky and hg.TemperatureMaps[game.GetMap()]
+	} ).HitSky
 
 	org.temperature = org.temperature or 36.7
 
 	local currentPulse = org.pulse or 70
 	local pulseHeat = 0
-	local temp = hg.MapTemps[game.GetMap()] or -10
-
+	local temp = hg.MapTemps[game.GetMap()] or 20
+	
 	if currentPulse > 80 then
 		local pulseMultiplier = math.min((currentPulse - 70) / 100, 1.2)
 		pulseHeat = timeValue / 50 * pulseMultiplier * 0.2
@@ -1565,7 +1565,7 @@ hook.Add("Org Think", "BodyTemperature", function(owner, org, timeValue) -- пе
 	local changeRate = timeValue / 30 -- 1 degree every 1 minute
 
 	local temp = (IsVisibleSkyBox and temp or 20) + warming * 5
-
+	
 	local isFreezing = temp < 0
 	local isHeating = temp > 30
 	
