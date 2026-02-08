@@ -69,7 +69,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 		addtiveLayer["brightness"] = Lerp(weight, 0, layer["brightness"] or 0)
 		--end
 	end
-
+	
 	//DrawBloom(addtiveLayer.bloom_darken, addtiveLayer.bloom_mul, addtiveLayer.bloom_sizex, addtiveLayer.bloom_sizey, addtiveLayer.bloom_passes, addtiveLayer.bloom_colormul, addtiveLayer.bloom_colorr, addtiveLayer.bloom_colorg, addtiveLayer.bloom_colorb)
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
@@ -844,3 +844,109 @@ hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 end)
+
+local hg_fear_effect = CreateClientConVar("hg_fear_effect", "1", true, false, "Enable fear/pain pixelization effect")
+
+local fearPixelIntensity = 0 
+local waterLerp = 0 
+ 
+ -- Material Definitions 
+ local matVignette = Material("effects/shaders/zb_vignette") 
+ local matGrain2 = Material("effects/shaders/zb_grain2") 
+ local matAssim = Material("effects/shaders/zb_assimilation") 
+ 
+ 
+ hook.Add("Post Post Processing", "FearPixelizeEnhanced", function() 
+    if not hg_fear_effect:GetBool() then return end
+    
+    local lply = LocalPlayer()
+    if not IsValid(lply) then return end
+    
+     if !grainMat or grainMat:IsError() then return end 
+ 
+ 
+     local spect = lply:GetNWEntity("spect") 
+     local ply = lply:Alive() and lply or (IsValid(spect) and spect) 
+     
+     if !IsValid(ply) or !ply.organism then 
+         fearPixelIntensity = 0 
+         waterLerp = 0 
+         return 
+     end 
+     
+     local org = ply.organism 
+     local shock = org.shock or 0 
+     local pain = PainLerp or 0 
+     local o2 = (org.o2 and org.o2[1]) or 30 
+     local passed = org.otrub or false 
+     
+     local submerged = (ply:WaterLevel() >= 2) 
+     local lerpFunc = LerpFT or function(t, cur, target) return Lerp(t, cur, target) end 
+     
+     waterLerp = lerpFunc(0.05, waterLerp, submerged and 1 or 0) 
+     
+     local lowBreath = math.Clamp((25 - o2) / 25, 0, 1) 
+     local targetIntensity = math.Clamp((shock / 40) + (pain / 500) + (lowBreath * 0.8), 0, 1) 
+ 
+ 
+     targetIntensity = math.max(targetIntensity, waterLerp * 0.4) 
+ 
+ 
+     if passed then 
+         fearPixelIntensity = 1 
+     else 
+         fearPixelIntensity = lerpFunc(0.01, fearPixelIntensity, targetIntensity) 
+     end 
+     
+     if fearPixelIntensity > 0.01 then 
+         render.UpdateScreenEffectTexture() 
+         
+         -- Enhanced Vignette (Stronger presence) 
+         if matVignette and !matVignette:IsError() then 
+             render.SetMaterial(matVignette) 
+             -- Doubled the intensity scale for a "heavy" vignette look 
+             matVignette:SetFloat("$alpha", math.Clamp(fearPixelIntensity * 2, 0, 1)) 
+             render.DrawScreenQuad() 
+         end 
+ 
+ 
+         -- Assimilation Shader 
+         if matAssim and !matAssim:IsError() then 
+             render.SetMaterial(matAssim) 
+             matAssim:SetFloat("$time", CurTime()) 
+             matAssim:SetFloat("$abundance", fearPixelIntensity) 
+             render.DrawScreenQuad() 
+         end 
+ 
+ 
+         -- Grain2 Effect 
+         if matGrain2 and !matGrain2:IsError() then 
+             render.SetMaterial(matGrain2) 
+             matGrain2:SetFloat("$alpha", fearPixelIntensity * 0.6) 
+             render.DrawScreenQuad() 
+         end 
+ 
+ 
+         if waterLerp > 0.01 then 
+             DrawToyTown(6 * fearPixelIntensity * waterLerp, 4 * fearPixelIntensity * waterLerp * ScrH()) 
+         end 
+ 
+ 
+         grainMat:SetFloat("$c0_x", CurTime()) 
+         grainMat:SetFloat("$c0_y", 1) 
+         grainMat:SetFloat("$c0_z", fearPixelIntensity * 1) 
+         grainMat:SetFloat("$c1_x", fearPixelIntensity * 0.6) 
+         grainMat:SetFloat("$c1_y", fearPixelIntensity * 0) 
+         
+         local distortion = Lerp(waterLerp, fearPixelIntensity * 2, fearPixelIntensity * -4) 
+         grainMat:SetFloat("$c1_z", distortion) 
+ 
+ 
+         grainMat:SetVector("$c2", Vector(1, 1, 1)) 
+         grainMat:SetFloat("$c3_x", fearPixelIntensity * 0.2) 
+ 
+ 
+         render.SetMaterial(grainMat) 
+         render.DrawScreenQuad() 
+     end 
+ end) 
