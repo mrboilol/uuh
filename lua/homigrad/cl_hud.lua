@@ -518,8 +518,9 @@ hook.Add("radialOptions", "7", function()
     local ply = LocalPlayer()
     local organism = ply.organism or {}
 
-    if ply:Alive() and not organism.otrub and hg.GetCurrentCharacter(ply) == ply and ply:GetPlayerClass() and ply:GetPlayerClass().CanUseGestures then
-        local tbl = {function(mouseClick)
+    if ply:Alive() and not organism.otrub and hg.GetCurrentCharacter(ply) == ply then
+        if ply.GetPlayerClass and ply:GetPlayerClass() and ply:GetPlayerClass().CanUseGestures ~= nil and not ply:GetPlayerClass().CanUseGestures then return end
+		local tbl = {function(mouseClick)
 			if mouseClick == 1 then
 				RunConsoleCommand("act", randomGestures[math.random(#randomGestures)])
 				if (ply.NextFoley or 0) < CurTime() then

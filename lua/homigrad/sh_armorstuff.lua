@@ -40,8 +40,8 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 
 	local view = render.GetViewSetup()
 	cam.Start3D(view.origin,view.angles,view.fov + fFov,nil,nil,nil,nil,1,10)
-		cam.IgnoreZ(true)
-		local viewpunching = GetViewPunchAngles()
+		--cam.IgnoreZ(true)
+		local viewpunching = GetViewPunchAngles() / 2
 		local ang = view.angles + viewpunching
 		mdl:SetRenderOrigin(view.origin + ang:Forward() * vecAdjust.x + ang:Right() * vecAdjust.y + ang:Up() * vecAdjust.z)
 		mdl:SetRenderAngles(ang)
@@ -57,7 +57,7 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 			render.SetStencilFailOperation( STENCIL_KEEP )
 			render.SetStencilZFailOperation( STENCIL_KEEP )
 			render.ClearStencil()
-			
+
 			-- Enable stencils
 			render.SetStencilEnable( true )
 			-- Set everything up everything draws to the stencil buffer instead of the screen
@@ -73,7 +73,7 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 			-- Let everything render normally again
 			render.SetStencilEnable( false )
 		render.SetColorModulation(1,1,1)
-		cam.IgnoreZ(false)
+		--cam.IgnoreZ(false)
 	cam.End3D()
 end
 
@@ -464,11 +464,11 @@ hg.armor.torso = {
 	},
 }
 local vectors = {
-	[1] = Vector(-4,0,-2),
-	[2] = Vector(-4,0,0),
+	[1] = Vector(-2,0,-1.5),
+	[2] = Vector(-4,0,0.2),
 	[3] = Vector(-5,0,0),
 	[4] = Vector(-2,0,0),
-	[5] = Vector(-5,0,-2.2)
+	[5] = Vector(-4.5,0,-2)
 }
 hg.armor.head = {
 	["helmet1"] = {

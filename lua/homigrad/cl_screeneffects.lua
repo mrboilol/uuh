@@ -71,7 +71,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 		addtiveLayer["brightness"] = Lerp(weight, 0, layer["brightness"] or 0)
 		--end
 	end
-	
+
 	//DrawBloom(addtiveLayer.bloom_darken, addtiveLayer.bloom_mul, addtiveLayer.bloom_sizex, addtiveLayer.bloom_sizey, addtiveLayer.bloom_passes, addtiveLayer.bloom_colormul, addtiveLayer.bloom_colorr, addtiveLayer.bloom_colorg, addtiveLayer.bloom_colorb)
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
@@ -231,6 +231,7 @@ local assimilationMat = Material("effects/shaders/zb_assimilation")
 local coldMat = Material("effects/shaders/zb_colda")
 local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
+local zombMat = grainMat -- Material("effects/shaders/zb_zomb")
 
 local PainLerp = 0
 local O2Lerp = 0
@@ -388,6 +389,34 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
 
 	tempLerp = LerpFT(0.01, tempLerp, org.temperature)
+
+	if lply.PlayerClassName == "headcrabzombie" then
+		render.UpdateScreenEffectTexture()
+
+		heatMat:SetFloat("$c0_x", -CurTime() * 0.1) //time
+		heatMat:SetFloat("$c0_y", 0.1) //intensity (strict)
+		heatMat:SetFloat("$c2_x", 2)
+
+		render.SetMaterial(heatMat)
+		render.DrawScreenQuad()
+
+		render.UpdateScreenEffectTexture()
+		render.UpdateFullScreenDepthTexture()
+		
+		zombMat:SetFloat("$c0_x", CurTime()) -- time
+		zombMat:SetFloat("$c0_y", -1) -- gate
+		zombMat:SetFloat("$c0_z", 1) -- Pixelize
+		zombMat:SetFloat("$c1_x", 12) -- lerp
+		zombMat:SetFloat("$c1_y", 0.2) -- vignette intensity
+		zombMat:SetFloat("$c1_z", 0.3) -- BlurIntensity
+		zombMat:SetFloat("$c2_x", 0.3) -- r
+		zombMat:SetFloat("$c2_y", 0.05) -- g
+		zombMat:SetFloat("$c2_z", 0) -- b
+		zombMat:SetFloat("$c3_x", 0) -- ImageIntensity
+	
+		render.SetMaterial(zombMat)
+		render.DrawScreenQuad()
+	end
 
 	if tempLerp > 38 then
 		local heat = tempLerp - 38
