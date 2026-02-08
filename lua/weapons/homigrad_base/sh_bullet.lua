@@ -657,7 +657,7 @@ function SWEP:FireBullet()
 
     bullet.Speed = ammotype.Speed
 	bullet.Distance = ammotype.Distance or 56756
-	bullet.Filter = {self.worldModel}
+	bullet.Filter = {self, self.worldModel}
 
 	bullet.noricochet = ammotype.noricochet
 	
