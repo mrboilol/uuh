@@ -83,13 +83,13 @@ male["ValveBiped.Bip01_Neck1"] = {
 		Vector(2, 0.5, 0.5),
 		Color(0, 125, 0)
 	},
-	{"trachea", nil, Vector(2, -2, 0), Angle(0, 0, 0), Vector(2, 0.5, 0.5), Color(0, 125, 255)},
+	{"trachea", nil, Vector(2, -2, 0), Angle(0, 0, 0), Vector(2, 0.25, 0.25), Color(0, 125, 255)},
 	{
 		"arteria", --right artery
 		nil,
 		Vector(3.5, -2, 2.3),
 		Angle(0, 0, 0),
-		Vector(2.5, 0.25, 0.25),
+		Vector(2.5, 0.5, 0.5),
 		Color(200, 0, 0)
 	},
 	{
@@ -97,7 +97,7 @@ male["ValveBiped.Bip01_Neck1"] = {
 		nil,
 		Vector(3.5, -2, -2.3),
 		Angle(0, 0, 0),
-		Vector(2.5, 0.25, 0.25),
+		Vector(2.5, 0.5, 0.5),
 		Color(200, 0, 0)
 	},
 }
@@ -105,7 +105,7 @@ male["ValveBiped.Bip01_Neck1"] = {
 local bone = 0.5
 male["ValveBiped.Bip01_Spine2"] = {
 	{"spine2", spine, Vector(4, -1, 0), Angle(0, 0, 0), Vector(8, 0.5, 0.5), Color(0, 125, 0)},
-	{"spineartery", 0, Vector(2, -1, 1), Angle(0, 0, 0), Vector(6, 0.4, 0.4), Color(255, 0, 0)},
+	{"spineartery", 0, Vector(2, -1, 1), Angle(0, 0, 0), Vector(6, 0.8, 0.8), Color(255, 0, 0)},
 	{
 		"chest", --right
 		bone,
@@ -432,13 +432,13 @@ female["ValveBiped.Bip01_Neck1"] = {
 		Vector(2, 0.5, 0.5),
 		Color(0, 125, 0)
 	},
-	{"trachea", nil, Vector(2, -2, 0), Angle(0, 0, 0), Vector(2, 0.5, 0.5), Color(0, 125, 255)},
+	{"trachea", nil, Vector(2, -2, 0), Angle(0, 0, 0), Vector(2, 0.25, 0.25), Color(0, 125, 255)},
 	{
 		"arteria", --right artery
 		nil,
 		Vector(1.5, -2, 2.3),
 		Angle(0, 0, 0),
-		Vector(2.5, 0.25, 0.25),
+		Vector(2.5, 0.5, 0.5),
 		Color(200, 0, 0)
 	},
 	{
@@ -446,7 +446,7 @@ female["ValveBiped.Bip01_Neck1"] = {
 		nil,
 		Vector(1.5, -2, -2.3),
 		Angle(0, 0, 0),
-		Vector(2.5, 0.25, 0.25),
+		Vector(2.5, 0.5, 0.5),
 		Color(200, 0, 0)
 	},
 }

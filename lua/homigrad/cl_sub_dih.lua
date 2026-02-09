@@ -4,6 +4,27 @@ local wepModel
 local wasFaking = false
 local matWhite = Material("models/debug/debugwhite")
 
+-- Global cleanup to prevent duplicates on reload or multiple instances
+if IsValid(HG_Silhouette_PlyModel) then HG_Silhouette_PlyModel:Remove() end
+if IsValid(HG_Silhouette_WepModel) then HG_Silhouette_WepModel:Remove() end
+
+local function GetSilhouetteModels(ply, isFaking, ragdoll)
+    local targetModel = isFaking and ragdoll:GetModel() or ply:GetModel()
+    
+    -- Recreate player model if needed
+    if not IsValid(HG_Silhouette_PlyModel) or HG_Silhouette_PlyModel:GetModel() ~= targetModel then
+        if IsValid(HG_Silhouette_PlyModel) then HG_Silhouette_PlyModel:Remove() end
+        HG_Silhouette_PlyModel = ClientsideModel(targetModel)
+        if IsValid(HG_Silhouette_PlyModel) then
+            HG_Silhouette_PlyModel:SetNoDraw(true)
+            HG_Silhouette_PlyModel:SetIK(false)
+        end
+    end
+    plyModel = HG_Silhouette_PlyModel
+    
+    return plyModel
+end
+
 hook.Add("HUDPaint", "subrosa", function()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then return end
@@ -13,71 +34,27 @@ hook.Add("HUDPaint", "subrosa", function()
     if not IsValid(ragdoll) then ragdoll = ply:GetRagdollEntity() end
     
     local isFaking = IsValid(ragdoll) and (ragdoll:GetModel() == ply:GetModel())
-
-    if isFaking ~= wasFaking then
-        if IsValid(plyModel) then
-            plyModel:Remove()
-            plyModel = nil
-        end
-        if IsValid(wepModel) then
-            wepModel:Remove()
-            wepModel = nil
-        end
-        wasFaking = isFaking
-    end
-
-    if not IsValid(plyModel) then
-        plyModel = ClientsideModel(ply:GetModel())
-        if not IsValid(plyModel) then return end
-        plyModel:SetNoDraw(true)
-    end
-
-    if plyModel:GetModel() ~= (isFaking and ragdoll:GetModel() or ply:GetModel()) then
-        plyModel:SetModel(isFaking and ragdoll:GetModel() or ply:GetModel())
-    end
-
+    
+    GetSilhouetteModels(ply, isFaking, ragdoll)
+    
+    if not IsValid(plyModel) then return end
+    
+    -- Ensure it's hidden from world view
+    plyModel:SetNoDraw(true)
+    
+    local sourceEnt = isFaking and ragdoll or ply
+    
+    -- Force update bones to get current pose
+    sourceEnt:InvalidateBoneCache()
+    sourceEnt:SetupBones()
+    
     plyModel:SetPos(Vector(0, 0, 0))
     plyModel:SetAngles(Angle(0, 0, 0))
     
-    local sourceEnt = isFaking and ragdoll or ply
-    sourceEnt:SetupBones()
-    
-    if not isFaking then
-        plyModel:SetSequence(ply:GetSequence())
-        plyModel:SetCycle(ply:GetCycle())
-        plyModel:SetPlaybackRate(ply:GetPlaybackRate())
-
-        for i = 0, ply:GetNumPoseParameters() - 1 do
-            local name = ply:GetPoseParameterName(i)
-            plyModel:SetPoseParameter(name, ply:GetPoseParameter(i))
-        end
-    end
-
-    local wep = ply:GetActiveWeapon()
-    if IsValid(wep) then
-        local modelName = wep.WorldModel
-        if not modelName or modelName == "" then modelName = wep:GetModel() end
-
-        if modelName and modelName ~= "" then
-             if not IsValid(wepModel) or wepModel:GetModel() ~= modelName then
-                 if IsValid(wepModel) then wepModel:Remove() end
-                 wepModel = ClientsideModel(modelName)
-                 if IsValid(wepModel) then
-                     wepModel:SetNoDraw(true)
-                     wepModel:SetParent(plyModel)
-                     wepModel:AddEffects(EF_BONEMERGE)
-                 end
-             end
-        else
-            if IsValid(wepModel) then wepModel:Remove() wepModel = nil end
-        end
-    else
-        if IsValid(wepModel) then wepModel:Remove() wepModel = nil end
-    end
-
+    -- Copy bones relative to pelvis (root)
     local rootBone = sourceEnt:LookupBone("ValveBiped.Bip01_Pelvis")
     if not rootBone then rootBone = 0 end
-
+    
     local rootMat = sourceEnt:GetBoneMatrix(rootBone)
     
     if rootMat then
@@ -97,6 +74,33 @@ hook.Add("HUDPaint", "subrosa", function()
         end
     end
 
+    -- Weapon Model Handling
+    local wep = ply:GetActiveWeapon()
+    if IsValid(wep) and not isFaking then
+        local modelName = wep.WorldModel
+        if not modelName or modelName == "" then modelName = wep:GetModel() end
+
+        if modelName and modelName ~= "" then
+             if not IsValid(HG_Silhouette_WepModel) or HG_Silhouette_WepModel:GetModel() ~= modelName then
+                 if IsValid(HG_Silhouette_WepModel) then HG_Silhouette_WepModel:Remove() end
+                 HG_Silhouette_WepModel = ClientsideModel(modelName)
+                 if IsValid(HG_Silhouette_WepModel) then
+                     HG_Silhouette_WepModel:SetNoDraw(true)
+                     HG_Silhouette_WepModel:SetParent(plyModel)
+                     HG_Silhouette_WepModel:AddEffects(EF_BONEMERGE)
+                 end
+             end
+             wepModel = HG_Silhouette_WepModel
+             if IsValid(wepModel) then wepModel:SetNoDraw(true) end
+        else
+            if IsValid(HG_Silhouette_WepModel) then HG_Silhouette_WepModel:Remove() HG_Silhouette_WepModel=nil end
+            wepModel = nil
+        end
+    else
+        if IsValid(HG_Silhouette_WepModel) then HG_Silhouette_WepModel:Remove() HG_Silhouette_WepModel=nil end
+        wepModel = nil
+    end
+
     local w, h = ScrW(), ScrH()
     local size = h * 0.25
     local x = w / 2 - size / 2
@@ -107,11 +111,9 @@ hook.Add("HUDPaint", "subrosa", function()
     render.SuppressEngineLighting(true)
     render.SetBlend(1) 
 
-
     local camDist = 120 
     local camPos = Vector(camDist, 0, 0)
     local camLookAt = Vector(0, 0, 0)
-    
     local camAng = (camLookAt - camPos):Angle()
 
     cam.Start3D(camPos, camAng, 50, x, y, size, size)
@@ -126,12 +128,14 @@ hook.Add("HUDPaint", "subrosa", function()
 end)
 
 hook.Add("PostCleanupMap", "ResetSilhouetteModel", function()
-    if IsValid(plyModel) then
-        plyModel:Remove()
-        plyModel = nil
+    if IsValid(HG_Silhouette_PlyModel) then
+        HG_Silhouette_PlyModel:Remove()
+        HG_Silhouette_PlyModel = nil
     end
-    if IsValid(wepModel) then
-        wepModel:Remove()
-        wepModel = nil
+    if IsValid(HG_Silhouette_WepModel) then
+        HG_Silhouette_WepModel:Remove()
+        HG_Silhouette_WepModel = nil
     end
+    plyModel = nil
+    wepModel = nil
 end)

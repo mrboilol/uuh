@@ -234,10 +234,10 @@ end
 local stomachGoreModel = "models/noob_dev2323/gib/intestine.mdl"
 
 local intestineChunkModels = {
-    "models/mosi/fnv/props/gore/meatbit02.mdl",
-    "models/mosi/fnv/props/gore/meatbit03.mdl",
-    "models/mosi/fnv/props/gore/meatbit01.mdl",
-    "models/mosi/fnv/props/gore/goreintestine.mdl",
+    "models/grub_nugget_small.mdl",
+    "models/Gibs/HGIBS.mdl",
+    "models/Gibs/HGIBS_spine.mdl",
+    "models/Gibs/HGIBS_rib.mdl",
 }
 
 local function SpawnIntestineChunks(parentEnt, basePos)

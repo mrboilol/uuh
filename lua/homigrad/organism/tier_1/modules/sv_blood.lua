@@ -111,6 +111,25 @@ module[2] = function(owner, org, mulTime)
 		local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 		
 		for i, wound in pairs(org.wounds) do
+			if wound[1] > 0.25 then
+				local bone = wound[4]
+				if bone then
+					local valid = {
+						["ValveBiped.Bip01_L_UpperArm"] = true,
+						["ValveBiped.Bip01_L_Forearm"] = true,
+						["ValveBiped.Bip01_R_UpperArm"] = true,
+						["ValveBiped.Bip01_R_Forearm"] = true,
+						["ValveBiped.Bip01_L_Thigh"] = true,
+						["ValveBiped.Bip01_L_Calf"] = true,
+						["ValveBiped.Bip01_R_Thigh"] = true,
+						["ValveBiped.Bip01_R_Calf"] = true,
+					}
+					if valid[bone] then
+						hg.organism.ApplyTourniquet(owner, bone)
+					end
+				end
+			end
+
 			local rand1 = math.Rand(4, 10) * 1
 			local rand2 = math.Rand(0.5, 1) * 1
 			local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.02
@@ -149,6 +168,23 @@ module[2] = function(owner, org, mulTime)
 	local next_arterypump = 1 / math.max(org.pulse, 10)
 	local ent = owner:IsPlayer() and IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 	for i, wound in pairs(org.arterialwounds) do
+		local bone = wound[4]
+		if bone then
+			local valid = {
+				["ValveBiped.Bip01_L_UpperArm"] = true,
+				["ValveBiped.Bip01_L_Forearm"] = true,
+				["ValveBiped.Bip01_R_UpperArm"] = true,
+				["ValveBiped.Bip01_R_Forearm"] = true,
+				["ValveBiped.Bip01_L_Thigh"] = true,
+				["ValveBiped.Bip01_L_Calf"] = true,
+				["ValveBiped.Bip01_R_Thigh"] = true,
+				["ValveBiped.Bip01_R_Calf"] = true,
+			}
+			if valid[bone] then
+				hg.organism.ApplyTourniquet(owner, bone)
+			end
+		end
+
 		bleedoutspeed2 = bleedoutspeed2 + wound[1] * mulTime * 0.2 * math.max(org.pulse, 20) / 80
 
 		if wound[5] + next_arterypump * 2 < time then
@@ -301,4 +337,110 @@ end
 
 function hg.organism.BloodDroplet2(owner, org, wound, dir, artery)
 	hook.Run("HG_BloodParticleStartedDropping", owner, org, wound, dir, artery)
+end
+
+hg.TourniquetGuys = hg.TourniquetGuys or {}
+
+local tourniqet_bones = {
+	["ValveBiped.Bip01_L_UpperArm"] = {
+		["ValveBiped.Bip01_L_Forearm"] = true,
+		["ValveBiped.Bip01_L_Hand"] = true
+	},
+	["ValveBiped.Bip01_L_Forearm"] = {
+		["ValveBiped.Bip01_L_Hand"] = true
+	},
+
+	["ValveBiped.Bip01_R_UpperArm"] = {
+		["ValveBiped.Bip01_R_Forearm"] = true,
+		["ValveBiped.Bip01_R_Hand"] = true
+	},
+	["ValveBiped.Bip01_R_Forearm"] = {
+		["ValveBiped.Bip01_R_Hand"] = true
+	},
+
+	["ValveBiped.Bip01_L_Thigh"] = {
+		["ValveBiped.Bip01_L_Calf"] = true,
+		["ValveBiped.Bip01_L_Foot"] = true
+	},
+	["ValveBiped.Bip01_L_Calf"] = {
+		["ValveBiped.Bip01_L_Foot"] = true
+	},
+
+	["ValveBiped.Bip01_R_Thigh"] = {
+		["ValveBiped.Bip01_R_Calf"] = true,
+		["ValveBiped.Bip01_R_Foot"] = true
+	},
+	["ValveBiped.Bip01_R_Calf"] = {
+		["ValveBiped.Bip01_R_Foot"] = true
+	},
+}
+
+function hg.organism.ApplyTourniquet(ent, bone)
+	local org = ent.organism
+	if not org then return false end
+	ent.tourniquets = ent.tourniquets or {}
+
+	-- Check if already has tourniquet on this bone
+	for _, t in ipairs(ent.tourniquets) do
+		if t[3] == bone then return false end
+	end
+
+	local wound_info = {Vector(0,0,0), Angle(0,0,0), bone}
+	
+	ent.tourniquets[#ent.tourniquets + 1] = wound_info
+
+	-- Remove associated regular wounds
+	local bonewounds = {}
+	local target_bone_name = bone
+	
+	for i, tbl in pairs(org.wounds) do
+		if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
+		local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
+		
+		if bonename == target_bone_name or (tourniqet_bones[target_bone_name] and tourniqet_bones[target_bone_name][bonename]) then
+			table.insert(bonewounds, i)
+		end
+	end
+
+	table.sort(bonewounds, function(a, b) return a > b end)
+	
+	for _, idx in ipairs(bonewounds) do
+		if org.wounds[idx] then
+			org.wounds[idx][1] = 0 -- Stop bleed
+			table.remove(org.wounds, idx)
+		end
+	end
+	
+	-- Also handle arterial wounds?
+	local artwounds = {}
+	for i, tbl in pairs(org.arterialwounds) do
+		if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
+		local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
+		 if bonename == target_bone_name or (tourniqet_bones[target_bone_name] and tourniqet_bones[target_bone_name][bonename]) then
+			table.insert(artwounds, i)
+		end
+	end
+	table.sort(artwounds, function(a, b) return a > b end)
+	for _, idx in ipairs(artwounds) do
+		 if org.arterialwounds[idx] then
+			local wound = org.arterialwounds[idx]
+			org[wound[7]] = 0
+			if wound[7] == "arteria" then org.o2.regen = 0 end
+			table.remove(org.arterialwounds, idx)
+		 end
+	end
+	org.owner:SetNetVar("arterialwounds", org.arterialwounds)
+
+	org.owner:SetNetVar("wounds", org.wounds)
+	ent:SetNetVar("Tourniquets", ent.tourniquets)
+	if IsValid(ent.FakeRagdoll) then
+		ent.FakeRagdoll:SetNetVar("Tourniquets", ent.tourniquets)
+	end
+	
+	if not table.HasValue(hg.TourniquetGuys, ent) then
+		table.insert(hg.TourniquetGuys, ent)
+	end
+	
+	SetNetVar("TourniquetGuys", hg.TourniquetGuys)
+	return true
 end
