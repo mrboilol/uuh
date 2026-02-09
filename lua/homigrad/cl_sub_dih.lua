@@ -1,5 +1,6 @@
 
 local plyModel
+local wepModel
 local wasFaking = false
 local matWhite = Material("models/debug/debugwhite")
 
@@ -9,12 +10,18 @@ hook.Add("HUDPaint", "subrosa", function()
     if ply.organism and ply.organism.otrub then return end
 
     local ragdoll = ply.FakeRagdoll
+    if not IsValid(ragdoll) then ragdoll = ply:GetRagdollEntity() end
+    
     local isFaking = IsValid(ragdoll) and (ragdoll:GetModel() == ply:GetModel())
 
     if isFaking ~= wasFaking then
         if IsValid(plyModel) then
             plyModel:Remove()
             plyModel = nil
+        end
+        if IsValid(wepModel) then
+            wepModel:Remove()
+            wepModel = nil
         end
         wasFaking = isFaking
     end
@@ -33,6 +40,7 @@ hook.Add("HUDPaint", "subrosa", function()
     plyModel:SetAngles(Angle(0, 0, 0))
     
     local sourceEnt = isFaking and ragdoll or ply
+    sourceEnt:SetupBones()
     
     if not isFaking then
         plyModel:SetSequence(ply:GetSequence())
@@ -43,6 +51,28 @@ hook.Add("HUDPaint", "subrosa", function()
             local name = ply:GetPoseParameterName(i)
             plyModel:SetPoseParameter(name, ply:GetPoseParameter(i))
         end
+    end
+
+    local wep = ply:GetActiveWeapon()
+    if IsValid(wep) then
+        local modelName = wep.WorldModel
+        if not modelName or modelName == "" then modelName = wep:GetModel() end
+
+        if modelName and modelName ~= "" then
+             if not IsValid(wepModel) or wepModel:GetModel() ~= modelName then
+                 if IsValid(wepModel) then wepModel:Remove() end
+                 wepModel = ClientsideModel(modelName)
+                 if IsValid(wepModel) then
+                     wepModel:SetNoDraw(true)
+                     wepModel:SetParent(plyModel)
+                     wepModel:AddEffects(EF_BONEMERGE)
+                 end
+             end
+        else
+            if IsValid(wepModel) then wepModel:Remove() wepModel = nil end
+        end
+    else
+        if IsValid(wepModel) then wepModel:Remove() wepModel = nil end
     end
 
     local rootBone = sourceEnt:LookupBone("ValveBiped.Bip01_Pelvis")
@@ -86,6 +116,7 @@ hook.Add("HUDPaint", "subrosa", function()
 
     cam.Start3D(camPos, camAng, 50, x, y, size, size)
         plyModel:DrawModel()
+        if IsValid(wepModel) then wepModel:DrawModel() end
     cam.End3D()
 
     render.SetBlend(1)
@@ -98,5 +129,9 @@ hook.Add("PostCleanupMap", "ResetSilhouetteModel", function()
     if IsValid(plyModel) then
         plyModel:Remove()
         plyModel = nil
+    end
+    if IsValid(wepModel) then
+        wepModel:Remove()
+        wepModel = nil
     end
 end)
