@@ -1745,7 +1745,7 @@ function SWEP:GetAdditionalValues()
 	self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] - y * 3 * lena
 
 	if CLIENT and self:IsLocal() and owner:IsOnGround() then
-		local runMul = vellen / owner:GetRunSpeed()
+		local runMul = vellen / owner:GetRunSpeed() * (self.reload and 0.5 or 1)
 		if runMul >= 0.32 then
 			if not self:IsPistolHoldType() and not self.CanEpicRun then
 				self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - y * 3 * runMul
