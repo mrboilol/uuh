@@ -48,49 +48,84 @@ CLASS.CanUseDefaultPhrase = false
 CLASS.CanEmitRNDSound = false
 CLASS.CanUseGestures = false
 
+local fallbackMats = {
+	["Rebel"] = {
+		["main"] = "models/zombie_classic/zombie_classic_sheet",
+		["pants"] = "models/zombie_classic/zombie_classic_sheet",
+		["boots"] = "models/zombie_classic/zombie_classic_sheet",
+	},
+	["Metrocop"] = {
+		["main"] = "models/balaclava_hood/berd_diff_018_a_uni",
+		["pants"] = "models/humans/male/group02/lambda",
+		["boots"] = "models/humans/male/group01/formal"
+	},
+	["Combine"] = {
+		["main"] = "models/zombie_classic/combinesoldiersheet_zombie",
+		["pants"] = "models/gruchk_uwrist/css_seb_swat/swat/gear2",
+		["boots"] = "models/humans/male/group01/formal"
+	},
+}
+
+local clr_darkred = Color(75, 0, 0)
 function CLASS.On(self)
+	--\\ Remember old player cloth to set it later
 	local clothTbl = {}
 	if SERVER then
-		for i, v in pairs(self.CurAppearance.AClothes) do
-			clothTbl[i] = v
+		if self.CurAppearance then
+			for i, v in pairs(self.CurAppearance.AClothes) do
+				clothTbl[i] = v
+			end
 		end
 	end
+
 	if SERVER then
 		ApplyAppearance(self,nil,nil,nil,true)
 		local Appearance = self.CurAppearance or hg.Appearance.GetRandomAppearance()
 		Appearance.AAttachments = ""
+
 		self:SetNetVar("Accessories", "")
 		self.CurAppearance = Appearance
 	end
 
     self:SetNWString("PlayerName", "Zombie")
 	self:SetModel("models/zcity/player/zombie_classic.mdl")
+
+	--\\ Set cloth and other materials
 	if self:GetModel() == "models/zcity/player/zombie_classic.mdl" then
 		if SERVER then
 			self:SetBodygroup(1, 1)
 		end
-		self:SetSubMaterial(0, "")
+
+		self:SetSubMaterial(0, fallbackMat)
+
 		if SERVER then
-			self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/players_sheet"), hg.Appearance.Clothes[1][clothTbl["main"]])
-			self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/pants"), hg.Appearance.Clothes[1][clothTbl["pants"]])
-			self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/cross"), hg.Appearance.Clothes[1][clothTbl["boots"]])
+			if not table.IsEmpty(clothTbl) and not fallbackMats[self.PreZombClass] then
+				self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/players_sheet"), hg.Appearance.Clothes[1][clothTbl["main"]])
+				self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/pants"), hg.Appearance.Clothes[1][clothTbl["pants"]])
+				self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/cross"), hg.Appearance.Clothes[1][clothTbl["boots"]])
+			else
+				self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/players_sheet"), fallbackMats[self.PreZombClass]["main"])
+				self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/pants"), fallbackMats[self.PreZombClass]["pants"])
+				self:SetSubMaterial(self:GetSubMaterialIdByName("distac/gloves/cross"), fallbackMats[self.PreZombClass]["boots"])
+			end
+			self:SetPlayerColor(clr_darkred:ToVector())
 		end
+
 		self:SetSubMaterial(4, "")
 	end
 
 	if SERVER then
+		--\\ Startup organism effects
 		if IsValid(self.organism) then
 			self.organism.temperature = 41
 			self.organism.brain = 0.05
 			self.organism.disorientation = 2
 			self.organism.otrub = false
 			self.organism.needotrub = false
-			self.organism.painadd = -5
+			self.organism.painadd = -10
 		end
 
-		if IsValid(self) and not IsValid(self.FakeRagdoll) then
-			self:SetNetVar("headcrab", false)
-		end
+		self:SetNetVar("headcrab", false)
 
 		for k, v in ipairs(ents.FindByClass("npc_*")) do
 			if table.HasValue(rebels, v:GetClass()) or table.HasValue(combines, v:GetClass()) then
@@ -100,21 +135,44 @@ function CLASS.On(self)
 			end
 		end
 
+		--\\ Npc relationships
 		local index = self:EntIndex()
-		hook.Add("OnEntityCreated", "relation_shipdo"..index, function(ent)
-			if not IsValid(self) then hook.Remove("OnEntityCreated","relation_shipdo"..index) return end
+		hook.Add("OnEntityCreated", "relation_shipdo" .. index, function(ent)
+			if not IsValid(self) or self.PlayerClassName ~= "headcrabzombie" then
+				hook.Remove("OnEntityCreated","relation_shipdo" .. index)
+				return
+			end
+
 			if ent:IsNPC() then
 				if table.HasValue(rebels, ent:GetClass()) or table.HasValue(combines, ent:GetClass()) then
-					v:AddEntityRelationship(self, D_HT, 99)
+					ent:AddEntityRelationship(self, D_HT, 99)
 				elseif table.HasValue(zombies, ent:GetClass()) then
-					v:AddEntityRelationship(self, D_LI, 99)
+					ent:AddEntityRelationship(self, D_LI, 99)
 				end
 			end
 		end)
+
+		--\\ Remove armor
+		local armors = self:GetNetVar("Armor",{})
+		if armors["head"] and !hg.armor["head"][armors["head"]].nodrop then
+			hg.DropArmorForce(self, armors["head"])
+		end
+
+		if armors["face"] and !hg.armor["face"][armors["face"]].nodrop then
+			hg.DropArmorForce(self, armors["face"])
+		end
+
+		--\\ Give hands if we don't have it
+		if self:HasWeapon("weapon_hands_sh") then
+			self:SelectWeapon("weapon_hands_sh")
+		else
+			local hands = self:Give("weapon_hands_sh")
+			self:SelectWeapon(hands)
+		end
 	end
 end
 
---// Reset organism and npc relations
+--// Reset organism and npc relationship
 function CLASS.Off(self)
     if CLIENT then return end
 
@@ -133,6 +191,7 @@ function CLASS.Off(self)
 	hook.Remove("OnEntityCreated", "relation_shipdo"..self:EntIndex())
 end
 
+--// Reset npc relationship
 function CLASS.PlayerDeath(self)
 	for k, v in ipairs(ents.FindByClass("npc_*")) do
         if table.HasValue(rebels, v:GetClass()) then
@@ -159,12 +218,6 @@ end
 function CLASS.Think(self)
     if CLIENT then return end
 
-	--\\ Remove headcrab because we already have one
-	-- We are doing it only when player isn't in ragdoll because we can't properly change playerclass model while he is in ragdoll..
-	if IsValid(self) and not IsValid(self.FakeRagdoll) then
-		self:SetNetVar("headcrab", false)
-	end
-
 	--\\ Remove armor
 	local armors = self:GetNetVar("Armor",{})
 	if armors["head"] and !hg.armor["head"][armors["head"]].nodrop then
@@ -181,70 +234,39 @@ function CLASS.Think(self)
 		if self:HasWeapon("weapon_hands_sh") then
 			self:SelectWeapon("weapon_hands_sh")
 		else
-			self:Give("weapon_hands_sh")
-			self:SelectWeapon("weapon_hands_sh")
+			local hands = self:Give("weapon_hands_sh")
+			self:SelectWeapon(hands)
 		end
 	end
 
 	--\\ Organism stuff
 	local org = self.organism
-	if org.bleed ~= 0 then
-		org.bleed = 0
-	end
-	if org.arteria ~= 0 then
-		org.arteria = 0
-	end
 
-	if org.stamina["max"] ~= 200 then
-		org.stamina["max"] = 200
-	end
-	if org.stamina["range"] ~= 200 then
-		org.stamina["range"] = 200
-	end
+	org.stamina["max"] = 200
+	org.stamina["range"] = 200
+
 	if org.otrub then
 		org.consciousness = 1
 		org.adrenalineAdd = 4
 		org.analgesia = 0.4
-		--org.needotrub = false
 	end
-	-- org.otrub = false
-	-- org.needotrub = false
-	-- org.incapacitated = false
-	-- org.critical = false
 
 	if org.pain >= 75 then
 		org.painadd = -10
 	end
 
-	if org.pulse <= 60 or org.o2["curregen"] <= 0.3 then
-		org.pulse = 100
-		org.o2["curregen"] = 2
-	end
+	org.pulse = 70
+	org.o2["curregen"] = 2
 
-	-- org.pain = 0
-	-- org.painadd = 0
-	-- org.shock = 0
-	-- org.hurt = 0
 	if org.consciousness <= 0.3 then
-		org.consciousness = 0.9
+		org.consciousness = 1
 		org.needotrub = false
 	end
 
-	if org.jawdislocation ~= false then
-		org.jawdislocation = false
-	end
-	if org.llegdislocation ~= false then
-		org.llegdislocation = false
-	end
-	if org.rlegdislocation ~= false then
-		org.rlegdislocation = false
-	end
-	if org.larmdislocation ~= false then
-		org.larmdislocation = false
-	end
-	if org.rarmdislocation ~= false then
-		org.rarmdislocation = false
-	end
+	org.jawdislocation = false
+	org.llegdislocation = false
+	org.rlegdislocation = false
+	org.rarmdislocation = false
 end
 
 --// Phrase stuff
@@ -285,7 +307,7 @@ end)
 
 --// Can't pickup weapons and use doors
 hook.Add("PlayerCanPickupWeapon", "ZombCantPickup", function(ply, ent)
-	if IsValid(ply) and ply.PlayerClassName == "headcrabzombie" then
+	if IsValid(ply) and ply.PlayerClassName == "headcrabzombie" and ent:GetClass() ~= "weapon_hands_sh" then
 		return false
 	end
 end)
@@ -402,6 +424,7 @@ else
 
 				ang:RotateAroundAxis(ang:Up(), -90)
 				ang:RotateAroundAxis(ang:Forward(), 100)
+
 				mdl:SetRenderOrigin(view.origin + ang:Forward() * vecAdjust.x + ang:Right() * vecAdjust.y + ang:Up() * vecAdjust.z)
 				mdl:SetRenderAngles(ang)
 				mdl2:SetRenderOrigin(view.origin + ang:Forward() * vecAdjust.x + ang:Right() * vecAdjust.y + ang:Up() * vecAdjust.z)
@@ -444,10 +467,8 @@ else
 	end
 
 	hook.Add("Post Pre Post Processing", "ZombDrawHeadcrab", function()
-		if lply.PlayerClassName == "headcrabzombie" and lply:Alive() then
-			cam.IgnoreZ(true)
-				DrawHeadcrab(lply, "models/nova/w_headcrab.mdl", vector_origin, -50)
-			cam.IgnoreZ(false)
+		if lply.PlayerClassName == "headcrabzombie" and lply:Alive() and lply.organism and not lply.organism.otrub then
+			DrawHeadcrab(lply, "models/nova/w_headcrab.mdl", vector_origin, -50)
 		end
 	end)
 

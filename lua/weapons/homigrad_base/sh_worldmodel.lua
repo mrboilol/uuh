@@ -603,6 +603,21 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 		self.last_transform = SysTime()
 
 		local should = hg.ShouldTPIK(owner) and not (ent ~= owner and not (inuse))
+		if not should then
+			if IsValid(model) then
+				-- local ownAngs = owner:EyeAngles()
+				-- model:SetRenderAngles(ownAngs)
+				-- model:SetRenderOrigin(owner:EyePos() + ownAngs:Forward() * 15 + owner:GetUp() * -10)
+
+				model:SetModel(self.WorldModel)
+				model:AddEffects(EF_BONEMERGE)
+				model:SetParent(owner)
+				model:Remove()
+				model = nil
+			end
+
+			return
+		end
 		
 		-- if not should then ent:SetupBones() end
 		
@@ -671,6 +686,7 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 		model:SetRenderAngles(newAng)
 		model:SetPos(newPos)
 		model:SetAngles(newAng)
+		self:DrawShadow(true)
 	else
 		local pos, ang = self:GetPos(), self:GetAngles()
 
@@ -682,6 +698,7 @@ function SWEP:WorldModel_Transform(bNoApply, bNoAdditional, model)
 		model:SetRenderAngles(ang)
 		model:SetPos(pos)
 		model:SetAngles(ang)
+		self:DrawShadow(false)
 	end
 end
 

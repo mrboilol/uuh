@@ -2,6 +2,9 @@ hg.armor = {}
 
 local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 	if ply:GetNetVar("headcrab") then return end
+	if not ply:Alive() then return end
+	if ply.organism and ply.organism.otrub then return end
+
 	if not IsValid(ply.FirstPersonHelmetModel) then
 		ply.FirstPersonHelmetModel = ClientsideModel(strModel)
 		ply.FirstPersonHelmetModel:SetNoDraw(true)
@@ -112,12 +115,14 @@ hg.armor.torso = {
 	["vest3"] = {
 		"torso",
 		"models/jworld_equipment/kevlar.mdl",
-		Vector(-42, 3.2, 0),
+		Vector(-9, 3.2, 0),
 		Angle(0, 90, 90),
 		protection = 9.8,
 		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/sal/acc/armor01.mdl",
-		material = "sal/acc/armor01",
+		model = "models/lightvest/lightvest.mdl",
+		material = {"models/lightvest/accs_diff_000_b_uni",
+		"models/lightvest/accs_diff_000_c_uni", "models/lightvest/accs_diff_000_c_uni",
+		"models/lightvest/accs_diff_000_d_uni", "sal/acc/armor01_4", "sal/acc/armor01_5"},
 		femPos = Vector(2.5, 0, 1),
 		scale = 0.88,
 		femscale = 0.8,
@@ -130,12 +135,14 @@ hg.armor.torso = {
 	["vest4"] = {
 		"torso",
 		"models/jworld_equipment/kevlar.mdl",
-		Vector(-42, 3.2, 0),
+		Vector(-9, 3.2, 0),
 		Angle(0, 90, 90),
 		protection = 13.5,
 		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/sal/acc/armor01.mdl",
-		material = "sal/acc/armor01_2",
+		model = "models/lightvest/lightvest.mdl",
+		material = {"models/lightvest/accs_diff_000_a_uni",
+		"models/lightvest/accs_diff_000_h_uni", "models/lightvest/accs_diff_000_f_uni",
+		"models/lightvest/accs_diff_000_e_uni", "sal/acc/armor01_3"},
 		femPos = Vector(2.5, 0, 1),
 		scale = 0.88,
 		femscale = 0.8,
@@ -446,16 +453,16 @@ hg.armor.torso = {
 	["ego_equalizer"] = {
 		"torso",
 		"models/monolithservers2/kerry/sswat_armor.mdl",
-		Vector(-9, 2.5, 0),
+		Vector(-8, 2.5, 0),
 		Angle(0, 92, 90),
 		protection = 0,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/monolithservers2/kerry/sswat_armor.mdl",
 		-- material = "models/shiny",
-		material = "models/props_c17/paper01",
+		material = "models/lightvest/accs_diff_000_d_uni", -- "models/props_c17/paper01"
 		femPos = Vector(0, 0, 0),
-		scale = 1,
-		femscale = 1,
+		scale = 0.95,
+		femscale = 0.95,
 		effect = "Impact",
 		surfaceprop = 67,
 		mass = 8,
@@ -1016,7 +1023,7 @@ hg.armor.face = {
 	},
 	["mask3"] = {
 		"face", -- "face"
-		"models/props_c17/metalPot001a.mdl",
+		"models/props_silo/welding_helmet.mdl",
 		Vector(0, 0.3, 0),
 		Angle(-90, 180, 90),
 		protection = 7,
@@ -1032,6 +1039,9 @@ hg.armor.face = {
 		mass = 2,
 		ScrappersSlot = "Armor",
 		voice_change = true,
+		PhysModel = "models/hunter/blocks/cube025x025x025.mdl",
+		PhysPos = Vector(1, 0, 5),
+		PhysAng = Angle(0, 90, 0),
 	},
 	["nightvision1"] = {
 		"face", -- "face"

@@ -38,6 +38,7 @@ end
 function ENT:Think()
 	if CLIENT then return end
 	self:NextThink(CurTime())
+
 	if self.AddThink then
 		self:AddThink()
 	end

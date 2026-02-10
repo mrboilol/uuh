@@ -57,9 +57,15 @@ COMMANDS.playerclass = {
 		if not ply:IsAdmin() then return end
 		local plya = #args > 1 and args[1] or ply:Name()
 		local class = #args > 1 and args[2] or args[1]
-		for i, ply2 in pairs(player.GetListByName(plya)) do
-			ply2:SetPlayerClass(class)
-			ply:ChatPrint(ply2:Name())
+
+		if #args < 2 then
+			ply:SetPlayerClass(class)
+			ply:ChatPrint(ply:Name())
+		else
+			for i, ply2 in pairs(player.GetListByName(plya)) do
+				ply2:SetPlayerClass(class)
+				ply:ChatPrint(ply2:Name())
+			end
 		end
 	end,
 	0

@@ -201,6 +201,8 @@ function DrawAccesories(ply, ent, accessories,accessData, islply, force, setup)
 		return
 	end
 
+	if ply.organism and hg.amputatedlimbs2[accessData["bone"]] and ply.organism[hg.amputatedlimbs2[accessData["bone"]].."amputated"] then return end
+
 	if setup != false then
 		local bone = ent:LookupBone(accessData["bone"])
 		if not bone then return end

@@ -486,14 +486,15 @@ hook.Add("PostEntityFireBullets","bulletsuppression",function(ent,bullet)
 
 		if dist > 120 then continue end
 
-		if shooterdist < 500 and !IsLookingAt(ent:GetOwner(),eyePos) then continue end
+		if shooterdist < 200 and !IsLookingAt(ent:GetOwner(),eyePos) then continue end
 
 		if ent:GetOwner():IsPlayer() then
 			hg.DynaMusic:AddPanic(ent:GetOwner(),0.5)
 		end
 
 		if !org.otrub then
-			ent:AddNaturalAdrenaline(0.05 * dmg / math.max(dist / 2,10) / 1)
+			--print(1 * dmg / math.max(dist / 2,10) / 1)
+			ply:AddNaturalAdrenaline(0.05 * dmg / math.max(dist / 2,10) / 1)
 			org.fearadd = org.fearadd + 0.2
 		end
 	end
@@ -1052,7 +1053,7 @@ if util.IsBinaryModuleInstalled("eightbit") then
 	require("eightbit")
 
 	if eightbit.SetDamp1 then
-		eightbit.SetDamp1(0.96)
+		eightbit.SetDamp1(0.85)
 	end
 
 	if eightbit.SetProotCutoff then
@@ -1541,7 +1542,7 @@ hook.Add("Org Think", "BodyTemperature", function(owner, org, timeValue) -- пе
 	local currentPulse = org.pulse or 70
 	local pulseHeat = 0
 	local temp = hg.MapTemps[game.GetMap()] or 20
-	
+
 	if currentPulse > 80 then
 		local pulseMultiplier = math.min((currentPulse - 70) / 100, 1.2)
 		pulseHeat = timeValue / 50 * pulseMultiplier * 0.2
@@ -1551,7 +1552,7 @@ hook.Add("Org Think", "BodyTemperature", function(owner, org, timeValue) -- пе
 	local ownerpos = owner:GetPos()
 	for i, ent in ipairs(ents.FindInSphere(ownerpos, 300)) do
 		local warmingent = warmingEnts[ent:GetClass()]
-		if warmingent then
+		if warmingent and !ent:GetNoDraw() then
 			--org.temperature = org.temperature + timeValue * (warmingEnts[ent:GetClass()] / 50 * (1 - ent:GetPos():Distance(owner:GetPos()) / 200))
 			warming = warming + (isfunction(warmingent) and warmingent(ent) or warmingent)
 		end

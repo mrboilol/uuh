@@ -40,7 +40,7 @@ SWEP.blockinganim = 0
 
 local clawClasses = {
 	["furry"] = 0.5,
-	["headcrabzombie"] = 1
+	["headcrabzombie"] = 1.5
 }
 
 local function qerp(delta, a, b)

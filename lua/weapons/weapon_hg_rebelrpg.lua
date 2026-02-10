@@ -10,7 +10,7 @@ SWEP.SlotPos = 10
 SWEP.ViewModel = ""
 SWEP.WorldModel = "models/mmod/weapons/w_rocket_launcher.mdl"
 SWEP.WorldModelFake = "models/mmod/weapons/c_rpg.mdl"
-//SWEP.FakeScale = 1.5
+
 SWEP.FakePos = Vector(-20, 5, 8)
 SWEP.FakeAng = Angle(0, -0.5, 0)
 SWEP.AttachmentPos = Vector(0.3,3.8,-13)

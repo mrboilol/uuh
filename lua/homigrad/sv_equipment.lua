@@ -421,24 +421,24 @@ hg.ArmorEffectEx = ArmorEffectEx
 		return protect
 	end
 
-	hg.organism.input_list.mask3 = function(org, bone, dmg, dmgInfo, ...)
-		local protect = protec(org, bone, dmg, dmgInfo, "face", "mask3", 1, 1, true, ...)
-		return protect
-	end
+hg.organism.input_list.mask3 = function(org, bone, dmg, dmgInfo, ...)
+	local protect = protec(org, bone, dmg, dmgInfo, "face", "mask3", 0.95, 0.92, true, ...)
+	return protect
+end
 
-	hg.organism.input_list.vest5 = function(org, bone, dmg, dmgInfo, ...)
-		local protect = protec(org, bone, dmg, dmgInfo, "torso", "vest5", 0.8, 0.6, true, ...)
-		return protect
-	end
-	hg.organism.input_list.vest6 = function(org, bone, dmg, dmgInfo, ...)
-		local protect = protec(org, bone, dmg, dmgInfo, "torso", "vest6", 0.8, 0.4, false, ...)
-		return protect
-	end
+hg.organism.input_list.vest5 = function(org, bone, dmg, dmgInfo, ...)
+	local protect = protec(org, bone, dmg, dmgInfo, "torso", "vest5", 0.8, 0.6, false, ...)
+	return protect
+end
+hg.organism.input_list.vest6 = function(org, bone, dmg, dmgInfo, ...)
+	local protect = protec(org, bone, dmg, dmgInfo, "torso", "vest6", 0.8, 0.4, false, ...)
+	return protect
+end
 
-	hg.organism.input_list.vest7 = function(org, bone, dmg, dmgInfo, ...)
-		local protect = protec(org, bone, dmg, dmgInfo, "torso", "vest7", 0.7, 0.4, false, ...)
-		return protect
-	end
+hg.organism.input_list.vest7 = function(org, bone, dmg, dmgInfo, ...)
+	local protect = protec(org, bone, dmg, dmgInfo, "torso", "vest7", 0.7, 0.4, false, ...)
+	return protect
+end
 
 	hg.organism.input_list.vest8 = function(org, bone, dmg, dmgInfo, ...)
 		local protect = protec(org, bone, dmg, dmgInfo, "torso", "vest8", 0.7, 0.4, false, ...)

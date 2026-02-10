@@ -1134,8 +1134,21 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	
 	if ply and !ply:GetNetVar("headcrab") and (ply.PlayerClassName != "Gordon" or ply.armors.head != "gordon_helmet") and ply.PlayerClassName ~= "headcrabzombie" then
 		local class = dmgInfo:GetAttacker():GetClass()
-		
+
 		if dmgInfo:GetAttacker():IsNPC() and headcrabs[class] then
+			local armors = ply:GetNetVar("Armor",{})
+			local isHelm = armors["head"] and !hg.armor["head"][armors["head"]].nodrop
+			local isMask = armors["face"] and !hg.armor["face"][armors["face"]].nodrop
+
+			if isHelm or isMask then
+				hg.DropArmorForce(ply, isHelm and armors["head"] or armors["face"])
+				ply.ArmorCD = CurTime() + 5
+
+				return
+			end
+
+			ply.PreZombClass = ply.PlayerClassName
+
 			ply:AddHeadcrab(headcrabsmodels[class])
 			
 			dmgInfo:GetAttacker():Remove()
@@ -1143,6 +1156,12 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 	
 	return true
+end)
+
+hook.Add("CanEquipArmor", "HeadcrabArmorCD", function(ply, armor_name)
+	if IsValid(ply) and ((ply.ArmorCD or 0) > CurTime() or ply:GetNetVar("headcrab")) then
+		return false
+	end
 end)
 
 local paintable = {

@@ -256,7 +256,7 @@ hook.Add("HUDPaint", "HUDPaint_DrawABox", function() -- этот код стар
 	if lply:Alive() and hg_gopro:GetBool() then
 		local specPly = lply
 		if not specPly:IsValid() then return end
-		local Text = "GoPro #" .. math.Round(util.SharedRandom(specPly:GetName(),1000,9999,specPly:EntIndex()),0)
+		local Text = "GoPro #" .. math.Round(util.SharedRandom(specPly:SteamID(),1000,9999,1),0)
 		draw.DrawText(Text, "BODYCAMFONT", ScrW() * 0.905 + 2, ScrH() * 0.035 + 2, Color(0, 0, 0), TEXT_ALIGN_CENTER)
 		draw.DrawText(Text, "BODYCAMFONT", ScrW() * 0.905, ScrH() * 0.035, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 		draw.RoundedBox(0, ScrW() * 0.85, ScrH() * 0.085, 50, 28, Color(0, 173, 255))
@@ -284,7 +284,7 @@ function SpecCam(ply, vec, ang, fov, znear, zfar)
 		angles = ang1,
 		fov = 110,
 		drawviewer = true,
-		znear = 0.1
+		znear = 0.7
 	}
 
 	return view
@@ -658,13 +658,13 @@ end)
 
 local hg_norenderoverride = ConVarExists("hg_norenderoverride") and GetConVar("hg_norenderoverride") or CreateClientConVar("hg_norenderoverride", 0, true, false, "if you have lags you can try turning that on", 0, 1)
 local mapswithfog = { -- Надо от сервер сайда сделать...
-	["gm_freespace_09_super_extended_night"] = 5500,
-	["gm_white_forest_countryside"] = 6000,
-	["gm_york_remaster"] = 9500,
-	["gm_city_of_silence"] = 1500,
-	--["gm_construct"] = 8000,
-	["gm_fork"] = 9500,
-	["rp_zapolye_v2"] = 7500
+	--["gm_freespace_09_super_extended_night"] = 5500,
+	--["gm_white_forest_countryside"] = 6000,
+	--["gm_york_remaster"] = 9500,
+	--["gm_city_of_silence"] = 1500,
+	----["gm_construct"] = 8000,
+	--["gm_fork"] = 9500,
+	--["rp_zapolye_v2"] = 7500
 }
 --GlobalRenderOverideTickOFF = true
 local zfar = mapswithfog[game.GetMap()] or 0

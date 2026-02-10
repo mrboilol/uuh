@@ -1545,7 +1545,7 @@ local IsValid = IsValid
 		hg.approach_vector = approach_vector
 	--//
 
-
+	local hg_movement_stamina_debuff = CreateConVar("hg_movement_stamina_debuff","0.3",{FCVAR_REPLICATED,FCVAR_ARCHIVE,FCVAR_NOTIFY},"movement debuff when low stamina",0,1)
 	local vecZero = Vector()
 	local vomitVPAng = Angle(1,0,0)
 	hook.Add("SetupMove", "HG(StartCommand)", function(ply, mv, cmd)
@@ -1861,7 +1861,7 @@ local IsValid = IsValid
 		k = k * math.Clamp(consmul, 0.7, 1)
 		k = k * math.Clamp((org.temperature and (1 - (org.temperature - 38) * 0.25) or 1), 0.5, 1)
 		k = k * math.Clamp((org.temperature and ((org.temperature - 35) * 0.25 + 1) or 1), 0.5, 1)
-		k = k * math.Clamp((org.stamina and org.stamina[1] or 180) / 120, 0.3, 1)
+		k = k * math.Clamp((org.stamina and org.stamina[1] or 180) / 120, hg_movement_stamina_debuff:GetFloat(), 1)
 		k = k * math.Clamp(5 / ((org.immobilization or 0) + 1), 0.25, 1)
 		k = k * math.Clamp((org.blood or 0) / 5000, 0, 1)
 		k = k * math.Clamp(10 / ((org.shock or 0) + 1), 0.25, 1)
@@ -2046,10 +2046,6 @@ local IsValid = IsValid
 		end
 
 		hook_Run("HG_PlayerFootstep_Notify", ply, pos, foot, sound, volume, rf)	--; Do not return anything from this _Notify hook
-		
-		local Hook = hook_Run("HG_PlayerFootstep", ply, pos, foot, sound, volume, rf)
-
-		if Hook then return Hook end
 
 		if CLIENT and ply == lply and ply.move then
 			footcl = (footcl == nil and -1 or footcl) + 1
@@ -2071,10 +2067,12 @@ local IsValid = IsValid
 		end
 
 		if SERVER then
-
 			if ply:GetNetVar("Armor", {})["torso"] then
 				EmitSound("arc9_eft_shared/weapon_generic_rifle_spin"..math.random(9)..".ogg", pos, ply:EntIndex(), CHAN_AUTO, changePitch(math.min(len / 100, 0.89)), 80)
 			end
+
+			local Hook = hook_Run("HG_PlayerFootstep", ply, pos, foot, sound, volume, rf)
+			if Hook then return Hook end
 
 			if !(ply:IsWalking() or ply:Crouching()) and ent == ply then
 				local snd

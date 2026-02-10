@@ -1300,6 +1300,7 @@ function SWEP:CoreStep()
 	if self:IsClient() then self:Step_SprayVel(dtime) end
 	self.dtimethink = SysTime()
 	//self:ThinkAtt()
+	if self.ThinkAdd then self:ThinkAdd() end
 
 	--self:Animation()
 
@@ -1744,7 +1745,7 @@ function SWEP:GetAdditionalValues()
 	self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] - y * 3 * lena
 
 	if CLIENT and self:IsLocal() and owner:IsOnGround() then
-		local runMul = vellen / owner:GetRunSpeed()
+		local runMul = vellen / owner:GetRunSpeed() * (self.reload and 0.5 or 1)
 		if runMul >= 0.32 then
 			if not self:IsPistolHoldType() and not self.CanEpicRun then
 				self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - y * 3 * runMul
@@ -1979,7 +1980,7 @@ function SWEP:SetHandPos(noset)
 			hg.bone_apply_matrix(ent, rh, rhmat)
 			--ent:SetBoneMatrix(rh, rhmat)
 			
-			if GetViewEntity() == self:GetOwner() then hg.set_holdrh(ent, self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")) end
+			hg.set_holdrh(ent, self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold"))
 		end
 		
 		if (( hg.CanUseLeftHand(ply) and self.lhandik )) and self.attachments and vec2 and addvec2 and ang2 then
@@ -2001,7 +2002,7 @@ function SWEP:SetHandPos(noset)
 			local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
 			hold = self.attachments.grip and #self.attachments.grip ~= 0 and hg.attachments.grip[self.attachments.grip[1]].hold or hold
 			
-			if GetViewEntity() == self:GetOwner() then hg.set_hold(ent, hold) end
+			hg.set_hold(ent, hold)
 		end
 	else
 		local wpn = self
@@ -2086,7 +2087,7 @@ function SWEP:SetHandPos(noset)
 				local hold = self.hold_type or (self:IsPistolHoldType() and "pistol_hold2" or "ak_hold")
 				hold = self.attachments.grip and #self.attachments.grip ~= 0 and hg.attachments.grip[self.attachments.grip[1]].hold or hold
 
-				if GetViewEntity() == self:GetOwner() then hg.set_hold(ent, hold) end
+				hg.set_hold(ent, hold)
 			end
 		end
 	end
