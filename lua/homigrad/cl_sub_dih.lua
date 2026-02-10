@@ -1,76 +1,57 @@
 
-local plyModel
+
+local HUD_SIZE = 300
+local VIEW_FOV = 45
 local matWhite = Material("models/debug/debugwhite")
+local hudMdl = nil
 
--- Global cleanup
-if IsValid(HG_Silhouette_PlyModel) then HG_Silhouette_PlyModel:Remove() end
-if IsValid(HG_Silhouette_WepModel) then HG_Silhouette_WepModel:Remove() end
-
-local function GetSilhouetteModel(ply)
-    local targetModel = ply:GetModel()
-    
-    if not IsValid(HG_Silhouette_PlyModel) or HG_Silhouette_PlyModel:GetModel() ~= targetModel then
-        if IsValid(HG_Silhouette_PlyModel) then HG_Silhouette_PlyModel:Remove() end
-        HG_Silhouette_PlyModel = ClientsideModel(targetModel)
-        if IsValid(HG_Silhouette_PlyModel) then
-            HG_Silhouette_PlyModel:SetNoDraw(true)
-            HG_Silhouette_PlyModel:SetIK(false)
-            
-            -- Find an idle sequence
-            local seq = HG_Silhouette_PlyModel:LookupSequence("idle_all_01")
-            if seq == -1 then seq = HG_Silhouette_PlyModel:LookupSequence("idle") end
-            if seq == -1 then seq = 0 end
-            
-            HG_Silhouette_PlyModel:ResetSequence(seq)
-        end
-    end
-    plyModel = HG_Silhouette_PlyModel
-    return plyModel
-end
-
-hook.Add("HUDPaint", "subrosa", function()
+hook.Add("HUDPaint", "subrosahuy", function()
     local ply = LocalPlayer()
-    if not IsValid(ply) or not ply:Alive() then return end
-    if ply.organism and ply.organism.otrub then return end
+    if not IsValid(ply) then return end
 
-    GetSilhouetteModel(ply)
-    
-    if not IsValid(plyModel) then return end
-    
-    -- Ensure updates but strictly idle
-    plyModel:FrameAdvance(FrameTime())
-    
-    local w, h = ScrW(), ScrH()
-    local size = h * 0.35 -- Scaled up a little bit as requested
-    local x = w / 2 - size / 2
-    local y = h * 0.60 
+    local target = ply
+    if IsValid(ply:GetRagdollEntity()) then
+        target = ply:GetRagdollEntity()
+    end
 
-    render.MaterialOverride(matWhite)
-    render.SetColorModulation(1, 1, 1)
-    render.SuppressEngineLighting(true)
-    render.SetBlend(1) 
+    if not IsValid(hudMdl) or hudMdl:GetModel() ~= target:GetModel() then
+        if IsValid(hudMdl) then hudMdl:Remove() end
+        hudMdl = ClientsideModel(target:GetModel(), RENDERGROUP_OPAQUE)
+        hudMdl:SetNoDraw(true)
+        hudMdl:SetIK(false)
+    end
 
-    local camDist = 90 -- Closer camera for larger view
-    local camPos = Vector(camDist, 0, 35) -- Centered around torso/head
-    local camLookAt = Vector(0, 0, 35)
-    local camAng = (camLookAt - camPos):Angle()
+    local x = (ScrW() - HUD_SIZE) / 2
+    local y = (ScrH() - HUD_SIZE) / 2
 
-    cam.Start3D(camPos, camAng, 50, x, y, size, size)
-        plyModel:SetPos(Vector(0,0,0))
-        plyModel:SetAngles(Angle(0,0,0))
-        plyModel:DrawModel()
+    cam.Start3D(Vector(100, 0, 36), Angle(0, 180, 0), VIEW_FOV, x, y, HUD_SIZE, HUD_SIZE)
+        render.SuppressEngineLighting(true)
+        render.SetColorModulation(1, 1, 1)
+        render.MaterialOverride(matWhite)
+
+        target:SetupBones()
+        local targetPos = target:GetPos()
+
+        local count = target:GetBoneCount()
+        if count then
+            for i = 0, count - 1 do
+                local matrix = target:GetBoneMatrix(i)
+                if matrix then
+                    local newPos = matrix:GetTranslation() - targetPos
+                    matrix:SetTranslation(newPos)
+                    hudMdl:SetBoneMatrix(i, matrix)
+                end
+            end
+        end
+
+        hudMdl:SetPos(Vector(0,0,0))
+        hudMdl:DrawModel()
+
+        render.MaterialOverride(nil)
+        render.SuppressEngineLighting(false)
     cam.End3D()
-
-    render.SetBlend(1)
-    render.SuppressEngineLighting(false)
-    render.SetColorModulation(1, 1, 1)
-    render.MaterialOverride(nil)
 end)
 
-hook.Add("PostCleanupMap", "ResetSilhouetteModel", function()
-    if IsValid(HG_Silhouette_PlyModel) then
-        HG_Silhouette_PlyModel:Remove()
-        HG_Silhouette_PlyModel = nil
-    end
-    plyModel = nil
+hook.Add("PostCleanupMap", "movenigg", function()
+    if IsValid(hudMdl) then hudMdl:Remove() end
 end)
