@@ -16,9 +16,6 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(5,3.2,-22.05)
 SWEP.AttachmentAng = Angle(0,0,0)
 
-
---Entity(1):GetActiveWeapon():GetWM():SetSubMaterial(0,"NULL")
-
 SWEP.CanEpicRun = false
 SWEP.EpicRunPos = Vector(2,12,5)
 

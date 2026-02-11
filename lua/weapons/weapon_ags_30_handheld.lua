@@ -105,8 +105,7 @@ SWEP.availableAttachments = {
 		["mountType"] = {"agsmount"},
 		["mount"] = {agsmount = Vector(0, 0, 0)},
 		["mountAngle"] = Angle(0,0,0),
-		["removehuy"] = {
-		},
+		["removehuy"] = {},
 	},
 }
 

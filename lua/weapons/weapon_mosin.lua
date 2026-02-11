@@ -12,8 +12,8 @@ SWEP.WorldModel = "models/weapons/w_snip_scout.mdl"
 SWEP.WorldModelFake = "models/weapons/zcity/c_mosin.mdl"
 SWEP.FakeScale = 1
 
-SWEP.FakePos = Vector(-6, 2.7, 6)
-SWEP.FakeAng = Angle(0, 0, 0)
+SWEP.FakePos = Vector(-7, 2.7, 6)
+SWEP.FakeAng = Angle(0.25, 0, 0)
 
 SWEP.FakeAttachment = "muzzle"
 SWEP.AttachmentPos = Vector(-0.1,-0.3,2)
@@ -21,7 +21,7 @@ SWEP.AttachmentAng = Angle(90,0,0)
 SWEP.FakeBodyGroups = "000000000"
 SWEP.BarrelLength = 40
 SWEP.SUPBarrelLenght = 47
-SWEP.OpenBolt = false
+SWEP.OpenBolt = true
 SWEP.CantFireFromCollision = false // 2 спусковых крючка все дела
 
 SWEP.FakeViewBobBone = "ValveBiped.Bip01_L_Hand"
@@ -56,7 +56,18 @@ SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "7.62x54 mm"
 SWEP.Primary.Cone = 0
 SWEP.Primary.Spread = 0
-SWEP.Primary.Sound = {"weapons/tfa_ins2/k98/m40a1_fp.wav", 80, 90, 100}
+
+sound.Add({
+	name = "Mosin-Nagant_Shoot",
+	sound = {
+		"weapons/easternfront/mosin/m44_fp - copy (2).wav",
+		"weapons/easternfront/mosin/mn91_30_fp - copy (3).wav",
+		"weapons/easternfront/mosin/mn91_30_fp - copy.wav",
+		"weapons/easternfront/mosin/mn91_30_fp.wav"
+	},
+})
+
+SWEP.Primary.Sound = {"Mosin-Nagant_Shoot", 80, 90, 110}
 SWEP.SupressedSound = {"mosin/mosin_suppressed_fp.wav", 80, 90, 100}
 SWEP.availableAttachments = {
 	barrel = {
@@ -77,7 +88,7 @@ SWEP.AnimShootHandMul = 1
 SWEP.DeploySnd = {"homigrad/weapons/draw_hmg.mp3", 55, 100, 110}
 SWEP.HolsterSnd = {"homigrad/weapons/hmg_holster.mp3", 55, 100, 110}
 SWEP.HoldType = "rpg"
-SWEP.ZoomPos = Vector(0, .65, 5.2)
+SWEP.ZoomPos = Vector(0, 0.6288, 4.8672)
 SWEP.RHandPos = Vector(0, 0, -1)
 SWEP.LHandPos = Vector(7, 0, -2)
 SWEP.Ergonomics = 0.9
@@ -96,11 +107,11 @@ SWEP.holsteredAng = Angle(210, 0, 180)
 SWEP.AnimList = {
 	["idle"] = "base_idle",
 	["reload"] = "base_Fire_end",
-	["reload_empty"] = "base_Fire_end",
 	["finish_empty"] = "Base_Reload_End",
 	["finish"] = "Base_Reload_End",
 	["insert"] = "Base_Reload_Insert",
 	["start"] = "Base_Reload_Start",
+	["start_empty"] = "base_reload_start_empty",
 	["cycle"] = "base_Fire_end",
 }
 
@@ -141,42 +152,58 @@ SWEP.AnimsEvents = {
 	["Base_Reload_Start"] = {
 		[0.3] = function(self)
 			SetModelAmmo(self:GetWM(), self)
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_back.wav", 45, math_random(95, 105))
+			HideMag2(self:GetWM(), true)
+		end,
+		[0.4] = function(self)
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_forward.wav", 45, math_random(95, 105))
+		end,
+	},
+	["base_reload_start_empty"] = {
+		[0.3] = function(self)
+			SetModelAmmo(self:GetWM(), self)
 			self:EmitSound("weapons/tfa_ins2/k98/m40a1_boltback.wav", 45, math_random(95, 105))
 			HideMag2(self:GetWM(), true)
 		end,
 	},
 	["Base_Reload_Insert"] = {
 		[0.1] = function(self)
-			SetModelAmmo(self:GetWM(), self)
-			self:EmitSound("weapons/tfa_ins2/k98/mosin_bulletin_"..math_random(1,4)..".wav", 45, math_random(95, 105))
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bullet_insert_"..math_random(5)..".wav", 45, math_random(95, 105))
 			HideMag2(self:GetWM(), true)
 		end,
+		[0.2] = function(self)
+			if CLIENT then
+				self:SetClip1(self:Clip1() + 1)
+			end
+			SetModelAmmo(self:GetWM(), self)
+		end
 	},
 	["Base_Reload_End"] = {
 		[0.2] = function(self)
 			SetModelAmmo(self:GetWM(), self)
-			self:EmitSound("weapons/tfa_ins2/k98/m40a1_boltforward.wav", 45, math_random(95, 105))
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_forward.wav", 45, math_random(95, 105))
 			HideMag2(self:GetWM(), false)
 		end,
+		[0.3] = function(self)
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_forward.wav", 45, math_random(95, 105))
+		end,
 		[0.5] = function(self)
-			self:EmitSound("weapons/tfa_ins2/k98/m40a1_boltlatch.wav", 45, math_random(95, 105))
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_close.wav", 45, math_random(95, 105))
 			HideMag2(self:GetWM(), false)
 		end,
 	},
 	["base_Fire_end"] = {
-		[0.1] = function(self)
+		[0.2] = function(self)
 			SetModelAmmo(self:GetWM(), self)
-			self:EmitSound("weapons/tfa_ins2/k98/m40a1_boltback.wav", 45, math_random(95, 105))
-			HideMag(self:GetWM(), true)
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_back.wav", 45, math_random(95, 105))
 		end,
-		[0.3] = function(self)
-			--self:RejectShell(self.ShellEject)
-			self:EmitSound("weapons/tfa_ins2/k98/m40a1_boltforward.wav", 45, math_random(95, 105))
+		[0.4] = function(self)
+			self:RejectShell(self.ShellEject)
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_forward.wav", 45, math_random(95, 105))
 		end,
-		[0.5] = function(self)
+		[0.55] = function(self)
 			SetModelAmmo(self:GetWM(), self)
-			self:EmitSound("weapons/tfa_ins2/k98/m40a1_boltlatch.wav", 45, math_random(95, 105))
-			HideMag(self:GetWM(), true)
+			self:EmitSound("weapons/easternfront/mosin/handling/mosin_bolt_close.wav", 45, math_random(95, 105))
 		end
 	}
 }
@@ -189,29 +216,6 @@ function SWEP:InitializePost()
 end
 
 function SWEP:AnimationPost()
-	local animpos = math.Clamp(self:GetAnimPos_Draw(CurTime()),0,1)
-	local sin = 1 - animpos
-	if sin >= 0.5 then
-		sin = 1 - sin
-	else
-		sin = sin * 1
-	end
-	sin = sin * 2
-	--sin = math.ease.InOutExpo(sin)
-	sin = math.ease.InOutSine(sin)
-
-	if sin > 0 then
-		self.LHPos[1] = 18 - sin * 6
-		self.RHPos[1] = 1 - sin * 4
-		self.inanim = true
-	else
-		self.inanim = nil
-	end
-
-	local wep = self:GetWeaponEntity()
-	if CLIENT and IsValid(wep) then
-		wep:ManipulateBonePosition(4,Vector(0,0,sin * -3),false)
-	end
 end
 
 function SWEP:GetAnimPos_Insert(time)
@@ -224,7 +228,7 @@ end
 
 local function cock(self,time)
 	if SERVER then
-		self:Draw(true)
+		self:Draw(true, true)
 	end
 
 	if self:Clip1() == 0 then
@@ -285,7 +289,7 @@ local function reloadFunc(self)
 	end, false, true)
 end
 
-SWEP.FakeEjectBrassATT = "2"
+SWEP.FakeEjectBrassATT = "shell"
 
 function SWEP:Reload(time)
 	--print(self:GetNetVar("shootgunReload",0))
@@ -308,7 +312,11 @@ function SWEP:Reload(time)
 
 	if SERVER then
 		self:SetNetVar("shootgunReload",CurTime() + 1.1)
-		self:PlayAnim(self.AnimList["start"] or "bolt_open_0",1,false,function() 
+		self:PlayAnim((self.drawBullet == nil and self.AnimList["start_empty"] or self.AnimList["start"]) or "bolt_open_0",1,false,function()
+			if self.drawBullet then
+				self:SetClip1(self:Clip1() - 1)
+				ply:GiveAmmo(1, self:GetPrimaryAmmoType(), true)
+			end
 			reloadFunc(self)
 		end,
 		false,true)

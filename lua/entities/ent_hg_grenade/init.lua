@@ -26,6 +26,7 @@ function ENT:Initialize()
 		phys:Wake()
 		phys:EnableMotion(true)
 	end
+	self.CreateTime = CurTime()
 end
 
 function ENT:Use(ply)
@@ -42,6 +43,12 @@ function ENT:Think()
 	if self.AddThink then
 		self:AddThink()
 	end
+
+	if (CurTime() - self.CreateTime) >= 90 and self.owner ~= nil then
+		self:SetOwner(nil)
+		self.owner = nil
+	end
+
 	if not self.timer then
 		if IsValid(self.ent) or self.ent == Entity(0) then
 			local ent,lpos,origlen = self.ent,self.lpos,self.origlen

@@ -140,6 +140,7 @@ SWEP.AnimsEvents = {
 
 SWEP.HoldPos = Vector(-8,0,0)
 SWEP.HoldAng = Angle(0,0,0)
+SWEP.NoTrap = true
 
 SWEP.ViewBobCamBase = "ValveBiped.Bip01_R_UpperArm"
 SWEP.ViewBobCamBone = "ValveBiped.Bip01_R_Hand"

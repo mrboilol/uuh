@@ -142,7 +142,7 @@ SWEP.AnimList = {
 		self.IsLowThrow = true
 		self.ReadyToThrow = true
 	end,0.8},
-	["idle"] = {"draw", 1, false,false,function(self)
+	["idle"] = {"draw", 1, false, false, function(self)
 	end}
 }
 
@@ -154,6 +154,7 @@ SWEP.ViewBobCamBone = "ValveBiped.Bip01_R_Hand"
 SWEP.ViewPunchDiv = 120
 
 SWEP.CallbackTimeAdjust = 0.1
+SWEP.NoTrap = true
 
 function SWEP:Deploy( wep )
 	self:PlayAnim("deploy")
@@ -172,6 +173,10 @@ function SWEP:Holster( wep )
 				self:SetShowSpoon(false)
 			end
 			self:Throw(0, self.SpoonTime or CurTime(),nil,Vector(0,0,0),Angle(0,0,0))
+			self:Remove()
+		end
+
+		if self:GetNWBool("PlacedTrap", false) then
 			self:Remove()
 		end
 
@@ -326,20 +331,25 @@ function SWEP:KeyDown(key_enum)
 end
 
 if CLIENT then
+	local colWhite = Color(255, 255, 255, 155)
+	local lerpthing = 0
 	function SWEP:DrawHUD()
-		--PrintBones(self:GetWM())
-		--if GetViewEntity() ~= LocalPlayer() then return end
-		--if LocalPlayer():InVehicle() then return end
-       --local tr = self:GetEyeTrace()
-       --local toScreen = tr.HitPos:ToScreen()
+		if GetViewEntity() ~= lply then return end
+		if lply:InVehicle() then return end
+		if hg.GetCurrentCharacter(lply):IsRagdoll() then return end
 
-       --surface.SetDrawColor(255,255,255,155)
-       --surface.DrawRect(toScreen.x-2.5, toScreen.y-2.5, 5, 5)
+		local tr = self:GetEyeTrace()
+		local toScreen = tr.HitPos:ToScreen()
+
+		lerpthing = Lerp(0.1, lerpthing, (hg.eyeTrace(lply).Hit and not lply:IsSprinting() and not self.NoTrap) and 1 or 0)
+		colWhite.a = 255 * lerpthing
+		surface.SetDrawColor(colWhite)
+		surface.DrawRect(toScreen.x-2.5, toScreen.y-2.5, 5, 5)
 	end
 end
 
 function SWEP:SecondaryAttack()
-	if self.ReadyToThrow or self.CoolDown > CurTime() then return end
+	if self.ReadyToThrow or self.CoolDown > CurTime() or self:GetNWBool("PlacedTrap", false) then return end
 
 	local owner = self:GetOwner()
 	if not hg.CanUseLeftHand(owner) or not hg.CanUseRightHand(owner) then return end
@@ -439,6 +449,10 @@ function SWEP:ThinkAdd()
 		self:Throw(0, self.SpoonTime or CurTime(),nil,Vector(0,0,0),Angle(0,0,0))
 		self:Remove()
 	end
+
+	if self.ReadyToTrap then
+		self:PlaceTrap()
+	end
 end
 
 SWEP.spoon = "models/weapons/arc9/darsu_eft/skobas/m67_skoba.mdl"
@@ -455,8 +469,8 @@ function SWEP:CreateSpoon(entownr)
 		entasd:SetAngles(hand:GetAngles())
 		entasd:SetCollisionGroup(COLLISION_GROUP_WEAPON)
 		entasd:Spawn()
-		
-		entownr:EmitSound("weapons/m67/m67_spooneject.wav",65)
+
+		entownr:EmitSound("weapons/m67/m67_spooneject.wav", 65)
 
 		if self.SpoonSounds then
 			for k,v in ipairs(self.SpoonSounds) do
@@ -506,7 +520,7 @@ end
 SWEP.CoolDown = 0
 
 function SWEP:PrimaryAttack()
-	if self.ReadyToThrow or self.CoolDown > CurTime() then return end
+	if self.ReadyToThrow or self.CoolDown > CurTime() or self:GetNWBool("PlacedTrap", false) then return end
 
 	local owner = self:GetOwner()
 	if not hg.CanUseLeftHand(owner) or not hg.CanUseRightHand(owner) then return end
@@ -516,5 +530,143 @@ function SWEP:PrimaryAttack()
 	self.Thrower = self:GetOwner()
 end
 
+function SWEP:OwnerChanged()
+	if SERVER and self:GetNWBool("PlacedTrap", false) then
+		self:Remove()
+	end
+end
+
+--// Booby trap stuff
+SWEP.lpos = Vector(2,0,0)
+SWEP.lang = Angle(0,0,0)
+function SWEP:PlaceTrap()
+	if self.NoTrap then return end
+
+	local time = CurTime()
+	if CLIENT then return end
+
+	local ply = self:GetOwner()
+	if hg.GetCurrentCharacter(ply):IsRagdoll() then return end
+
+	local entownr
+	if IsValid(ply) then
+		entownr = hg.GetCurrentCharacter(ply)
+	end
+	
+	if ply:IsSprinting() then return end
+
+	if not hg.eyeTrace(ply).Hit then return end
+
+	if not self.startedattack and entownr == ply and not self:GetNWBool("PlacedTrap", false) then
+		local tr = hg.eyeTrace(ply)
+		local ent = ents.Create(self.ENT)
+		local pos,ang = LocalToWorld(self.lpos, self.lang, tr.HitPos, tr.HitNormal:Angle())
+		ent:SetPos(pos)
+		ent:SetAngles(ang)
+		ent:Spawn()
+		ent.owner = self.lastOwner
+		ent.owner2 = self.lastOwner
+		ent:SetOwner(self.lastOwner)
+		
+		ent.cons2 = constraint.Weld(ent,tr.Entity,0,tr.PhysicsBone or 0, 200, true, false)
+		
+		self.Trap = ent
+		
+		self:SetNWBool("PlacedTrap", true)
+	elseif IsValid(self.Trap) then
+		local tr = hg.eyeTrace(ply)
+
+		local tr2 = {}
+		tr2.start = self.Trap:GetPos()
+		tr2.endpos = tr.HitPos
+		tr2.filter = self.Trap
+		local trace = util.TraceLine(tr2)
+
+		if trace.Hit then return end
+		
+		local len = tr.HitPos:Distance(self.Trap:GetPos())
+		if len < 200 and len > 10 then
+			self.Trap.ent = tr.Entity
+			self.Trap.lpos = tr.Entity:WorldToLocal(tr.HitPos)
+			self.Trap.origlen = tr.HitPos:Distance(self.Trap:GetPos())
+			local cons = constraint.CreateKeyframeRope(
+				tr.HitPos, 0.05, "cable/cable2", nil,
+				self.Trap.ent, self.Trap.lpos, tr.PhysicsBone, self.Trap,
+				vector_origin, 0,
+				{
+					["Slack"] = 50,
+					["Collide with world"] = false,
+				}
+			)
+
+			local ent2 = ents.Create("prop_physics")
+			ent2:SetModel("models/hunter/plates/plate.mdl")
+			
+			ent2:SetMoveType(MOVETYPE_NONE)
+			ent2:SetSolid(SOLID_VPHYSICS)
+			ent2:Spawn()
+			local size = 1
+			local pos = self.Trap:GetPos()
+			--local dir = (tr.HitPos - pos):GetNormalized() * 1
+			ent2:PhysicsInitConvex({
+				Vector( tr.HitPos[1], tr.HitPos[2], tr.HitPos[3] ),
+				Vector( tr.HitPos[1], tr.HitPos[2], tr.HitPos[3] + size ),
+				Vector( tr.HitPos[1] + size, tr.HitPos[2], tr.HitPos[3] ),
+				Vector( tr.HitPos[1] + size, tr.HitPos[2], tr.HitPos[3] + size ),
+				Vector( pos[1], pos[2], pos[3] ),
+				Vector( pos[1], pos[2], pos[3] + size ),
+				Vector( pos[1] + size, pos[2], pos[3] ),
+				Vector( pos[1] + size, pos[2], pos[3] + size ),
+			})			
+			ent2:EnableCustomCollisions(true)
+
+			local phys = ent2:GetPhysicsObject()
+			if IsValid(phys) then
+				phys:SetMass(1)
+			end
+
+			ent2.Trap = self
+			ent2:SetNoDraw(true)
+			ent2:AddCallback("PhysicsCollide",function()
+				if IsValid(ent2.Trap) then
+					ent2.Trap:Arm(CurTime() - ent2.Trap.timeToBoom + 1, vector_origin)
+				end
+			end)
+
+			--[[ broken
+			constraint.NoCollide(self.Trap, ent2, 0, 0, false)
+			constraint.NoCollide(self.Trap.ent, ent2, 0, 0, false)
+			constraint.NoCollide(self.Trap, self.Trap.ent, 0, 0, false)
+
+			constraint.Weld(self.Trap, ent2, 0, 0, 0, true, false)
+			constraint.Weld(self.Trap.ent, ent2, 0, 0, 0, true, false)
+			]]
+
+			self.Trap.ent2 = ent2
+			self.Trap.cons = cons
+
+			ply:SelectWeapon("weapon_hands_sh")
+			self:Remove()
+		end
+	end
+
+	self.TrappingRN = false
+	self.ReadyToTrap = false
+end
+
 function SWEP:Reload()
+	if self.NoTrap or (self.TrappingRN or false) then return end
+
+	local ply = self:GetOwner()
+	if hg.GetCurrentCharacter(ply):IsRagdoll() then return end
+
+	if ply:IsSprinting() then return end
+	if not hg.eyeTrace(ply).Hit then return end
+
+	if self:GetNWBool("PlacedTrap", false) then
+		self:PlaceTrap()
+	else
+		self.TrappingRN = true
+		self:PlayAnim("trapplace")
+	end
 end

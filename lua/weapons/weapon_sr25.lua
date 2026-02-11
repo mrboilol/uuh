@@ -17,9 +17,6 @@ SWEP.FakeAng = Angle(0, 0, 0)
 SWEP.AttachmentPos = Vector(3.5,-0.2,-0.05)
 SWEP.AttachmentAng = Angle(0,0,0)
 
-
---Entity(1):GetActiveWeapon():GetWM():SetSubMaterial(0,"NULL")
-
 SWEP.FakeReloadSounds = {
 	[0.25] = "weapons/m4a1/m4a1_magrelease.wav",
 	[0.27] = "weapons/m4a1/m4a1_magout.wav",

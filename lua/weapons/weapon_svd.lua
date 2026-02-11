@@ -18,9 +18,6 @@ SWEP.AttachmentAng = Angle(0,0,0)
 
 
 
-
---Entity(1):GetActiveWeapon():GetWM():SetSubMaterial(0,"NULL")
-
 SWEP.FakeReloadSounds = {
 	[0.32] = "weapons/tfa_nam_svd/svd_magout.wav",
 	--[0.37] = "weapons/m4a1/m4a1_magrelease.wav",
@@ -144,7 +141,7 @@ SWEP.Primary.Wait = 0.15
 SWEP.NumBullet = 1
 SWEP.AnimShootMul = 1
 SWEP.AnimShootHandMul = 1
-SWEP.ReloadTime = 6.7
+SWEP.ReloadTime = 4.8
 SWEP.ReloadSoundes = {
 	"none",
 	"none",
