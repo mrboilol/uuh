@@ -1540,6 +1540,8 @@ function hg.TranslateToBodyTemp(temp, org)
 end
 
 local hg_temperaturesystem = CreateConVar("hg_temperaturesystem", 1, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "Enables/disabled temperature system", 0, 1)
+local hg_weather_override = CreateConVar("hg_weather_override", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "Enable overriding map temperature", 0, 1)
+local hg_weather_temperature = CreateConVar("hg_weather_temperature", 20, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "The temperature to use when override is enabled")
 
 hook.Add("Org Think", "BodyTemperature", function(owner, org, timeValue) -- переделал систему температуры
 	if not owner:IsPlayer() or not owner:Alive() then return end
@@ -1562,6 +1564,10 @@ hook.Add("Org Think", "BodyTemperature", function(owner, org, timeValue) -- пе
 	local currentPulse = org.pulse or 70
 	local pulseHeat = 0
 	local temp = hg.MapTemps[game.GetMap()] or 20
+	
+	if hg_weather_override:GetBool() then
+		temp = hg_weather_temperature:GetFloat()
+	end
 
 	if currentPulse > 80 then
 		local pulseMultiplier = math.min((currentPulse - 70) / 100, 1.2)

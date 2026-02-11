@@ -1510,9 +1510,9 @@ local function velocityDamage(ent, data)
 			
 			local neck_not_broken = org.spine3 < 0.8
 			
-			//if dmg > 0.5 then
-				hg.organism.input_list.spine3(org, bone, dmg * (math.random(4) == 1 and 1 or 0) * 3 * (hadhelmet and 0.5 or 1), dmgInfo)
-			//end
+			if dmg > 0.5 then
+				hg.organism.input_list.spine3(org, bone, dmg * (math.random(4) == 1 and 1 or 0) * 2.5 * (hadhelmet and 0.5 or 1), dmgInfo)
+			end
 			if dmg * 10 > 0.5 and !hadhelmet then
 				org.otrub = true
 				org.shock = org.shock + 10
@@ -1540,7 +1540,7 @@ local function velocityDamage(ent, data)
 		
 		if (not ply:Alive() or not org.alive) and (math.Round(ply:GetInfoNum("hg_deathfadeout", 1)) == 1) then// or org.otrub or hg.organism.paincheck(org) or (ply:Health() <= 0) then
 			if org.skull == 1 then
-				//ent:SetNWString("PlayerName", "Unidentifiable person")
+				ent:SetNWString("PlayerName", "Unidentifiable person")
 			end
 			
 			ply:ScreenFade(0, color_black, 1, 1)
