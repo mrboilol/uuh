@@ -87,7 +87,7 @@ local function decalBlood(pos, normal, tr, artery, owner)
 
 	hg.bloodcount = hg.bloodcount + 1
 	
-	if hg.bloodcount > 10000 then
+	if hg.bloodcount > 50000 then
 		hg.bloodpositions = {}
 		hg.bloodcount = 0
 	end
