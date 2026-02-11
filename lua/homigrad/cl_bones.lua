@@ -766,10 +766,19 @@
 			local time = CurTime()
 			if (ply.cachedtpik or 0) > time then return ply.cachedval end
 			ply.cachedtpik = time + 0.1
+
 			local int = hg_tpik_distance:GetInt()
-			if (int == 0 or ply == LocalPlayer() or ply == LocalPlayer():GetNWEntity("spect")) then ply.cachedval = true return true end
+			if (int == 0 or ply == lply or ply == lply:GetNWEntity("spect")) then
+				ply.cachedval = true
+				return true
+			end
+
 			local view = render.GetViewSetup(true)
-			if (ply:GetPos():DistToSqr(view.origin) > int*int) then ply.cachedval = false return false end
+			if (ply:GetPos():DistToSqr(view.origin) > int * int) then
+				ply.cachedval = false 
+				return false
+			end
+
 			ply.cachedval = true
 			return true
 		end
