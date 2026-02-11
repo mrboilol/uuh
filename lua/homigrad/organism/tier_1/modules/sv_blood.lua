@@ -17,6 +17,40 @@ hg.organism.bloodtypes = {
 	["c-"] = {["c-"] = true,["o-"] = true,["o+"] = true,["a-"] = true,["a+"] = true,["b-"] = true,["b+"] = true,["ab-"] = true,["ab+"] = true},
 }
 
+local tourniqet_bones = {
+	["ValveBiped.Bip01_L_UpperArm"] = {
+		["ValveBiped.Bip01_L_Forearm"] = true,
+		["ValveBiped.Bip01_L_Hand"] = true
+	},
+	["ValveBiped.Bip01_L_Forearm"] = {
+		["ValveBiped.Bip01_L_Hand"] = true
+	},
+
+	["ValveBiped.Bip01_R_UpperArm"] = {
+		["ValveBiped.Bip01_R_Forearm"] = true,
+		["ValveBiped.Bip01_R_Hand"] = true
+	},
+	["ValveBiped.Bip01_R_Forearm"] = {
+		["ValveBiped.Bip01_R_Hand"] = true
+	},
+
+	["ValveBiped.Bip01_L_Thigh"] = {
+		["ValveBiped.Bip01_L_Calf"] = true,
+		["ValveBiped.Bip01_L_Foot"] = true
+	},
+	["ValveBiped.Bip01_L_Calf"] = {
+		["ValveBiped.Bip01_L_Foot"] = true
+	},
+
+	["ValveBiped.Bip01_R_Thigh"] = {
+		["ValveBiped.Bip01_R_Calf"] = true,
+		["ValveBiped.Bip01_R_Foot"] = true
+	},
+	["ValveBiped.Bip01_R_Calf"] = {
+		["ValveBiped.Bip01_R_Foot"] = true
+	},
+}
+
 module[1] = function(org)
 	org.blood = 5000
 	org.bleed = 0
@@ -134,6 +168,24 @@ module[2] = function(owner, org, mulTime)
 			local rand2 = math.Rand(0.5, 1) * 1
 			local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.02
 			local coagulate = 2 * mulTime * rand2 * (adrenaline * 0.1 + 1) * 0.04-- / #org.wounds
+
+			if ent.bandaged_limbs and ent.bandaged_limbs[wound[4]] then
+				coagulate = coagulate * 3
+				bleed = bleed * 0.5
+			end
+
+			if ent.tourniquets then
+				for _, t in ipairs(ent.tourniquets) do
+					if t[3] == wound[4] then
+						coagulate = coagulate * 10
+						break
+					elseif tourniqet_bones[t[3]] and tourniqet_bones[t[3]][wound[4]] then
+						coagulate = coagulate * 10
+						break
+					end
+				end
+			end
+
 			bleedoutspeed = bleedoutspeed + bleed / rand1 * 3--we pray for the luck of it being in the center
 			coagulatespeed = coagulatespeed + coagulate / rand2 * 1
 			
@@ -340,40 +392,6 @@ function hg.organism.BloodDroplet2(owner, org, wound, dir, artery)
 end
 
 hg.TourniquetGuys = hg.TourniquetGuys or {}
-
-local tourniqet_bones = {
-	["ValveBiped.Bip01_L_UpperArm"] = {
-		["ValveBiped.Bip01_L_Forearm"] = true,
-		["ValveBiped.Bip01_L_Hand"] = true
-	},
-	["ValveBiped.Bip01_L_Forearm"] = {
-		["ValveBiped.Bip01_L_Hand"] = true
-	},
-
-	["ValveBiped.Bip01_R_UpperArm"] = {
-		["ValveBiped.Bip01_R_Forearm"] = true,
-		["ValveBiped.Bip01_R_Hand"] = true
-	},
-	["ValveBiped.Bip01_R_Forearm"] = {
-		["ValveBiped.Bip01_R_Hand"] = true
-	},
-
-	["ValveBiped.Bip01_L_Thigh"] = {
-		["ValveBiped.Bip01_L_Calf"] = true,
-		["ValveBiped.Bip01_L_Foot"] = true
-	},
-	["ValveBiped.Bip01_L_Calf"] = {
-		["ValveBiped.Bip01_L_Foot"] = true
-	},
-
-	["ValveBiped.Bip01_R_Thigh"] = {
-		["ValveBiped.Bip01_R_Calf"] = true,
-		["ValveBiped.Bip01_R_Foot"] = true
-	},
-	["ValveBiped.Bip01_R_Calf"] = {
-		["ValveBiped.Bip01_R_Foot"] = true
-	},
-}
 
 function hg.organism.ApplyTourniquet(ent, bone)
 	local org = ent.organism

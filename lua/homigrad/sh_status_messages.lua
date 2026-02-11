@@ -20,7 +20,13 @@ local audible_pain = {
     "Nothing matters EXCEPT MAKING IT STOP...",
     "Every second is an eternity of FIRE.",
     "DEATH WOULD BE MERCY NOW...",
-    "Just one moment without the pain..",
+    "FUUUUCK. ITS PAINING SO BAD...",
+    "WHY DOES IT HURT SO MUCH!",
+    "Stop stop stop stop stop stop STOP STOP...",
+    "OUUGH FUCK...",
+    "GOD. IT HURTS SO MUCH...",
+    "WHY DOES IT HURT WHY....",
+    "MOMMY- MOMMY HELP ME",
 	"I WISH I HAD SOME PAINKILLERS NOW. FUCK.",
 }
 
@@ -40,7 +46,7 @@ local sharp_pain = {
 	"AAAaaAa",
 	"AaaAAaghf",
 	"aaAaaAaff",
-	"aaahhh",
+	"AAAAGghgGG",
 	"AAAaaGHHH",
 	"AAAaaAAHH",
 	"AAAaaAAAAAaGHHHH",
@@ -65,6 +71,7 @@ local random_phrase = {
 	"Everything seems too quiet...",
 	"Breathing feels oddly satisfying right now.",
 	"What if this quiet lasts forever?",
+	"Nothing ever happens.",
 	"Why isn't anything happening?",
 }
 

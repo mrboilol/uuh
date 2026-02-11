@@ -281,7 +281,10 @@ hook.Add("RenderScreenspaceEffects", "HG_DrawEyeLossOverlay", function()
 	end
 end)
 
+local DespairSoundChoice
+
 local function stopthings()
+	DespairSoundChoice = nil
 	PainLerp = 0
 	O2Lerp = 0
 	shockLerp = 0
@@ -682,7 +685,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 			if o2 > 50 and !org.otrub then
 				if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
-					sound.PlayFile("sound/scav/despair.ogg", "noblock noplay", function(station)
+					if not DespairSoundChoice then
+						DespairSoundChoice = (math.random(2) == 1) and "sound/scav/despair.ogg" or "sound/itswraps.ogg"
+					end
+
+					sound.PlayFile(DespairSoundChoice, "noblock noplay", function(station)
 						if IsValid(station) then
 							station:SetVolume(0)
 							station:Play()
