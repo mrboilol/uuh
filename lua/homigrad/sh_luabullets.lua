@@ -332,6 +332,14 @@ end
 local function Impact(Weapon, iAmmoDamageType, bFirstTimePredicted, vSrc, tr, sImpactEffect, sRagdollImpactEffect)
 	if (not (Weapon and Weapon.DoImpactEffect and Weapon:DoImpactEffect(tr, iAmmoDamageType))) then
 		if (bFirstTimePredicted) then
+			if SERVER and math.random(1, 4) == 1 then
+				local sounds = hg.ImpactSounds[tr.MatType] or hg.ImpactSounds.Default
+				if sounds then
+					local snd = table.Random(sounds)
+					sound.Play(snd, tr.HitPos, 75, math.random(90, 110))
+				end
+			end
+
 			local data = EffectData()
 				data:SetOrigin(tr.HitPos)
 				data:SetStart(vSrc)
@@ -488,6 +496,100 @@ local tDefaultAmmoTable = {
 local numbullets = 0
 
 hg.vehicles = hg.vehicles or {}
+
+hg.ImpactSounds = {
+    [MAT_FLESH] = {
+        "bullet/ric_flesh1.ogg",
+        "bullet/ric_flesh2.ogg",
+        "bullet/ric_flesh3.ogg",
+        "bullet/ric_flesh4.ogg"
+    },
+    [MAT_BLOODYFLESH] = {
+        "bullet/ric_flesh1.ogg",
+        "bullet/ric_flesh2.ogg",
+        "bullet/ric_flesh3.ogg",
+        "bullet/ric_flesh4.ogg"
+    },
+    [MAT_CONCRETE] = {
+        "bullet/ric_stone1.ogg",
+        "bullet/ric_stone2.ogg",
+        "bullet/ric_stone3.ogg"
+    },
+    [MAT_TILE] = {
+        "bullet/ric_stone1.ogg",
+        "bullet/ric_stone2.ogg",
+        "bullet/ric_stone3.ogg"
+    },
+    [MAT_DIRT] = {
+        "bullet/ric_ground1.ogg",
+        "bullet/ric_ground2.ogg",
+        "bullet/ric_ground3.ogg",
+        "bullet/ric_ground4.ogg",
+        "bullet/ric_ground5.ogg"
+    },
+    [MAT_GRASS] = {
+        "bullet/ric_ground1.ogg",
+        "bullet/ric_ground2.ogg",
+        "bullet/ric_ground3.ogg",
+        "bullet/ric_ground4.ogg",
+        "bullet/ric_ground5.ogg"
+    },
+    [MAT_SAND] = {
+        "bullet/ric_ground1.ogg",
+        "bullet/ric_ground2.ogg",
+        "bullet/ric_ground3.ogg",
+        "bullet/ric_ground4.ogg",
+        "bullet/ric_ground5.ogg"
+    },
+    [MAT_METAL] = {
+        "bullet/ric_metal1.ogg",
+        "bullet/ric_metal2.ogg",
+        "bullet/ric_metal3.ogg",
+        "bullet/ric_metal4.ogg",
+        "bullet/ric_metal5.ogg"
+    },
+    [MAT_GRATE] = {
+        "bullet/ric_metal1.ogg",
+        "bullet/ric_metal2.ogg",
+        "bullet/ric_metal3.ogg",
+        "bullet/ric_metal4.ogg",
+        "bullet/ric_metal5.ogg"
+    },
+    [MAT_VENT] = {
+        "bullet/ric_metal1.ogg",
+        "bullet/ric_metal2.ogg",
+        "bullet/ric_metal3.ogg",
+        "bullet/ric_metal4.ogg",
+        "bullet/ric_metal5.ogg"
+    },
+    [MAT_COMPUTER] = {
+        "bullet/ric_metal1.ogg",
+        "bullet/ric_metal2.ogg",
+        "bullet/ric_metal3.ogg",
+        "bullet/ric_metal4.ogg",
+        "bullet/ric_metal5.ogg"
+    },
+    [MAT_WOOD] = {
+        "bullet/ric_wood1.ogg",
+        "bullet/ric_wood2.ogg",
+        "bullet/ric_wood3.ogg",
+        "bullet/ric_wood4.ogg"
+    }
+}
+hg.ImpactSounds.Default = {
+    "bullet/ric_ground1.ogg",
+    "bullet/ric_ground2.ogg",
+    "bullet/ric_ground3.ogg",
+    "bullet/ric_ground4.ogg",
+    "bullet/ric_ground5.ogg"
+}
+
+hg.RicochetSounds = {
+    "bullet/ricochet1.ogg",
+    "bullet/ricochet2.ogg",
+    "bullet/ricochet3.ogg",
+    "bullet/ricochet4.ogg"
+}
 
 function ENTITY:FireLuaBullets(tInfo)
     if (hook.Run("EntityFireBullets", self, tInfo) == false) then

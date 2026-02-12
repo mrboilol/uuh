@@ -3,6 +3,14 @@ hg.organism.module = hg.organism.module or {}
 local module = hg.organism.module
 hg.organism.lastindex = hg.organism.lastindex or 1000000
 hook.Add("Org Clear", "Main", function(org)
+	org.desensitized = false
+	if IsValid(org.owner) and org.owner:IsPlayer() then
+		local trauma = tonumber(org.owner:GetPData("hg_trauma", 0))
+		if trauma >= 50 then -- Threshold for desensitized
+			org.desensitized = true
+		end
+	end
+
 	org.alive = true
 	org.otrub = false
 	org.entindex = IsValid(org.owner) and org.owner:EntIndex() or hg.organism.lastindex + 1
@@ -175,6 +183,7 @@ local function send_organism(org, ply)
 	sendtable.incapacitated = org.incapacitated
 
 	sendtable.superfighter = org.superfighter
+	sendtable.desensitized = org.desensitized
 
 	net.Start("organism_send")
 	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
@@ -226,6 +235,7 @@ local function send_bareinfo(org)
 	sendtable.berserkActive2 = org.berserkActive2
 	sendtable.CantCheckPulse = org.CantCheckPulse
 	sendtable.berserkActive2 = org.berserkActive2
+	sendtable.desensitized = org.desensitized
 
 	local rf = RecipientFilter()
 	--rf:AddAllPlayers()
@@ -696,6 +706,26 @@ end)
 
 hook.Add("PlayerDeath","next-respawn-full",function(ply)
 	ply.fullsend = true
+	
+	local trauma = tonumber(ply:GetPData("hg_trauma", 0))
+	ply:SetPData("hg_trauma", trauma + 1)
+end)
+
+concommand.Add("hg_trauma_set", function(ply, cmd, args)
+	if not ply:IsAdmin() then return end
+	local target = args[1] and player.GetListByName(args[1])[1] or ply
+	local amount = tonumber(args[2])
+	if not IsValid(target) or not amount then return end
+	target:SetPData("hg_trauma", amount)
+	ply:ChatPrint("Set trauma for " .. target:Nick() .. " to " .. amount)
+end)
+
+concommand.Add("hg_trauma_get", function(ply, cmd, args)
+	if not ply:IsAdmin() then return end
+	local target = args[1] and player.GetListByName(args[1])[1] or ply
+	if not IsValid(target) then return end
+	local trauma = target:GetPData("hg_trauma", 0)
+	ply:ChatPrint("Trauma for " .. target:Nick() .. ": " .. trauma)
 end)
 
 hook.Add("HG_OnWakeOtrub", "afterOtrub", function( owner )

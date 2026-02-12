@@ -51,7 +51,8 @@ module[2] = function(owner, org, timeValue)
     org.satiety = min(max(org.satiety - timeValue * 0.5, 0), 100)
     org.blood = min(org.blood + timeValue * (org.satiety/10) , 5000)
     
-    org.regeneratehp = (org.regeneratehp or 0) + timeValue * (org.satiety/100)
+    local regenMul = org.desensitized and 0.7 or 1
+    org.regeneratehp = (org.regeneratehp or 0) + timeValue * (org.satiety/100) * regenMul
     if org.regeneratehp >= 1 then
         owner:SetHealth(min(owner:Health() + 1, 100))
         org.regeneratehp = org.regeneratehp - 1

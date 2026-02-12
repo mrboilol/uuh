@@ -276,7 +276,7 @@ module[2] = function(owner, org, timeValue)
 
 	if org.analgesia > 1.5 or org.painkiller > 2.4 then
 		if math.Rand(0, 500) < (org.analgesia + org.painkiller) then
-			//org.lungsfunction = false
+			org.lungsfunction = false
 		end
 	end
 

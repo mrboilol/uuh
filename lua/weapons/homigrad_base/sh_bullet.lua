@@ -1,4 +1,4 @@
-﻿AddCSLuaFile()
+AddCSLuaFile()
 --
 local surface_hardness = {
 	[MAT_METAL] = 1,
@@ -166,9 +166,16 @@ local function callbackBullet(self, tr, dmg, force, bullet)
 	elseif ApproachAngle < MaxRicAngle * 0.7 then --previosly 0.2, made 1 for fun
 		--if CLIENT then return end
 		-- ping whiiiizzzz
-		local rnd = math.random(12)
-		if rnd == 8 then rnd = 9 end
-		sound.Play("arc9_eft_shared/ricochet/ricochet" .. rnd .. ".ogg", hitPos, 75, math.random(90, 110))
+		if SERVER then
+			if math.random(1, 3) == 1 then
+				local snd = table.Random(hg.RicochetSounds or {"bullet/ricochet1.ogg", "bullet/ricochet2.ogg"})
+				sound.Play(snd, hitPos, 75, math.random(90, 110))
+			else
+				local rnd = math.random(12)
+				if rnd == 8 then rnd = 9 end
+				sound.Play("arc9_eft_shared/ricochet/ricochet" .. rnd .. ".ogg", hitPos, 75, math.random(90, 110))
+			end
+		end
 		--sound.Play("snd_jack_hmcd_ricochet_" .. math.random(1, 2) .. ".wav", hitPos, 75, math.random(90, 110))
 		--sound.Play("weapons/arccw/ricochet0" .. math.random(1, 5) .. "_quiet.wav", hitPos, 75, math.random(90, 110))
 		util.Decal("ManhackCut", tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)

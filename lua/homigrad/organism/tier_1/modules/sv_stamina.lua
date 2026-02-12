@@ -99,6 +99,8 @@ end
 function hg.organism.AddNaturalAdrenaline(org, fAmount)
 	if org.adrenalineStorage == 0 then return end
 	if fAmount < 0 then return end
+
+	if org.desensitized then fAmount = fAmount * 0.5 end
 	
 	local amt = math.min(org.adrenalineStorage, fAmount)
 	org.adrenaline = math.min(org.adrenaline + amt, 5)

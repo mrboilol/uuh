@@ -815,6 +815,12 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		
 		local instant_pain = instantPainMul * painadd
 		local slow_pain = (1 - instantPainMul) * painadd
+
+		if org.desensitized then
+			slow_pain = slow_pain * 0.8
+			instaPain = instaPain * 0.8
+		end
+
 		org.painadd = org.painadd + slow_pain
 		//org.avgpain = org.avgpain + instant_pain
 		org.shock = math.min(org.shock + instaPain * shockMul * 4.5 * math.Clamp(pen / 5,1,2), 70)
@@ -837,13 +843,13 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		end
 
 		if dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT+DMG_SLASH+DMG_BURN) then
-			org.fearadd = org.fearadd + 0.3
+			org.fearadd = org.fearadd + (org.desensitized and 0.15 or 0.3)
 			if IsValid(att) and att.organism and att.organism.fearadd then
 				//att.organism.fearadd = att.organism.fearadd + 0.05
 			end
 		end
 
-		org.fearadd = org.fearadd + hurt_add * 0.5
+		org.fearadd = org.fearadd + hurt_add * 0.5 * (org.desensitized and 0.5 or 1)
 
 		if dmgInfo:IsDamageType(DMG_BURN) then
 			local bigRand = math.Rand(0.0005,0.0008)

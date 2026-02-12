@@ -87,14 +87,14 @@ if SERVER then
 			entOwner:EmitSound("snds_jack_gmod/ez_medical/15.wav", 60, math.random(95, 105))
 		elseif self.mode == 3 then
 			if self.modeValues[3] == 0 then return end
-			/*local val = org.lungsL[1]
+			local val = org.lungsL[1]
 			local healed = math.max(val - self.modeValues[3], 0)
 			self.modeValues[3] = self.modeValues[3] - (val - healed)
 			org.lungsL[1] = healed
 			local val = org.lungsR[1]
 			local healed = math.max(val - self.modeValues[3], 0)
 			self.modeValues[3] = self.modeValues[3] - (val - healed)
-			org.lungsR[1] = healed*/
+			org.lungsR[1] = healed
 			local internalBleed = org.internalBleed - org.internalBleedHeal
 			
 			if self.poisoned2 then

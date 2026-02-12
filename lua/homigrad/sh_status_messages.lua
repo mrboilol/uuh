@@ -313,7 +313,7 @@ function hg.likely_to_phrase(ply)
 	local temperature = org.temperature
 	local broken_dislocated = org.just_damaged_bone and ((org.just_damaged_bone - CurTime()) < -3)
 
-	return (broken_dislocated) and 5
+	local probability = (broken_dislocated) and 5
 		or (pain > 65) and 5
 		or (temperature < 31 and 0.5)
 		or (temperature > 38 and 0.5)
@@ -322,6 +322,12 @@ function hg.likely_to_phrase(ply)
 		or (brain > 0.1 and brain * 5)
 		or (fear < -0.5 and 0.05)
 		or 0.02 -- Random thoughts
+
+	if org.desensitized then
+		probability = probability * 0.05
+	end
+
+	return probability
 end
 
 local function ScrambleText(text, intensity)
