@@ -1031,7 +1031,7 @@ local IsValid = IsValid
 		curlean = curlean or 0
 		unmodified_angle = unmodified_angle or 0
 		local time = SysTime() - 0.01
-		hook.Add("Think", "leanin", function()
+		hook.Add("HUDPaint", "leanin", function()
 			local ply = LocalPlayer()
 			local angles = ply:EyeAngles()
 
@@ -1828,7 +1828,7 @@ local IsValid = IsValid
 		k = k * math.Clamp(5 / ((org.immobilization or 0) + 1), 0.25, 1)
 		k = k * math.Clamp((org.blood or 0) / 5000, 0, 1)
 		k = k * math.Clamp(10 / ((org.shock or 0) + 1), 0.25, 1)
-		k = k * (math.min((org.adrenaline or 0) / 24, 0.3) + 1)
+		--k = k * (math.min((org.adrenaline or 0) / 24, 0.3) + 1)
 		k = k * math.Clamp((org.lleg and org.lleg >= 0.5 and math.max(1 - org.lleg, 0.6) or 1) * (org.lleg and org.rleg >= 0.5 and math.max(1 - org.rleg, 0.6) or 1) * ((org.analgesia * 1 + 1)), 0, 1)
 		k = k * (org.llegdislocation and 0.75 or 1) * (org.rlegdislocation and 0.75 or 1)
 		k = k * (org.pelvis == 1 and 0.4 or 1)
