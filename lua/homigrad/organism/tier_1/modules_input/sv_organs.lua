@@ -118,6 +118,10 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 	return result
 end
 
+if SERVER then
+    util.AddNetworkString("hg_head_trauma_saturation")
+end
+
 input_list.brain = function(org, bone, dmg, dmgInfo)
 	if not org or not org.brain then return 0 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 50 end
@@ -145,10 +149,23 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 		end)
 	end
 
-	org.consciousness = math.Approach(org.consciousness, 0, dmg * 3)
+	if dmg > 0.1 then
+        -- ooo blyat
+		org.consciousness = math.Approach(org.consciousness, 0, dmg * 3)
+		org.disorientation = org.disorientation + dmg * 1
+		org.shock = org.shock + dmg * 3
+        
+        if org.isPly then
+             net.Start("hg_head_trauma_saturation")
+             net.WriteFloat(math.Clamp(dmg * 2, 0.5, 2.0))
+             net.Send(org.owner)
+        end
+	else
+        org.consciousness = math.Approach(org.consciousness, 0, dmg * 3)
+        org.disorientation = org.disorientation + dmg * 1
+        org.shock = org.shock + dmg * 3
+    end
 	
-	org.disorientation = org.disorientation + dmg * 1
-	org.shock = org.shock + dmg * 3
 	org.painadd = org.painadd + dmg * 10
 	
 	if dmg > 0.01 and org.isPly then

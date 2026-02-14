@@ -281,9 +281,15 @@ hook.Add("RenderScreenspaceEffects", "HG_DrawEyeLossOverlay", function()
 	end
 end)
 
+local PainSoundChoice
+local LowO2SoundChoice
 local DespairSoundChoice
+local TiredStation
+local SleepyStation
 
 local function stopthings()
+	PainSoundChoice = nil
+	LowO2SoundChoice = nil
 	DespairSoundChoice = nil
 	PainLerp = 0
 	O2Lerp = 0
@@ -294,13 +300,13 @@ local function stopthings()
 
 	local lply = LocalPlayer()
 	if IsValid(lply) then
-		lply.tinnitus = 0
+		lply.tinnitus = nil
 	end
-	
-	--[[if IsValid(PainStation) then
+
+	if IsValid(PainStation) then
 		PainStation:Stop()
 		PainStation = nil
-	end--]]
+	end
 
 	if IsValid(NoiseStation) then
 		NoiseStation:Stop()
@@ -316,6 +322,16 @@ local function stopthings()
 		DespairStation:Stop()
 		DespairStation = nil
 	end
+
+    if IsValid(TiredStation) then
+        TiredStation:Stop()
+        TiredStation = nil
+    end
+
+    if IsValid(SleepyStation) then
+        SleepyStation:Stop()
+        SleepyStation = nil
+    end
 
 	if IsValid(BrainTraumaStation) then
 		BrainTraumaStation:Stop()
@@ -382,7 +398,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	local org = organism
 	
 	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
-		sound.PlayFile("sound/zbattle/pain_beat.ogg", "noblock noplay", function(station)
+		if not PainSoundChoice then
+			PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/owie.ogg"
+		end
+		
+		sound.PlayFile(PainSoundChoice, "noblock noplay", function(station)
 			if IsValid(station) then
 				station:SetVolume(0)
 				station:Play()
@@ -453,6 +473,52 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	-- local immobilization = org.immobilization
 	PainLerp = LerpFT(0.05, PainLerp, math.max(pain * (org.otrub and 0.2 or 1), 0))
 	assimilatedLerp = LerpFT(0.01, assimilatedLerp, (org.assimilated or 0))
+
+    local stamina = org.stamina and org.stamina[1] or 100
+    if stamina < 30 and !org.otrub then
+        if !IsValid(TiredStation) or TiredStation:GetState() != GMOD_CHANNEL_PLAYING then
+            sound.PlayFile("sound/tired.ogg", "noblock noplay", function(station)
+                if IsValid(station) then
+                    station:SetVolume(0)
+                    station:Play()
+                    TiredStation = station
+                    station:EnableLooping(true)
+                end
+            end)
+        end
+        if IsValid(TiredStation) then
+            local targetVol = math.Clamp((30 - stamina) / 30, 0, 0.4)
+            if (PainLerp > 20) or (o2 < 20) then targetVol = targetVol * 0.2 end
+            TiredStation:SetVolume(targetVol)
+        end
+    else
+        if IsValid(TiredStation) then
+            TiredStation:Stop()
+            TiredStation = nil
+        end
+    end
+
+    if org.consciousness < 0.4 and !org.otrub then
+        if !IsValid(SleepyStation) or SleepyStation:GetState() != GMOD_CHANNEL_PLAYING then
+            sound.PlayFile("sound/sleepy.ogg", "noblock noplay", function(station)
+                if IsValid(station) then
+                    station:SetVolume(0)
+                    station:Play()
+                    SleepyStation = station
+                    station:EnableLooping(true)
+                end
+            end)
+        end
+        if IsValid(SleepyStation) then
+            local targetVol = math.Clamp((0.4 - org.consciousness) * 2.5, 0, 0.5)
+            SleepyStation:SetVolume(targetVol)
+        end
+    else
+        if IsValid(SleepyStation) then
+            SleepyStation:Stop()
+            SleepyStation = nil
+        end
+    end
 
 	if assimilatedLerp > 0.001 then
 		render.UpdateScreenEffectTexture()
@@ -669,44 +735,56 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 		
 		if o2 > 20 then
-			if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
-				sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
-					if IsValid(station) then
-						station:SetVolume(0)
-						station:Play()
-						DespairStation = station
-						station:EnableLooping(true)
-					end
-				end)
-			end
-			if IsValid(DespairStation) then
-				DespairStation:SetVolume(math.Clamp((o2 - 20) / 100, 0, 0.6))
+			if !LowO2SoundChoice then
+				LowO2SoundChoice = math.random(1, 3)
 			end
 
-			if o2 > 50 and !org.otrub then
-				if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
-					if not DespairSoundChoice then
-						DespairSoundChoice = (math.random(2) == 1) and "sound/scav/despair.ogg" or "sound/itswraps.ogg"
-					end
-
-					sound.PlayFile(DespairSoundChoice, "noblock noplay", function(station)
+			if LowO2SoundChoice == 1 or LowO2SoundChoice == 3 then
+				if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
+					sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
 						if IsValid(station) then
 							station:SetVolume(0)
 							station:Play()
-							station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
-							NoiseStation2 = station
+							DespairStation = station
 							station:EnableLooping(true)
 						end
 					end)
 				end
-				
-				if IsValid(NoiseStation2) then
-					NoiseStation2:SetVolume(math.Clamp((o2 - 50) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 0.25))
+				if IsValid(DespairStation) then
+					DespairStation:SetVolume(math.Clamp((o2 - 20) / 100, 0, 0.6))
 				end
 			else
-				if IsValid(NoiseStation2) then
-					NoiseStation2:SetVolume(0)
+				if IsValid(DespairStation) then DespairStation:SetVolume(0) end
+			end
+
+			if LowO2SoundChoice == 2 or LowO2SoundChoice == 3 then
+				if o2 > 50 and !org.otrub then
+					if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
+						if not DespairSoundChoice then
+							DespairSoundChoice = (math.random(2) == 1) and "sound/scav/despair.ogg" or "sound/itswraps.ogg"
+						end
+	
+						sound.PlayFile(DespairSoundChoice, "noblock noplay", function(station)
+							if IsValid(station) then
+								station:SetVolume(0)
+								station:Play()
+								station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
+								NoiseStation2 = station
+								station:EnableLooping(true)
+							end
+						end)
+					end
+					
+					if IsValid(NoiseStation2) then
+						NoiseStation2:SetVolume(math.Clamp((o2 - 50) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 0.25))
+					end
+				else
+					if IsValid(NoiseStation2) then
+						NoiseStation2:SetVolume(0)
+					end
 				end
+			else
+				if IsValid(NoiseStation2) then NoiseStation2:SetVolume(0) end
 			end
 			
 			if org.otrub then
@@ -844,11 +922,41 @@ if CLIENT then
     end)
 end
 
+local traumaSaturation = 0
+net.Receive("hg_head_trauma_saturation", function()
+    local intensity = net.ReadFloat()
+    traumaSaturation = math.min(traumaSaturation + intensity, 2.0)
+end)
+
+local tab = {
+	[ "$pp_colour_addr" ] = 0,
+	[ "$pp_colour_addg" ] = 0,
+	[ "$pp_colour_addb" ] = 0,
+	[ "$pp_colour_brightness" ] = 0,
+	[ "$pp_colour_contrast" ] = 1,
+	[ "$pp_colour_colour" ] = 1,
+	[ "$pp_colour_mulr" ] = 0,
+	[ "$pp_colour_mulg" ] = 0,
+	[ "$pp_colour_mulb" ] = 0
+}
+
 hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
     if damageFlashLerp > 0.01 then
         damageFlashLerp = math.Approach(damageFlashLerp, 0, FrameTime() * 0.5)
         surface.SetDrawColor(255, 0, 0, damageFlashLerp * 150)
         surface.DrawRect(0, 0, ScrW(), ScrH())
+    end
+    
+    if traumaSaturation > 0.01 then
+        traumaSaturation = math.Approach(traumaSaturation, 0, FrameTime() * 0.5)
+        
+        tab[ "$pp_colour_colour" ] = 1 + traumaSaturation * 2 
+        tab[ "$pp_colour_contrast" ] = 1 + traumaSaturation * 0.2
+        
+        DrawColorModify(tab)
+        
+        tab[ "$pp_colour_colour" ] = 1
+        tab[ "$pp_colour_contrast" ] = 1
     end
 end)
 

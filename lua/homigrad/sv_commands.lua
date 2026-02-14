@@ -206,6 +206,33 @@ if SERVER then
 
     end, 2, "ник игрока сообщение"}
 
+    COMMANDS.weather = {function(ply, args)
+        if not ply:IsAdmin() then return end
+        
+        local input = args[1]
+        
+        if not input then
+            local override = hg.TemperatureOverride
+            local map = hg.MapTemps[game.GetMap()] or 20
+            ply:ChatPrint("Current Override: " .. (override or "None"))
+            ply:ChatPrint("Map Default: " .. map .. "C")
+            ply:ChatPrint("Usage: !weather [number] or !weather reset")
+            return
+        end
+
+        input = string.lower(input)
+
+        if input == "reset" or input == "normal" then
+            hg.TemperatureOverride = nil
+            ply:ChatPrint("Weather reset to map default.")
+        elseif tonumber(input) then
+            hg.TemperatureOverride = tonumber(input)
+            ply:ChatPrint("Weather set to " .. input .. "C")
+        else
+            ply:ChatPrint("Invalid input. Please use a number (e.g. 25, -10) or 'reset'.")
+        end
+    end, 1}
+
 	COMMANDS.setmodel = {function(ply, args)
 		if not ply:IsAdmin() then return end
 		local plya = #args > 1 and args[1] or ply:Name()
