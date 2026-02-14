@@ -317,22 +317,22 @@ end
 input_list.eyeL = function(org, bone, dmg, dmgInfo)
 	if not org or not org.eyeL then return 0 end
 	local oldDmg = org.eyeL or 0
-	local result = damageOrgan(org, dmg * 1.5, dmgInfo, "eyeL") -- eyes are more fragile now
+	local result = damageOrgan(org, dmg * 3, dmgInfo, "eyeL") -- HIGHLY vulnerable
 
-	hg.AddHarmToAttacker(dmgInfo, math.max(org.eyeL - oldDmg, 0) * 6, "Left eye damage harm")
+	hg.AddHarmToAttacker(dmgInfo, math.max(org.eyeL - oldDmg, 0) * 10, "Left eye damage harm")
 
 	if hg.organism.enhancedPain then
-		hg.organism.enhancedPain.applyPain(org, dmg * 35, dmgInfo, "eyeL", false)
+		hg.organism.enhancedPain.applyPain(org, dmg * 50, dmgInfo, "eyeL", false)
 	else
-		org.painadd = org.painadd + dmg * 35
+		org.painadd = org.painadd + dmg * 50
 	end
-	org.shock = org.shock + dmg * 10
-	org.disorientation = org.disorientation + dmg * 2
+	org.shock = org.shock + dmg * 15
+	org.disorientation = org.disorientation + dmg * 4
 
 	-- bleed from any damaging hit type
-	org.bleed = org.bleed + dmg * 0.8
+	org.bleed = org.bleed + dmg * 1.5
 
-	org.pulse = math.min(org.pulse + dmg * 8, 180)
+	org.pulse = math.min(org.pulse + dmg * 10, 180)
 
 	-- eye popped: play short-range cue
 	if oldDmg < 1 and org.eyeL >= 1 then
@@ -353,12 +353,7 @@ input_list.eyeL = function(org, bone, dmg, dmgInfo)
 		end
 	elseif org.eyeL > 0.1 then
 		-- Slight disorientation for eye damage
-		org.disorientation = math.min(org.disorientation + dmg * 0.5, 0.5)
-	end
-
-	-- Small chance to block brain damage (20%)
-	if math.random(100) <= 20 then
-		return 1
+		org.disorientation = math.min(org.disorientation + dmg * 1, 1.0)
 	end
 
 	return result
@@ -367,22 +362,22 @@ end
 input_list.eyeR = function(org, bone, dmg, dmgInfo)
 	if not org or not org.eyeR then return 0 end
 	local oldDmg = org.eyeR or 0
-	local result = damageOrgan(org, dmg * 1.5, dmgInfo, "eyeR") -- eyes are more fragile now
+	local result = damageOrgan(org, dmg * 3, dmgInfo, "eyeR") -- HIGHLY vulnerable
 
-	hg.AddHarmToAttacker(dmgInfo, math.max(org.eyeR - oldDmg, 0) * 6, "Right eye damage harm")
+	hg.AddHarmToAttacker(dmgInfo, math.max(org.eyeR - oldDmg, 0) * 10, "Right eye damage harm")
 
 	if hg.organism.enhancedPain then
-		hg.organism.enhancedPain.applyPain(org, dmg * 35, dmgInfo, "eyeR", false)
+		hg.organism.enhancedPain.applyPain(org, dmg * 50, dmgInfo, "eyeR", false)
 	else
-		org.painadd = org.painadd + dmg * 35
+		org.painadd = org.painadd + dmg * 50
 	end
-	org.shock = org.shock + dmg * 10
-	org.disorientation = org.disorientation + dmg * 2
+	org.shock = org.shock + dmg * 15
+	org.disorientation = org.disorientation + dmg * 4
 
 	-- bleed from any damaging hit type
-	org.bleed = org.bleed + dmg * 0.8
+	org.bleed = org.bleed + dmg * 1.5
 
-	org.pulse = math.min(org.pulse + dmg * 8, 180)
+	org.pulse = math.min(org.pulse + dmg * 10, 180)
 
 	-- eye popped: play short-range cue
 	if oldDmg < 1 and org.eyeR >= 1 then
@@ -407,12 +402,7 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
 		end
 	elseif org.eyeR > 0.1 then
 		-- Slight disorientation for eye damage
-		org.disorientation = math.min(org.disorientation + dmg * 0.5, 0.5)
-	end
-
-	-- Small chance to block brain damage (20%)
-	if math.random(100) <= 20 then
-		return 1
+		org.disorientation = math.min(org.disorientation + dmg * 1, 1.0)
 	end
 
 	return result
@@ -421,7 +411,7 @@ end
 input_list.nose = function(org, bone, dmg, dmgInfo)
 	if not org or not org.nose then return 0 end
 	local oldDmg = org.nose or 0
-	local result = damageOrgan(org, dmg * 3, dmgInfo, "nose") -- nose is sensitive
+	local result = damageOrgan(org, dmg * 4, dmgInfo, "nose") -- nose is extremely sensitive
 
 	-- Nose breakage threshold
 	if oldDmg < 0.5 and org.nose >= 0.5 then
@@ -447,24 +437,21 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
 			
 			-- Pain increase
 			if hg.organism.enhancedPain then
-				hg.organism.enhancedPain.applyPain(org, 25, dmgInfo, "nose", false)
+				hg.organism.enhancedPain.applyPain(org, 35, dmgInfo, "nose", false)
 			else
-				org.painadd = org.painadd + 25
+				org.painadd = org.painadd + 35
 			end
 			
 			-- Disorientation (similar to eye damage)
-			org.disorientation = math.min(org.disorientation + 0.5, 1.0)
+			org.disorientation = math.min(org.disorientation + 0.8, 1.2)
 			
 			-- Bleeding effect
-			org.bleed = org.bleed + 0.5
-			
-			-- Visual bleeding could be handled here if we have a specific nose bleed particle/net message
-			-- For now, using generic blood impact via damage info scaling or relying on client side blood
+			org.bleed = org.bleed + 1.0
 		end
 	end
 	
 	if org.nose > 0.1 then
-		org.painadd = org.painadd + dmg * 5
+		org.painadd = org.painadd + dmg * 8
 	end
 
 	return result

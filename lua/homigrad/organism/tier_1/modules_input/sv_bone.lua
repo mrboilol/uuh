@@ -546,17 +546,94 @@ end)
 input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet)
 	if dmgInfo:IsDamageType(DMG_BURN) or dmgInfo:IsDamageType(DMG_SLOWBURN) then return 0 end
     local oldDmg = org.skull
+    local rawDmg = dmg
     local isBullet = dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)
     local isSlash = dmgInfo:IsDamageType(DMG_SLASH)
+    local isCrush = dmgInfo:IsDamageType(DMG_CRUSH) or dmgInfo:IsDamageType(DMG_CLUB) or dmgInfo:IsDamageType(DMG_GENERIC)
 
     if isSlash then
         dmg = dmg * 0.6
+    end
+
+    -- Check for frontal hit
+    local isFrontal = false
+    local eyeL_hit = false
+    local eyeR_hit = false
+    local nose_hit = false
+    local hitPos = hit or dmgInfo:GetDamagePosition()
+
+    if IsValid(org.owner) then
+        local headBone = org.owner:LookupBone("ValveBiped.Bip01_Head1")
+        if headBone then
+            local headTrans = org.owner:GetBoneMatrix(headBone)
+            if headTrans then
+                local headPos = headTrans:GetTranslation()
+                local headAng = headTrans:GetAngles()
+                local headFwd = headAng:Forward()
+                
+                local dmgDir = dir or dmgInfo:GetDamageForce():GetNormalized()
+                if headFwd:Dot(dmgDir) < -0.2 then isFrontal = true end
+
+                -- Precise Hitbox Logic (Simulated)
+                -- Offsets approximate standard human head proportions
+                local eyeL_pos = headPos + headFwd * 3.5 + headAng:Right() * -1.3 + headAng:Up() * 0.5
+                local eyeR_pos = headPos + headFwd * 3.5 + headAng:Right() * 1.3 + headAng:Up() * 0.5
+                local nose_pos = headPos + headFwd * 4.2 + headAng:Up() * -0.5
+
+                if hitPos:DistToSqr(eyeL_pos) < 2.5 then eyeL_hit = true end
+                if hitPos:DistToSqr(eyeR_pos) < 2.5 then eyeR_hit = true end
+                if hitPos:DistToSqr(nose_pos) < 2 then nose_hit = true end
+            end
+        end
     end
 
     local boneMul = isSlash and 0.35 or 0.25
     local result, vecrand = damageBone(org, boneMul, dmg, dmgInfo, "skull", boneindex, dir, hit, ricochet)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.skull - oldDmg) * 4, "Skull bone damage harm")
+
+    -- Eyes and Nose Logic (Prone to crush/slash, bypass skull protection)
+    local eyeChance = 0
+    local noseChance = 0
+
+    if isSlash then
+        eyeChance = isFrontal and 90 or 30 -- Prone to slash
+        noseChance = isFrontal and 60 or 10
+    elseif isBullet then
+        eyeChance = isFrontal and 50 or 20
+        noseChance = isFrontal and 40 or 10
+    elseif isCrush then
+        eyeChance = isFrontal and 80 or 20 -- Prone to crush
+        noseChance = isFrontal and 90 or 30 -- Prone to crush
+    end
+
+    -- Apply precise hits first
+    if eyeL_hit then
+        local eyeFunc = hg.organism.input_list["eyeL"]
+        if eyeFunc then eyeFunc(org, 1, rawDmg, dmgInfo) end
+    end
+    
+    if eyeR_hit then
+        local eyeFunc = hg.organism.input_list["eyeR"]
+        if eyeFunc then eyeFunc(org, 1, rawDmg, dmgInfo) end
+    end
+
+    if nose_hit then
+        local noseFunc = hg.organism.input_list["nose"]
+        if noseFunc then noseFunc(org, 1, rawDmg, dmgInfo) end
+    end
+
+    -- Random chance (only if not precisely hit)
+    if !eyeL_hit and !eyeR_hit and eyeChance > 0 and math.random(100) <= eyeChance then
+        local which = (math.random(2) == 1) and "eyeL" or "eyeR"
+        local eyeFunc = hg.organism.input_list[which]
+        if eyeFunc then eyeFunc(org, 1, rawDmg, dmgInfo) end 
+    end
+
+    if !nose_hit and noseChance > 0 and math.random(100) <= noseChance then
+        local noseFunc = hg.organism.input_list["nose"]
+        if noseFunc then noseFunc(org, 1, rawDmg, dmgInfo) end 
+    end
 
     if org.skull == 1 then
         -- bullet: softer shock on fully broken skull
@@ -711,21 +788,6 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 		end
 	end
 
-
-    local eyeChance = 0
-    if dmgInfo:IsDamageType(DMG_SLASH) then
-        eyeChance = 30 
-    elseif dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT) then
-        eyeChance = 20
-    elseif dmgInfo:IsDamageType(DMG_CLUB) or dmgInfo:IsDamageType(DMG_GENERIC) or dmgInfo:IsDamageType(DMG_CRUSH) then
-        eyeChance = 8
-    end
-
-    if eyeChance > 0 and math.random(100) <= eyeChance then
-        local which = (math.random(2) == 1) and "eyeL" or "eyeR"
-        local eyeFunc = hg.organism.input_list[which]
-        if eyeFunc then eyeFunc(org, 1, dmg, dmgInfo) end
-    end
 
 	return result,vecrand
 end

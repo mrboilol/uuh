@@ -408,13 +408,13 @@ hook.Add("Think", "Fake", function()
 				local pos = head:GetPos()
 				
 				if !IsValid(ragdoll.ConsLH) then
-					shadowControl(ragdoll, 5, 0.001, ang, 500, 100, pos + ang:Forward() * 12 - ang:Right() * 6, 500, 50)
-					shadowControl(ragdoll, 4, 0.001, ang, 500, 100, pos + ang:Forward() * 6 - ang:Right() * 10, 500, 50)
+					shadowControl(ragdoll, 5, 0.001, ang, 0, 0, pos + ang:Forward() * 10 - ang:Right() * 5, 5050, 100)
+					shadowControl(ragdoll, 4, 0.001, ang, 0, 0, pos + ang:Forward() * 5 - ang:Right() * 10, 5050, 100)
 				end
 				
 				if !IsValid(ragdoll.ConsRH) then
-					shadowControl(ragdoll, 7, 0.001, ang, 500, 100, pos + ang:Forward() * 12 + ang:Right() * 6, 500, 50)
-					shadowControl(ragdoll, 6, 0.001, ang, 500, 100, pos + ang:Forward() * 6 + ang:Right() * 10, 500, 50)
+					shadowControl(ragdoll, 7, 0.001, ang, 0, 0, pos + ang:Forward() * 10 + ang:Right() * 5, 5050, 100)
+					shadowControl(ragdoll, 6, 0.001, ang, 0, 0, pos + ang:Forward() * 5 + ang:Right() * 10, 5050, 100)
 				end
 			end
 
@@ -1014,3 +1014,4 @@ hook.Add("PlayerButtonDown", "RagdollProtectiveStance", function(ply, button)
 		--ply:ChatPrint("Protective Stance: " .. (ply.protectiveStance and "ON" or "OFF"))
 	end
 end)
+
