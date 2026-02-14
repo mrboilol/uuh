@@ -766,15 +766,18 @@ COMMANDS.setforcemode = {
 		if args[1] ~= "random" then
 			NextRound(args[1])
 		end
-	end,
-	0
+	end, 0
 }
 
-COMMANDS.endround = {function(ply, args)
-	if not ply:IsAdmin() then ply:ChatPrint("You don't have access") return end
+COMMANDS.endround = {
+	function(ply, args)
+		if not ply:IsAdmin() then
+			ply:ChatPrint("You don't have access")
+			return
+		end
 	 	zb:EndRound()
-	end,
-	0}
+	end, 0
+}
 
 if SERVER then
 	util.AddNetworkString("SendAvailableModes")
