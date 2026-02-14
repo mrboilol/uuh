@@ -1942,6 +1942,9 @@ function SWEP:SetupWeaponHoldTypeForAI( t )
 	end
 end
 
+function SWEP:CanBePickedUpByNPCs()
+	return true
+end
 
 --[[function SWEP:CustomAttack2() -- prikol
     local ent = ents.Create("ent_throwable")

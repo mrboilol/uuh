@@ -742,6 +742,7 @@ function SWEP:CanPickup(ent)
 end
 
 local trMins, trMaxs = Vector(-5, -5, -5), Vector(5, 5, 5)
+local trMinsClaws, trMaxsClaws = Vector(-8, -8, -8), Vector(8, 8, 8)
 function SWEP:SecondaryAttack()
 	local owner = self:GetOwner()
 	if owner:InVehicle() then return end
@@ -763,6 +764,14 @@ function SWEP:SecondaryAttack()
 		local tr = util.QuickTrace(pos, owner:GetAimVector() * self.ReachDistance, {owner})
 
 		if clawClasses[ply.PlayerClassName] then
+			tr = util.TraceHull({
+				start = pos,
+				endpos = pos + owner:GetAimVector() * self.ReachDistance,
+				filter = {ply, hg.GetCurrentCharacter(ply)},
+				mins = trMinsClaws,
+				maxs = trMaxsClaws,
+			})
+		else
 			tr = util.TraceHull({
 				start = pos,
 				endpos = pos + owner:GetAimVector() * self.ReachDistance,
@@ -996,11 +1005,12 @@ function SWEP:ApplyForce()
 
 				local tr = {}
 				tr.start = TargetPos
-				tr.endpos = TargetPos - vector_up * 16
-				tr.mask = MASK_SOLID_BRUSHONLY
+				tr.endpos = TargetPos - vector_up * 32
+				tr.mask = MASK_SOLID
+				tr.filter = {self.CarryEnt, self, ply}
 				local trace = util.TraceLine(tr)
-
-				if bone != "ValveBiped.Bip01_Spine2" or not trace.Hit then
+				
+				if bone != "ValveBiped.Bip01_Spine2" or !trace.Hit then
 					phys:ApplyForceCenter(ply:GetAimVector() * math.min(5000, phys:GetMass() * 800))
 					self:SetCarrying()
 				end
@@ -1479,7 +1489,18 @@ function SWEP:AttackFront(special_attack, rand)
 	--self.PenetrationCopy = -(-self.Penetration) -- это как
 	owner:LagCompensation(true)
 	local Ent, HitPos, _, physbone, trace = WhomILookinAt(owner, .3, special_attack and 35 or 45)
-	if true --[[clawClasses[owner.PlayerClassName]] then
+	if clawClasses[owner.PlayerClassName] then
+		local pos = hg.eye(owner)
+		trace = util.TraceHull({
+			start = pos,
+			endpos = pos + owner:GetAimVector() * self.ReachDistance,
+			filter = {owner, hg.GetCurrentCharacter(owner)},
+			mins = trMinsClaws,
+			maxs = trMaxsClaws,
+		})
+		Ent = trace.Entity
+		HitPos = trace.HitPos
+	else
 		local pos = hg.eye(owner)
 		trace = util.TraceHull({
 			start = pos,
