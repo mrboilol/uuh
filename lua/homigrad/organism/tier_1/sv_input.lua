@@ -314,7 +314,7 @@ util.AddNetworkString("AddFlash")
 util.AddNetworkString("bloodsquirt")
 
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"enable developer mode (enables damage traces)",0,1)
-CreateConVar("hg_isshitworking", "0", FCVAR_REPLICATED, "Debug mode for damage shit")
+CreateConVar("hg_isshitworking2", "0", FCVAR_REPLICATED, "Debug mode for damage shit")
 
 local npcDmg = {
 	npc_combine_s = {
@@ -503,6 +503,26 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	org.isPly = IsValid(ply)
 	
 	if org.godmode then return true end
+
+	if IsValid(ply) and ply.protectiveStance then
+		local att = dmgInfo:GetAttacker()
+		if IsValid(att) then
+			local dir = (att:GetPos() - ent:GetPos()):GetNormalized()
+			local forward
+
+			if ent:IsRagdoll() then
+				local head = ent:GetPhysicsObjectNum(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_Head1")) or 0)
+				if IsValid(head) then forward = head:GetAngles():Forward() end
+			elseif ent:IsPlayer() then
+				forward = ent:GetAimVector()
+			end
+
+			if forward and dir:Dot(forward) > 0.4 then
+				dmgInfo:ScaleDamage(0.25)
+				ent:EmitSound("physics/flesh/flesh_impact_hard"..math.random(1,5)..".wav")
+			end
+		end
+	end
 
 	if ent == ply and IsValid(ply.FakeRagdoll) and dmgInfo:IsDamageType(DMG_BURN) then
 		return true

@@ -401,7 +401,24 @@ hook.Add("Think", "Fake", function()
                 end
             end
 
-			if !IsValid(ragdoll.ConsLH) and (ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or ((ishgweapon(wep) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2))) then// || ply:InVehicle() then
+			local protective = ply.protectiveStance and org.canmove and not ply:InVehicle()
+			if protective then
+				local head = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 10))
+				local ang = head:GetAngles()
+				local pos = head:GetPos()
+				
+				if !IsValid(ragdoll.ConsLH) then
+					shadowControl(ragdoll, 5, 0.001, ang, 500, 100, pos + ang:Forward() * 12 - ang:Right() * 6, 500, 50)
+					shadowControl(ragdoll, 4, 0.001, ang, 500, 100, pos + ang:Forward() * 6 - ang:Right() * 10, 500, 50)
+				end
+				
+				if !IsValid(ragdoll.ConsRH) then
+					shadowControl(ragdoll, 7, 0.001, ang, 500, 100, pos + ang:Forward() * 12 + ang:Right() * 6, 500, 50)
+					shadowControl(ragdoll, 6, 0.001, ang, 500, 100, pos + ang:Forward() * 6 + ang:Right() * 10, 500, 50)
+				end
+			end
+
+			if !protective and !IsValid(ragdoll.ConsLH) and ((ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or ((ishgweapon(wep) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2)))) then// || ply:InVehicle() then
 				if org.canmove then
 					//if !ply:InVehicle() then
 						ang2:Set(angles)
@@ -522,7 +539,7 @@ hook.Add("Think", "Fake", function()
                 end
             end
 
-			if !IsValid(ragdoll.ConsRH) and ply:KeyDown(IN_ATTACK2) or ((ishgweapon(wep) or wep.ismelee2) and ply:KeyDown(IN_USE)) then// || ply:InVehicle() then
+			if !protective and (!IsValid(ragdoll.ConsRH) and ply:KeyDown(IN_ATTACK2) or ((ishgweapon(wep) or wep.ismelee2) and ply:KeyDown(IN_USE))) then// || ply:InVehicle() then
 				if org.canmove then
 					--if org.shock > 1 and not ply:KeyDown(IN_ATTACK2) then angles = spine:GetAngles() end
 					//if !ply:InVehicle() then
@@ -971,7 +988,6 @@ hook.Add("Think", "Fake", function()
 		end*/
 	end
 end)
-
 hook.Add("PlayerDeath", "homigrad-fake-control", function(ply)
 	local ragdoll = ply.FakeRagdoll
 	if not IsValid(ragdoll) then return end
@@ -989,5 +1005,12 @@ hook.Add("PlayerDeath", "homigrad-fake-control", function(ply)
 		for i = 1, 4 do
 			ragdoll:ManipulateBoneAngles(ragdoll:LookupBone("ValveBiped.Bip01_R_Finger" .. tostring(i) .. "1"), Angle(0, 0, 0))
 		end
+	end
+end)
+
+hook.Add("PlayerButtonDown", "RagdollProtectiveStance", function(ply, button)
+	if button == KEY_T then
+		ply.protectiveStance = not ply.protectiveStance
+		--ply:ChatPrint("Protective Stance: " .. (ply.protectiveStance and "ON" or "OFF"))
 	end
 end)

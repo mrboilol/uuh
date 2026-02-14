@@ -21,6 +21,10 @@ local KICK_BONES = {
     ["ValveBiped.Bip01_L_Thigh"] = true, -- Added missing thigh bones
     ["ValveBiped.Bip01_R_Thigh"] = true, -- Added missing thigh bones
     ["ValveBiped.Bip01_Head1"] = true,
+    ["ValveBiped.Bip01_L_Forearm"] = true,
+    ["ValveBiped.Bip01_R_Forearm"] = true,
+    ["ValveBiped.Bip01_L_Hand"] = true,
+    ["ValveBiped.Bip01_R_Hand"] = true,
 }
 
 -- Sound effects for different impact types
@@ -96,12 +100,25 @@ local function CanTakeKickDamage(ent)
     return false
 end
 
--- Calculate kick damage based on speed
-local function CalculateKickDamage(speed)
-    if speed < KICK_SPEED_THRESHOLD then return 0 end
+-- Calculate kick damage based on speed and bone
+local function CalculateKickDamage(speed, boneName)
+    local threshold = KICK_SPEED_THRESHOLD
+    local multiplier = KICK_DAMAGE_MULTIPLIER
+    
+    -- Check if it's an arm/hand bone
+    local isArm = string.find(boneName, "Arm") or string.find(boneName, "Hand")
+    
+    if isArm then
+        threshold = KICK_SPEED_THRESHOLD * 1.5 -- Arms take more force
+        multiplier = KICK_DAMAGE_MULTIPLIER * 0.5 -- Arms do less damage
+    else
+        threshold = 150 -- Legs take less force (easier to trigger)
+    end
+    
+    if speed < threshold then return 0 end
     
     -- Linear scaling from threshold to max damage
-    local damage = (speed - KICK_SPEED_THRESHOLD) * KICK_DAMAGE_MULTIPLIER
+    local damage = (speed - threshold) * multiplier
     return math.min(damage, MAX_KICK_DAMAGE)
 end
 
@@ -268,7 +285,7 @@ hook.Add("Ragdoll Collide", "RagdollKickDamage", function(ragdoll, data)
     
     -- Calculate speed and damage
     local speed = data.OurOldVelocity:Length()
-    local damage = CalculateKickDamage(speed)
+    local damage = CalculateKickDamage(speed, boneName)
     
     if damage <= 0 then return end
     
