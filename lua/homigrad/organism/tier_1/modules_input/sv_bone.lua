@@ -123,11 +123,15 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.fearadd = org.fearadd + 0.5
 
 		-- oooooooooooooooooowwww
-		if org.isPly and org[key.."amputated"] then
-			if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_leg[math.random(#dismember_leg)], true, "dismember_"..key, 3) end
+		if org.isPly then
+			if org[key.."amputated"] then
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_leg[math.random(#dismember_leg)], true, "dismember_"..key, 3) end
+			elseif org[key.."gruesome"] then
+				org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil)
+			else
+				org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil)
+			end
 		end
-
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil) end
 		
 		-- Gruesome fracture logic
 		if dmg > 1.5 or (oldDmg > 0.8 and dmg > 0.5) then
@@ -162,7 +166,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.immobilization = org.immobilization + dmg * 10
 		org.fearadd = org.fearadd + 0.5
 
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_leg[math.random(#dislocated_leg)], 1, "dislocated"..key, 1, nil, nil) end
+		if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_leg[math.random(#dislocated_leg)], 1, "dislocated"..key, 1, nil, nil) end
 		
 		-- Gruesome dislocation logic
 		if dmg > 0.8 then
@@ -217,11 +221,15 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.fearadd = org.fearadd + 0.5
 
 
-		if org.isPly and org[key.."amputated"] then
-			if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_arm[math.random(#dismember_arm)], true, "dismember_"..key, 3) end
+		if org.isPly then
+			if org[key.."amputated"] then
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_arm[math.random(#dismember_arm)], true, "dismember_"..key, 3) end
+			elseif org[key.."gruesome"] then
+				org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil)
+			else
+				org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil)
+			end
 		end
-
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil) end
 
 		-- Gruesome fracture logic
 		if dmg > 1.5 or (oldDmg > 0.8 and dmg > 0.5) then
@@ -253,7 +261,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.owner:AddNaturalAdrenaline(0.5)
 		org.fearadd = org.fearadd + 0.5
 
-		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_arm[math.random(#dislocated_arm)], 1, "dislocated"..key, 1, nil, nil) end
+		if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_arm[math.random(#dislocated_arm)], 1, "dislocated"..key, 1, nil, nil) end
 
 		-- Gruesome dislocation logic
 		if dmg > 0.8 then
