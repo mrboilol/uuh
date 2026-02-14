@@ -5,14 +5,14 @@ local util_TraceHull = util.TraceHull
 local IsValid = IsValid
 local CurTime = CurTime
 
-local TUMBLE_SPEED_THRESHOLD = 250
+local TUMBLE_SPEED_THRESHOLD = 230
 local TUMBLE_COOLDOWN = 2
 local GAP_CHECK_DIST = 50 
 local WALL_CHECK_DIST = 20
 local WALL_CHECK_HEIGHT = 10 
 
-local BASE_TRIP_CHANCE = 0.1
-local MAX_TRIP_CHANCE = 0.8
+local BASE_TRIP_CHANCE = 0.25
+local MAX_TRIP_CHANCE = 0.9
 
 hook.Add("Think", "stanleytumbler", function()
     for _, ply in ipairs(player_GetAll()) do

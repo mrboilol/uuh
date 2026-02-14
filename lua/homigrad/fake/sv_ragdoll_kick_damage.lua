@@ -4,9 +4,9 @@
 if not SERVER then return end
 
 -- Configuration
-local KICK_SPEED_THRESHOLD = 400 -- Minimum speed for kick damage
-local MAX_KICK_DAMAGE = 15 -- Maximum damage cap
-local KICK_DAMAGE_MULTIPLIER = 0.05 -- Speed to damage conversion rate
+local KICK_SPEED_THRESHOLD = 250 -- Minimum speed for kick damage
+local MAX_KICK_DAMAGE = 25 -- Maximum damage cap
+local KICK_DAMAGE_MULTIPLIER = 0.1 -- Speed to damage conversion rate
 local KICK_DAMAGE_COOLDOWN = 0.5 -- Cooldown between kick damage hits (seconds)
 
 -- Hit tracking to prevent damage multiplication
