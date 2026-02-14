@@ -998,7 +998,7 @@ function hg.DoTPIK(ply, ent)
             start = ply.segmentsr[1].Pos,
             endpos = ply.segmentsr[2].Pos,
             filter = {ent, ply},
-            mask = MASK_SHOT,
+            mask = MASK_SOLID_BRUSHONLY,
         })
 
         if tr.Hit then
@@ -1142,7 +1142,7 @@ function hg.DoTPIK(ply, ent)
             start = ply.segmentsl[1].Pos,
             endpos = ply.segmentsl[2].Pos,
             filter = {ent, ply},
-            mask = MASK_SHOT,
+            mask = MASK_SOLID_BRUSHONLY,
         })
 
         if tr.Hit then

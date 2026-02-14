@@ -1,3 +1,4 @@
+do return end -- until you find a good model
 SWEP.Base = "weapon_m4super"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
