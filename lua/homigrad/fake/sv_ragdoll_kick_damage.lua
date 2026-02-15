@@ -281,7 +281,18 @@ hook.Add("Ragdoll Collide", "RagdollKickDamage", function(ragdoll, data)
     
     -- Check if it's a kick bone
     local boneName = GetBoneNameFromPhysBone(ragdoll, physBone)
-    if not boneName or not KICK_BONES[boneName] then return end
+    if not boneName then return end
+
+    if boneName == "ValveBiped.Bip01_Head1" then
+        local owner = hg.RagdollOwner(ragdoll)
+        if IsValid(owner) then
+            net.Start("hg_head_trauma_saturation")
+            net.WriteFloat(math.min(data.Speed / 100, 2.5))
+            net.Send(owner)
+        end
+    end
+
+    if not KICK_BONES[boneName] then return end
     
     -- Calculate speed and damage
     local speed = data.OurOldVelocity:Length()

@@ -401,24 +401,28 @@ hook.Add("Think", "Fake", function()
                 end
             end
 
-			local protective = ply.protectiveStance and org.canmove and not ply:InVehicle()
-			if protective then
+			if ply:KeyDown(IN_WALK) and org.canmove and not ply:InVehicle() then
 				local head = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 10))
 				local ang = head:GetAngles()
 				local pos = head:GetPos()
-				
-				if !IsValid(ragdoll.ConsLH) then
-					shadowControl(ragdoll, 5, 0.001, ang, 0, 0, pos + ang:Forward() * 10 - ang:Right() * 5, 5050, 100)
-					shadowControl(ragdoll, 4, 0.001, ang, 0, 0, pos + ang:Forward() * 5 - ang:Right() * 10, 5050, 100)
-				end
-				
-				if !IsValid(ragdoll.ConsRH) then
-					shadowControl(ragdoll, 7, 0.001, ang, 0, 0, pos + ang:Forward() * 10 + ang:Right() * 5, 5050, 100)
-					shadowControl(ragdoll, 6, 0.001, ang, 0, 0, pos + ang:Forward() * 5 + ang:Right() * 10, 5050, 100)
-				end
-			end
 
-			if !protective and !IsValid(ragdoll.ConsLH) and ((ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or ((ishgweapon(wep) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2)))) then// || ply:InVehicle() then
+				if ply:KeyDown(IN_ATTACK2) then
+					shadowControl(ragdoll, 7, 0.1, ang, 550, 50, pos + ang:Forward() * 10 + ang:Right() * 5, 5050, 100)
+					shadowControl(ragdoll, 6, 0.1, ang, 550, 50, pos + ang:Forward() * 5 + ang:Right() * 10, 5050, 100)
+				else
+					shadowControl(ragdoll, 7, 0.1, ang, 250, 20, pos + ang:Forward() * 10 + ang:Right() * 5, 5050, 100)
+					shadowControl(ragdoll, 6, 0.1, ang, 250, 20, pos + ang:Forward() * 5 + ang:Right() * 10, 5050, 100)
+				end
+
+				if ply:KeyDown(IN_ATTACK) then
+					shadowControl(ragdoll, 5, 0.1, ang, 550, 50, pos + ang:Forward() * 10 - ang:Right() * 5, 5050, 100)
+					shadowControl(ragdoll, 4, 0.1, ang, 550, 50, pos + ang:Forward() * 5 - ang:Right() * 10, 5050, 100)
+				else
+					shadowControl(ragdoll, 5, 0.1, ang, 250, 20, pos + ang:Forward() * 10 - ang:Right() * 5, 5050, 100)
+					shadowControl(ragdoll, 4, 0.1, ang, 250, 20, pos + ang:Forward() * 5 - ang:Right() * 10, 5050, 100)
+				end
+			else
+				if !IsValid(ragdoll.ConsLH) and ((ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or ((ishgweapon(wep) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2)))) then// || ply:InVehicle() then
 				if org.canmove then
 					//if !ply:InVehicle() then
 						ang2:Set(angles)
