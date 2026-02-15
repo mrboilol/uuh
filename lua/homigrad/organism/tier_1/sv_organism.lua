@@ -474,6 +474,17 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
 
+hook.Add("HG_OnWakeOtrub", "SaturationFlashOnWake", function(owner)
+    local org = owner.organism
+    if org and org.saturationFlashOnWake then
+        net.Start("hg_head_trauma_saturation")
+        net.WriteFloat(org.saturationFlashIntensity or 0.5)
+        net.Send(owner)
+        org.saturationFlashOnWake = false
+        org.saturationFlashIntensity = nil
+    end
+end)
+
 	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
 	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
 	

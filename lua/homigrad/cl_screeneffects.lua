@@ -948,7 +948,7 @@ hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
     end
     
     if traumaSaturation > 0.01 then
-        traumaSaturation = math.Approach(traumaSaturation, 0, FrameTime() * 0.5)
+        traumaSaturation = math.Approach(traumaSaturation, 0, FrameTime() * 0.1)
         
         tab[ "$pp_colour_colour" ] = 1 + traumaSaturation * 2 
         tab[ "$pp_colour_contrast" ] = 1 + traumaSaturation * 0.2
@@ -957,6 +957,23 @@ hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
         
         tab[ "$pp_colour_colour" ] = 1
         tab[ "$pp_colour_contrast" ] = 1
+        
+        render.UpdateScreenEffectTexture()
+        render.UpdateFullScreenDepthTexture()
+        
+        grainMat:SetFloat("$c0_x", CurTime()) -- time
+        grainMat:SetFloat("$c0_y", 0.5) -- gate
+        grainMat:SetFloat("$c0_z", traumaSaturation * 0.5) -- Pixelize
+        grainMat:SetFloat("$c1_x", traumaSaturation * 0.5) -- lerp
+        grainMat:SetFloat("$c1_y", 0) -- vignette intensity
+        grainMat:SetFloat("$c1_z", 0) -- BlurIntensity
+        grainMat:SetFloat("$c2_x", 0) -- r
+        grainMat:SetFloat("$c2_y", 0) -- g
+        grainMat:SetFloat("$c2_z", 0) -- b
+        grainMat:SetFloat("$c3_x", 0) -- ImageIntensity
+    
+        render.SetMaterial(grainMat)
+        render.DrawScreenQuad()
     end
 end)
 

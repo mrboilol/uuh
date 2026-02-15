@@ -678,6 +678,9 @@ hg.TourniquetGuys = hg.TourniquetGuys or {}
 if SERVER then
 	util.AddNetworkString("send_tourniquets")
 	local tourniqet_bones = {
+		["ValveBiped.Bip01_Neck1"] = {
+			["ValveBiped.Bip01_Head1"] = true
+		},
 		["ValveBiped.Bip01_L_UpperArm"] = {
 			["ValveBiped.Bip01_L_Forearm"] = true,
 			["ValveBiped.Bip01_L_Hand"] = true

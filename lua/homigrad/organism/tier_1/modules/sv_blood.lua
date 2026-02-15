@@ -18,6 +18,10 @@ hg.organism.bloodtypes = {
 }
 
 local tourniqet_bones = {
+	["ValveBiped.Bip01_Neck1"] = {
+		["ValveBiped.Bip01_Head1"] = true
+	},
+
 	["ValveBiped.Bip01_L_UpperArm"] = {
 		["ValveBiped.Bip01_L_Forearm"] = true,
 		["ValveBiped.Bip01_L_Hand"] = true
@@ -145,24 +149,7 @@ module[2] = function(owner, org, mulTime)
 		local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 		
 		for i, wound in pairs(org.wounds) do
-			if wound[1] > 0.25 then
-				local bone = wound[4]
-				if bone then
-					local valid = {
-						["ValveBiped.Bip01_L_UpperArm"] = true,
-						["ValveBiped.Bip01_L_Forearm"] = true,
-						["ValveBiped.Bip01_R_UpperArm"] = true,
-						["ValveBiped.Bip01_R_Forearm"] = true,
-						["ValveBiped.Bip01_L_Thigh"] = true,
-						["ValveBiped.Bip01_L_Calf"] = true,
-						["ValveBiped.Bip01_R_Thigh"] = true,
-						["ValveBiped.Bip01_R_Calf"] = true,
-					}
-					if valid[bone] then
-						hg.organism.ApplyTourniquet(owner, bone)
-					end
-				end
-			end
+
 
 			local rand1 = math.Rand(4, 10) * 1
 			local rand2 = math.Rand(0.5, 1) * 1
@@ -220,22 +207,7 @@ module[2] = function(owner, org, mulTime)
 	local next_arterypump = 1 / math.max(org.pulse, 10)
 	local ent = owner:IsPlayer() and IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 	for i, wound in pairs(org.arterialwounds) do
-		local bone = wound[4]
-		if bone then
-			local valid = {
-				["ValveBiped.Bip01_L_UpperArm"] = true,
-				["ValveBiped.Bip01_L_Forearm"] = true,
-				["ValveBiped.Bip01_R_UpperArm"] = true,
-				["ValveBiped.Bip01_R_Forearm"] = true,
-				["ValveBiped.Bip01_L_Thigh"] = true,
-				["ValveBiped.Bip01_L_Calf"] = true,
-				["ValveBiped.Bip01_R_Thigh"] = true,
-				["ValveBiped.Bip01_R_Calf"] = true,
-			}
-			if valid[bone] then
-				hg.organism.ApplyTourniquet(owner, bone)
-			end
-		end
+
 
 		bleedoutspeed2 = bleedoutspeed2 + wound[1] * mulTime * 0.2 * math.max(org.pulse, 20) / 80
 

@@ -9,5 +9,5 @@ end
 module[2] = function(owner, org, mulTime)
 	if not org.alive or org.hearstop then return end
 
-	--fuckass
+	--think
 end

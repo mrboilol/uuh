@@ -156,9 +156,15 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 		org.shock = org.shock + dmg * 3
         
         if org.isPly then
-             net.Start("hg_head_trauma_saturation")
-             net.WriteFloat(math.Clamp(dmg * 2, 0.5, 2.0))
-             net.Send(org.owner)
+            local intensity = math.min((org.brain - oldDmg) * 5, 2.0)
+            if org.otrub then
+                org.saturationFlashOnWake = true
+                org.saturationFlashIntensity = intensity
+            else
+                net.Start("hg_head_trauma_saturation")
+                net.WriteFloat(intensity)
+                net.Send(org.owner)
+            end
         end
 	else
         org.consciousness = math.Approach(org.consciousness, 0, dmg * 3)
@@ -341,6 +347,8 @@ input_list.eyeL = function(org, bone, dmg, dmgInfo)
 			net.Start("hg_play_client_sound")
 			net.WriteString("cuteye.ogg")
 			net.Send(org.owner)
+
+			org.owner:EmitSound("eyegone.mp3")
             
             -- Red flash
             net.Start("AddFlash")
@@ -387,9 +395,7 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
 			net.WriteString("cuteye.ogg")
 			net.Send(org.owner)
 
-            net.Start("hg_play_client_sound")
-			net.WriteString("eyegone.mp3")
-			net.Send(org.owner)
+			org.owner:EmitSound("eyegone.mp3")
             
             -- Red flash
             net.Start("AddFlash")
