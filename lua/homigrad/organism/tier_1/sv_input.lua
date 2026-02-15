@@ -414,10 +414,25 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 	-- Adrenaline gain for attacker (Melee/Gun attacks)
 	if IsValid(attacker) and attacker:IsPlayer() and attacker.organism and ent ~= attacker then
-		local dmgType = dmgInfo:GetDamageType()
-		if bit.band(dmgType, DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH + DMG_CLUB) ~= 0 then
-			local dmg = dmgInfo:GetDamage()
-			hg.organism.AddAttackAdrenaline(attacker.organism, dmg)
+		if not attacker.organism.betaBlock or CurTime() > attacker.organism.betaBlock then
+			local dmgType = dmgInfo:GetDamageType()
+			if bit.band(dmgType, DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH + DMG_CLUB) ~= 0 then
+				local dmg = dmgInfo:GetDamage()
+				hg.organism.AddAttackAdrenaline(attacker.organism, dmg)
+			end
+		end
+	end
+
+	-- Adrenaline gain for victim
+	if org and org.isPly then
+		if not org.betaBlock or CurTime() > org.betaBlock then
+			local hg_funny = GetConVar("hg_funny")
+			if hg_funny and math.random() < hg_funny:GetFloat() then
+				local pain_val = (dmgInfo:GetDamage() / 100) * ( ( bullet ~= nil and bullet.PainMultiplier ) or ( IsValid(inf) and inf.PainMultiplier ) or 1 )
+				org.painadd = (org.painadd or 0) + pain_val
+			else
+				hg.organism.AddAttackAdrenaline(org, dmgInfo:GetDamage())
+			end
 		end
 	end
 

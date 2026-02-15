@@ -390,18 +390,11 @@ hook.Add("Think", "Fake", function()
 		if not wep.RagdollFunc then
 			local force = math.max(1 - org.larm / 1.3, 0)
 			if org.larmgruesome or org.larmgruesome_dislocation then force = force * 0.2 end
+			
             
-            if ragdoll.tourniquets then
-                for _, t in pairs(ragdoll.tourniquets) do
-                    local b = t[3]
-                    if b == "ValveBiped.Bip01_L_UpperArm" or b == "ValveBiped.Bip01_L_Forearm" then
-                        force = force * 0.75
-                        break
-                    end
-                end
-            end
+            local protective = ply:KeyDown(IN_WALK) and org.canmove and not ply:InVehicle()
 
-			if ply:KeyDown(IN_WALK) and org.canmove and not ply:InVehicle() then
+			if protective then
 				local head = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 10))
 				local ang = head:GetAngles()
 				local pos = head:GetPos()
@@ -421,8 +414,22 @@ hook.Add("Think", "Fake", function()
 					shadowControl(ragdoll, 5, 0.1, ang, 250, 20, pos + ang:Forward() * 10 - ang:Right() * 5, 5050, 100)
 					shadowControl(ragdoll, 4, 0.1, ang, 250, 20, pos + ang:Forward() * 5 - ang:Right() * 10, 5050, 100)
 				end
-			else
-				if !IsValid(ragdoll.ConsLH) and ((ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or ((ishgweapon(wep) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2)))) then// || ply:InVehicle() then
+			end
+
+			local lforce = math.max(1 - org.larm / 1.3, 0)
+			if org.larmgruesome or org.larmgruesome_dislocation then lforce = lforce * 0.2 end
+            
+            if ragdoll.tourniquets then
+                for _, t in pairs(ragdoll.tourniquets) do
+                    local b = t[3]
+                    if b == "ValveBiped.Bip01_L_UpperArm" or b == "ValveBiped.Bip01_L_Forearm" then
+                        lforce = lforce * 0.75
+                        break
+                    end
+                end
+            end
+
+			if !protective and !IsValid(ragdoll.ConsLH) and ((ply:KeyDown(IN_ATTACK) and !ishgweapon(wep)) or ((ishgweapon(wep) or wep.ismelee2) and (ply:KeyDown(IN_USE) or ply:KeyDown(IN_ATTACK2)))) then// || ply:InVehicle() then
 				if org.canmove then
 					//if !ply:InVehicle() then
 						ang2:Set(angles)
@@ -432,8 +439,8 @@ hook.Add("Think", "Fake", function()
 						ang2:RotateAroundAxis(angles:Forward(), -45)
 						
 
-						shadowControl(ragdoll, 3, 0.002, ang2, forceArm * force, forceArm_dump)
-						shadowControl(ragdoll, 4, 0.002, ang2, forceArm * force, forceArm_dump)
+						shadowControl(ragdoll, 3, 0.002, ang2, forceArm * lforce, forceArm_dump)
+						shadowControl(ragdoll, 4, 0.002, ang2, forceArm * lforce, forceArm_dump)
 						ang2:RotateAroundAxis(ang2:Forward(), 135)
 						ang2:RotateAroundAxis(ang2:Up(), 20)
 						shadowControl(ragdoll, 5, 0.001, ang2, forceArm * 2, forceArm_dump, ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll,5)):GetPos() + ang2:Forward() * 15 + ((vellen > 150 and ragdoll:GetPhysicsObject():GetVelocity() / 224) or vector_zero), 500, 50)
@@ -530,14 +537,14 @@ hook.Add("Think", "Fake", function()
 				end
 			end
 
-			local force = math.max(1 - org.rarm / 1.3, 0)
-			if org.rarmgruesome or org.rarmgruesome_dislocation then force = force * 0.2 end
+			local rforce = math.max(1 - org.rarm / 1.3, 0)
+			if org.rarmgruesome or org.rarmgruesome_dislocation then rforce = rforce * 0.2 end
             
             if ragdoll.tourniquets then
                 for _, t in pairs(ragdoll.tourniquets) do
                     local b = t[3]
                     if b == "ValveBiped.Bip01_R_UpperArm" or b == "ValveBiped.Bip01_R_Forearm" then
-                        force = force * 0.75 -- nunca digas vosotros
+                        rforce = rforce * 0.75 -- nunca digas vosotros
                         break
                     end
                 end
@@ -553,8 +560,8 @@ hook.Add("Think", "Fake", function()
 						ang2:RotateAroundAxis(angles:Forward(), -90)
 
 						//if !ishgweapon(wep) then
-							shadowControl(ragdoll, 2, 0.001, ang2, forceArm * force, forceArm_dump)
-							shadowControl(ragdoll, 6, 0.001, ang2, forceArm * force, forceArm_dump)
+							shadowControl(ragdoll, 2, 0.001, ang2, forceArm * rforce, forceArm_dump)
+							shadowControl(ragdoll, 6, 0.001, ang2, forceArm * rforce, forceArm_dump)
 						//end
 
 						ang2:RotateAroundAxis(ang2:Forward(), 135)

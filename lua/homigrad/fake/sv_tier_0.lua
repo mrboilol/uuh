@@ -606,6 +606,7 @@ function hg.Fake(ply, huyragdoll, no_freemove, force)
 end
 
 local hg_ragdollcombat = ConVarExists("hg_ragdollcombat") and GetConVar("hg_ragdollcombat") or CreateConVar("hg_ragdollcombat", 0, FCVAR_REPLICATED, "Toggle ragdoll combat-like ragdoll mode (walking, running in ragdoll, etc.)", 0, 1)
+local hg_funny = ConVarExists("hg_funny") and GetConVar("hg_funny") or CreateConVar("hg_funny", 0, FCVAR_REPLICATED, "The chance (0-1) that adrenaline will not kick in, causing instant pain.", 0, 1)
 
 local veczero = Vector(0,0,0)
 function hg.SetFreemove(ply, set)

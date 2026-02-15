@@ -154,21 +154,21 @@ local near_death_positive = {
 }
 
 local broken_limb = {
-	"FUCK. FUCK. ITS DEFINITELY BROKEN!",
-	"I CAN FEEL THE BONE PIECES MOVING!",
-	"IT'S FUCKING BROKEN. I THINK..",
-	"It hurts just thinking about it. Definitely broken.",
-	"I don't think it should bend here.",
-	"Oh fuck. It is snapped.",
-	"I don't see any open fracture, but I feel like I broke something",
+	"Fuck... I think i need a doctor.",
+	"It makes me sick just looking at it...",
+	"Jesus christ- dont look at it dont look at it...",
+	"I can barely move this limb...",
+	"It hurts just thinking about it.",
+	"I'll never forget the snap it made.",
+	"Some painkillers would be nice...",
 }
 
 local dislocated_limb = {
-	"Yeah that shouldn't be bending like that.",
+	"I can see the bulge where its wrong...",
 	"I have to get this bone back in.",
-	"No... I have to move it back in place.",
+	"I cant just leave it like that...",
 	"It just hurts so much there. I might need a check up.",
-	"My limb is out of place.",
+	"Do i just move it back in place?",
 }
 
 local hungry_a_bit = {

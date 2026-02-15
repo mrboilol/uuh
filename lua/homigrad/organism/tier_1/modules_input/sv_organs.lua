@@ -75,9 +75,14 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.stomach - oldDmg) * 2, "Stomach damage harm")
     
-    org.painadd = org.painadd + dmg * 40
+    org.painadd = org.painadd + dmg * 50
 	
-	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 8
+	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 12
+
+	if (org.stomach - oldDmg) > 0.3 and math.random(3) == 1 then
+		hg.organism.CoughUpBlood(org)
+	end
+
 	return result
 end
 
@@ -89,9 +94,13 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
     
-    org.painadd = org.painadd + dmg * 40
+    org.painadd = org.painadd + dmg * 50
 
-	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 8
+	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 12
+
+	if (org.intestines - oldDmg) > 0.3 and math.random(3) == 1 then
+		hg.organism.CoughUpBlood(org)
+	end
 	-- mcici disembolwer
 	if org.isPly then
 		local severeDamage = dmg > 0.8
@@ -161,6 +170,7 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
                 org.saturationFlashOnWake = true
                 org.saturationFlashIntensity = intensity
             else
+                if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Saturation Flash Triggered (Brain Damage)") end
                 net.Start("hg_head_trauma_saturation")
                 net.WriteFloat(intensity)
                 net.Send(org.owner)
@@ -358,6 +368,8 @@ input_list.eyeL = function(org, bone, dmg, dmgInfo)
             net.WriteColor(Color(255, 0, 0))
             net.WriteString("sprites/light_glow02_add")
             net.Send(org.owner)
+
+			hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 1, 1, nil, nil, true)
 		end
 	elseif org.eyeL > 0.1 then
 		-- Slight disorientation for eye damage
@@ -405,6 +417,8 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
             net.WriteColor(Color(255, 0, 0))
             net.WriteString("sprites/light_glow02_add")
             net.Send(org.owner)
+
+			hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 1, 1, nil, nil, true)
 		end
 	elseif org.eyeR > 0.1 then
 		-- Slight disorientation for eye damage
@@ -441,6 +455,8 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
             net.WriteString("sprites/light_glow02_add")
             net.Send(org.owner)
 			
+			hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 1, 1, nil, nil, true)
+
 			-- Pain increase
 			if hg.organism.enhancedPain then
 				hg.organism.enhancedPain.applyPain(org, 35, dmgInfo, "nose", false)

@@ -126,7 +126,9 @@ module[2] = function(owner, org, timeValue)
 	end
 
 	if org.adrenalineAdd > 0 then
-		org.adrenaline = Approach(org.adrenaline, 4, timeValue / 5)
+		if not org.betaBlock or CurTime() > org.betaBlock then
+			org.adrenaline = Approach(org.adrenaline, 4, timeValue / 5)
+		end
 	end
 
 	org.adrenalineAdd = Approach(org.adrenalineAdd, 0, org.adrenalineAdd < 0 and timeValue / 30 or timeValue / 5)

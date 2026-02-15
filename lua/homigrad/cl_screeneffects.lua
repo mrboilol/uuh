@@ -948,10 +948,11 @@ hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
     end
     
     if traumaSaturation > 0.01 then
-        traumaSaturation = math.Approach(traumaSaturation, 0, FrameTime() * 0.05)
+        			if not LocalPlayer():Alive() then traumaSaturation = 0 end
+		traumaSaturation = math.Approach(traumaSaturation, 0, FrameTime() * 8)
         
-        tab[ "$pp_colour_colour" ] = 1 + traumaSaturation * 4
-        tab[ "$pp_colour_contrast" ] = 1 + traumaSaturation * 0.4
+        tab[ "$pp_colour_colour" ] = 1 + traumaSaturation * 8
+        tab[ "$pp_colour_contrast" ] = 1 + traumaSaturation * 0.8
         
         DrawColorModify(tab)
         
@@ -963,10 +964,10 @@ hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
         
         grainMat:SetFloat("$c0_x", CurTime()) -- time
         grainMat:SetFloat("$c0_y", 0.5) -- gate
-        grainMat:SetFloat("$c0_z", traumaSaturation * 1.5) -- Pixelize
-        grainMat:SetFloat("$c1_x", traumaSaturation * 1.5) -- lerp
-        grainMat:SetFloat("$c1_y", 0) -- vignette intensity
-        grainMat:SetFloat("$c1_z", 0) -- BlurIntensity
+        grainMat:SetFloat("$c0_z", traumaSaturation * 3) -- Pixelize
+        grainMat:SetFloat("$c1_x", traumaSaturation * 3) -- lerp
+        grainMat:SetFloat("$c1_y", 10) -- vignette intensity
+        grainMat:SetFloat("$c1_z", traumaSaturation) -- BlurIntensity
         grainMat:SetFloat("$c2_x", 0) -- r
         grainMat:SetFloat("$c2_y", 0) -- g
         grainMat:SetFloat("$c2_z", 0) -- b

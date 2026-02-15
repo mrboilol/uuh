@@ -71,6 +71,7 @@ module[1] = function(org)
 	org.arterialwounds = {}
 	org.wantToVomit = 0
 	org.vomitInThroat = nil
+	org.bloodChoke = 0
 
 	org.bloodtype = table.GetKeys(hg.organism.bloodtypes)[math.random(8)]
 	
@@ -241,6 +242,29 @@ module[2] = function(owner, org, mulTime)
 	org.internalBleedHeal = math.Approach(org.internalBleedHeal, 0, mulTime / 2)
 	
 	if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end
+
+	-- Choking on blood
+	local choke_increase = (org.internalBleed / 50) + (org.trachea * 0.1) + (((org.lungsL and org.lungsL[1] or 0) + (org.lungsR and org.lungsR[1] or 0)) * 0.05)
+	if choke_increase > 0 then
+		org.bloodChoke = math.min(org.bloodChoke + choke_increase * mulTime * 0.1, 1)
+	end
+
+	-- Natural decrease, and placeholder for treatments
+	local choke_decrease_rate = 0.01 -- very slow natural decrease
+	-- if cpr_active then choke_decrease_rate = choke_decrease_rate + 0.5 end -- placeholder
+	org.bloodChoke = math.max(org.bloodChoke - choke_decrease_rate * mulTime, 0)
+
+	-- Coughing up blood
+	if org.bloodChoke > 0.7 and (org.lastBloodCough or 0) < CurTime() then
+		hg.organism.CoughUpBlood(org)
+		org.lastBloodCough = CurTime() + math.Rand(5, 15)
+	end
+
+	-- Nosebleed/mouth bleed from internal bleeding/choking
+	if (org.bloodChoke > 0.3 or org.internalBleed > 15) and (org.lastNoseBleed or 0) < CurTime() then
+		hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 0.1, 1, nil, nil, true)
+		org.lastNoseBleed = CurTime() + math.Rand(10, 20)
+	end
 	
 	-- Ischemia: Low blood damages organs slowly
 	if org.blood < 3000 then
@@ -357,6 +381,16 @@ function hg.organism.CoughBlood(org)
 
 		ent:EmitSound("vomit/vomit5.mp3")
 	end
+end
+
+function hg.organism.CoughUpBlood(org)
+	local ply = org.owner
+	if not hg.IsValidPlayer(ply) then return end
+
+	hg.organism.Vomit(ply, "zcitysnd/real_sonar/"..(ThatPlyIsFemale(ply) and "female" or "male").."_cough"..math.random(4)..".mp3")
+
+	org.internalBleed = math.max(org.internalBleed - 5, 0)
+	org.bloodChoke = math.max(org.bloodChoke - 0.2, 0)
 end
 
 function hg.organism.BloodDroplet2(owner, org, wound, dir, artery)

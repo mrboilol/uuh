@@ -3,6 +3,8 @@ if SERVER then
     util.AddNetworkString("headtrauma_flash")
 end
 
+local colred = Color(255, 0, 0)
+
 local function isCrush(dmgInfo)
 	return (not dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_BLAST)) or dmgInfo:GetInflictor().RubberBullets
 end
@@ -33,10 +35,10 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
 end
 
 local huyasd = {
-	["spine1"] = "I don't feel anything below my hips.",
-	["spine2"] = "I cant't feel or move anything below my torso.",
-	["spine3"] = "I can't move at all. I can barely even breathe.",
-	["skull"] = "My head is aching.",
+	["spine1"] = "I cant feel my legs...",
+	["spine2"] = "I cant feel my arms...",
+	["spine3"] = "I cant move my body...",
+	["skull"] = "MY HEAD HURTS REAL BAD...",
 }
 
 local broke_arm = {
@@ -47,51 +49,91 @@ local broke_arm = {
 	"MY ARM IS NOT SUPPOSED TO BEND IN HALF!",
 }
 
+local broke_arm_gruesome = {
+	"MY ARM- OH GOD, IT'S- SHATTERED!",
+	"I CAN SEE THE BONE- IT'S POKING OUT!",
+	"IT'S SHATTERED- MY ARM IS SHATTERED!",
+}
+
+local broke_leg_gruesome = {
+	"MY LEG- IT'S- IT'S MANGLED!",
+	"THE BONE- IT'S STICKING OUT OF MY LEG!",
+	"MY LEG IS- IT'S DESTROYED!",
+}
+
+local dislocated_arm_gruesome = {
+	"MY ARM- IT'S- IT'S COMPLETELY WRECKED!",
+	"THE JOINT IS- IT'S TORN APART!",
+	"I CAN'T- I CAN'T MOVE IT! IT'S JUST- DANGLING!",
+}
+
+local dislocated_leg_gruesome = {
+	"MY LEG- IT'S- IT'S BEYOND BROKEN!",
+	"THE JOINT- IT'S- IT'S GONE!",
+	"I CAN'T- I CAN'T FEEL MY LEG!",
+}
+
 local dislocated_arm = {
 	"MY ARM- GOD, IT'S POPPED OUT OF THE SOCKET!",
-	"FUCK- THE SHOULDER'S JUST- HANGING LOOSE!",
+	"ITS STRETCHED OUT OF THE SOCKET...",
 	"MY ARM..! IT'S DISLOCATED! I CAN SEE THE BULGE WHERE IT'S WRONG!",
-	"THE ARM'S JUST- DEAD WEIGHT- IT'S NOT ATTACHED RIGHT!",
-	"SHIT! I CAN FEEL THE BONE OUT OF PLACE!",
+	"MY ARM- ITS NOT ATTACHED RIGHT!",
+	"I CAN SEE THE BULGE WHERE MY ARM IS WRONG!",
 }
 
 local broke_leg = {
-	"MY LEG- FUCK, IT'S BROKEN- I HEARD THE SNAP!",
-	"FUCK! THE SHIN'S SNAPPED CLEAN THROUGH!",
-	"THE KNEE'S WRONG- THE WHOLE LEG'S TWISTED WRONG!",
-	"MY LEG..! IT'S JUST- HANGING BY MUSCLE AND SKIN!",
-	"THE PAIN'S SHOOTING UP TO MY HIP- FUCK, IT'S BAD!",
+	"MY LEG- MY LEG HURTS SO BAD",
 	"I CAN'T MOVE MY FOOT- THE ANKLE'S BROKEN TOO!",
+	"AAAGH- ILL NEVER BE ABLE TO WALK RIGHT AGAIN!",
+	"FUCK ME- MY LEG IS SPLIT IN TWO!",
+	"MY LEG! ITS PAINING REAL BAD!",
+	"JESUS CHRIST- I CAN SEE THE BONE!",
 }
 
 local dislocated_leg = {
-	"MY LEG- FUCK, IT'S DISLOCATED AT THE KNEE!",
+	"MY LEG ISNT SUPPOSED TO DO THAT!",
 	"I CAN SEE THE KNEECAP IN THE WRONG PLACE!",
 	"AGHH- THE HIP'S POPPED OUT- IT'S STUCK OUTWARD!",
-	"IT'S BENT BACKWARD- THE KNEE SHOULDN'T BEND THIS WAY!",
-	"FUCK! THE HIP'S DISLOCATED!",
-	"THE ANKLE'S TWISTED- BUT THE KNEE'S THE REAL PROBLEM!",
+	"IT BENT- ITS BENT REAL BAD!",
+	"MY LEG IS TWISTED WRONG!",
+	"OH GOD- I CAN SEE THE BULGE WHERE ITS WRONG!",
 }
 
 local dismember_leg = {
-	"MY LEG! IT'S GONE!",
-	"HELP! MY LEG IS BLOWN OFF!",
-	"I CAN'T WALK! MY LEG IS GONE!",
-	"FUCK- WHERE'S MY LEG?!",
-	"IT'S SEVERED! OH GOD, MY LEG IS SEVERED!",
-	"I CAN SEE THE BONE! MY LEG'S GONE!",
+	"OH MY GOD- I CAN SEE THE BONE!",
+	"ITS BLEEDING- ITS BLEEDING SO MUCH",
+	"I CANT FEEL MY LEG",
+	"MY LEG... ITS JUST GONE...",
+	"FUUUCK- ILL NEVER BE ABLE TO WALK AGAIN!",
+	"ITS MISSING- WHERE IS MY LEG?",
 }
 
 local dismember_arm = {
-	"MY ARM! IT'S GONE! OH GOD!",
-	"FUCK! MY ARM IS OFF!",
-	"I CAN'T FEEL MY ARM! IT'S GONE!",
-	"IT'S RIPPED OFF! MY ARM IS RIPPED OFF!",
-	"LOOK AT MY ARM! IT'S JUST GONE!",
+	"MY ARM- MY ARM IS GONE",
+	"I CANT FEEL MY ARM, ITS JUST FUCKING GONE",
+	"MY ARM IS BLEEDING- ITS BLEEDING A LOT",
+	"IT HURTS... IT HURTS SO MUCH",
+	"AAAAGH MY ARM",
 	"JESUS CHRIST, MY ARM IS MISSING!",
 }
 
 local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
+    if org.lastBoneHitTime and org.lastBoneHitTime[key] and (CurTime() - org.lastBoneHitTime[key] < 2) then
+        dmg = dmg * 1.5
+
+        if org[key.."gruesome"] then
+            org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.1, 1)
+            if org.isPly then
+                hg.CreateNotification(org.owner, "The damage to your " .. string.gsub(key, "l", "left "):gsub("r", "right ") .. " has worsened!", 3, colred)
+            end
+        end
+    end
+
+    if not org.lastBoneHitTime then
+        org.lastBoneHitTime = {}
+    end
+    org.lastBoneHitTime[key] = CurTime()
+
 	local oldDmg = org[key]
 	local dmg = dmg * 4
 
@@ -112,24 +154,26 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 	if dmg < 0.7 then return 0 end
 	if dmg < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then return 0 end
 
-	if org.isPly and !org[key.."amputated"] then org.just_damaged_bone = CurTime() end
+		if org.isPly and !org[key.."amputated"] then org.just_damaged_bone = CurTime() end
 	
 	if dmg >= 1 and (!dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) or math.random(3) != 1) then
 		org[key] = 1
 
 		org.painadd = org.painadd + 55
-		org.owner:AddNaturalAdrenaline(1)
+		if not org.betaBlock or CurTime() > org.betaBlock then
+			org.owner:AddNaturalAdrenaline(1)
+		end
 		org.immobilization = org.immobilization + dmg * 25
 		org.fearadd = org.fearadd + 0.5
 
 		-- oooooooooooooooooowwww
 		if org.isPly then
 			if org[key.."amputated"] then
-				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_leg[math.random(#dismember_leg)], true, "dismember_"..key, 3) end
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_leg[math.random(#dismember_leg)], 3, colred) end
 			elseif org[key.."gruesome"] then
-				org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil)
+				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg_gruesome[math.random(#broke_leg_gruesome)], 3, colred) end
 			else
-				org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil)
+				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg[math.random(#broke_leg)], 3, colred) end
 			end
 		end
 		
@@ -139,8 +183,12 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			org.painadd = org.painadd + 40
 			org.immobilization = org.immobilization + 20
 			org[key.."gruesome"] = true
+			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.05, 1)
+			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
 			
 			if org.isPly then
+				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg_gruesome[math.random(#broke_leg_gruesome)], 3, colred) end
+
 				org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO) -- Fallback handled if missing
                 
                 -- Red flash
@@ -162,21 +210,40 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org[key.."dislocation"] = true
 
 		org.painadd = org.painadd + 35
-		org.owner:AddNaturalAdrenaline(0.5)
+		if not org.betaBlock or CurTime() > org.betaBlock then
+			org.owner:AddNaturalAdrenaline(0.5)
+		end
 		org.immobilization = org.immobilization + dmg * 10
 		org.fearadd = org.fearadd + 0.5
 
-		if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_leg[math.random(#dislocated_leg)], 1, "dislocated"..key, 1, nil, nil) end
+		if org.isPly and !org[key.."amputated"] then
+			if org[key.."gruesome_dislocation"] then
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dislocated_leg_gruesome[math.random(#dislocated_leg_gruesome)], 3, colred) end
+			else
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dislocated_leg[math.random(#dislocated_leg)], 3, colred) end
+			end
+		end
 		
 		-- Gruesome dislocation logic
 		if dmg > 0.8 then
 			if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Gruesome Dislocation: " .. key) end
-			org.painadd = org.painadd + 30
-			org.immobilization = org.immobilization + 15
+			org.painadd = org.painadd + 20
+			org.immobilization = org.immobilization + 10
 			org[key.."gruesome_dislocation"] = true
+			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.02, 1)
+			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
 			
 			if org.isPly then
 				org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO) -- Fallback handled if missing
+                
+                -- Red flash
+                net.Start("AddFlash")
+                net.WriteVector(org.owner:EyePos())
+                net.WriteFloat(0.4)
+                net.WriteInt(40, 20)
+                net.WriteColor(Color(255, 0, 0))
+                net.WriteString("sprites/light_glow02_add")
+                net.Send(org.owner)
 			end
 		end
 
@@ -191,6 +258,22 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 end
 
 local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
+    if org.lastBoneHitTime and org.lastBoneHitTime[key] and (CurTime() - org.lastBoneHitTime[key] < 2) then
+        dmg = dmg * 1.5
+
+        if org[key.."gruesome"] then
+            org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.1, 1)
+            if org.isPly then
+                hg.CreateNotification(org.owner, "The damage to your " .. string.gsub(key, "l", "left "):gsub("r", "right ") .. " has worsened!", 3, colred)
+            end
+        end
+    end
+
+    if not org.lastBoneHitTime then
+        org.lastBoneHitTime = {}
+    end
+    org.lastBoneHitTime[key] = CurTime()
+
 	local oldDmg = org[key]
 	local dmg = dmg * 4
 	
@@ -217,17 +300,19 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org[key] = 1
 
 		org.painadd = org.painadd + 55
-		org.owner:AddNaturalAdrenaline(1)
+		if not org.betaBlock or CurTime() > org.betaBlock then
+			org.owner:AddNaturalAdrenaline(1)
+		end
 		org.fearadd = org.fearadd + 0.5
 
 
 		if org.isPly then
 			if org[key.."amputated"] then
-				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_arm[math.random(#dismember_arm)], true, "dismember_"..key, 3) end
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_arm[math.random(#dismember_arm)], 3, colred) end
 			elseif org[key.."gruesome"] then
-				org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil)
+				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm_gruesome[math.random(#broke_arm_gruesome)], 3, colred) end
 			else
-				org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil)
+				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm[math.random(#broke_arm)], 3, colred) end
 			end
 		end
 
@@ -235,8 +320,11 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		if dmg > 1.5 or (oldDmg > 0.8 and dmg > 0.5) then
 			org.painadd = org.painadd + 40
 			org[key.."gruesome"] = true
+			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.05, 1)
+			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
 			
 			if org.isPly then
+				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm_gruesome[math.random(#broke_arm_gruesome)], 3, colred) end
 				org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
                 
                 -- Red flash
@@ -258,18 +346,37 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		//org[key] = 0.5
 
 		org.painadd = org.painadd + 35
-		org.owner:AddNaturalAdrenaline(0.5)
+		if not org.betaBlock or CurTime() > org.betaBlock then
+			org.owner:AddNaturalAdrenaline(0.5)
+		end
 		org.fearadd = org.fearadd + 0.5
 
-		if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_arm[math.random(#dislocated_arm)], 1, "dislocated"..key, 1, nil, nil) end
+		if org.isPly and !org[key.."amputated"] then
+			if org[key.."gruesome_dislocation"] then
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dislocated_arm_gruesome[math.random(#dislocated_arm_gruesome)], 3, colred) end
+			else
+				if hg.CreateNotification then hg.CreateNotification(org.owner, dislocated_arm[math.random(#dislocated_arm)], 3, colred) end
+			end
+		end
 
 		-- Gruesome dislocation logic
 		if dmg > 0.8 then
-			org.painadd = org.painadd + 30
+			org.painadd = org.painadd + 20
 			org[key.."gruesome_dislocation"] = true
+			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.02, 1)
+			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
 			
 			if org.isPly then
 				org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO)
+
+                -- Red flash
+                net.Start("AddFlash")
+                net.WriteVector(org.owner:EyePos())
+                net.WriteFloat(0.4)
+                net.WriteInt(40, 20)
+                net.WriteColor(Color(255, 0, 0))
+                net.WriteString("sprites/light_glow02_add")
+                net.Send(org.owner)
 			end
 		end
 

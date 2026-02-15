@@ -62,6 +62,11 @@ hook.Add("Org Clear", "Main", function(org)
     org.rarmgruesome_dislocation = false
     org.larmgruesome_dislocation = false
 
+	org.lleg_perm_dmg = 0
+	org.rleg_perm_dmg = 0
+	org.larm_perm_dmg = 0
+	org.rarm_perm_dmg = 0
+
 	org.llegamputated = false
 	org.rlegamputated = false
 	org.rarmamputated = false
@@ -522,6 +527,42 @@ end)
 		if org.lungsR[1] < 1 then org.lungsR[1] = math.Approach(org.lungsR[1], 0, naturalHeal) end
 		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
 		if org.trachea < 1 then org.trachea = math.Approach(org.trachea, 0, naturalHeal) end
+		if org.eyeL < 1 then org.eyeL = math.Approach(org.eyeL, 0, naturalHeal) end
+		if org.eyeR < 1 then org.eyeR = math.Approach(org.eyeR, 0, naturalHeal) end
+		if org.nose < 1 then org.nose = math.Approach(org.nose, 0, naturalHeal) end
+
+		-- Heal bone damage
+		local boneHeal = naturalHeal / 2
+		if org.lleg > (org.lleg_perm_dmg or 0) then org.lleg = math.Approach(org.lleg, org.lleg_perm_dmg or 0, boneHeal) end
+		if org.rleg > (org.rleg_perm_dmg or 0) then org.rleg = math.Approach(org.rleg, org.rleg_perm_dmg or 0, boneHeal) end
+		if org.larm > (org.larm_perm_dmg or 0) then org.larm = math.Approach(org.larm, org.larm_perm_dmg or 0, boneHeal) end
+		if org.rarm > (org.rarm_perm_dmg or 0) then org.rarm = math.Approach(org.rarm, org.rarm_perm_dmg or 0, boneHeal) end
+		if org.jaw > 0 then org.jaw = math.Approach(org.jaw, 0, boneHeal) end
+		if org.spine1 > 0 then org.spine1 = math.Approach(org.spine1, 0, boneHeal) end
+		if org.spine2 > 0 then org.spine2 = math.Approach(org.spine2, 0, boneHeal) end
+		if org.spine3 > 0 then org.spine3 = math.Approach(org.spine3, 0, boneHeal) end
+		if org.chest > 0 then org.chest = math.Approach(org.chest, 0, boneHeal) end
+		if org.pelvis > 0 then org.pelvis = math.Approach(org.pelvis, 0, boneHeal) end
+		if org.skull > 0 then org.skull = math.Approach(org.skull, 0, boneHeal) end
+
+		-- Heal permanent damage very slowly
+		local permHeal = naturalHeal / 10
+		if org.lleg_perm_dmg > 0 then org.lleg_perm_dmg = math.Approach(org.lleg_perm_dmg, 0, permHeal) end
+		if org.rleg_perm_dmg > 0 then org.rleg_perm_dmg = math.Approach(org.rleg_perm_dmg, 0, permHeal) end
+		if org.larm_perm_dmg > 0 then org.larm_perm_dmg = math.Approach(org.larm_perm_dmg, 0, permHeal) end
+		if org.rarm_perm_dmg > 0 then org.rarm_perm_dmg = math.Approach(org.rarm_perm_dmg, 0, permHeal) end
+
+		-- Heal gruesome breaks very slowly
+		local gruesomeHealChance = naturalHeal / 20
+		for _, limb in ipairs({"lleg", "rleg", "larm", "rarm"}) do
+			if org[limb.."gruesome"] and math.random() < gruesomeHealChance then
+				org[limb.."gruesome"] = nil
+				org[limb] = 0.95 -- Set bone health to almost broken
+				if org.isPly then
+					hg.CreateNotification(org.owner, "Your gruesome break seems to have set, but it is still broken.", 5, colred)
+				end
+			end
+		end
 		
 		if org.thiamine > 0.8 then
 			naturalHeal = naturalHeal * 2
@@ -648,10 +689,10 @@ hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 
 	local regen = timeValue / 120 * org.berserk
 
-	org.lleg = math.max(org.lleg - regen, 0)
-	org.rleg = math.max(org.rleg - regen, 0)
-	org.rarm = math.max(org.rarm - regen, 0)
-	org.larm = math.max(org.larm - regen, 0)
+	org.lleg = math.max(org.lleg - regen, org.lleg_perm_dmg or 0)
+	org.rleg = math.max(org.rleg - regen, org.rleg_perm_dmg or 0)
+	org.larm = math.max(org.larm - regen, org.larm_perm_dmg or 0)
+	org.rarm = math.max(org.rarm - regen, org.rarm_perm_dmg or 0)
 	org.chest = math.max(org.chest - regen, 0)
 	org.pelvis = math.max(org.pelvis - regen, 0)
 	org.spine1 = math.max(org.spine1 - regen, 0)

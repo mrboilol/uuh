@@ -413,6 +413,13 @@ if SERVER then
 		local done = false
 		local bandaged = false
 		
+		local key = hg.BoneToLimb(bone)
+		if org[key.."gruesome"] and math.random() < 0.3 then
+			org[key.."gruesome"] = nil
+			org[key] = 0.95 -- Set bone health to almost broken
+			done = true
+		end
+
 		if not bone then
 			--print(#org.wounds)
 			for i = 1, #org.wounds do

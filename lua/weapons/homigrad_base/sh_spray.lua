@@ -76,6 +76,10 @@ function SWEP:PrimarySpread()
 		
 		local force = self.Primary.Damage / 100 * self.addSprayMul * (self.NumBullet or 1) * math.min(sprayI / 30,0.6)--(self.Primary.Automatic and math.min(sprayI / 30,1) or 1)
 		mul = mul * (((organism.larm or 0) + (organism.rarm or 0) + 2) / 1 + ((organism.larmamputated and 5 or 0) + (organism.rarmamputated and 5 or 0)))
+		local gruesome_multiplier = 1
+		if organism.larmgruesome or organism.larmgruesome_dislocation then gruesome_multiplier = gruesome_multiplier + 0.5 end
+		if organism.rarmgruesome or organism.rarmgruesome_dislocation then gruesome_multiplier = gruesome_multiplier + 0.5 end
+		mul = mul * gruesome_multiplier
 		mul = mul * ((owner.posture == 7 or owner.posture == 8 or owner.holdingWeapon) and 2 or 1)
 		mul = mul * self.RecoilMul
 		mul = mul * (owner:Crouching() and 0.75 or 1)
