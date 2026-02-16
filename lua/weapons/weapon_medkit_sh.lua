@@ -79,7 +79,20 @@ function SWEP:OwnerChanged()
 end
 
 if SERVER then
-	function SWEP:Heal(ent, mode)
+	function SWEP:Heal(ent, mode, bone)
+		if self.mode == 1 or self.mode == 4 then
+			-- Trigger minigame
+			self:GetOwner().ActiveMinigameWeapon = self
+			net.Start("start_bandage_minigame")
+			net.WriteEntity(ent)
+			net.Send(self:GetOwner())
+		else
+			-- Don't trigger minigame, just heal
+			self:DoHeal(ent, mode, bone)
+		end
+	end
+
+	function SWEP:DoHeal(ent, mode, bone)
 		if ent:IsNPC() then
 			self:NPCHeal(ent, 0.6, "snd_jack_hmcd_bandage.wav")
 		end
@@ -92,8 +105,8 @@ if SERVER then
 		if self.mode == 2 then
 			if self.modeValues[2] == 0 then return end
 			if ent ~= owner and not org.otrub then return end
-			//org.painkiller = math.min(org.painkiller + self.modeValues[2], 3)
-			//self.modeValues[2] = 0
+			--org.painkiller = math.min(org.painkiller + self.modeValues[2], 3)
+			--self.modeValues[2] = 0
 			org.analgesiaAdd = math.min(org.analgesiaAdd + self.modeValues[2] * 0.3, 4)
 			self.modeValues[2] = 0
 			entOwner:EmitSound("snds_jack_gmod/ez_medical/15.wav", 60, math.random(95, 105))
@@ -126,7 +139,7 @@ if SERVER then
 		elseif self.mode == 4 then
 			if self:Tourniquet(ent, bone) then self.modeValues[4] = 0 end
 		elseif self.mode == 5 then
-			//if ((org.lungsL[2] + org.lungsR[2]) / 2 >= 0.5) and not org.needle then
+			--if ((org.lungsL[2] + org.lungsR[2]) / 2 >= 0.5) and not org.needle then
 				if self.modeValues[5] == 0 then return end
 				if self.poisoned2 then
 					org.poison4 = CurTime()
@@ -146,7 +159,7 @@ if SERVER then
 
 				self.modeValues[5] = 0
 				entOwner:EmitSound("snd_jack_hmcd_needleprick.wav", 60, math.random(95, 105))
-			//end
+			--end
 		end
 
 		if self.modeValues[1] == 0 and self.modeValues[2] == 0 and self.modeValues[3] == 0 and self.modeValues[4] == 0 and self.modeValues[5] == 0 and self.ShouldDeleteOnFullUse then

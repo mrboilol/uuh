@@ -101,8 +101,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 	if (org.intestines - oldDmg) > 0.3 and math.random(3) == 1 then
 		hg.organism.CoughUpBlood(org)
 	end
-	-- mcici disembolwer
-	if org.isPly then
+	if org.isPly and not org.disemboweled then
 		local severeDamage = dmg > 0.8
 		local isSlash = dmgInfo:IsDamageType(DMG_SLASH)
 		local isBullet = dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)
@@ -110,8 +109,21 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 		if severeDamage and (isSlash or isBullet) then
 			local chance = isSlash and 70 or 30
 			if math.random(100) <= chance then
+				org.disemboweled = true
 				hg.AttachStomachGore(org.owner)
 				
+				-- Increased bleeding
+				org.bleed = org.bleed + 5
+				org.internalBleed = org.internalBleed + 5
+
+				-- Stamina drain
+				org.stamina = 0
+
+				-- Chance to drop weapon
+				if math.random(3) == 1 and IsValid(org.owner:GetActiveWeapon()) then
+					org.owner:DropWeapon(org.owner:GetActiveWeapon())
+				end
+
 				local gut_msg = {
 					"OH GOD- MY GUTS!",
 					"IT'S SPILLING OUT! MY INSIDES ARE SPILLING OUT!",

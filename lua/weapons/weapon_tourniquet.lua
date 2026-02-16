@@ -75,7 +75,9 @@ function SWEP:OwnerChanged()
 	end
 end
 
-function SWEP:Heal(ent, mode)
+SWEP.UseMinigame = true
+
+function SWEP:DoHeal(ent, mode, bone)
 	if ent:IsNPC() then
 		self:NPCHeal(ent, 0.25, "snd_jack_hmcd_bandage.wav")
 	end

@@ -33,24 +33,30 @@ local sides = {
 	["_cl"] = "cl_",
 }
 
+hg.included_files = {}
+
 local function AddFile(File, dir)
+	local path = dir .. File
+	if hg.included_files[path] then return end
+	hg.included_files[path] = true
+
 	local fileSide = string.lower(string.Left(File, 3))
 	local fileSide2 = string.lower(string.Right(string.sub(File, 1, -5), 3))
 	local side = sides[fileSide] or sides[fileSide2]
 	if SERVER and side == "sv_" then
-		include(dir .. File)
+		include(path)
 	elseif side == "sh_" then
-		if SERVER then AddCSLuaFile(dir .. File) end
-		include(dir .. File)
+		if SERVER then AddCSLuaFile(path) end
+		include(path)
 	elseif side == "cl_" then
 		if SERVER then
-			AddCSLuaFile(dir .. File)
+			AddCSLuaFile(path)
 		else
-			include(dir .. File)
+			include(path)
 		end
 	else
-		if SERVER then AddCSLuaFile(dir .. File) end
-		include(dir .. File)
+		if SERVER then AddCSLuaFile(path) end
+		include(path)
 	end
 end
 
@@ -75,6 +81,10 @@ local function Run()
 	print("Loading zcity...") -- Loading homigrad :]
 	hg.loaded = false
 	if engine.ActiveGamemode() == "ixhl2rp" then return end
+
+	-- Explicitly load sv_blood.lua first
+	AddFile("sv_blood.lua", "homigrad/organism/tier_1/modules/")
+
 	IncludeDir("homigrad")
 	hg.loaded = true
 	print("Loaded zcity, " .. tostring(math.Round(SysTime() - time, 5)) .. " seconds needed")

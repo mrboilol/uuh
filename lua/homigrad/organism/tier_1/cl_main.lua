@@ -190,7 +190,7 @@ hook.Add("radialOptions", "DislocatedJoint", function()
         local tbl = {
             function()
 				lply.tried_fixing_limb = CurTime() + 0.5
-				RunConsoleCommand("hg_fixdislocation", 1, 0)
+				hg.StartDislocationMinigame(1)
             end,
             "Fix dislocation (leg)"
         }
@@ -202,9 +202,9 @@ hook.Add("radialOptions", "DislocatedJoint", function()
 			local tbl = {
 				function()
 					lply.tried_fixing_limb = CurTime() + 0.5
-					RunConsoleCommand("hg_fixdislocation", 1, 1)
+					hg.StartDislocationMinigame(1, ent)
 				end,
-				"Fix "..ent:GetPlayerName().."'s dislocation (leg)"
+				"Fix "..ent:GetPlayerName().."\'s dislocation (leg)"
 			}
 			hg.radialOptions[#hg.radialOptions + 1] = tbl
 		end
@@ -221,7 +221,7 @@ hook.Add("radialOptions", "DislocatedJoint2", function()
         local tbl = {
             function()
 				lply.tried_fixing_limb = CurTime() + 0.5
-				RunConsoleCommand("hg_fixdislocation", 2, 0)
+				hg.StartDislocationMinigame(2)
             end,
             "Fix dislocation (arm)"
         }
@@ -233,9 +233,9 @@ hook.Add("radialOptions", "DislocatedJoint2", function()
 			local tbl = {
 				function()
 					lply.tried_fixing_limb = CurTime() + 0.5
-					RunConsoleCommand("hg_fixdislocation", 2, 1)
+					hg.StartDislocationMinigame(2, ent)
 				end,
-				"Fix "..ent:GetPlayerName().."'s dislocation (arm)"
+				"Fix "..ent:GetPlayerName().."\'s dislocation (arm)"
 			}
 			hg.radialOptions[#hg.radialOptions + 1] = tbl
 		end
@@ -252,7 +252,7 @@ hook.Add("radialOptions", "DislocatedJaw", function()
         local tbl = {
             function()
 				lply.tried_fixing_limb = CurTime() + 0.5
-				RunConsoleCommand("hg_fixdislocation", 3, 0)
+				hg.StartDislocationMinigame(3)
             end,
             "Fix dislocation (jaw)"
         }
@@ -264,9 +264,9 @@ hook.Add("radialOptions", "DislocatedJaw", function()
 			local tbl = {
 				function()
 					lply.tried_fixing_limb = CurTime() + 0.5
-					RunConsoleCommand("hg_fixdislocation", 3, 1)
+					hg.StartDislocationMinigame(3, ent)
 				end,
-				"Fix "..ent:GetPlayerName().."'s dislocation (jaw)"
+				"Fix "..ent:GetPlayerName().."\'s dislocation (jaw)"
 			}
 			hg.radialOptions[#hg.radialOptions + 1] = tbl
 		end

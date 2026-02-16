@@ -405,6 +405,19 @@ if SERVER then
 		local org = ent.organism
 		local owner = self:GetOwner()
 		if not org then return end
+
+		if org.disemboweled then
+			org.disemboweled = false
+			org.bleed = math.max(0, org.bleed - 5)
+			org.internalBleed = math.max(0, org.internalBleed - 5)
+			if hg.CreateNotification then
+				hg.CreateNotification(ent, "You manage to shove your guts back in and apply a bandage. It feels... unstable.", 5)
+			end
+			self.modeValues[1] = math.max(0, self.modeValues[1] - 20)
+			
+			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
+			return true
+		end
 		
 		-- Если растрелять труп а потом его взорвать гранатой, после перевязать - крашнет сервер why?
 		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1) then return end
@@ -414,9 +427,11 @@ if SERVER then
 		local bandaged = false
 		
 		local key = hg.BoneToLimb(bone)
-		if org[key.."gruesome"] and math.random() < 0.3 then
-			org[key.."gruesome"] = nil
-			org[key] = 0.95 -- Set bone health to almost broken
+		if org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
+			org[key .. "_perm_dmg"] = math.max(0, org[key .. "_perm_dmg"] - 0.1)
+			if hg.CreateNotification then
+				hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
+			end
 			done = true
 		end
 
@@ -679,7 +694,6 @@ if SERVER then
 	end
 end
 
-
 hg.TourniquetGuys = hg.TourniquetGuys or {}
 
 if SERVER then
@@ -723,6 +737,15 @@ if SERVER then
 	function SWEP:Tourniquet(ent, bone)
 		local org = ent.organism
 		if not org then return end
+
+		local key = hg.BoneToLimb(bone)
+		if org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
+			org[key .. "_perm_dmg"] = math.max(0, org[key .. "_perm_dmg"] - 0.1)
+			if hg.CreateNotification then
+				hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
+			end
+			return true
+		end
 		
 		local ent = org.isPly and org.owner or ent
 		ent.tourniquets = ent.tourniquets or {}

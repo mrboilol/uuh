@@ -128,6 +128,117 @@ end)
 
 util.AddNetworkString("organism_send")
 util.AddNetworkString("organism_sendply")
+util.AddNetworkString("hg_dislocation_minigame_pain")
+util.AddNetworkString("hg_dislocation_minigame_success")
+util.AddNetworkString("hg_bandage_minigame_success")
+util.AddNetworkString("hg_bandage_minigame_fail")
+
+hook.Add("PlayerDeath", "ClearUnconcious", function(ply)
+	ply.unconcious = nil
+end)
+
+net.Receive("hg_dislocation_minigame_pain", function(len, ply)
+    if not IsValid(ply) or not ply:Alive() then return end
+    
+    local target = net.ReadEntity()
+    
+    -- If fixing someone else
+    if IsValid(target) and target:IsPlayer() and target != ply then
+        -- Apply pain to target (maybe less fear since they aren't doing it?)
+        -- Or apply to both? Let's apply to target as they are the one being hurt
+        local org = target.organism
+        if not org then return end
+        
+        org.painadd = org.painadd + 5
+        org.fearadd = org.fearadd + 0.1
+        target:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
+        return
+    end
+
+    local org = ply.organism
+    if not org then return end
+    
+    org.painadd = org.painadd + 5
+    org.fearadd = org.fearadd + 0.1
+    ply:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
+end)
+
+net.Receive("hg_dislocation_minigame_success", function(len, ply)
+    if not IsValid(ply) or not ply:Alive() then return end
+    
+    local target = net.ReadEntity()
+    local patient = ply
+    
+    -- If fixing someone else
+    if IsValid(target) and target:IsPlayer() and target != ply then
+        patient = target
+        -- Verify distance
+        if ply:GetPos():Distance(patient:GetPos()) > 200 then return end
+    end
+
+    local org = patient.organism
+    if not org then return end
+    
+    local limbType = net.ReadInt(4)
+    local failures = net.ReadInt(16)
+    
+    local key
+    if limbType == 1 then
+        key = "lleg"
+    elseif limbType == 2 then
+        key = "rleg"
+    elseif limbType == 3 then
+        key = "larm"
+    elseif limbType == 4 then
+        key = "rarm"
+    elseif limbType == 5 then
+        key = "jaw"
+    end
+    
+    if not key then return end
+    
+    -- Make it harder to fix based on failures
+    if math.random(0, 10) > (5 - failures) then
+        org[key .. "dislocation"] = false
+        patient:EmitSound("physics/body/body_medium_impact_hard"..math.random(1,4)..".wav", 75, 100, 1, CHAN_VOICE)
+    else
+        org.painadd = org.painadd + 10
+        org.fearadd = org.fearadd + 0.2
+        patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
+    end
+end)
+
+net.Receive("hg_bandage_minigame_fail", function(len, ply)
+    if not IsValid(ply) or not ply:Alive() then return end
+    
+    local target = net.ReadEntity()
+    local patient = IsValid(target) and target or ply
+
+    local org = patient.organism
+    if not org then return end
+    
+    org.painadd = org.painadd + 2
+    org.fearadd = org.fearadd + 0.05
+    patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
+end)
+
+net.Receive("hg_bandage_minigame_success", function(len, ply)
+    if not IsValid(ply) or not ply:Alive() then return end
+
+    local target = net.ReadEntity()
+    local success = net.ReadBool()
+
+    if not success then return end
+
+    local patient = IsValid(target) and target or ply
+
+    if not IsValid(patient.ActiveMinigameWeapon) then return end
+
+    local wep = patient.ActiveMinigameWeapon
+    wep:DoHeal(patient)
+
+    patient.ActiveMinigameWeapon = nil
+end)
 local CurTime = CurTime
 local nullTbl = {}
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"Toggle developer mode (enables damage traces)",0,1)
@@ -344,6 +455,10 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 	org.isPly = isPly
 
+	if org.disemboweled then
+		org.stamina = 0
+	end
+
 	if isPly or org.fakePlayer then
 		if not org.fakePlayer then
 			org.alive = owner:Alive()
@@ -546,8 +661,21 @@ end)
 		if org.skull > 0 then org.skull = math.Approach(org.skull, 0, boneHeal) end
 
 		-- Heal permanent damage very slowly
-		local permHeal = naturalHeal / 10
-		if org.lleg_perm_dmg > 0 then org.lleg_perm_dmg = math.Approach(org.lleg_perm_dmg, 0, permHeal) end
+		local permHeal = naturalHeal / 20 -- Slower healing for permanent damage
+		for _, key in ipairs({"lleg", "rleg", "larm", "rarm"}) do
+			local permDmgKey = key .. "_perm_dmg"
+			if org[permDmgKey] and org[permDmgKey] > 0 then
+				org[permDmgKey] = math.Approach(org[permDmgKey], 0, permHeal)
+				
+				if org[permDmgKey] == 0 then
+					org[key .. "gruesome"] = false
+					org[key .. "gruesome_dislocation"] = false
+					if org.isPly and hg.CreateNotification then
+						hg.CreateNotification(org.owner, "Your gruesome wound seems to have stabilized.", 5)
+					end
+				end
+			end
+		end
 		if org.rleg_perm_dmg > 0 then org.rleg_perm_dmg = math.Approach(org.rleg_perm_dmg, 0, permHeal) end
 		if org.larm_perm_dmg > 0 then org.larm_perm_dmg = math.Approach(org.larm_perm_dmg, 0, permHeal) end
 		if org.rarm_perm_dmg > 0 then org.rarm_perm_dmg = math.Approach(org.rarm_perm_dmg, 0, permHeal) end

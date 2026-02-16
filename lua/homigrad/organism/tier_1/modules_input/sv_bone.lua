@@ -3,6 +3,524 @@ if SERVER then
     util.AddNetworkString("headtrauma_flash")
 end
 
+-- Limb bone mapping for visual floppy effects
+local limbBoneSegments = {
+	-- Left arm segments (3 segments)
+	larm = {
+		{"ValveBiped.Bip01_L_UpperArm", "ValveBiped.Bip01_Spine2"}, -- upper arm to spine
+		{"ValveBiped.Bip01_L_Forearm", "ValveBiped.Bip01_L_UpperArm"}, -- forearm to upper arm
+		{"ValveBiped.Bip01_L_Hand", "ValveBiped.Bip01_L_Forearm"} -- hand to forearm
+	},
+	-- Right arm segments (3 segments)
+	rarm = {
+		{"ValveBiped.Bip01_R_UpperArm", "ValveBiped.Bip01_Spine2"}, -- upper arm to spine
+		{"ValveBiped.Bip01_R_Forearm", "ValveBiped.Bip01_R_UpperArm"}, -- forearm to upper arm
+		{"ValveBiped.Bip01_R_Hand", "ValveBiped.Bip01_R_Forearm"} -- hand to forearm
+	},
+	-- Left leg segments (3 segments)
+	lleg = {
+		{"ValveBiped.Bip01_L_Thigh", "ValveBiped.Bip01_Pelvis"}, -- thigh to pelvis
+		{"ValveBiped.Bip01_L_Calf", "ValveBiped.Bip01_L_Thigh"}, -- calf to thigh
+		{"ValveBiped.Bip01_L_Foot", "ValveBiped.Bip01_L_Calf"} -- foot to calf
+	},
+	-- Right leg segments (3 segments)
+	rleg = {
+		{"ValveBiped.Bip01_R_Thigh", "ValveBiped.Bip01_Pelvis"}, -- thigh to pelvis
+		{"ValveBiped.Bip01_R_Calf", "ValveBiped.Bip01_R_Thigh"}, -- calf to thigh
+		{"ValveBiped.Bip01_R_Foot", "ValveBiped.Bip01_R_Calf"} -- foot to calf
+	}
+}
+
+-- Bone Buster angle limits for ragdoll constraints
+local bb_constraints_limit = {
+    ["ValveBiped.Bip01_Pelvis"] = {
+        [0] = { [0] = "90",  [1] = "-90" },
+        [1] = { [0] = "90",  [1] = "-90" },
+        [2] = { [0] = "90",  [1] = "-90" },
+    },
+    ["ValveBiped.Bip01_R_UpperArm"] = {
+        [0] = { [0] = "100", [1] = "-100" },
+        [1] = { [0] = "50",  [1] = "-50" },
+        [2] = { [0] = "30",  [1] = "-30" },
+    },
+    ["ValveBiped.Bip01_L_UpperArm"] = {
+        [0] = { [0] = "100", [1] = "-100" },
+        [1] = { [0] = "50",  [1] = "-50" },
+        [2] = { [0] = "30",  [1] = "-30" },
+    },
+    ["ValveBiped.Bip01_L_Forearm"] = {
+        [0] = { [0] = "90",  [1] = "-135" },
+        [1] = { [0] = "45",  [1] = "-45" },
+        [2] = { [0] = "90",  [1] = "-90" },
+    },
+    ["ValveBiped.Bip01_R_Forearm"] = {
+        [0] = { [0] = "90",  [1] = "-135" },
+        [1] = { [0] = "45",  [1] = "-45" },
+        [2] = { [0] = "90",  [1] = "-90" },
+    },
+    ["ValveBiped.Bip01_L_Hand"] = {
+        [0] = { [0] = "90",  [1] = "-90" },
+        [1] = { [0] = "90",  [1] = "-90" },
+        [2] = { [0] = "90",  [1] = "-90" },
+    },
+    ["ValveBiped.Bip01_R_Hand"] = {
+        [0] = { [0] = "90",  [1] = "-90" },
+        [1] = { [0] = "90",  [1] = "-90" },
+        [2] = { [0] = "90",  [1] = "-90" },
+    },
+    ["ValveBiped.Bip01_R_Thigh"] = {
+        [0] = { [0] = "100", [1] = "-60" },
+        [1] = { [0] = "10",  [1] = "-60" },
+        [2] = { [0] = "45",  [1] = "-5" },
+    },
+    ["ValveBiped.Bip01_R_Calf"] = {
+        [0] = { [0] = "60",  [1] = "-135" },
+        [1] = { [0] = "20",  [1] = "-45" },
+        [2] = { [0] = "45",  [1] = "-5" },
+    },
+    ["ValveBiped.Bip01_L_Thigh"] = {
+        [0] = { [0] = "100", [1] = "-60" },
+        [1] = { [0] = "60",  [1] = "-10" },
+        [2] = { [0] = "5",   [1] = "-45" },
+    },
+    ["ValveBiped.Bip01_L_Calf"] = {
+        [0] = { [0] = "60",  [1] = "-135" },
+        [1] = { [0] = "45",  [1] = "-20" },
+        [2] = { [0] = "5",   [1] = "-45" },
+    },
+    ["ValveBiped.Bip01_L_Foot"] = {
+        [0] = { [0] = "45",  [1] = "-45" },
+        [1] = { [0] = "45",  [1] = "-45" },
+        [2] = { [0] = "45",  [1] = "-45" },
+    },
+    ["ValveBiped.Bip01_R_Foot"] = {
+        [0] = { [0] = "45",  [1] = "-45" },
+        [1] = { [0] = "45",  [1] = "-45" },
+        [2] = { [0] = "45",  [1] = "-45" },
+    },
+    -- Spine joints (use Bone Buster constraints instead of old ballsocket)
+    ["ValveBiped.Bip01_Spine"] = {
+        [0] = { [0] = "45",  [1] = "-45" },
+        [1] = { [0] = "35",  [1] = "-35" },
+        [2] = { [0] = "25",  [1] = "-25" },
+    },
+    ["ValveBiped.Bip01_Spine2"] = {
+        [0] = { [0] = "40",  [1] = "-40" },
+        [1] = { [0] = "30",  [1] = "-30" },
+        [2] = { [0] = "20",  [1] = "-20" },
+    },
+}
+
+local matrix_cache = {}
+
+local function getBoneMatrix(rag, boneID)
+    local model = rag:GetModel()
+    if not matrix_cache[model] then
+        local _, tab = util.GetModelMeshes(model)
+        if not tab then return end
+
+        matrix_cache[model] = {}
+        for i = 0, rag:GetPhysicsObjectCount() - 1 do
+            local id = rag:TranslatePhysBoneToBone(i)
+            if tab[id] and tab[id].matrix then
+                local mat = tab[id].matrix:GetInverse()
+                matrix_cache[model][id] = mat
+            end
+        end
+    end
+    return matrix_cache[model] and matrix_cache[model][boneID]
+end
+
+-- Function to create floppy limb constraint (less floppy than neck)
+local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
+	if not IsValid(rag) or not rag:IsRagdoll() then 
+        return false 
+    end
+	
+	local bone1 = rag:LookupBone(bone1Name)
+	local bone2 = rag:LookupBone(bone2Name)
+	if not bone1 or not bone2 then 
+        return false 
+    end
+
+    local matrix = getBoneMatrix(rag, bone1)
+    local matrix_par = getBoneMatrix(rag, bone2)
+    if not matrix or not matrix_par then
+        return false
+    end
+
+	local phys1 = rag:TranslateBoneToPhysBone(bone1)
+	local phys2 = rag:TranslateBoneToPhysBone(bone2)
+	if not phys1 or not phys2 or phys1 < 0 or phys2 < 0 then 
+        return false 
+    end
+
+	local pBone1 = rag:GetPhysicsObjectNum(phys1)
+	local pBone2 = rag:GetPhysicsObjectNum(phys2)
+	if not (IsValid(pBone1) and IsValid(pBone2)) then 
+        return false 
+    end
+
+	-- Check for limits before removing existing constraint to prevent detachment
+	local limits = bb_constraints_limit[bone1Name]
+	if not limits then 
+        return false 
+    end
+
+    -- Helper to remove any conflicting constraints (like stiffness hinges) between these bones
+    if rag.Constraints then
+        for k, v in pairs(rag.Constraints) do
+            if (v.Bone1 == phys1 and v.Bone2 == phys2) or (v.Bone1 == phys2 and v.Bone2 == phys1) then
+                if IsValid(v.Constraint) then v.Constraint:Remove() end
+                rag.Constraints[k] = nil
+            end
+        end
+    end
+
+	-- Remove existing rigid constraint
+	pcall(function() rag:RemoveInternalConstraint(phys1) end)
+
+    -- Save current state
+    local pos_ori = pBone1:GetPos()
+	local pos_ori_par = pBone2:GetPos()
+	local ang_ori = pBone1:GetAngles()
+	local ang_ori_par = pBone2:GetAngles()
+
+	local vel_ori = pBone1:GetVelocity()
+	local vel_ori_par = pBone2:GetVelocity()
+	local avel_ori = pBone1:GetAngleVelocity()
+	local avel_ori_par = pBone2:GetAngleVelocity()
+
+    -- Move to bind pose for accurate constraint creation
+    local m_translation = rag:LocalToWorld(matrix:GetTranslation())
+	local p_translation = rag:LocalToWorld(matrix_par:GetTranslation())
+
+	pBone1:SetPos(m_translation)
+	pBone1:SetAngles(rag:LocalToWorldAngles(matrix:GetAngles()))
+	pBone2:SetPos(p_translation)
+	pBone2:SetAngles(rag:LocalToWorldAngles(matrix_par:GetAngles()))
+
+    -- Ensure collisions are enabled on both physics objects to avoid funky hits
+    if pBone1.EnableCollisions then pBone1:EnableCollisions(true) end
+    if pBone2.EnableCollisions then pBone2:EnableCollisions(true) end
+    if pBone1.Wake then pBone1:Wake() end
+    if pBone2.Wake then pBone2:Wake() end
+    pBone1:EnableMotion(true)
+    pBone2:EnableMotion(true)
+
+    -- Use spawnflags 1 to disable collision between constrained parts (cleaner than NoCollide)
+	-- Bone Buster–style ragdoll constraint
+	local cons = ents.Create("phys_ragdollconstraint")
+	
+    cons:SetPos(m_translation)
+    -- cons:SetAngles(rag:LocalToWorldAngles(matrix:GetAngles())) -- BoneBuster doesn't set angles on cons? 
+    -- But it sets angles of physics objects.
+    
+    cons:SetKeyValue("spawnflags", 1) 
+	cons:SetKeyValue("xmin", limits[0][1])
+	cons:SetKeyValue("xmax", limits[0][0])
+	cons:SetKeyValue("ymin", limits[1][1])
+	cons:SetKeyValue("ymax", limits[1][0])
+	cons:SetKeyValue("zmin", limits[2][1])
+	cons:SetKeyValue("zmax", limits[2][0])
+	cons:SetPhysConstraintObjects(pBone1, pBone2)
+	cons:Spawn()
+	cons:Activate()
+    
+    -- Restore original state
+    pBone1:SetPos(pos_ori)
+	pBone1:SetAngles(ang_ori)
+	pBone2:SetPos(pos_ori_par)
+	pBone2:SetAngles(ang_ori_par)
+
+	pBone1:SetVelocityInstantaneous(vel_ori)
+	pBone1:SetVelocity(vel_ori)
+	pBone2:SetVelocityInstantaneous(vel_ori_par)
+	pBone2:SetVelocity(vel_ori_par)
+	pBone1:SetAngleVelocityInstantaneous(avel_ori)
+	pBone1:SetAngleVelocity(avel_ori)
+	pBone2:SetAngleVelocityInstantaneous(avel_ori_par)
+	pBone2:SetAngleVelocity(avel_ori_par)
+    
+	rag:SetSaveValue("m_ragdoll.allowStretch", false)
+
+	return cons and IsValid(cons) and cons
+end
+
+-- Jaw pose: tilt down and slight left/right at random
+local function applyJawPose(ent)
+    if not IsValid(ent) then return end
+
+    timer.Simple(0.1, function()
+        if not IsValid(ent) then return end
+
+        local rag = ent:GetNWEntity("RagdollDeath")
+        if not IsValid(rag) then rag = ent:GetNWEntity("FakeRagdoll") end
+        if not IsValid(rag) and IsValid(ent.FakeRagdoll) then rag = ent.FakeRagdoll end
+        if not IsValid(rag) then rag = ent end
+
+        if not rag:IsRagdoll() then return end
+
+        -- prefer an explicit jaw bone if present; fallback to head
+        local targetBone
+        local bc = rag.GetBoneCount and rag:GetBoneCount() or 0
+        for i = 0, bc - 1 do
+            local n = rag:GetBoneName(i)
+            if isstring(n) and string.find(string.lower(n), "jaw", 1, true) then
+                targetBone = i
+                break
+            end
+        end
+        targetBone = targetBone or rag:LookupBone("ValveBiped.Bip01_Head1")
+        if not targetBone then return end
+
+        -- Check if bone manipulation is safe to perform
+        local physBone = rag:TranslateBoneToPhysBone(targetBone)
+        if not physBone or physBone < 0 then return end
+        
+        local physObj = rag:GetPhysicsObjectNum(physBone)
+        if not IsValid(physObj) then return end
+
+        local yaw = (math.random(2) == 1) and -10 or 10
+        local pitch = 18
+        rag:ManipulateBoneAngles(targetBone, Angle(pitch, yaw, 0))
+    end)
+end
+
+-- Function to apply visual floppy effect to a limb
+local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
+	if not IsValid(ent) then return end
+	
+	timer.Simple(0.1, function()
+		if not IsValid(ent) then return end
+
+		local rag = ent:GetNWEntity("RagdollDeath")
+		if not IsValid(rag) then rag = ent:GetNWEntity("FakeRagdoll") end
+		if not IsValid(rag) and IsValid(ent.FakeRagdoll) then rag = ent.FakeRagdoll end
+		if not IsValid(rag) then rag = ent end
+
+		-- Only apply to ragdolls
+		if not rag:IsRagdoll() then return end
+
+		local segments = limbBoneSegments[limbKey]
+		if not segments then return end
+
+        -- Select which segment becomes floppy (persisted or random)
+        local randomSegment = tonumber(segmentOverride) or math.random(1, 3)
+        local selectedSegment = segments[randomSegment]
+                -- save chosen segment on player for persistence
+                if IsValid(ent) and ent:IsPlayer() then
+                    ent.HG_FloppyPersistSeg = ent.HG_FloppyPersistSeg or {}
+                    ent.HG_FloppyPersistSeg[limbKey] = randomSegment
+                end
+		if selectedSegment then
+			local bone1Name, bone2Name = selectedSegment[1], selectedSegment[2]
+			
+			-- Check if bones exist before creating constraint
+			local bone1 = rag:LookupBone(bone1Name)
+			local bone2 = rag:LookupBone(bone2Name)
+			if not bone1 or not bone2 then return end
+			
+			-- Check if physics objects are valid
+			local phys1 = rag:TranslateBoneToPhysBone(bone1)
+			local phys2 = rag:TranslateBoneToPhysBone(bone2)
+			if not phys1 or not phys2 or phys1 < 0 or phys2 < 0 then return end
+			
+			local physObj1 = rag:GetPhysicsObjectNum(phys1)
+			local physObj2 = rag:GetPhysicsObjectNum(phys2)
+			if not IsValid(physObj1) or not IsValid(physObj2) then return end
+			
+			local cons = createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbKey)
+			
+			if cons then
+				-- Store which limb segment is floppy for healing restoration
+				rag.floppyLimbs = rag.floppyLimbs or {}
+				rag.floppyLimbs[limbKey] = {
+					segment = randomSegment,
+					bone1 = bone1Name,
+					bone2 = bone2Name,
+					constraint = cons
+				}
+				
+
+			end
+		end
+	end)
+end
+
+-- Standing manipulation removed by request
+
+-- Function to restore normal limb constraints (for healing)
+local function restoreLimbConstraints(rag, limbKey)
+
+    if IsValid(rag) and rag:IsRagdoll() and rag.floppyLimbs and rag.floppyLimbs[limbKey] then
+        local floppyData = rag.floppyLimbs[limbKey]
+        local bone1 = rag:LookupBone(floppyData.bone1)
+        local bone2 = rag:LookupBone(floppyData.bone2)
+        if bone1 and bone2 then
+            local phys1 = rag:TranslateBoneToPhysBone(bone1)
+            local phys2 = rag:TranslateBoneToPhysBone(bone2)
+            if phys1 and phys2 then
+                -- remove floppy constraint
+                pcall(function() rag:RemoveInternalConstraint(phys1) end)
+                if IsValid(floppyData.constraint) then floppyData.constraint:Remove() end
+                rag.floppyLimbs[limbKey] = nil
+            end
+        end
+    end
+
+    -- standing manipulation removed
+end
+
+-- Function to create a floppy spine constraint
+local function createFloppySpineConstraint(rag, bone1Name, bone2Name)
+    if not IsValid(rag) or not rag:IsRagdoll() then return false end
+
+    local bone1 = rag:LookupBone(bone1Name)
+    local bone2 = rag:LookupBone(bone2Name)
+    if not bone1 or not bone2 then return false end
+
+    local phys1 = rag:TranslateBoneToPhysBone(bone1)
+    local phys2 = rag:TranslateBoneToPhysBone(bone2)
+    if not phys1 or not phys2 or phys1 < 0 or phys2 < 0 then return false end
+
+    local pBone1 = rag:GetPhysicsObjectNum(phys1)
+    local pBone2 = rag:GetPhysicsObjectNum(phys2)
+    if not (IsValid(pBone1) and IsValid(pBone2)) then return false end
+
+    -- Remove existing rigid constraint
+    pcall(function() rag:RemoveInternalConstraint(phys1) end)
+
+    -- Create a moderately loose ballsocket for a floppy spine
+    local lpos, lang = WorldToLocal(
+        pBone1:GetPos() + pBone1:GetAngles():Forward() * -1.5 + pBone1:GetAngles():Up() * -1,
+        angle_zero,
+        pBone2:GetPos(),
+        pBone2:GetAngles()
+    )
+
+    constraint.AdvBallsocket(
+        rag, rag,
+        phys2, phys1,
+        lpos, nil,
+        0, 0,
+        -45, -45, -45,
+        45, 45, 45,
+        0, 0, 0,
+        0, 0
+    )
+
+    return true
+end
+
+-- Function to apply floppy effect to the spine
+local function applySpineFloppyEffect(ent)
+    if not IsValid(ent) then return end
+
+    timer.Simple(0.1, function()
+        if not IsValid(ent) then return end
+
+        local rag = ent:GetNWEntity("RagdollDeath")
+        if not IsValid(rag) then rag = ent end
+        if not rag:IsRagdoll() then return end
+
+        -- Apply to spine2-spine1 connection
+        local success = createFloppySpineConstraint(rag, "ValveBiped.Bip01_Spine2", "ValveBiped.Bip01_Spine1")
+        if success then
+            rag.floppySpine = true
+        end
+    end)
+end
+
+-- Function to restore spine constraints
+local function restoreSpineConstraints(rag)
+    if IsValid(rag) and rag:IsRagdoll() and rag.floppySpine then
+        local bone1 = rag:LookupBone("ValveBiped.Bip01_Spine2")
+        local phys1 = rag:TranslateBoneToPhysBone(bone1)
+        if phys1 then
+            pcall(function() rag:RemoveInternalConstraint(phys1) end)
+        end
+        rag.floppySpine = false
+    end
+end
+
+
+-- Function to create a floppy neck constraint
+local function createFloppyNeckConstraint(rag)
+    if not IsValid(rag) or not rag:IsRagdoll() then return false end
+
+    local headBone = rag:LookupBone("ValveBiped.Bip01_Head1")
+    local spineBone = rag:LookupBone("ValveBiped.Bip01_Spine2")
+    if not headBone or not spineBone then return false end
+
+    local headPhys = rag:TranslateBoneToPhysBone(headBone)
+    local spinePhys = rag:TranslateBoneToPhysBone(spineBone)
+    if not headPhys or not spinePhys or headPhys < 0 or spinePhys < 0 then return false end
+
+    local pHead = rag:GetPhysicsObjectNum(headPhys)
+    local pSpine = rag:GetPhysicsObjectNum(spinePhys)
+    if not (IsValid(pHead) and IsValid(pSpine)) then return false end
+
+    -- Remove existing rigid constraint
+    pcall(function() rag:RemoveInternalConstraint(headPhys) end)
+
+    -- Create a very loose ballsocket for a floppy neck
+    local lpos, lang = WorldToLocal(
+        pHead:GetPos() + pHead:GetAngles():Forward() * -2 + pHead:GetAngles():Up() * -1.5,
+        angle_zero,
+        pSpine:GetPos(),
+        pSpine:GetAngles()
+    )
+
+    constraint.AdvBallsocket(
+        rag, rag,
+        spinePhys, headPhys,
+        lpos, nil,
+        0, 0,
+        -55, -90, -50,
+        55, 35, 50,
+        0, 0, 0,
+        0, 0
+    )
+
+    return true
+end
+
+-- Function to apply floppy effect to the neck
+local function applyNeckFloppyEffect(ent)
+    if not IsValid(ent) then return end
+
+    timer.Simple(0.1, function()
+        if not IsValid(ent) then return end
+
+        local rag = ent:GetNWEntity("RagdollDeath")
+        if not IsValid(rag) then rag = ent end
+        if not rag:IsRagdoll() then return end
+
+        local success = createFloppyNeckConstraint(rag)
+        if success then
+            rag.floppyNeck = true
+        end
+    end)
+end
+
+-- Function to restore neck constraints
+local function restoreNeckConstraints(rag)
+    if IsValid(rag) and rag:IsRagdoll() and rag.floppyNeck then
+        local headBone = rag:LookupBone("ValveBiped.Bip01_Head1")
+        local headPhys = rag:TranslateBoneToPhysBone(headBone)
+        if headPhys then
+            pcall(function() rag:RemoveInternalConstraint(headPhys) end)
+        end
+        rag.floppyNeck = false
+    end
+end
+
+hg.organism.restoreLimbConstraints = restoreLimbConstraints
+hg.organism.restoreSpineConstraints = restoreSpineConstraints
+hg.organism.restoreNeckConstraints = restoreNeckConstraints
+
+
 local colred = Color(255, 0, 0)
 
 local function isCrush(dmgInfo)
@@ -117,6 +635,169 @@ local dismember_arm = {
 	"JESUS CHRIST, MY ARM IS MISSING!",
 }
 
+-- Gruesome accident system for catastrophic multi-bone breaks
+local function trackBoneBreak(org, boneKey)
+	-- Initialize tracking if not present
+	org.recentBoneBreaks = org.recentBoneBreaks or {}
+	
+	-- Add current bone break with timestamp
+	table.insert(org.recentBoneBreaks, {
+		bone = boneKey,
+		time = CurTime()
+	})
+	
+	-- Clean old entries (older than 5 seconds)
+	local currentTime = CurTime()
+	for i = #org.recentBoneBreaks, 1, -1 do
+		if currentTime - org.recentBoneBreaks[i].time > 5 then
+			table.remove(org.recentBoneBreaks, i)
+		end
+	end
+end
+
+local function checkForGruesomeAccident(org)
+	if not org.recentBoneBreaks then return false end
+	
+	local currentTime = CurTime()
+	local recentBreaks = {}
+	local hasNeckBreak = false
+	
+	-- Count recent breaks (within last 4 seconds)
+	for _, breakData in ipairs(org.recentBoneBreaks) do
+		if currentTime - breakData.time <= 4 then
+			table.insert(recentBreaks, breakData.bone)
+			if breakData.bone == "spine3" then
+				hasNeckBreak = true
+			end
+		end
+	end
+	
+	-- Check for gruesome accident: 3+ bones broken + neck break
+	if #recentBreaks >= 3 and hasNeckBreak then
+		org.gruesomeAccident = true
+		org.gruesomeAccidentTime = currentTime
+		
+		-- Sounds removed - keeping only neck snap
+		
+		return true
+	end
+	
+	return false
+end
+
+local function createGruesomeFloppyConstraint(rag, bone1Name, bone2Name, limbKey)
+	local bone1 = rag:LookupBone(bone1Name)
+	local bone2 = rag:LookupBone(bone2Name)
+	if not bone1 or not bone2 then return false end
+
+	local phys1 = rag:TranslateBoneToPhysBone(bone1)
+	local phys2 = rag:TranslateBoneToPhysBone(bone2)
+	if not phys1 or not phys2 then return false end
+
+	local p1 = rag:GetPhysicsObjectNum(phys1)
+	local p2 = rag:GetPhysicsObjectNum(phys2)
+	if not (IsValid(p1) and IsValid(p2)) then return false end
+
+	-- Remove existing rigid constraint
+	pcall(function() rag:RemoveInternalConstraint(phys1) end)
+
+	-- Reposition bones for natural constraint alignment (reduced offset for more realistic positioning)
+	local posOffset = p2:GetAngles():Forward() * 4 + p2:GetAngles():Right() * math.Rand(-0.5, 0.5)
+	if limbKey == "larm" or limbKey == "rarm" then
+		posOffset = p2:GetAngles():Forward() * 3 + p2:GetAngles():Right() * 0.3
+	elseif limbKey == "lleg" or limbKey == "rleg" then
+		posOffset = p2:GetAngles():Forward() * 5 + p2:GetAngles():Up() * 0.5
+	end
+	p1:SetPos(p2:GetPos() + posOffset)
+
+	-- Create moderately floppy constraint for gruesome accidents (more realistic than before)
+	local lpos, lang = WorldToLocal(
+		p1:GetPos() + p1:GetAngles():Forward() * -0.8 + p1:GetAngles():Up() * -0.3,
+		angle_zero,
+		p2:GetPos(),
+		p2:GetAngles()
+	)
+
+	-- More realistic constraints - still damaged but not completely disconnected
+	local minX, minY, minZ = -25, -35, -20
+	local maxX, maxY, maxZ = 25, 15, 20
+
+	-- Adjust constraints based on limb type for more realistic movement
+	if limbKey == "larm" or limbKey == "rarm" then
+		-- Arms: allow more forward/backward movement but limit side-to-side
+		minX, maxX = -20, 20
+		minY, maxY = -30, 10
+		minZ, maxZ = -15, 15
+	elseif limbKey == "lleg" or limbKey == "rleg" then
+		-- Legs: more restricted movement to simulate weight-bearing damage
+		minX, maxX = -15, 15
+		minY, maxY = -25, 8
+		minZ, maxZ = -12, 12
+	end
+
+	constraint.AdvBallsocket(
+		rag, rag,
+		phys2, phys1,
+		lpos, nil,
+		0, 0,
+		minX, minY, minZ,
+		maxX, maxY, maxZ,
+		0, 0, 0,
+		0, 0
+	)
+
+	return true
+end
+
+local function applyGruesomeFloppiness(ent, limbKey)
+	if not IsValid(ent) then return end
+	
+	timer.Simple(0.1, function()
+		if not IsValid(ent) then return end
+
+		local rag = ent:GetNWEntity("RagdollDeath")
+		if not IsValid(rag) then rag = ent end
+
+		-- Only apply to ragdolls
+		if not rag:IsRagdoll() then return end
+
+		local segments = limbBoneSegments[limbKey]
+		if not segments then return end
+
+		-- Randomly select which segment becomes floppy (1-3)
+		local randomSegment = math.random(1, 3)
+		local selectedSegment = segments[randomSegment]
+		
+		if selectedSegment then
+			local bone1Name, bone2Name = selectedSegment[1], selectedSegment[2]
+			local success = createGruesomeFloppyConstraint(rag, bone1Name, bone2Name, limbKey)
+			
+			if success then
+				-- Store which limb segment is floppy for healing restoration
+				rag.floppyLimbs = rag.floppyLimbs or {}
+				rag.floppyLimbs[limbKey] = {
+					segment = randomSegment,
+					bone1 = bone1Name,
+					bone2 = bone2Name,
+					gruesome = true -- Mark as gruesome accident
+				}
+				
+				-- Sounds removed - keeping only neck snap
+			end
+		end
+	end)
+end
+
+-- Function to clean up gruesome accident data
+local function cleanupGruesomeAccident(org)
+	if org.gruesomeAccident and org.gruesomeAccidentTime then
+		-- Clear gruesome accident flag after 10 seconds
+		if CurTime() - org.gruesomeAccidentTime > 10 then
+			org.gruesomeAccident = false
+		end
+	end
+end
+
 local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
     if org.lastBoneHitTime and org.lastBoneHitTime[key] and (CurTime() - org.lastBoneHitTime[key] < 2) then
         dmg = dmg * 1.5
@@ -204,6 +885,19 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+        trackBoneBreak(org, key)
+        if checkForGruesomeAccident(org) then
+            local currentTime = CurTime()
+            if org.recentBoneBreaks then
+                for _, breakData in ipairs(org.recentBoneBreaks) do
+                    if currentTime - breakData.time <= 4 then
+                        applyGruesomeFloppiness(org.owner, breakData.bone)
+                    end
+                end
+            end
+        else
+            applyLimbFloppyEffect(org.owner, key)
+        end
 		//broken
 	else
 		//org[key] = 0.5
@@ -228,9 +922,9 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		if dmg > 0.8 then
 			if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Gruesome Dislocation: " .. key) end
 			org.painadd = org.painadd + 20
-			org.immobilization = org.immobilization + 10
+			org.immobilization = org.immobilization + 15
 			org[key.."gruesome_dislocation"] = true
-			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.02, 1)
+			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.01, 1)
 			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
 			
 			if org.isPly then
@@ -249,6 +943,19 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+        trackBoneBreak(org, key)
+        if checkForGruesomeAccident(org) then
+            local currentTime = CurTime()
+            if org.recentBoneBreaks then
+                for _, breakData in ipairs(org.recentBoneBreaks) do
+                    if currentTime - breakData.time <= 4 then
+                        applyGruesomeFloppiness(org.owner, breakData.bone)
+                    end
+                end
+            end
+        else
+            applyLimbFloppyEffect(org.owner, key)
+        end
 		//dislocated
 	end
 
@@ -340,6 +1047,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+        applyLimbFloppyEffect(org.owner, key)
 		//broken
 	else
 		org[key.."dislocation"] = true
@@ -362,8 +1070,9 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		-- Gruesome dislocation logic
 		if dmg > 0.8 then
 			org.painadd = org.painadd + 20
+			org.immobilization = org.immobilization + 15
 			org[key.."gruesome_dislocation"] = true
-			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.02, 1)
+			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.01, 1)
 			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
 			
 			if org.isPly then
@@ -382,6 +1091,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+        applyLimbFloppyEffect(org.owner, key)
 		//dislocated
 	end
 
@@ -421,6 +1131,12 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 
 	if org[name] >= hg.organism[name2] and org.isPly then
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+		if name == "spine3" then
+			applyNeckFloppyEffect(org.owner)
+		end
+		if name == "spine1" or name == "spine2" then
+			applySpineFloppyEffect(org.owner)
+		end
 		if org.owner:IsPlayer() then
 			org.owner:Notify(huyasd[name], true, name, 2)
 		end
@@ -548,7 +1264,12 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 
 	hg.AddHarmToAttacker(dmgInfo, (org.jaw - oldDmg) * 3, "Jaw bone damage harm")
 
-	if org.jaw == 1 and (org.jaw - oldDmg) > 0 and org.isPly then if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end end
+	if org.jaw == 1 and (org.jaw - oldDmg) > 0 and org.isPly then
+		if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end
+		net.Start("headtrauma_flash")
+		net.Send(org.owner)
+		applyJawPose(org.owner)
+	end
 
 	local dislocated = (org.jaw - oldDmg) > math.Rand(0.1, 0.3)
 
@@ -781,6 +1502,9 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	if org.skull == 1 then
 		if org.isPly then
 			org.owner:Notify(huyasd["skull"],true,"skull",4)
+
+			net.Start("headtrauma_flash")
+			net.Send(org.owner)
 		end
 
 		if dir then

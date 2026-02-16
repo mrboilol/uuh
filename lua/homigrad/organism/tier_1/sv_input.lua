@@ -16,6 +16,18 @@ local function Trace_Bullet(box, hit, ricochet, org, organs, dmg, dmgInfo, dir)
 	if not name then return 0 end
 	if org.superfighter and not (string.find(name,"vest") or string.find(name,"helmet")) then return 0 end
 	local bone = organ[2] or 0
+
+	-- Damage escalation for repeated hits
+	local currentTime = CurTime()
+	if org.recent_hits[bone] and currentTime - org.recent_hits[bone] < 2 then
+		dmg = dmg * 2 -- Double the damage for repeated hits
+		local limb = hg.BoneToLimb and hg.BoneToLimb(bone)
+		if limb and org[limb .. "gruesome"] == false then
+			org[limb .. "gruesome"] = true -- Apply gruesome damage
+		end
+	end
+	org.recent_hits[bone] = currentTime
+
 	local func = input_list[name]
 	local hook_info = {
 		restricted = false,
@@ -512,6 +524,19 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	
 	local org = ent.organism
 	if not org then return end
+
+	-- Initialize recent hits table
+	if not org.recent_hits then
+		org.recent_hits = {}
+	end
+
+	-- Clean up old hits
+	local currentTime = CurTime()
+	for bone, time in pairs(org.recent_hits) do
+		if currentTime - time > 2 then -- 2 second window for repeated hits
+			org.recent_hits[bone] = nil
+		end
+	end
 	
 	local ply = (ent:IsPlayer() and ent) or hg.RagdollOwner(ent)
 
