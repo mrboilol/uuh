@@ -1,4 +1,4 @@
-timer.Simple(0, function()
+
 local CurTime = CurTime
 local time
 local max, min, Round = math.max, math.min, math.Round
@@ -469,4 +469,3 @@ function hg.organism.ApplyTourniquet(ent, bone)
 	SetNetVar("TourniquetGuys", hg.TourniquetGuys)
 	return true
 end
-end)
