@@ -492,4 +492,3 @@ end
 
 -- input_list.rarmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone * 1.25, dmg, dmgInfo, "rarm", boneindex, dir, hit, ricochet) end
 -- Note: 'arms' function is undefined in this file scope. This definition is redundant or incorrect here.
-end)
