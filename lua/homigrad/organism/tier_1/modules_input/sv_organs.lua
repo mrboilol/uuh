@@ -442,7 +442,7 @@ end
 input_list.nose = function(org, bone, dmg, dmgInfo)
 	if not org or not org.nose then return 0 end
 	local oldDmg = org.nose or 0
-	local result = damageOrgan(org, dmg * 4, dmgInfo, "nose") -- nose is extremely sensitive
+	local result = damageOrgan(org, dmg * 6, dmgInfo, "nose") -- nose is extremely sensitive
 
 	-- Nose breakage threshold
 	if oldDmg < 0.5 and org.nose >= 0.5 then

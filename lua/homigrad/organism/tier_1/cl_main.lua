@@ -274,7 +274,6 @@ hook.Add("radialOptions", "DislocatedJaw", function()
 end)
 
 hook.Add("PostRender", "screenshot_think", function()
-	do return end
 	local org = lply.organism
 	
 	if not org or not org.brain or org.otrub or !lply:Alive() then return end
@@ -323,11 +322,11 @@ hook.Add("Post Pre Post Processing", "ShowScreens", function()
 
 	local part = CurTime() - braindeathstart
 
-	local show_multiki = org.brain > 0.1 and org.otrub
+	local show_multiki = (org.brain > 0.1 and org.otrub) or (otrubStartTime != 0 and CurTime() - otrubStartTime > 15)
 
 	if show_multiki then
 		lerpedbrain = LerpFT(0.05, lerpedbrain, org.brain)
-		local time = 40 - (lerpedbrain - 0.1) * 20
+		local time = math.max(5, 40 - ((lerpedbrain - 0.1) * 20 + (org.pain or 0) / 10))
 		if part % time > time / 3 and curscreen <= #screens and screens[curscreen] and !screens[curscreen]:IsError() then
 			switch = true
 			local part2 = math.ease.InOutSine(math.sin(((part % time) - time / 3) / (time / 3 * 2) * math.pi))
@@ -355,6 +354,7 @@ local addtime = CurTime()
 
 local hg_potatopc
 local old = false
+local otrubStartTime = 0
 local tinnitusSoundFactor
 local lerpblood = 0
 hook.Add("RenderScreenspaceEffects", "organism-effects", function()
@@ -366,7 +366,10 @@ hook.Add("RenderScreenspaceEffects", "organism-effects", function()
 
 	if organism.owner == LocalPlayer() then
 		if new_organism.otrub and !old then
+			otrubStartTime = CurTime()
 			hook.Run("HG_OnOtrub", new_organism.owner)
+		elseif !new_organism.otrub and old then
+			otrubStartTime = 0
 		end
 		
 		old = new_organism.otrub

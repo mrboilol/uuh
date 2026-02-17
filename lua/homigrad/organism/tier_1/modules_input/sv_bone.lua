@@ -1062,6 +1062,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
                 end
             end
         else
+            if not org.owner.brokenLimbSegments then org.owner.brokenLimbSegments = {} end
             if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
                 applyLimbFloppyEffect(org.owner, key)
             end
@@ -1644,7 +1645,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
         eyeChance = isFrontal and 50 or 20
         noseChance = isFrontal and 40 or 10
     elseif isCrush then
-        eyeChance = isFrontal and 80 or 20 -- Prone to crush
+        eyeChance = isFrontal and 30 or 10 -- Less prone to crush
         noseChance = isFrontal and 90 or 30 -- Prone to crush
     end
 

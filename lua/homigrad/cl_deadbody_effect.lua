@@ -4,16 +4,7 @@ if SERVER then
     return 
 end
 
-local DeadBodySounds = {
-    "ambient/creatures/town_moan1.wav",
-    "ambient/creatures/town_muffled_cry1.wav",
-    "ambient/creatures/town_scared_breathing1.wav",
-    "ambient/creatures/town_scared_breathing2.wav",
-    "ambient/creatures/town_scared_sob1.wav",
-    "ambient/creatures/town_scared_sob2.wav",
-}
 
-local deadBodySoundPlaying = false
 
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 local tunnelWaveFade = 0
@@ -70,9 +61,8 @@ hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
     if deadActive and not deadBodySoundPlaying then
         deadBodySoundPlaying = true
         surface.PlaySound(table.Random(DeadBodySounds))
-        timer.Simple(math.Rand(5, 10), function()
-            deadBodySoundPlaying = false
-        end)
+    elseif not deadActive and deadBodySoundPlaying then
+        deadBodySoundPlaying = false
     end
 end)
 

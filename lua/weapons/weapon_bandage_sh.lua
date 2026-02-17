@@ -430,7 +430,7 @@ if SERVER then
 		if org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
 			org[key .. "_perm_dmg"] = math.max(0, org[key .. "_perm_dmg"] - 0.1)
 			if hg.CreateNotification then
-				hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
+				--hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
 			end
 			done = true
 		end
@@ -742,7 +742,7 @@ if SERVER then
 		if org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
 			org[key .. "_perm_dmg"] = math.max(0, org[key .. "_perm_dmg"] - 0.1)
 			if hg.CreateNotification then
-				hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
+				--hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
 			end
 			return true
 		end

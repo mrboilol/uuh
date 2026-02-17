@@ -1048,7 +1048,7 @@ local function fixlimb(org, key, fixer)
 		org.painadd = org.painadd + 5 * math.random(1, 3)
 		org.fearadd = org.fearadd + 0.1
 
-		org.owner:EmitSound("physics/flesh/flesh_impact_hard6.wav", 65)
+		org.owner:EmitSound("physics/body/body_medium_impact_hard"..math.random(1,4)..".wav", 75, 100, 1, CHAN_VOICE)
 
 		if fixer == org.owner and (fixer.tries or 0) > 3 and math.random(3) == 1 then
 			fixer:Notify(finally_fixed[math.random(#finally_fixed)], 1, "dislocations_unlucky", 1, nil, Color(255, 255, 255, 255))

@@ -160,6 +160,13 @@ local hitgrouptolimb = {
 }
 
 hg.bonetohitgroup = bonetohitgroup
+hg.hitgrouptolimb = hitgrouptolimb
+
+function hg.BoneToLimb(boneName)
+	local hitgroup = hg.bonetohitgroup[boneName]
+	if not hitgroup then return nil end
+	return hg.hitgrouptolimb[hitgroup]
+end
 
 hg.amputeetable = {
 	--["ValveBiped.Bip01_L_UpperArm"] = "larm",
