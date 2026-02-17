@@ -28,6 +28,13 @@ local function Trace_Bullet(box, hit, ricochet, org, organs, dmg, dmgInfo, dir)
 	end
 	org.recent_hits[bone] = currentTime
 
+	local limb = hg.BoneToLimb and hg.BoneToLimb(bone)
+	if limb and org[limb] and org[limb] > 0 and not org[limb .. "gruesome"] then
+		org[limb .. "gruesome"] = true
+		if IsValid(org.owner) and org.owner:IsPlayer() then
+		end
+	end
+
 	local func = input_list[name]
 	local hook_info = {
 		restricted = false,
@@ -38,6 +45,25 @@ local function Trace_Bullet(box, hit, ricochet, org, organs, dmg, dmgInfo, dir)
 	
 	dmg = hook_info.dmg
 	
+	local limb = hg.BoneToLimb and hg.BoneToLimb(bone)
+	if limb and org[limb .. "amputated"] == false then
+		local chance = 0
+		if org[limb .. "gruesome"] then
+			chance = chance + 0.15
+		end
+		
+		if dmg > 100 then
+			chance = chance + 0.4
+		elseif dmg > 50 then
+			chance = chance + 0.1
+		end
+		
+		if math.random() < chance then
+			hg.organism.AmputateLimb(org, limb)
+			return 0
+		end
+	end
+
 	if func and !hook_info.restricted then
 		return func(org, bone, dmg, dmgInfo, box[6], dir, hit, ricochet)
 	else
@@ -57,6 +83,25 @@ local function Trace_Blast(box, amt, org, organs, dmg, dmgInfo)
 
 	local amount = amt * dmg
 	
+	local limb = hg.BoneToLimb and hg.BoneToLimb(bone)
+	if limb and org[limb .. "amputated"] == false then
+		local chance = 0
+		if org[limb .. "gruesome"] then
+			chance = chance + 0.25
+		end
+		
+		if amount > 80 then
+			chance = chance + 0.5
+		elseif amount > 40 then
+			chance = chance + 0.2
+		end
+		
+		if math.random() < chance then
+			hg.organism.AmputateLimb(org, limb)
+			return 0
+		end
+	end
+
 	if func then return func(org, 1, amount, dmgInfo, box[6], vector_origin, true, false) end
 end
 

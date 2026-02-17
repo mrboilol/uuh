@@ -31,6 +31,13 @@ local limbBoneSegments = {
 	}
 }
 
+local maxLimbBreaks = {
+    larm = 3,
+    rarm = 3,
+    lleg = 3,
+    rleg = 3
+}
+
 -- Bone Buster angle limits for ragdoll constraints
 local bb_constraints_limit = {
     ["ValveBiped.Bip01_Pelvis"] = {
@@ -849,12 +856,27 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		-- oooooooooooooooooowwww
 		if org.isPly then
+			local break_key = key .. "_breaks"
+			local limb_gruesome = key .. "_gruesome"
+			local current_breaks = org[break_key] or 0
+            local max_breaks = maxLimbBreaks[key] or 1
+
 			if org[key.."amputated"] then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_leg[math.random(#dismember_leg)], 3, colred) end
-			elseif org[key.."gruesome"] then
+			elseif org[limb_gruesome] then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg_gruesome[math.random(#broke_leg_gruesome)], 3, colred) end
 			else
-				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg[math.random(#broke_leg)], 3, colred) end
+				if current_breaks < max_breaks then
+					org[break_key] = current_breaks + 1
+					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg[math.random(#broke_leg)] .. " (" .. org[break_key] .. "/" .. max_breaks .. ")", 3, colred) end
+				
+					if org[break_key] == max_breaks then
+						org[limb_gruesome] = true
+						if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg_gruesome[math.random(#broke_leg_gruesome)], 3, colred) end
+					end
+				else
+					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg[math.random(#broke_leg)], 3, colred) end
+				end
 			end
 		end
 		
@@ -1014,12 +1036,27 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 
 		if org.isPly then
+			local break_key = key .. "_breaks"
+			local limb_gruesome = key .. "_gruesome"
+			local current_breaks = org[break_key] or 0
+            local max_breaks = maxLimbBreaks[key] or 1
+
 			if org[key.."amputated"] then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, dismember_arm[math.random(#dismember_arm)], 3, colred) end
-			elseif org[key.."gruesome"] then
+			elseif org[limb_gruesome] then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm_gruesome[math.random(#broke_arm_gruesome)], 3, colred) end
 			else
-				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm[math.random(#broke_arm)], 3, colred) end
+				if current_breaks < max_breaks then
+					org[break_key] = current_breaks + 1
+					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm[math.random(#broke_arm)] .. " (" .. org[break_key] .. "/" .. max_breaks .. ")", 3, colred) end
+				
+					if org[break_key] == max_breaks then
+						org[limb_gruesome] = true
+						if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm_gruesome[math.random(#broke_arm_gruesome)], 3, colred) end
+					end
+				else
+					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm[math.random(#broke_arm)], 3, colred) end
+				end
 			end
 		end
 

@@ -25,15 +25,16 @@ end
 
 function hg.organism.paincheck(org)
 	local analgesiaMul = (org.analgesia * 4 + 1)
-	local adrenalineMul = min(max(1 + org.adrenaline, 1), 1.2)
+	local consciousnessAdrenalineMul = 1 + (org.adrenaline or 0) * 2
 
-	return (org.shock > org.shock_turn * 4 * analgesiaMul)
+	return (org.shock > org.shock_turn * 4 * analgesiaMul * consciousnessAdrenalineMul)
 end
 
 module[2] = function(owner, org, timeValue)
 	local adrenalineMul = min(max(1 + org.adrenaline, 1), 1.2)
 	local adrenaline = org.adrenaline
 	local analgesiaMul = (org.analgesia * 4 + 1)
+	local consciousnessAdrenalineMul = 1 + (org.adrenaline or 0) * 2
 	local painkillerMul = (org.painkiller * 0.5 + 1)
 
 	org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
@@ -77,8 +78,15 @@ module[2] = function(owner, org, timeValue)
 		org.shock = math.Approach(org.shock, 70, timeValue * 4)
 	end
 
-	if (org.shock > (30 * analgesiaMul)) or org.otrub then
+	if (org.shock > (30 * analgesiaMul * consciousnessAdrenalineMul)) or org.otrub then
 		org.consciousness = math.Approach(org.consciousness, 0.1, timeValue / 5)
+	end
+
+	if org.needotrub and org.otrub_delay > 0 then
+		org.otrub_delay = math.Approach(org.otrub_delay, 0, timeValue)
+		if org.otrub_delay <= 0 then
+			org.otrub = true
+		end
 	end
 
 	if org.tranquilizer > 0 then
@@ -91,6 +99,7 @@ module[2] = function(owner, org, timeValue)
 
 	if org.consciousness < 0.1 then
 		org.needotrub = true
+		org.otrub_delay = math.Clamp(5 - (org.shock / 20), 0.5, 5)
 	end
 
 	if org.consciousness < math.Rand(0.3, 0.5) then
@@ -109,6 +118,7 @@ module[2] = function(owner, org, timeValue)
 
 	if hg.organism.paincheck(org) then
 		org.needotrub = true
+		org.otrub_delay = math.Clamp(5 - (org.shock / 20), 0.5, 5)
 	end
 	
 	org.analgesia =  Approach(org.analgesia, 0, timeValue / 240 * (org.naloxone * 25 + 1))

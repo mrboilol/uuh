@@ -4,7 +4,11 @@ hg.organism.list = hg.organism.list or {}
 local hook_Run = hook.Run
 function hg.organism.Add(ent)
 	ent.organism = {
-		owner = ent
+		owner = ent,
+		larm_breaks = 0,
+		rarm_breaks = 0,
+		lleg_breaks = 0,
+		rleg_breaks = 0
 	}
 
 	local org = ent.organism

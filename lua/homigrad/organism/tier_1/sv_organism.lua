@@ -201,6 +201,11 @@ net.Receive("hg_dislocation_minigame_success", function(len, ply)
     if math.random(0, 10) > (5 - failures) then
         org[key .. "dislocation"] = false
         patient:EmitSound("physics/body/body_medium_impact_hard"..math.random(1,4)..".wav", 75, 100, 1, CHAN_VOICE)
+        
+        local rag = hg.GetCurrentCharacter(patient)
+        if IsValid(rag) then
+            hg.organism.restoreLimbConstraints(rag, key)
+        end
     else
         org.painadd = org.painadd + 10
         org.fearadd = org.fearadd + 0.2
@@ -456,7 +461,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	org.isPly = isPly
 
 	if org.disemboweled then
-		org.stamina = 0
+		org.stamina[1] = 0
 	end
 
 	if isPly or org.fakePlayer then
@@ -653,9 +658,36 @@ end)
 		if org.larm > (org.larm_perm_dmg or 0) then org.larm = math.Approach(org.larm, org.larm_perm_dmg or 0, boneHeal) end
 		if org.rarm > (org.rarm_perm_dmg or 0) then org.rarm = math.Approach(org.rarm, org.rarm_perm_dmg or 0, boneHeal) end
 		if org.jaw > 0 then org.jaw = math.Approach(org.jaw, 0, boneHeal) end
-		if org.spine1 > 0 then org.spine1 = math.Approach(org.spine1, 0, boneHeal) end
-		if org.spine2 > 0 then org.spine2 = math.Approach(org.spine2, 0, boneHeal) end
-		if org.spine3 > 0 then org.spine3 = math.Approach(org.spine3, 0, boneHeal) end
+		if org.spine1 > 0 then
+			local old_val = org.spine1
+			org.spine1 = math.Approach(org.spine1, 0, boneHeal)
+			if old_val > 0 and org.spine1 == 0 then
+				local rag = hg.GetCurrentCharacter(org.owner)
+				if IsValid(rag) then
+					hg.organism.restoreSpineConstraints(rag)
+				end
+			end
+		end
+		if org.spine2 > 0 then
+			local old_val = org.spine2
+			org.spine2 = math.Approach(org.spine2, 0, boneHeal)
+			if old_val > 0 and org.spine2 == 0 then
+				local rag = hg.GetCurrentCharacter(org.owner)
+				if IsValid(rag) then
+					hg.organism.restoreSpineConstraints(rag)
+				end
+			end
+		end
+		if org.spine3 > 0 then
+			local old_val = org.spine3
+			org.spine3 = math.Approach(org.spine3, 0, boneHeal)
+			if old_val > 0 and org.spine3 == 0 then
+				local rag = hg.GetCurrentCharacter(org.owner)
+				if IsValid(rag) then
+					hg.organism.restoreNeckConstraints(rag)
+				end
+			end
+		end
 		if org.chest > 0 then org.chest = math.Approach(org.chest, 0, boneHeal) end
 		if org.pelvis > 0 then org.pelvis = math.Approach(org.pelvis, 0, boneHeal) end
 		if org.skull > 0 then org.skull = math.Approach(org.skull, 0, boneHeal) end

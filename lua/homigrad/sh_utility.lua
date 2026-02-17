@@ -1873,10 +1873,10 @@ local IsValid = IsValid
 		k = k * (org.llegdislocation and 0.75 or 1) * (org.rlegdislocation and 0.75 or 1)
 		
 		-- Gruesome breaks affect movement speed (legs)
-		if org.lleggruesome then k = k * 0.5 end
-		if org.rleggruesome then k = k * 0.5 end
-		if org.lleggruesome_dislocation then k = k * 0.6 end
-		if org.rleggruesome_dislocation then k = k * 0.6 end
+		if org.lleggruesome then k = k * 0.6 end
+		if org.rleggruesome then k = k * 0.6 end
+		if org.lleggruesome_dislocation then k = k * 0.8 end
+		if org.rleggruesome_dislocation then k = k * 0.8 end
 		
         local tourniquets = ply:GetNetVar("Tourniquets")
         if tourniquets then

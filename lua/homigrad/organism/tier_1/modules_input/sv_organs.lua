@@ -1,3 +1,4 @@
+timer.Simple(0, function()
 --local Organism = hg.organism
 if SERVER then
     util.AddNetworkString("hg_play_client_sound")
@@ -117,7 +118,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 				org.internalBleed = org.internalBleed + 5
 
 				-- Stamina drain
-				org.stamina = 0
+				org.stamina[1] = 0
 
 				-- Chance to drop weapon
 				if math.random(3) == 1 and IsValid(org.owner:GetActiveWeapon()) then
@@ -132,7 +133,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 					"MY STOMACH IS OPEN! GOD HELP ME!"
 				}
 				org.owner:Notify(gut_msg[math.random(#gut_msg)], true, "disembowel", 3)
-			end
+				end
 		end
 	end
 	
@@ -493,3 +494,4 @@ end
 
 -- input_list.rarmup = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return arms(org, bone * 1.25, dmg, dmgInfo, "rarm", boneindex, dir, hit, ricochet) end
 -- Note: 'arms' function is undefined in this file scope. This definition is redundant or incorrect here.
+end)
