@@ -52,13 +52,11 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 	org.liver = math.min(org.liver + dmg, 1)
 	local harmed = (org.liver - oldDmg)
 	if org.analgesia < 0.4 and harmed >= 0.2 then
-		timer.Simple(0, function()
-			if harmed > 0 then -- wtf? whatever
-				hg.StunPlayer(org.owner,2)
-			else
-				hg.LightStunPlayer(org.owner,2)
-			end
-		
+		if harmed > 0 then -- wtf? whatever
+			hg.StunPlayer(org.owner,2)
+		else
+			hg.LightStunPlayer(org.owner,2)
+		end
 	end
 
 	org.internalBleed = org.internalBleed + harmed * 10

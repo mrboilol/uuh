@@ -942,8 +942,8 @@ local tab = {
 
 hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
     if damageFlashLerp > 0.01 then
-        damageFlashLerp = math.Approach(damageFlashLerp, 0, FrameTime() * 0.5)
-        surface.SetDrawColor(255, 0, 0, damageFlashLerp * 150)
+        damageFlashLerp = math.Approach(damageFlashLerp, 0, FrameTime() * 4)
+        surface.SetDrawColor(255, 0, 0, damageFlashLerp * 255)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
     
