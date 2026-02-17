@@ -294,6 +294,125 @@ local function applyJawPose(ent)
     end)
 end
 
+
+-- AOOWWOAWAOAOWAAAGAHGWAOWAAAA
+local function trackBoneBreak(org, boneKey)
+    org.recentBoneBreaks = org.recentBoneBreaks or {}
+    
+    table.insert(org.recentBoneBreaks, {
+        bone = boneKey,
+        time = CurTime()
+    })
+    
+    local currentTime = CurTime()
+    for i = #org.recentBoneBreaks, 1, -1 do
+        if currentTime - org.recentBoneBreaks[i].time > 5 then
+            table.remove(org.recentBoneBreaks, i)
+        end
+    end
+end
+
+local function checkForGruesomeAccident(org)
+    if not org.recentBoneBreaks then return false end
+    
+    local currentTime = CurTime()
+    local recentBreaks = {}
+    local hasNeckBreak = false
+    
+
+    for _, breakData in ipairs(org.recentBoneBreaks) do
+        if currentTime - breakData.time <= 4 then
+            table.insert(recentBreaks, breakData.bone)
+            if breakData.bone == "spine3" then
+                hasNeckBreak = true
+            end
+        end
+    end
+    
+
+    if #recentBreaks >= 3 and hasNeckBreak then
+        org.gruesomeAccident = true
+        org.gruesomeAccidentTime = currentTime
+        
+        
+        return true
+    end
+    
+    return false
+end
+
+local function applyGruesomeFloppiness(ent, limbKey)
+    if not IsValid(ent) then return end
+
+    timer.Simple(0.1, function()
+        if not IsValid(ent) then return end
+
+        local rag = ent:GetNWEntity("RagdollDeath")
+        if not IsValid(rag) then rag = ent:GetNWEntity("FakeRagdoll") end
+        if not IsValid(rag) and IsValid(ent.FakeRagdoll) then rag = ent.FakeRagdoll end
+        if not IsValid(rag) then rag = ent end
+
+        if not rag:IsRagdoll() then return end
+
+        local segments = limbBoneSegments[limbKey]
+        if not segments then return end
+
+        local randomSegment
+        local availableSegments = {}
+        for i = 1, #segments do
+            if not table.HasValue(ent.brokenLimbSegments[limbKey], i) then
+                table.insert(availableSegments, i)
+            end
+        end
+
+        if #availableSegments == 0 then return end
+
+        randomSegment = table.Random(availableSegments)
+
+        if not randomSegment then return end
+
+        local selectedSegment = segments[randomSegment]
+
+        if IsValid(ent) and ent:IsPlayer() then
+            table.insert(ent.brokenLimbSegments[limbKey], randomSegment)
+            ent.HG_FloppyPersistSeg = ent.HG_FloppyPersistSeg or {}
+            ent.HG_FloppyPersistSeg[limbKey] = ent.brokenLimbSegments[limbKey]
+        end
+
+        if selectedSegment then
+            local bone1Name, bone2Name = selectedSegment[1], selectedSegment[2]
+
+            local bone1 = rag:LookupBone(bone1Name)
+            local bone2 = rag:LookupBone(bone2Name)
+            if not bone1 or not bone2 then return end
+
+            local phys1 = rag:TranslateBoneToPhysBone(bone1)
+            local phys2 = rag:TranslateBoneToPhysBone(bone2)
+            if not phys1 or not phys2 or phys1 < 0 or phys2 < 0 then return end
+            
+            local physObj1 = rag:GetPhysicsObjectNum(phys1)
+            local physObj2 = rag:GetPhysicsObjectNum(phys2)
+            if not IsValid(physObj1) or not IsValid(physObj2) then return end
+            
+            local cons = createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbKey)
+            
+            if cons then
+                rag.floppyLimbs = rag.floppyLimbs or {}
+                rag.floppyLimbs[limbKey] = rag.floppyLimbs[limbKey] or {}
+                rag.floppyLimbs[limbKey][randomSegment] = {
+                    segment = randomSegment,
+                    bone1 = bone1Name,
+                    bone2 = bone2Name,
+                    constraint = cons,
+                    gruesome = true
+                }
+                
+            end
+        end
+    end)
+end
+
+
 -- Function to apply visual floppy effect to a limb
 local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
 	if not IsValid(ent) then return end
@@ -301,9 +420,7 @@ local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
 	ent.brokenLimbSegments = ent.brokenLimbSegments or {}
 	ent.brokenLimbSegments[limbKey] = ent.brokenLimbSegments[limbKey] or {}
 
-	if table.Count(ent.brokenLimbSegments[limbKey]) >= (maxLimbBreaks[limbKey] or 3) then
-		return
-	end
+	--if table.Count(ent.brokenLimbSegments[limbKey]) >= (maxLimbBreaks[limbKey] or 3) then return end
 
 	timer.Simple(0.1, function()
 		if not IsValid(ent) then return end
@@ -945,7 +1062,9 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
                 end
             end
         else
-            applyLimbFloppyEffect(org.owner, key)
+            if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
+                applyLimbFloppyEffect(org.owner, key)
+            end
         end
 		//broken
 	else
@@ -1003,7 +1122,9 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
                 end
             end
         else
-            applyLimbFloppyEffect(org.owner, key)
+            if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
+                applyLimbFloppyEffect(org.owner, key)
+            end
         end
 		//dislocated
 	end
@@ -1111,7 +1232,21 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
-        applyLimbFloppyEffect(org.owner, key)
+        trackBoneBreak(org, key)
+        if checkForGruesomeAccident(org) then
+            local currentTime = CurTime()
+            if org.recentBoneBreaks then
+                for _, breakData in ipairs(org.recentBoneBreaks) do
+                    if currentTime - breakData.time <= 4 then
+                        applyGruesomeFloppiness(org.owner, breakData.bone)
+                    end
+                end
+            end
+        else
+            if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
+                applyLimbFloppyEffect(org.owner, key)
+            end
+        end
 		//broken
 	else
 		org[key.."dislocation"] = true
@@ -1155,7 +1290,21 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
-        applyLimbFloppyEffect(org.owner, key)
+        trackBoneBreak(org, key)
+        if checkForGruesomeAccident(org) then
+            local currentTime = CurTime()
+            if org.recentBoneBreaks then
+                for _, breakData in ipairs(org.recentBoneBreaks) do
+                    if currentTime - breakData.time <= 4 then
+                        applyGruesomeFloppiness(org.owner, breakData.bone)
+                    end
+                end
+            end
+        else
+            if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
+                applyLimbFloppyEffect(org.owner, key)
+            end
+        end
 		//dislocated
 	end
 
