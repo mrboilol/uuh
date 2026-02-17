@@ -44,6 +44,7 @@ local function isDeadBodyAllowed(ply, owner)
 end
 
 hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
+    local lply = LocalPlayer()
     if not GetConVar("hg_death_effect_enabled"):GetBool() then return end
 	if not IsValid(lply) or not lply:Alive() then return end
 	local deadOwner = getDeadBodyOwner(lply)
