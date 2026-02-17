@@ -1,5 +1,19 @@
 --thanks nig
-if SERVER then return end
+if SERVER then 
+    CreateConVar("hg_death_effect_enabled", "1", FCVAR_REPLICATED, "enable or disable wave effect thing")
+    return 
+end
+
+local DeadBodySounds = {
+    "ambient/creatures/town_moan1.wav",
+    "ambient/creatures/town_muffled_cry1.wav",
+    "ambient/creatures/town_scared_breathing1.wav",
+    "ambient/creatures/town_scared_breathing2.wav",
+    "ambient/creatures/town_scared_sob1.wav",
+    "ambient/creatures/town_scared_sob2.wav",
+}
+
+local deadBodySoundPlaying = false
 
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 local tunnelWaveFade = 0
@@ -30,6 +44,7 @@ local function isDeadBodyAllowed(ply, owner)
 end
 
 hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
+    if not GetConVar("hg_death_effect_enabled"):GetBool() then return end
 	if not IsValid(lply) or not lply:Alive() then return end
 	local deadOwner = getDeadBodyOwner(lply)
 

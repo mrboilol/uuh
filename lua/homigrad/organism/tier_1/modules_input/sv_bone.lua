@@ -298,6 +298,13 @@ end
 local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
 	if not IsValid(ent) then return end
 	
+	ent.brokenLimbSegments = ent.brokenLimbSegments or {}
+	ent.brokenLimbSegments[limbKey] = ent.brokenLimbSegments[limbKey] or {}
+
+	if table.Count(ent.brokenLimbSegments[limbKey]) >= (maxLimbBreaks[limbKey] or 3) then
+		return
+	end
+
 	timer.Simple(0.1, function()
 		if not IsValid(ent) then return end
 
@@ -312,14 +319,34 @@ local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
 		local segments = limbBoneSegments[limbKey]
 		if not segments then return end
 
-        -- Select which segment becomes floppy (persisted or random)
-        local randomSegment = tonumber(segmentOverride) or math.random(1, 3)
-        local selectedSegment = segments[randomSegment]
-                -- save chosen segment on player for persistence
-                if IsValid(ent) and ent:IsPlayer() then
-                    ent.HG_FloppyPersistSeg = ent.HG_FloppyPersistSeg or {}
-                    ent.HG_FloppyPersistSeg[limbKey] = randomSegment
-                end
+		-- Select a segment that isn't already broken
+		local randomSegment
+		local availableSegments = {}
+		for i = 1, #segments do
+			if not table.HasValue(ent.brokenLimbSegments[limbKey], i) then
+				table.insert(availableSegments, i)
+			end
+		end
+
+		if #availableSegments == 0 then return end -- No more segments to break
+
+		if segmentOverride and table.HasValue(availableSegments, segmentOverride) then
+			randomSegment = segmentOverride
+		else
+			randomSegment = table.Random(availableSegments)
+		end
+
+		if not randomSegment then return end
+
+		local selectedSegment = segments[randomSegment]
+		
+		-- save chosen segment on player for persistence
+		if IsValid(ent) and ent:IsPlayer() then
+			table.insert(ent.brokenLimbSegments[limbKey], randomSegment)
+			ent.HG_FloppyPersistSeg = ent.HG_FloppyPersistSeg or {}
+			ent.HG_FloppyPersistSeg[limbKey] = ent.brokenLimbSegments[limbKey]
+		end
+
 		if selectedSegment then
 			local bone1Name, bone2Name = selectedSegment[1], selectedSegment[2]
 			
@@ -342,14 +369,13 @@ local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
 			if cons then
 				-- Store which limb segment is floppy for healing restoration
 				rag.floppyLimbs = rag.floppyLimbs or {}
-				rag.floppyLimbs[limbKey] = {
+				rag.floppyLimbs[limbKey] = rag.floppyLimbs[limbKey] or {}
+				rag.floppyLimbs[limbKey][randomSegment] = {
 					segment = randomSegment,
 					bone1 = bone1Name,
 					bone2 = bone2Name,
 					constraint = cons
 				}
-				
-
 			end
 		end
 	end)
@@ -359,24 +385,25 @@ end
 
 -- Function to restore normal limb constraints (for healing)
 local function restoreLimbConstraints(rag, limbKey)
-
     if IsValid(rag) and rag:IsRagdoll() and rag.floppyLimbs and rag.floppyLimbs[limbKey] then
-        local floppyData = rag.floppyLimbs[limbKey]
-        local bone1 = rag:LookupBone(floppyData.bone1)
-        local bone2 = rag:LookupBone(floppyData.bone2)
-        if bone1 and bone2 then
-            local phys1 = rag:TranslateBoneToPhysBone(bone1)
-            local phys2 = rag:TranslateBoneToPhysBone(bone2)
-            if phys1 and phys2 then
-                -- remove floppy constraint
-                pcall(function() rag:RemoveInternalConstraint(phys1) end)
-                if IsValid(floppyData.constraint) then floppyData.constraint:Remove() end
-                rag.floppyLimbs[limbKey] = nil
+        for segment, floppyData in pairs(rag.floppyLimbs[limbKey]) do
+            local bone1 = rag:LookupBone(floppyData.bone1)
+            if bone1 then
+                local phys1 = rag:TranslateBoneToPhysBone(bone1)
+                if phys1 then
+                    -- remove floppy constraint
+                    pcall(function() rag:RemoveInternalConstraint(phys1) end)
+                    if IsValid(floppyData.constraint) then floppyData.constraint:Remove() end
+                end
             end
         end
+        rag.floppyLimbs[limbKey] = nil
+        
+        local ent = rag:GetOwner()
+        if IsValid(ent) and ent:IsPlayer() and ent.brokenLimbSegments then
+            ent.brokenLimbSegments[limbKey] = {}
+        end
     end
-
-    -- standing manipulation removed
 end
 
 -- Function to create a floppy spine constraint

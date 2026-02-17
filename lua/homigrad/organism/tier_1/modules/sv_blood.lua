@@ -218,7 +218,8 @@ module[2] = function(owner, org, mulTime)
 			wound[5] = time
 			org.blood = max(org.blood - wound[1] * mulTime * 4.5 * math.max(org.pulse, 20) / 80, 1)
 			if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
-				local dir = wound[6]
+					local dir = wound[6]
+					if not dir then dir = vector_origin end
 				local len = dir:Length()
 				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
 				dir = -dir:Forward() * len
@@ -265,7 +266,7 @@ module[2] = function(owner, org, mulTime)
 
 	-- Nosebleed/mouth bleed from internal bleeding/choking
 	if (org.bloodChoke > 0.3 or org.internalBleed > 15) and (org.lastNoseBleed or 0) < CurTime() then
-		hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 0.1, 1, nil, nil, true)
+		org.bleed = org.bleed + 1
 		org.lastNoseBleed = CurTime() + math.Rand(10, 20)
 	end
 	
@@ -326,27 +327,7 @@ end
 
 util.AddNetworkString("bloodsquirt2")
 --grrr
-function hg.organism.AddBleed(org, bone, size, artery_name_or_type, pos, dir, is_artery)
-    if not org or not org.owner then return end
 
-    local wound_table = {
-        size, -- [1] Wound size
-        pos or Vector(0,0,0), -- [2] Position
-        artery_name_or_type, -- [3] Type or Artery Name
-        bone, -- [4] Bone name
-        CurTime(), -- [5] Last bleed time
-        dir, -- [6] Direction (for arterial)
-        is_artery and (type(artery_name_or_type) == "string" and artery_name_or_type or nil) or nil -- [7] Artery flag name
-    }
-
-    if is_artery then
-        table.insert(org.arterialwounds, wound_table)
-        org.owner:SetNetVar("arterialwounds", org.arterialwounds)
-    else
-        table.insert(org.wounds, wound_table)
-        org.owner:SetNetVar("wounds", org.wounds)
-    end
-end
 
 function hg.organism.Vomit(owner, snd)
 	if !hg.IsValidPlayer(owner) then return end

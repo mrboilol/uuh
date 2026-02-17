@@ -37,6 +37,9 @@ module[2] = function(owner, org, timeValue)
 	local consciousnessAdrenalineMul = 1 + (org.adrenaline or 0) * 2
 	local painkillerMul = (org.painkiller * 0.5 + 1)
 
+	if org.otrub == nil then org.otrub = false end
+	if org.needfake == nil then org.needfake = false end
+
 	org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
 
 	if org.shock > org.shock_turn * 1.5 * analgesiaMul * painkillerMul then

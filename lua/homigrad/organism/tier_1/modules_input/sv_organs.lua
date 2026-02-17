@@ -380,7 +380,7 @@ input_list.eyeL = function(org, bone, dmg, dmgInfo)
             net.WriteString("sprites/light_glow02_add")
             net.Send(org.owner)
 
-			hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 1, 1, nil, nil, true)
+			org.bleed = org.bleed + 1
 		end
 	elseif org.eyeL > 0.1 then
 		-- Slight disorientation for eye damage
@@ -429,7 +429,7 @@ input_list.eyeR = function(org, bone, dmg, dmgInfo)
             net.WriteString("sprites/light_glow02_add")
             net.Send(org.owner)
 
-			hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 1, 1, nil, nil, true)
+			org.bleed = org.bleed + 1
 		end
 	elseif org.eyeR > 0.1 then
 		-- Slight disorientation for eye damage
@@ -466,7 +466,7 @@ input_list.nose = function(org, bone, dmg, dmgInfo)
             net.WriteString("sprites/light_glow02_add")
             net.Send(org.owner)
 			
-			hg.organism.AddBleed(org, "ValveBiped.Bip01_Head1", 1, 1, nil, nil, true)
+			org.bleed = org.bleed + 1
 
 			-- Pain increase
 			if hg.organism.enhancedPain then
