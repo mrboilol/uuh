@@ -725,7 +725,7 @@ if SERVER then
         [HITGROUP_LEFTLEG]  = true
     }
     hook.Add("HomigradDamage","Combine_painsounds",function(ply, dmgInfo, hitgroup, ent)
-        --[[if ply.PlayerClassName == "Combine" then
+        if ply.PlayerClassName == "Combine" then
             ply.painCD = ply.painCD or 0
             if hitgroups_sounds[hitgroup] and ply.painCD < CurTime() and ply.organism and not ply.organism.otrub and ply:Alive() then
                 local snd = "npc/combine_soldier/pain" .. math.random(1,3) .. ".wav"
@@ -733,7 +733,7 @@ if SERVER then
                 ply.painCD = CurTime() + SoundDuration(snd)
                 ply.lastPhr = snd
             end
-        end--]]
+        end
     end)
 
     hook.Add("HGReloading","Combine_reloadalert",function(wep)

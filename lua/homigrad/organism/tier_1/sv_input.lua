@@ -372,6 +372,8 @@ util.AddNetworkString("bloodsquirt")
 
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"enable developer mode (enables damage traces)",0,1)
 CreateConVar("hg_isshitworking2", "0", FCVAR_REPLICATED, "Debug mode for damage shit")
+CreateConVar("hg_scavsound", "2", FCVAR_REPLICATED, "0 = normal, 1 = itswraps/despair only, 2 = both")
+CreateConVar("hg_scavpain", "0", FCVAR_REPLICATED, "0 = normal, 1 = only owie.ogg")
 
 local npcDmg = {
 	npc_combine_s = {
@@ -1317,12 +1319,14 @@ local paintable = {
 	end,
 }
 
---[[hook.Add("HomigradDamage", "painsounds",function(ply, dmgInfo, hitgroup, ent) -- Пример использования HomigradDamage
-	--ply.painCD = ply.painCD or 0
-	--if paintable[hitgroup] and ply.painCD and ply.painCD < CurTime() and ply.organism and !ply.organism.otrub and ply:Alive() and !ply.organism.holdingbreath then 
-	--	paintable[hitgroup](ply,ent)
-	--end
-end)--	]]
+hook.Add("HomigradDamage", "painsounds",function(ply, dmgInfo, hitgroup, ent) -- Пример использования HomigradDamage
+	ply.painCD = ply.painCD or 0
+	if paintable[hitgroup] and ply.painCD and ply.painCD < CurTime() and ply.organism and !ply.organism.otrub and ply:Alive() and !ply.organism.holdingbreath then 
+		if math.random() < 0.3 then
+			paintable[hitgroup](ply,ent)
+		end
+	end
+end)
 
 function hg.organism.DamageTypeAffliction(dmg, dmgInfo, ply, org)
 	local dmgBlood, dmgHurt, instaPain, immobilization = dmg, dmg, dmg, 0

@@ -399,7 +399,12 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	
 	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
 		if not PainSoundChoice then
-			PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/owie.ogg"
+			local scav_pain = GetConVar("hg_scavpain"):GetInt()
+			if scav_pain == 1 then
+				PainSoundChoice = "sound/owie.ogg"
+			else -- 0 = normal
+				PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/owie.ogg"
+			end
 		end
 		
 		sound.PlayFile(PainSoundChoice, "noblock noplay", function(station)
@@ -421,6 +426,60 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	o2 = o2 + (org.CO or 0)
 	local brain = org.brain or 0
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
+
+	if o2 > 20 then
+		local scav_sound = GetConVar("hg_scavsound"):GetInt()
+		
+		local play_conscious = false
+		local play_despair = false
+
+		if scav_sound == 0 then -- normal
+			if not LowO2SoundChoice then
+				LowO2SoundChoice = math.random(2) == 1 and "conscious" or "despair"
+			end
+			if LowO2SoundChoice == "conscious" then play_conscious = true end
+			if LowO2SoundChoice == "despair" then play_despair = true end
+		elseif scav_sound == 1 then -- despair only
+			play_despair = true
+		elseif scav_sound == 2 then -- both
+			play_conscious = true
+			play_despair = true
+		end
+
+		if play_conscious then
+			if !IsValid(NoiseStation) or NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
+				sound.PlayFile("sound/conscioustypebeat.ogg", "noblock noplay", function(station)
+					if IsValid(station) then
+						station:SetVolume(0.5)
+						station:Play()
+						NoiseStation = station
+						station:EnableLooping(true)
+					end
+				end)
+			end
+		else
+			if IsValid(NoiseStation) then NoiseStation:Stop(); NoiseStation = nil; end
+		end
+
+		if play_despair then
+			if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
+				sound.PlayFile("sound/itswraps/despair.ogg", "noblock noplay", function(station)
+					if IsValid(station) then
+						station:SetVolume(0.5)
+						station:Play()
+						DespairStation = station
+						station:EnableLooping(true)
+					end
+				end)
+			end
+		else
+			if IsValid(DespairStation) then DespairStation:Stop(); DespairStation = nil; end
+		end
+	else
+		LowO2SoundChoice = nil
+		if IsValid(NoiseStation) then NoiseStation:Stop(); NoiseStation = nil; end
+		if IsValid(DespairStation) then DespairStation:Stop(); DespairStation = nil; end
+	end
 
 	tempLerp = LerpFT(0.01, tempLerp, org.temperature)
 
@@ -735,11 +794,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 		
 		if o2 > 20 then
-			if !LowO2SoundChoice then
-				LowO2SoundChoice = math.random(1, 3)
-			end
+			local scav_sound = GetConVar("hg_scavsound"):GetInt()
 
-			if LowO2SoundChoice == 1 or LowO2SoundChoice == 3 then
+			if (scav_sound == 0 or scav_sound == 2) then
 				if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
 					sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
 						if IsValid(station) then
@@ -757,7 +814,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				if IsValid(DespairStation) then DespairStation:SetVolume(0) end
 			end
 
-			if LowO2SoundChoice == 2 or LowO2SoundChoice == 3 then
+			if (scav_sound == 1 or scav_sound == 2) then
 				if o2 > 50 and !org.otrub then
 					if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
 						if not DespairSoundChoice then

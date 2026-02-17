@@ -25,7 +25,7 @@ local vecbloodpos = Vector( 0, 0, 75 )
 local function playEffects( ent, data )
     if not IsValid( ent ) or not data then return end
 
-    if not ( ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot() ) or not isBulletDamage( data ) then return end
+    if not ( ent:IsPlayer() or ent:IsNPC() or ent:IsNextBot() ) or not (isBulletDamage( data ) or data:IsDamageType(DMG_SLASH) or data:IsDamageType(DMG_CLUB)) then return end
 
     if getBloodColor( ent ) ~= -1 then
         ent.bloodColorHitFix = getBloodColor( ent )
@@ -43,7 +43,7 @@ local function playEffects( ent, data )
     local effectData = EffectData()
 
 
-    local tempBloodPos = ( hitPos + ( ( inflictorEyepos - hitPos ):GetNormalized() * math_random( -25, -200 ) ) ) + Vector( math_random( -15, 15 ), math_random( -15, 15 ), 0 )
+    local tempBloodPos = ( hitPos + ( ( inflictorEyepos - hitPos ):GetNormalized() * math_random( -50, -300 ) ) ) + Vector( math_random( -35, 35 ), math_random( -35, 35 ), 0 )
     local bloodPos = tempBloodPos - vecbloodpos
 
     local bloodMat = rawget( bloodColors, bloodColor )
@@ -51,6 +51,7 @@ local function playEffects( ent, data )
 
     util_Decal( bloodMat, hitPos, tempBloodPos, ent )
     util_Decal( bloodMat, tempBloodPos, bloodPos, ent )
+    util_Decal( bloodMat, hitPos, bloodPos, ent )
 end
 
 hook.Add( "PostEntityTakeDamage", "ResponsiveHits_PostEntityTakeDamage", playEffects )
@@ -1583,7 +1584,7 @@ hook.Add("Org Think", "BodyTemperature", function(owner, org, timeValue) -- пе
 
 	local currentPulse = org.pulse or 70
 	local pulseHeat = 0
-	local temp = sf2_get_temp and sf2_get_temp() or hg.MapTemps[game.GetMap()] or 20
+	local temp = hg.TemperatureOverride or (sf2_get_temp and sf2_get_temp()) or hg.MapTemps[game.GetMap()] or 20
 
 	if currentPulse > 80 then
 		local pulseMultiplier = math.min((currentPulse - 70) / 100, 1.2)

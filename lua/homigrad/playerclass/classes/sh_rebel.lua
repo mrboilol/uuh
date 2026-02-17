@@ -365,7 +365,7 @@ if SERVER then
         if rebel_classes[ply.PlayerClassName] then
             ply.painCD = ply.painCD or 0
             if paintable[hitgroup] and (ply.painCD < CurTime()) and ply.organism and not ply.organism.otrub and ply:Alive() and not ply.organism.holdingbreath then 
-                --paintable[hitgroup](ply,ent)
+                paintable[hitgroup](ply,ent)
             end
         end
     end)
