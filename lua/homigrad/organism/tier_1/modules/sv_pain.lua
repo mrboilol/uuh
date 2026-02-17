@@ -21,6 +21,8 @@ module[1] = function(org)
 
 	org.stun = 0
 	org.lightstun = 0
+	org.otrub_delay = 0
+	org.needotrub = false
 end
 
 function hg.organism.paincheck(org)
