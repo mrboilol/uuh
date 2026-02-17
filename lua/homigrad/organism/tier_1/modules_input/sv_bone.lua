@@ -216,23 +216,17 @@ local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
     pBone2:EnableMotion(true)
 
     -- Use spawnflags 1 to disable collision between constrained parts (cleaner than NoCollide)
-	-- Bone Buster–style ragdoll constraint
-	local cons = ents.Create("phys_ragdollconstraint")
-	
-    cons:SetPos(m_translation)
-    -- cons:SetAngles(rag:LocalToWorldAngles(matrix:GetAngles())) -- BoneBuster doesn't set angles on cons? 
-    -- But it sets angles of physics objects.
-    
-    cons:SetKeyValue("spawnflags", 1) 
-	cons:SetKeyValue("xmin", limits[0][1])
-	cons:SetKeyValue("xmax", limits[0][0])
-	cons:SetKeyValue("ymin", limits[1][1])
-	cons:SetKeyValue("ymax", limits[1][0])
-	cons:SetKeyValue("zmin", limits[2][1])
-	cons:SetKeyValue("zmax", limits[2][0])
-	cons:SetPhysConstraintObjects(pBone1, pBone2)
-	cons:Spawn()
-	cons:Activate()
+	local lpos, lang = WorldToLocal(pBone1:GetPos(), pBone1:GetAngles(), pBone2:GetPos(), pBone2:GetAngles())
+
+	local cons = constraint.AdvBallsocket(
+		rag, rag,
+		phys2, phys1,
+		lpos, lpos,
+		0, 0,
+		tonumber(limits[0][1]), tonumber(limits[1][1]), tonumber(limits[2][1]),
+		tonumber(limits[0][0]), tonumber(limits[1][0]), tonumber(limits[2][0]),
+		0, 0
+	)
     
     -- Restore original state
     pBone1:SetPos(pos_ori)
@@ -341,76 +335,7 @@ local function checkForGruesomeAccident(org)
     return false
 end
 
-local function applyGruesomeFloppiness(ent, limbKey)
-    if not IsValid(ent) then return end
 
-    timer.Simple(0.1, function()
-        if not IsValid(ent) then return end
-
-        local rag = ent:GetNWEntity("RagdollDeath")
-        if not IsValid(rag) then rag = ent:GetNWEntity("FakeRagdoll") end
-        if not IsValid(rag) and IsValid(ent.FakeRagdoll) then rag = ent.FakeRagdoll end
-        if not IsValid(rag) then rag = ent end
-
-        if not rag:IsRagdoll() then return end
-
-        local segments = limbBoneSegments[limbKey]
-        if not segments then return end
-
-        local randomSegment
-        local availableSegments = {}
-        for i = 1, #segments do
-            if not table.HasValue(ent.brokenLimbSegments[limbKey], i) then
-                table.insert(availableSegments, i)
-            end
-        end
-
-        if #availableSegments == 0 then return end
-
-        randomSegment = table.Random(availableSegments)
-
-        if not randomSegment then return end
-
-        local selectedSegment = segments[randomSegment]
-
-        if IsValid(ent) and ent:IsPlayer() then
-            table.insert(ent.brokenLimbSegments[limbKey], randomSegment)
-            ent.HG_FloppyPersistSeg = ent.HG_FloppyPersistSeg or {}
-            ent.HG_FloppyPersistSeg[limbKey] = ent.brokenLimbSegments[limbKey]
-        end
-
-        if selectedSegment then
-            local bone1Name, bone2Name = selectedSegment[1], selectedSegment[2]
-
-            local bone1 = rag:LookupBone(bone1Name)
-            local bone2 = rag:LookupBone(bone2Name)
-            if not bone1 or not bone2 then return end
-
-            local phys1 = rag:TranslateBoneToPhysBone(bone1)
-            local phys2 = rag:TranslateBoneToPhysBone(bone2)
-            if not phys1 or not phys2 or phys1 < 0 or phys2 < 0 then return end
-            
-            local physObj1 = rag:GetPhysicsObjectNum(phys1)
-            local physObj2 = rag:GetPhysicsObjectNum(phys2)
-            if not IsValid(physObj1) or not IsValid(physObj2) then return end
-            
-            local cons = createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbKey)
-            
-            if cons then
-                rag.floppyLimbs = rag.floppyLimbs or {}
-                rag.floppyLimbs[limbKey] = rag.floppyLimbs[limbKey] or {}
-                rag.floppyLimbs[limbKey][randomSegment] = {
-                    segment = randomSegment,
-                    bone1 = bone1Name,
-                    bone2 = bone2Name,
-                    constraint = cons,
-                    gruesome = true
-                }
-                
-            end
-        end
-    end)
-end
 
 
 -- Function to apply visual floppy effect to a limb
@@ -501,7 +426,7 @@ end
 -- Standing manipulation removed by request
 
 -- Function to restore normal limb constraints (for healing)
-local function restoreLimbConstraints(rag, limbKey)
+function hg.organism.restoreLimbConstraints(rag, limbKey)
     if IsValid(rag) and rag:IsRagdoll() and rag.floppyLimbs and rag.floppyLimbs[limbKey] then
         for segment, floppyData in pairs(rag.floppyLimbs[limbKey]) do
             local bone1 = rag:LookupBone(floppyData.bone1)
@@ -584,7 +509,7 @@ local function applySpineFloppyEffect(ent)
 end
 
 -- Function to restore spine constraints
-local function restoreSpineConstraints(rag)
+function hg.organism.restoreSpineConstraints(rag)
     if IsValid(rag) and rag:IsRagdoll() and rag.floppySpine then
         local bone1 = rag:LookupBone("ValveBiped.Bip01_Spine2")
         local phys1 = rag:TranslateBoneToPhysBone(bone1)
@@ -656,7 +581,7 @@ local function applyNeckFloppyEffect(ent)
 end
 
 -- Function to restore neck constraints
-local function restoreNeckConstraints(rag)
+function hg.organism.restoreNeckConstraints(rag)
     if IsValid(rag) and rag:IsRagdoll() and rag.floppyNeck then
         local headBone = rag:LookupBone("ValveBiped.Bip01_Head1")
         local headPhys = rag:TranslateBoneToPhysBone(headBone)
@@ -667,9 +592,7 @@ local function restoreNeckConstraints(rag)
     end
 end
 
-hg.organism.restoreLimbConstraints = restoreLimbConstraints
-hg.organism.restoreSpineConstraints = restoreSpineConstraints
-hg.organism.restoreNeckConstraints = restoreNeckConstraints
+
 
 
 local colred = Color(255, 0, 0)

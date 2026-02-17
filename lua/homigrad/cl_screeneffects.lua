@@ -266,19 +266,30 @@ hook.Add("RenderScreenspaceEffects", "HG_DrawEyeLossOverlay", function()
 	if not org then return end
 	
 	local leftEyeGone = (org.eyeL or 0) >= 1
-	local rightEyeGone = (org.eyeR or 0) >= 1
-	
-	if leftEyeGone then
-		surface.SetDrawColor(255, 255, 255, 255)
-		surface.SetMaterial(LEFT_EYE_GONE_OVERLAY)
-		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-	end
-	
-	if rightEyeGone then
-		surface.SetDrawColor(255, 255, 255, 255)
-		surface.SetMaterial(RIGHT_EYE_GONE_OVERLAY)
-		surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-	end
+    local rightEyeGone = (org.eyeR or 0) >= 1
+
+    if leftEyeGone and rightEyeGone then
+        surface.SetDrawColor(255, 255, 255, 255)
+        surface.SetMaterial(LEFT_EYE_GONE_OVERLAY)
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+        surface.SetMaterial(RIGHT_EYE_GONE_OVERLAY)
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+
+        local vignette = Material("effects/vignette")
+        surface.SetMaterial(vignette)
+        surface.SetDrawColor(0, 0, 0, 255)
+        vignette:SetFloat("$vignette_radius", 0.2)
+        vignette:SetFloat("$vignette_softness", 0.2)
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+    elseif leftEyeGone then
+        surface.SetDrawColor(255, 255, 255, 255)
+        surface.SetMaterial(LEFT_EYE_GONE_OVERLAY)
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+    elseif rightEyeGone then
+        surface.SetDrawColor(255, 255, 255, 255)
+        surface.SetMaterial(RIGHT_EYE_GONE_OVERLAY)
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+    end
 end)
 
 local PainSoundChoice
@@ -401,9 +412,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		if not PainSoundChoice then
 			local scav_pain = GetConVar("hg_scavpain"):GetInt()
 			if scav_pain == 1 then
-				PainSoundChoice = "sound/owie.ogg"
+				PainSoundChoice = "sound/itfuckinghurts.ogg"
 			else -- 0 = normal
-				PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/owie.ogg"
+				PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/itfuckinghurts.ogg"
 			end
 		end
 		

@@ -7,7 +7,7 @@ function hg.settings:AddOpt( strCategory, strConVar, strTitle, bDecimals, bStrin
 end
 local hg_firstperson_death = CreateClientConVar("hg_firstperson_death", "0", true, false, "Toggle first-person death camera view", 0, 1)
 local hg_font = CreateClientConVar("hg_font", "Bahnschrift", true, false, "change every text font to selected because ui customization is cool")
-local hg_attachment_draw_distance = CreateClientConVar("hg_attachment_draw_distance", 0, true, "distance to draw attachments", 0, 4096)
+local hg_attachment_draw_distance = CreateClientConVar("hg_attachment_draw_distance", 0, true, "distance to draw attachments")
 
 xbars = 17
 ybars = 30

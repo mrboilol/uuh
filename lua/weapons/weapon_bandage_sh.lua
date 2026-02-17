@@ -427,7 +427,7 @@ if SERVER then
 		local bandaged = false
 		
 		local key = hg.BoneToLimb(bone)
-		if org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
+		if key and org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
 			org[key .. "_perm_dmg"] = math.max(0, org[key .. "_perm_dmg"] - 0.1)
 			if hg.CreateNotification then
 				--hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)

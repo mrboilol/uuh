@@ -226,6 +226,13 @@ local ents_Create = ents.Create
 function hg.organism.AmputateLimb(org, limb)
 	if org[limb.."amputated"] == nil then return end
 
+    local rag = org.owner:GetNWEntity("RagdollDeath")
+    if not IsValid(rag) then rag = org.owner:GetNWEntity("FakeRagdoll") end
+    if not IsValid(rag) and IsValid(org.owner.FakeRagdoll) then rag = org.owner.FakeRagdoll end
+    if IsValid(rag) then
+        hg.organism.restoreLimbConstraints(rag, limb)
+    end
+
 	local bone = limbs[limb]
 	if !IsValid(org.owner) then return end
 	local len = org.owner:BoneLength(org.owner:LookupBone(bone))
@@ -379,8 +386,8 @@ util.AddNetworkString("bloodsquirt")
 
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"enable developer mode (enables damage traces)",0,1)
 CreateConVar("hg_isshitworking2", "0", FCVAR_REPLICATED, "Debug mode for damage shit")
-CreateConVar("hg_scavsound", "2", FCVAR_REPLICATED, "0 = normal, 1 = itswraps/despair only, 2 = both")
-CreateConVar("hg_scavpain", "0", FCVAR_REPLICATED, "0 = normal, 1 = only owie.ogg")
+CreateConVar("hg_scavsound", "2", FCVAR_REPLICATED, "0 = normal dying sound only, 1 = scav dying sound only, 2 = both")
+CreateConVar("hg_scavpain", "0", FCVAR_REPLICATED, "0 = normal pain sound only, 1 = scav pain only")
 
 local npcDmg = {
 	npc_combine_s = {
