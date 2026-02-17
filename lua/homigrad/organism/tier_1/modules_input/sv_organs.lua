@@ -1,4 +1,4 @@
-timer.Simple(0, function()
+include("homigrad/organism/tier_1/modules/sv_blood.lua")
 --local Organism = hg.organism
 if SERVER then
     util.AddNetworkString("hg_play_client_sound")
@@ -58,7 +58,7 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 			else
 				hg.LightStunPlayer(org.owner,2)
 			end
-		end)
+		
 	end
 
 	org.internalBleed = org.internalBleed + harmed * 10

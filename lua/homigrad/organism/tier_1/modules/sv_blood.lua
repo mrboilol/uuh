@@ -229,7 +229,9 @@ module[2] = function(owner, org, mulTime)
 				table.remove(org.arterialwounds, i)
 				owner:SetNetVar("arterialwounds", org.arterialwounds)
 
-				org[wound[7]] = 0
+				if wound[7] then
+					org[wound[7]] = 0
+				end
 			end
 		end
 	end
@@ -323,6 +325,28 @@ module[2] = function(owner, org, mulTime)
 end
 
 util.AddNetworkString("bloodsquirt2")
+--grrr
+function hg.organism.AddBleed(org, bone, size, artery_name_or_type, pos, dir, is_artery)
+    if not org or not org.owner then return end
+
+    local wound_table = {
+        size, -- [1] Wound size
+        pos or Vector(0,0,0), -- [2] Position
+        artery_name_or_type, -- [3] Type or Artery Name
+        bone, -- [4] Bone name
+        CurTime(), -- [5] Last bleed time
+        dir, -- [6] Direction (for arterial)
+        is_artery and (type(artery_name_or_type) == "string" and artery_name_or_type or nil) or nil -- [7] Artery flag name
+    }
+
+    if is_artery then
+        table.insert(org.arterialwounds, wound_table)
+        org.owner:SetNetVar("arterialwounds", org.arterialwounds)
+    else
+        table.insert(org.wounds, wound_table)
+        org.owner:SetNetVar("wounds", org.wounds)
+    end
+end
 
 function hg.organism.Vomit(owner, snd)
 	if !hg.IsValidPlayer(owner) then return end
