@@ -524,9 +524,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		if not PainSoundChoice then
 			local scav_pain = GetConVar("hg_scavpain"):GetInt()
 			if scav_pain == 1 then
-				PainSoundChoice = "sound/itfuckinghurts.ogg"
+				PainSoundChoice = "sound/itfuckinghurts.mp3"
 			else -- 0 = normal
-				PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/itfuckinghurts.ogg"
+				PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/itfuckinghurts.mp3"
 			end
 		end
 		
