@@ -138,9 +138,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 	return result
 end
 
-if SERVER then
-    util.AddNetworkString("hg_head_trauma_saturation")
-end
+
 
 input_list.brain = function(org, bone, dmg, dmgInfo)
 	if not org or not org.brain then return 0 end
@@ -182,8 +180,12 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
                 org.saturationFlashIntensity = intensity
             else
                 if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Saturation Flash Triggered (Brain Damage)") end
-                net.Start("hg_head_trauma_saturation")
+                net.Start("hg_saturation_flash")
                 net.WriteFloat(intensity)
+                net.Send(org.owner)
+
+                net.Start("hg_play_client_sound")
+                net.WriteString("concussion"..math.random(1,4)..".mp3")
                 net.Send(org.owner)
             end
         end
@@ -212,10 +214,7 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 					net.WriteInt(flashSize, 20)
 				net.Send(tp)
 				
-				net.Start("hg_play_client_sound")
-				net.WriteString("concussion"..math.random(1,4)..".mp3")
-				net.Send(tp)
-				
+
 				tp.HeadDisorientFlashCooldown = CurTime() + 0.2
 			end
 		end

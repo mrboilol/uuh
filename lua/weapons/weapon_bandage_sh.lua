@@ -40,18 +40,15 @@ SWEP.offsetAng = Angle(90, 90, 0)
 
 modelshuy = modelshuy or {}
 
-function SWEP:DrawWorldModel()
-	if not IsValid(self:GetOwner()) then
-		self:DrawWorldModel2()
-	end
-end
-
-function SWEP:DrawWorldModel2(nodraw)
+function SWEP:DrawWorldModel(nodraw)
 	if self.Color then
 		render.SetColorModulation(self.Color.r/255,self.Color.g/255,self.Color.b/255)
 	end
 
 	local mdl = self.Model or self.WorldModel
+	if self:GetClass() == "weapon_medkit_sh" and self.mode == 4 then
+		mdl = "models/tourniquet/tourniquet.mdl"
+	end
 	modelshuy[mdl] = IsValid(modelshuy[mdl]) and modelshuy[mdl] or ClientsideModel(mdl)
 	modelshuy[mdl]:SetNoDraw(true)
 	local WorldModel = modelshuy[mdl]
@@ -244,7 +241,7 @@ if CLIENT then
 			draw.DrawText(Tr.Entity:IsPlayer() and Tr.Entity:GetPlayerName() or Tr.Entity:IsRagdoll() and Tr.Entity:GetPlayerName() or "", "HomigradFontLarge", x, y + 30, col, TEXT_ALIGN_CENTER)
 		end
 		local mdl = modelshuy[self.Model or self.WorldModel]
-		self:DrawWorldModel2(true)
+		self:DrawWorldModel(true)
 		local p,a = mdl:GetPos(), mdl:GetAngles()
 		local pos,ang = LocalToWorld(self.ofsV,self.ofsA,p,a)
 		if self.showstats and self.modeValues and istable(self.modeValues) then

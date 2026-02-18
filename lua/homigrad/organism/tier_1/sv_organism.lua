@@ -197,20 +197,7 @@ net.Receive("hg_dislocation_minigame_success", function(len, ply)
     
     if not key then return end
     
-    -- Make it harder to fix based on failures
-    if math.random(0, 10) > (5 - failures) then
-        org[key .. "dislocation"] = false
-        patient:EmitSound("physics/body/body_medium_impact_hard"..math.random(1,4)..".wav", 75, 100, 1, CHAN_VOICE)
-        
-        local rag = hg.GetCurrentCharacter(patient)
-        if IsValid(rag) then
-            hg.organism.restoreLimbConstraints(rag, key)
-        end
-    else
-        org.painadd = org.painadd + 10
-        org.fearadd = org.fearadd + 0.2
-        patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
-    end
+    hg.organism.fixlimb(org, key, ply)
 end)
 
 net.Receive("hg_bandage_minigame_fail", function(len, ply)

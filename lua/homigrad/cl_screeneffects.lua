@@ -391,6 +391,118 @@ local stations = {
 
 local choosera = 1
 local tempolerp = 0
+--might have already done this but oh well
+if CLIENT then
+    net.Receive("headtrauma_flash", function()
+        -- from head hit: draw a quick directional flash
+        local pos = net.ReadVector()
+        local time = net.ReadFloat()
+        local size = net.ReadInt(20)
+        local lply = LocalPlayer()
+        if not IsValid(lply) then return end
+        hg.AddFlash(lply:EyePos(), 1, pos, time, size)
+    end)
+
+    hg.flashes = {}
+    
+    function hg.AddFlash(eyepos, dot, pos, time, size)
+        time = time or 20
+        size = size or 1000 -- pixels
+        size = size / math.max(pos:Distance(eyepos) / 64, 0.01) * (dot ^ 2)
+        local taint = math.max(200 - size, 0) / 200 * time * 0.9
+
+        local scr = pos:ToScreen()
+        if not scr.visible then
+            scr.x = ScrW() * 0.5
+            scr.y = ScrH() * 0.5
+        else
+            scr.x = math.Clamp(scr.x, 0, ScrW())
+            scr.y = math.Clamp(scr.y, 0, ScrH())
+        end
+
+        table.insert(hg.flashes, {
+            x = scr.x,
+            y = scr.y,
+            time = CurTime() + time - taint,
+            lentime = time,
+            size = size
+        })
+    end
+
+    local flash
+    local mat = Material("sprites/orangeflare1_gmod")
+    local mat2 = Material("sprites/glow04_noz")
+
+    amtflashed = 0
+    amtflashed2 = 0
+
+    hook.Add("PlayerDeath","huyhuyhuy",function(ply)
+        if ply == LocalPlayer() then
+            hg.flashes = {}
+            amtflashed = 0
+            amtflashed2 = 0
+        end
+    end)
+
+    hook.Add("PreCleanupMap", "noflashesforyounigge", function()
+        hg.flashes = {}
+        amtflashed = 0
+        amtflashed2 = 0
+    end)
+
+    hook.Add("RenderScreenspaceEffects","flasheseffect",function()
+        local lply = LocalPlayer()
+        if not IsValid(lply) or not lply:IsPlayer() then return end
+        if !lply:Alive() then
+            if !next(hg.flashes) then
+                hg.flashes = {}
+            end
+            amtflashed = 0
+            amtflashed2 = 0
+        end
+        if (#hg.flashes <= 0) and (amtflashed2 <= 0) then return end
+        amtflashed = 0
+        for i = #hg.flashes, 1, -1 do
+            local f = hg.flashes[i]
+            if (f.time or 0) < CurTime() then
+                table.remove(hg.flashes, i)
+            else
+                local animpos = (f.time - CurTime()) / f.lentime
+                local size = f.size
+                f.animpos = animpos
+                amtflashed = amtflashed + animpos * size / 5000
+            end
+        end
+        
+        amtflashed = amtflashed + amtflashed2
+        amtflashed2 = math.min(math.Approach(amtflashed2, 0, FrameTime() / 20),2)
+        
+        amtflashed = math.max(amtflashed - math.ease.InOutCubic(math.max(0, math.sin(CurTime() * 1) - 0.6) / 0.4),0)
+
+        local tab = {}
+        tab["$pp_colour_brightness"] = 0 - math.max(amtflashed - 0.1,0)
+        DrawColorModify(tab)
+
+        for i = 1, #hg.flashes do
+            flash = hg.flashes[i]
+            
+            local animpos = flash.animpos
+            local size = flash.size
+
+            local huy = (1 - animpos) * -100
+            surface.SetMaterial(mat)
+            surface.SetDrawColor(255,255,255,animpos * 255 + math.Rand(-10,10) * animpos)
+            surface.DrawTexturedRectRotated(flash.x, flash.y, size * animpos, size * animpos, huy)
+        end
+        
+        surface.SetMaterial(mat2)
+        surface.SetDrawColor(255,255,255,amtflashed * 255)
+        surface.DrawTexturedRect(0,0,ScrW(),ScrH())
+
+        tab["$pp_colour_brightness"] = 0
+        DrawColorModify(tab)
+    end)
+end
 hook.Add("Post Post Processing", "ItHurts", function()
 	local lply = LocalPlayer()
 	if not IsValid(lply) then return end
@@ -994,6 +1106,31 @@ local traumaSaturation = 0
 net.Receive("hg_head_trauma_saturation", function()
     local intensity = net.ReadFloat()
     traumaSaturation = math.min(traumaSaturation + intensity, 2.0)
+end)
+
+local concussionSaturation = 0
+net.Receive("hg_saturation_flash", function()
+    local intensity = net.ReadFloat()
+    concussionSaturation = math.min(concussionSaturation + intensity, 1.5)
+end)
+
+hook.Add("RenderScreenspaceEffects", "HG_ConcussionSaturation", function()
+    if concussionSaturation > 0 then
+        if not LocalPlayer():Alive() then concussionSaturation = 0 return end
+        local data = {}
+        data["$pp_colour_addr"] = 0.5 * concussionSaturation
+        data["$pp_colour_addg"] = -0.1 * concussionSaturation
+        data["$pp_colour_addb"] = -0.1 * concussionSaturation
+        data["$pp_colour_brightness"] = -0.05 * concussionSaturation
+        data["$pp_colour_contrast"] = 1 + 0.2 * concussionSaturation
+        data["$pp_colour_colour"] = 1 + 0.2 * concussionSaturation
+        data["$pp_colour_mulr"] = 0
+        data["$pp_colour_mulg"] = 0
+        data["$pp_colour_mulb"] = 0
+        DrawColorModify(data)
+
+        concussionSaturation = math.Approach(concussionSaturation, 0, FrameTime() * 0.75)
+    end
 end)
 
 local tab = {

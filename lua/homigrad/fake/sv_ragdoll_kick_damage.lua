@@ -283,15 +283,7 @@ hook.Add("Ragdoll Collide", "RagdollKickDamage", function(ragdoll, data)
     local boneName = GetBoneNameFromPhysBone(ragdoll, physBone)
     if not boneName then return end
 
-    if boneName == "ValveBiped.Bip01_Head1" then
-        local owner = hg.RagdollOwner(ragdoll)
-        if IsValid(owner) then
-            if GetConVar("hg_isshitworking"):GetBool() then PrintMessage(HUD_PRINTTALK, "Saturation Flash Triggered (Head Bump)") end
-            net.Start("hg_head_trauma_saturation")
-            net.WriteFloat(math.min(data.Speed / 100, 2.5))
-            net.Send(owner)
-        end
-    end
+
 
     if not KICK_BONES[boneName] then return end
     

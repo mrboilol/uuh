@@ -106,6 +106,8 @@ else
     util.AddNetworkString("zbLocalVarSet")
     util.AddNetworkString("zbNetVarSet")
     util.AddNetworkString("zbNetVarDelete")
+    util.AddNetworkString("headtrauma_flash")
+    util.AddNetworkString("hg_saturation_flash")
 
     local function CheckBadType(name, object)
 		return false

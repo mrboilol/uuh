@@ -954,7 +954,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			org.immobilization = org.immobilization + 20
 			org[key.."gruesome"] = true
 			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.05, 1)
-			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
+            org.bleed = (org.bleed or 0) + 5
 			
 			if org.isPly then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg_gruesome[math.random(#broke_leg_gruesome)], 3, colred) end
@@ -1017,7 +1017,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			org.immobilization = org.immobilization + 15
 			org[key.."gruesome_dislocation"] = true
 			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.01, 1)
-			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
+            org.bleed = (org.bleed or 0) + 5
 			
 			if org.isPly then
 				org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO) -- Fallback handled if missing
@@ -1137,7 +1137,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			org.painadd = org.painadd + 40
 			org[key.."gruesome"] = true
 			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.05, 1)
-			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
+            org.bleed = (org.bleed or 0) + 5
 			
 			if org.isPly then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm_gruesome[math.random(#broke_arm_gruesome)], 3, colred) end
@@ -1196,7 +1196,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			org.immobilization = org.immobilization + 15
 			org[key.."gruesome_dislocation"] = true
 			org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.01, 1)
-			hg.organism.AddBleed(org, org.owner:GetBoneMatrix(boneindex):GetTranslation(), 5, 15)
+            org.bleed = (org.bleed or 0) + 5
 			
 			if org.isPly then
 				org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO)
