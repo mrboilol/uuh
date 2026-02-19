@@ -292,6 +292,17 @@ hook.Add("Ragdoll Collide", "RagdollKickDamage", function(ragdoll, data)
     local damage = CalculateKickDamage(speed, boneName)
     
     if damage <= 0 then return end
+
+    if boneName == "ValveBiped.Bip01_Head1" then
+        local flashIntensity = math.Clamp(damage / 10, 0.1, 1.0)
+        local flashDuration = math.Clamp(damage / 5, 0.5, 3.0)
+
+        net.Start("headtrauma_flash")
+            net.WriteVector(attacker:GetPos())
+            net.WriteFloat(flashDuration)
+            net.WriteInt(flashIntensity * 100)
+        net.Send(attacker)
+    end
     
     -- Check if kick damage is on cooldown for this attacker-target pair
     if IsKickOnCooldown(attacker, target) then return end

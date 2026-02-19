@@ -40,15 +40,18 @@ SWEP.offsetAng = Angle(90, 90, 0)
 
 modelshuy = modelshuy or {}
 
-function SWEP:DrawWorldModel(nodraw)
+function SWEP:DrawWorldModel()
+	if not IsValid(self:GetOwner()) then
+		self:DrawWorldModel2()
+	end
+end
+
+function SWEP:DrawWorldModel2(nodraw)
 	if self.Color then
 		render.SetColorModulation(self.Color.r/255,self.Color.g/255,self.Color.b/255)
 	end
 
 	local mdl = self.Model or self.WorldModel
-	if self:GetClass() == "weapon_medkit_sh" and self.mode == 4 then
-		mdl = "models/tourniquet/tourniquet.mdl"
-	end
 	modelshuy[mdl] = IsValid(modelshuy[mdl]) and modelshuy[mdl] or ClientsideModel(mdl)
 	modelshuy[mdl]:SetNoDraw(true)
 	local WorldModel = modelshuy[mdl]
@@ -241,7 +244,7 @@ if CLIENT then
 			draw.DrawText(Tr.Entity:IsPlayer() and Tr.Entity:GetPlayerName() or Tr.Entity:IsRagdoll() and Tr.Entity:GetPlayerName() or "", "HomigradFontLarge", x, y + 30, col, TEXT_ALIGN_CENTER)
 		end
 		local mdl = modelshuy[self.Model or self.WorldModel]
-		self:DrawWorldModel(true)
+		self:DrawWorldModel2(true)
 		local p,a = mdl:GetPos(), mdl:GetAngles()
 		local pos,ang = LocalToWorld(self.ofsV,self.ofsA,p,a)
 		if self.showstats and self.modeValues and istable(self.modeValues) then
@@ -305,7 +308,6 @@ end
 
 function SWEP:Initialize()
 	self:SetHold(self.HoldType)
-
 	self.modeValues = {
 		[1] = 40,
 	}
@@ -402,19 +404,6 @@ if SERVER then
 		local org = ent.organism
 		local owner = self:GetOwner()
 		if not org then return end
-
-		if org.disemboweled then
-			org.disemboweled = false
-			org.bleed = math.max(0, org.bleed - 5)
-			org.internalBleed = math.max(0, org.internalBleed - 5)
-			if hg.CreateNotification then
-				hg.CreateNotification(ent, "You manage to shove your guts back in and apply a bandage. It feels... unstable.", 5)
-			end
-			self.modeValues[1] = math.max(0, self.modeValues[1] - 20)
-			
-			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
-			return true
-		end
 		
 		-- Если растрелять труп а потом его взорвать гранатой, после перевязать - крашнет сервер why?
 		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1) then return end
@@ -423,15 +412,6 @@ if SERVER then
 		local done = false
 		local bandaged = false
 		
-		local key = hg.BoneToLimb(bone)
-		if key and org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
-			org[key .. "_perm_dmg"] = math.max(0, org[key .. "_perm_dmg"] - 0.1)
-			if hg.CreateNotification then
-				--hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
-			end
-			done = true
-		end
-
 		if not bone then
 			--print(#org.wounds)
 			for i = 1, #org.wounds do
@@ -566,12 +546,7 @@ if SERVER then
 		return done
 	end
 
-	function SWEP:Heal(ent, mode, bone)
-		local owner = self:GetOwner()
-		if owner:IsNPC() then
-			self:NPCHeal(owner, 0.15, "snd_jack_hmcd_bandage.wav")
-		end
-
+	function SWEP:DoHeal(ent, mode, bone)
 		local org = ent.organism
 		if not org then return end
 
@@ -582,6 +557,13 @@ if SERVER then
 		end
 		
 		return done
+	end
+
+	function SWEP:Heal(ent, mode, bone)
+		self:GetOwner().ActiveMinigameWeapon = self
+		net.Start("start_bandage_minigame")
+		net.WriteEntity(ent)
+		net.Send(self:GetOwner())
 	end
 	
 	function SWEP:PostHeal(ent, mode)
@@ -691,14 +673,12 @@ if SERVER then
 	end
 end
 
+
 hg.TourniquetGuys = hg.TourniquetGuys or {}
 
 if SERVER then
 	util.AddNetworkString("send_tourniquets")
 	local tourniqet_bones = {
-		["ValveBiped.Bip01_Neck1"] = {
-			["ValveBiped.Bip01_Head1"] = true
-		},
 		["ValveBiped.Bip01_L_UpperArm"] = {
 			["ValveBiped.Bip01_L_Forearm"] = true,
 			["ValveBiped.Bip01_L_Hand"] = true
@@ -734,134 +714,87 @@ if SERVER then
 	function SWEP:Tourniquet(ent, bone)
 		local org = ent.organism
 		if not org then return end
-
-		local key = hg.BoneToLimb(bone)
-		if org[key .. "gruesome"] and org[key .. "_perm_dmg"] and org[key .. "_perm_dmg"] > 0 then
-			org[key .. "_perm_dmg"] = math.max(0, org[key .. "_perm_dmg"] - 0.1)
-			if hg.CreateNotification then
-				--hg.CreateNotification(ent, "You manage to slightly treat the gruesome wound.", 4)
-			end
-			return true
-		end
-		
-		local ent = org.isPly and org.owner or ent
-		ent.tourniquets = ent.tourniquets or {}
-
-		local arterial_wound_index
-		local heavy_bleed_wounds = {}
-		local target_bone = bone
-		
-		-- 1. Check for arterial wounds (Priority)
 		if #org.arterialwounds > 0 then
-			if not bone then
-				for i, wound in pairs(org.arterialwounds) do
-					if wound[7] ~= "arteria" then 
-						arterial_wound_index = i 
-						target_bone = ent:GetBoneName(ent:LookupBone(wound[4])) -- Get bone from wound
-						break 
-					end
-				end
-			else
-				for i, wound in pairs(org.arterialwounds) do
-					if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then 
-						arterial_wound_index = i 
-						break 
-					end
-				end
-			end
-		end
+			local ent = org.isPly and org.owner or ent
+			ent.tourniquets = ent.tourniquets or {}
 
-		-- 2. If no arterial wound found/targeted, check for heavy bleeding on the limb
-		local heavy_bleed_amount = 0
-		if not arterial_wound_index and bone then
-			for i, tbl in pairs(org.wounds) do
-				if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
-				local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
-				
-				-- Check if wound is on the targeted bone or its children
-				if bonename == bone or (tourniqet_bones[bone] and tourniqet_bones[bone][bonename]) then
-					heavy_bleed_amount = heavy_bleed_amount + (tbl[1] or 0)
-					table.insert(heavy_bleed_wounds, i)
-				end
-			end
-		end
-
-		-- Threshold for "bleeding too much" (e.g., more than a minor scratch)
-		-- Arteries are ~10. Let's set it to 4 to catch significant trauma.
-		local allow_tourniquet = arterial_wound_index or (heavy_bleed_amount > 4)
-
-		if allow_tourniquet then
-			local wound_info
-			
-			if arterial_wound_index then
-				-- Arterial logic
-				local wound = org.arterialwounds[arterial_wound_index]
-				wound_info = {wound[2], wound[3], wound[4]}
-				org[wound[7]] = 0
-				if wound[7] == "arteria" then org.o2.regen = 0 end
-				table.remove(org.arterialwounds, arterial_wound_index)
-				org.owner:SetNetVar("arterialwounds", org.arterialwounds)
-			else
-				-- Heavy bleed logic
-				-- Create a dummy wound info for visual placement based on the bone
-				-- We need a position/angle for the tourniquet visual. 
-				-- We can use the bone's default offset or one of the wounds.
-				local main_bone_id = ent:LookupBone(bone)
-				if main_bone_id then
-					wound_info = {Vector(0,0,0), Angle(0,0,0), bone} -- Visuals handle offsets based on bone name usually
-				end
-			end
-
-			if not wound_info then return false end
-
-			ent.tourniquets[#ent.tourniquets + 1] = wound_info
-
-			-- Remove associated regular wounds
+			local pw
 			local bonewounds = {}
-			local target_bone_name = wound_info[3]
-			
-			for i, tbl in pairs(org.wounds) do
-				if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
-				local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
+			if not bone then
+				for i,wound in pairs(org.arterialwounds) do
+					if wound[7] != "arteria" then 
+						pw = i 
+						for i1,tbl in pairs(org.wounds) do
+							if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
+							local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
+							local sec_bonename = ent:GetBoneName(ent:LookupBone(wound[4]))
+							--print(1,bonename,sec_bonename)
+							if bonename == sec_bonename or (tourniqet_bones[sec_bonename] and tourniqet_bones[sec_bonename][bonename]) then
+								--print(2,bonename,sec_bonename)
+								table.insert(bonewounds,i1)
+							end
+						end
+						--PrintTable(bonewounds)
+					break end
+				end
 				
-				if bonename == target_bone_name or (tourniqet_bones[target_bone_name] and tourniqet_bones[target_bone_name][bonename]) then
-					table.insert(bonewounds, i)
+			else
+				for i,wound in pairs(org.arterialwounds) do
+					if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then pw = i break end
 				end
-			end
+				for i,tbl in pairs(org.wounds) do
+					local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
+					if bonename == bone or (tourniqet_bones[bone] and tourniqet_bones[bone][bonename]) then
+						table.insert(bonewounds,i)
+					end
+				end
+			end		
+			pw = pw or math.random(#org.arterialwounds)
 
-			-- Zero out and remove wounds
-			-- Sort descending to remove correctly
-			table.sort(bonewounds, function(a, b) return a > b end)
+			local wound = org.arterialwounds[pw]
+			if not wound then return false end
 			
-			for _, idx in ipairs(bonewounds) do
-				if org.wounds[idx] then
-					org.wounds[idx][1] = 0 -- Stop bleed
-					table.remove(org.wounds, idx)
+			ent.tourniquets[#ent.tourniquets + 1] = {wound[2], wound[3], wound[4]}
+			org[wound[7]] = 0
+
+			if wound[7] == "arteria" then org.o2.regen = 0 end
+
+			table.remove(org.arterialwounds,pw)
+
+			org.owner:SetNetVar("arterialwounds",org.arterialwounds)
+
+			for i = 1, #bonewounds do
+				if org.wounds[bonewounds[i]] then
+					--print(org.wounds[bonewounds[i]], bonewounds[i])
+					org.wounds[bonewounds[i]][1] = 0
+				end
+			end
+			for i = 1, #bonewounds do
+				if org.wounds[bonewounds[i]] then
+					table.remove(org.wounds, bonewounds[i])
 				end
 			end
 
-			org.owner:SetNetVar("wounds", org.wounds)
-			ent:SetNetVar("Tourniquets", ent.tourniquets)
+			org.owner:SetNetVar("wounds",org.wounds)
+
+			ent:SetNetVar("Tourniquets",ent.tourniquets)
 			if IsValid(ent.FakeRagdoll) then
-				ent.FakeRagdoll:SetNetVar("Tourniquets", ent.tourniquets)
+				ent.FakeRagdoll:SetNetVar("Tourniquets",ent.tourniquets)
 			end
 			
-			if not table.HasValue(hg.TourniquetGuys, ent) then
-				table.insert(hg.TourniquetGuys, ent)
+			if not table.HasValue(hg.TourniquetGuys,ent) then
+				table.insert(hg.TourniquetGuys,ent)
 			end
 
-			-- Clean up invalid entries
-			for i, ent in ipairs(hg.TourniquetGuys) do
-				if not IsValid(ent) or not ent.tourniquets or table.IsEmpty(ent.tourniquets) then table.remove(hg.TourniquetGuys, i) end
+			for i,ent in ipairs(hg.TourniquetGuys) do
+				if not IsValid(ent) or not ent.tourniquets or table.IsEmpty(ent.tourniquets) then table.remove(hg.TourniquetGuys,i) end
 			end
 
-			SetNetVar("TourniquetGuys", hg.TourniquetGuys)
+			SetNetVar("TourniquetGuys",hg.TourniquetGuys)
+
 			self:GetOwner():EmitSound("snd_jack_hmcd_bandage.wav", 65, math.random(95, 105))
-			
 			return true
 		end
-		
-		return false
 	end
 
 	hook.Add("Player Spawn", "remove-tourniquets", function(ply)
@@ -1136,46 +1069,10 @@ function SWEP:Holster(wep)
 	return true
 end
 
-function SWEP:NPCHeal(npc, mul, snd)
-	if not npc then
-		npc = self:GetOwner()
-	end
-
-	if npc:IsNPC() then
-		self:SetHold("melee")
-		if not mul then
-			mul = 0.3
-		end
-		npc:SetHealth(math.Clamp(npc:Health() + (npc:GetMaxHealth() * 1 * mul), 0, npc:GetMaxHealth() * math.Clamp(2 * mul, 2, 100)))
-		npc:EmitSound(snd or "snd_jack_hmcd_bandage.wav", 75, math.random(95, 105))
-
-		if SERVER then
-			self:Remove()
-		end
-	end
-end
-
-function SWEP:OwnerChanged()
-	local owner = self:GetOwner()
-	if IsValid(owner) and owner:IsNPC() then
-		self:NPCHeal(owner, 0.15, "snd_jack_hmcd_bandage.wav")
-	end
-end
-
 function SWEP:Deploy()
 	if SERVER or CLIENT and self:IsLocal() then
 		self:EmitSound(self.DeploySnd, 50, math.random(90, 110))
 	end
 
-	if self.DeployAdd then self:DeployAdd() end
-
 	return true
-end
-
-function SWEP:CanBePickedUpByNPCs()
-	return true
-end
-
-function SWEP:GetNPCRestTimes()
-	return 0.1, 0.1
 end

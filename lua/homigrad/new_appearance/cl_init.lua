@@ -445,3 +445,20 @@ function RenderAccessoriesCool(ent,ply)
 		CoolRenderAccessories(ent, ent:GetNetVar("Accessories", "none"))
 	end
 end
+
+hook.Add("PostPlayerDraw", "hg_AmputationStumps", function(ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply.organism then return end
+
+    if ply.organism.larmamputated then
+        ply:SetSubMaterial(2, "models/gibs/hgibs/flesh_bloody")
+    end
+    if ply.organism.rarmamputated then
+        ply:SetSubMaterial(3, "models/gibs/hgibs/flesh_bloody")
+    end
+    if ply.organism.llegamputated then
+        ply:SetSubMaterial(4, "models/gibs/hgibs/flesh_bloody")
+    end
+    if ply.organism.rlegamputated then
+        ply:SetSubMaterial(5, "models/gibs/hgibs/flesh_bloody")
+    end
+end)

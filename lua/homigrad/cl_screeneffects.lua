@@ -520,25 +520,36 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	if not organism.brain then stopthings() return end
 	local org = organism
 	
-	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
-		if not PainSoundChoice then
-			local scav_pain = GetConVar("hg_scavpain"):GetInt()
-			if scav_pain == 1 then
-				PainSoundChoice = "sound/itfuckinghurts.mp3"
-			else -- 0 = normal
-				PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/itfuckinghurts.mp3"
+	if PainLerp > 1 then
+		if !IsValid(PainStation) then
+			if not PainSoundChoice then
+				local scav_pain = GetConVar("hg_scavpain"):GetInt()
+				if scav_pain == 1 then
+					PainSoundChoice = "sound/itfuckinghurts.mp3"
+				else -- 0 = normal
+					PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/itfuckinghurts.mp3"
+				end
+			end
+
+			sound.PlayFile(PainSoundChoice, "noblock noplay", function(station)
+				if IsValid(station) then
+					station:SetVolume(0)
+					station:Play()
+					station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
+					PainStation = station
+					station:EnableLooping(true)
+				end
+			end)
+		else
+			if PainStation:GetState() != GMOD_CHANNEL_PLAYING then
+				PainStation:Play()
 			end
 		end
-		
-		sound.PlayFile(PainSoundChoice, "noblock noplay", function(station)
-			if IsValid(station) then
-				station:SetVolume(0)
-				station:Play()
-				station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
-				PainStation = station
-				station:EnableLooping(true)
-			end
-		end)
+	else
+		if IsValid(PainStation) then
+			PainStation:Stop()
+			PainStation = nil
+		end
 	end
 
 	local LerpFT = LerpFT or Lerp
@@ -570,7 +581,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 
 		if play_conscious then
-			if !IsValid(NoiseStation) or NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
+			if !IsValid(NoiseStation) then
 				sound.PlayFile("sound/conscioustypebeat.ogg", "noblock noplay", function(station)
 					if IsValid(station) then
 						station:SetVolume(0.5)
@@ -579,13 +590,17 @@ hook.Add("Post Post Processing", "ItHurts", function()
 						station:EnableLooping(true)
 					end
 				end)
+			else
+				if NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
+					NoiseStation:Play()
+				end
 			end
 		else
 			if IsValid(NoiseStation) then NoiseStation:Stop(); NoiseStation = nil; end
 		end
 
 		if play_despair then
-			if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
+			if !IsValid(DespairStation) then
 				sound.PlayFile("sound/itswraps/despair.ogg", "noblock noplay", function(station)
 					if IsValid(station) then
 						station:SetVolume(0.5)
@@ -594,6 +609,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
 						station:EnableLooping(true)
 					end
 				end)
+			else
+				if DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
+					DespairStation:Play()
+				end
 			end
 		else
 			if IsValid(DespairStation) then DespairStation:Stop(); DespairStation = nil; end
@@ -658,7 +677,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
     local stamina = org.stamina and org.stamina[1] or 100
     if stamina < 30 and !org.otrub then
-        if !IsValid(TiredStation) or TiredStation:GetState() != GMOD_CHANNEL_PLAYING then
+        if !IsValid(TiredStation) then
             sound.PlayFile("sound/tired.ogg", "noblock noplay", function(station)
                 if IsValid(station) then
                     station:SetVolume(0)
@@ -667,6 +686,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
                     station:EnableLooping(true)
                 end
             end)
+        else
+            if TiredStation:GetState() != GMOD_CHANNEL_PLAYING then
+                TiredStation:Play()
+            end
         end
         if IsValid(TiredStation) then
             local targetVol = math.Clamp((30 - stamina) / 30, 0, 0.4)
@@ -681,7 +704,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
 
     if org.consciousness < 0.4 and !org.otrub then
-        if !IsValid(SleepyStation) or SleepyStation:GetState() != GMOD_CHANNEL_PLAYING then
+        if !IsValid(SleepyStation) then
             sound.PlayFile("sound/sleepy.ogg", "noblock noplay", function(station)
                 if IsValid(station) then
                     station:SetVolume(0)
@@ -690,6 +713,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
                     station:EnableLooping(true)
                 end
             end)
+        else
+            if SleepyStation:GetState() != GMOD_CHANNEL_PLAYING then
+                SleepyStation:Play()
+            end
         end
         if IsValid(SleepyStation) then
             local targetVol = math.Clamp((0.4 - org.consciousness) * 2.5, 0, 0.5)
@@ -713,7 +740,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		assimilationMat:SetFloat("$c1_y", val)
 		assimilationMat:SetFloat("$c1_x", val2 - 0.5)
 
-		if !IsValid(AssimilationStation) or AssimilationStation:GetState() != GMOD_CHANNEL_PLAYING then
+		if !IsValid(AssimilationStation) then
 			sound.PlayFile("sound/zbattle/furry/conversion/assimilation_noise3.ogg", "noblock noplay", function(station, err)
 				if IsValid(station) then
 					station:SetVolume(0)
@@ -723,6 +750,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				end
 			end)
 		else
+			if AssimilationStation:GetState() != GMOD_CHANNEL_PLAYING then
+				AssimilationStation:Play()
+			end
 			AssimilationStation:SetVolume(assimilatedLerp * 2)
 			//AssimilationStation:SetPlaybackRate(assimilatedLerp * 1)
 		end
@@ -822,7 +852,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			end
 		end
 	
-		if !IsValid(BrainTraumaStation) or choosera != chooser or BrainTraumaStation:GetState() != GMOD_CHANNEL_PLAYING then
+		if !IsValid(BrainTraumaStation) or choosera != chooser then
 			if IsValid(BrainTraumaStation) then
 				BrainTraumaStation:Stop()
 				BrainTraumaStation = nil
@@ -837,6 +867,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				end
 			end)
 			choosera = chooser
+		else
+			if BrainTraumaStation:GetState() != GMOD_CHANNEL_PLAYING then
+				BrainTraumaStation:Play()
+			end
 		end
 
 		if IsValid(BrainTraumaStation) then
@@ -851,7 +885,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 	//if brain > 0.1 and not org.otrub and show_some_images_time > 0 and false then
 	if lply.tinnitus and lply.tinnitus > CurTime() and lply:Alive() then
-		if !IsValid(Tinnitus) or Tinnitus:GetState() != GMOD_CHANNEL_PLAYING  then
+		if !IsValid(Tinnitus) then
 			sound.PlayFile("sound/zcitysnd/real_sonar/tinnitus"..math.random(3)..".mp3", "noblock noplay", function(station, err)
 				if IsValid(station) then
 					station:SetVolume(0)
@@ -860,6 +894,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
 					station:EnableLooping(true)
 				end
 			end)
+		else
+			if Tinnitus:GetState() != GMOD_CHANNEL_PLAYING then
+				Tinnitus:Play()
+			end
 		end
 
 		if IsValid(Tinnitus) then
@@ -1112,6 +1150,7 @@ local concussionSaturation = 0
 net.Receive("hg_saturation_flash", function()
     local intensity = net.ReadFloat()
     concussionSaturation = math.min(concussionSaturation + intensity, 1.5)
+    surface.PlaySound("ambient/explosions/explode_1.wav")
 end)
 
 hook.Add("RenderScreenspaceEffects", "HG_ConcussionSaturation", function()

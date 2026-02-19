@@ -222,14 +222,12 @@ net.Receive("hg_bandage_minigame_success", function(len, ply)
 
     if not success then return end
 
-    local patient = IsValid(target) and target or ply
+    if not IsValid(ply.ActiveMinigameWeapon) then return end
 
-    if not IsValid(patient.ActiveMinigameWeapon) then return end
+    local wep = ply.ActiveMinigameWeapon
+    wep:DoHeal(wep.minigame_ent, wep.minigame_mode, wep.minigame_bone)
 
-    local wep = patient.ActiveMinigameWeapon
-    wep:DoHeal(patient)
-
-    patient.ActiveMinigameWeapon = nil
+    ply.ActiveMinigameWeapon = nil
 end)
 local CurTime = CurTime
 local nullTbl = {}

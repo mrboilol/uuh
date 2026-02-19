@@ -103,7 +103,15 @@ local fear_phrases = {
 	"I never thought it would be like this.",
 	"I should've listened to my instincts.",
 	"Breathe. Just breathe.",
+	"Why is this happening to me...",
+	"This isnt the end right?",
+	"I dont think there is a way out.",
+	"This is so upsetting.",
+	"I cant focus on anything right now.",
 	"Cold hands. Steady hands.",
+	"There is so much i didnt do.",
+	"Just calm down, just calm down...",
+	"Focus... focus...",
 }
 
 local is_aimed_at_phrases = {
@@ -123,14 +131,14 @@ local is_aimed_at_phrases = {
 }
 
 local near_death_poetic = {
-	"Trying to stand... but I just can't...",
-	"Breathing's just shallow sips of nothing...",
-	"Can't tell if my eyes are open or not anymore...",
+	"My legs are starting to give out...",
+	"Breathing feels useless...",
+	"I can barely see a thing...",
 	"Last thing I'll taste is my own blood and copper.",
-	"Eyes keep sliding off things.",
+	"It feels incredibly hard to focus.",
 	"Can't remember how standing works.",
 	"Everything echoes inside my skull.",
-	"Blinking takes too long to come back.",
+	"Blinking feels like minutes.",
 	"Fingers won't close around anything.",
 	"Lungs refuse to be full.",
 	"Regrets are pointless now.",

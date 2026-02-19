@@ -1046,6 +1046,10 @@ function hg.GoreCalc(ent, ply)
 			--headboom_mdl:SetSubMaterial(0, "models/flesh")
 			headboom_mdl:SetModelScale(0.8)
 		end
+
+		local ishuman = ent:IsPlayer() or string.find(ent:GetClass(), "npc_")
+		local col = Color(150, 0, 0, 255)
+		headboom_mdl:SetColor(col)
 		
 		headboom_mdl:SetRenderOrigin(pos)
 		headboom_mdl:SetRenderAngles(ang)

@@ -15,9 +15,9 @@ hook.Add("PhysgunDrop", "RagdollHeadFlash", function(ply, ent)
         filter = ent
     })
 
-    if not tr.Hit then return end
+    if not tr.Hit or not tr.PhysicsBone then return end
 
-    local boneName = ent:GetBoneName(ent:GetPhysicsObject(0):GetClosestPoint(tr.HitPos):GetBone())
+    local boneName = GetBoneNameFromPhysBone(ent, tr.PhysicsBone)
 
     if boneName == "ValveBiped.Bip01_Head1" then
         local owner = hg.RagdollOwner(ent)
