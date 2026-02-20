@@ -192,6 +192,9 @@ if SERVER then
 
 	function SWEP:Heal(ent, mode, bone)
 		self:GetOwner().ActiveMinigameWeapon = self
+		self.minigame_ent = ent
+		self.minigame_mode = mode
+		self.minigame_bone = bone
 		net.Start("start_bandage_minigame")
 		net.WriteEntity(ent)
 		net.Send(self:GetOwner())
