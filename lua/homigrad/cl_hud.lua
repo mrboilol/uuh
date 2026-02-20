@@ -401,6 +401,22 @@ hook.Add("HG_OnOtrub", "resetshit", function(ply)
 		end
 	end
 end)
+--whatever floats your boat
+hook.Add("KeyPress", "ProtectiveStancePress", function(ply, key)
+    if key == KEY_T then
+        net.Start("hg_protective_stance_toggle")
+        net.WriteBool(true)
+        net.SendToServer()
+    end
+end)
+
+hook.Add("KeyRelease", "ProtectiveStanceRelease", function(ply, key)
+    if key == KEY_T then
+        net.Start("hg_protective_stance_toggle")
+        net.WriteBool(false)
+        net.SendToServer()
+    end
+end)
 
 hook.Add( "PlayerBindPress", "PlayerBindPressExample2huy", function( ply, bind, pressed )
 	if string.find(bind, "+menu") then

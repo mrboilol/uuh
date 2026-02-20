@@ -571,18 +571,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.uncon_timer = org.uncon_timer or 0
 		org.uncon_timer = org.uncon_timer + timeValue
 
-		-- Dreams/Memories System
-		if org.uncon_timer > 15 and CurTime() > (org.lastDreamTime or 0) then
-			local baseChance = 0.1 -- 10% base chance per second after 15s
-			local brainDamageBonus = (org.brain or 0) * 0.4 -- Up to 40% bonus chance
-			local chance = baseChance + brainDamageBonus
 
-			if math.random() < chance * timeValue then
-				net.Start("hg_dream_effect")
-				net.Send(owner)
-				org.lastDreamTime = CurTime() + math.random(10, 20) -- Cooldown
-			end
-		end
 	else
 		org.uncon_timer = 0
 	end

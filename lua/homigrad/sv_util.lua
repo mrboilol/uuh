@@ -685,6 +685,13 @@ hook.Add("SetupMove", "SV_SYNC", function(ply)
 	end
 end)
 
+
+util.AddNetworkString("hg_protective_stance_toggle")
+net.Receive("hg_protective_stance_toggle", function(len, ply)
+    if not IsValid(ply) then return end
+    ply.wantsProtectiveStance = net.ReadBool()
+end)
+
 local WreckBlacklist = {"gmod_lamp", "gmod_cameraprop", "gmod_light", "ent_jack_gmod_nukeflash"}
 
 function hgWreckBuildings(blaster, pos, power, range, ignoreVisChecks) -- taken from JMod -- this so unstable shit, can crush your game

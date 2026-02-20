@@ -392,7 +392,7 @@ hook.Add("Think", "Fake", function()
 			if org.larmgruesome or org.larmgruesome_dislocation then force = force * 0.2 end
 			
             
-            local protective = ply:KeyDown(IN_WALK) and org.canmove and not ply:InVehicle()
+            local protective = ply.wantsProtectiveStance and org.canmove and not ply:InVehicle()
 
 			if protective then
 				local head = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 10))
@@ -400,19 +400,19 @@ hook.Add("Think", "Fake", function()
 				local pos = head:GetPos()
 
 				if ply:KeyDown(IN_ATTACK2) then
-					shadowControl(ragdoll, 7, 0.1, ang, 550, 50, pos + ang:Forward() * 10 + ang:Right() * 5, 5050, 100)
-					shadowControl(ragdoll, 6, 0.1, ang, 550, 50, pos + ang:Forward() * 5 + ang:Right() * 10, 5050, 100)
+					shadowControl(ragdoll, 7, 0.1, ang, 100, 20, pos + ang:Forward() * 5 + ang:Right() * 2, 500, 100)
+					shadowControl(ragdoll, 6, 0.1, ang, 100, 20, pos + ang:Forward() * 2 + ang:Right() * 5, 500, 100)
 				else
-					shadowControl(ragdoll, 7, 0.1, ang, 250, 20, pos + ang:Forward() * 10 + ang:Right() * 5, 5050, 100)
-					shadowControl(ragdoll, 6, 0.1, ang, 250, 20, pos + ang:Forward() * 5 + ang:Right() * 10, 5050, 100)
+					shadowControl(ragdoll, 7, 0.1, ang, 50, 20, pos + ang:Forward() * 5 + ang:Right() * 2, 500, 100)
+					shadowControl(ragdoll, 6, 0.1, ang, 50, 20, pos + ang:Forward() * 2 + ang:Right() * 5, 500, 100)
 				end
 
 				if ply:KeyDown(IN_ATTACK) then
-					shadowControl(ragdoll, 5, 0.1, ang, 550, 50, pos + ang:Forward() * 10 - ang:Right() * 5, 5050, 100)
-					shadowControl(ragdoll, 4, 0.1, ang, 550, 50, pos + ang:Forward() * 5 - ang:Right() * 10, 5050, 100)
+					shadowControl(ragdoll, 5, 0.1, ang, 100, 20, pos + ang:Forward() * 5 - ang:Right() * 2, 500, 100)
+					shadowControl(ragdoll, 4, 0.1, ang, 100, 20, pos + ang:Forward() * 2 - ang:Right() * 5, 500, 100)
 				else
-					shadowControl(ragdoll, 5, 0.1, ang, 250, 20, pos + ang:Forward() * 10 - ang:Right() * 5, 5050, 100)
-					shadowControl(ragdoll, 4, 0.1, ang, 250, 20, pos + ang:Forward() * 5 - ang:Right() * 10, 5050, 100)
+					shadowControl(ragdoll, 5, 0.1, ang, 50, 20, pos + ang:Forward() * 5 - ang:Right() * 2, 500, 100)
+					shadowControl(ragdoll, 4, 0.1, ang, 50, 20, pos + ang:Forward() * 2 - ang:Right() * 5, 500, 100)
 				end
 			end
 
