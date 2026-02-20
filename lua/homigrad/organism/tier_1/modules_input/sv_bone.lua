@@ -136,53 +136,120 @@ local function getBoneMatrix(rag, boneID)
     return matrix_cache[model] and matrix_cache[model][boneID]
 end
 
--- Function to create floppy limb constraint
-local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbKey)
-    if not IsValid(rag) or not rag:IsRagdoll() then return false end
+-- Function to create floppy limb constraint (less floppy than neck)
+local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
+	if not IsValid(rag) or not rag:IsRagdoll() then 
+        return false 
+    end
+	
+	local bone1 = rag:LookupBone(bone1Name)
+	local bone2 = rag:LookupBone(bone2Name)
+	if not bone1 or not bone2 then 
+        return false 
+    end
 
-    local bone1 = rag:LookupBone(bone1Name)
-    local bone2 = rag:LookupBone(bone2Name)
-    if not bone1 or not bone2 then return false end
+    local matrix = getBoneMatrix(rag, bone1)
+    local matrix_par = getBoneMatrix(rag, bone2)
+    if not matrix or not matrix_par then
+        return false
+    end
 
-    local phys1 = rag:TranslateBoneToPhysBone(bone1)
-    local phys2 = rag:TranslateBoneToPhysBone(bone2)
-    if phys1 < 0 or phys2 < 0 then return false end
+	local phys1 = rag:TranslateBoneToPhysBone(bone1)
+	local phys2 = rag:TranslateBoneToPhysBone(bone2)
+	if not phys1 or not phys2 or phys1 < 0 or phys2 < 0 then 
+        return false 
+    end
 
-    local pBone1 = rag:GetPhysicsObjectNum(phys1)
-    local pBone2 = rag:GetPhysicsObjectNum(phys2)
-    if not (IsValid(pBone1) and IsValid(pBone2)) then return false end
+	local pBone1 = rag:GetPhysicsObjectNum(phys1)
+	local pBone2 = rag:GetPhysicsObjectNum(phys2)
+	if not (IsValid(pBone1) and IsValid(pBone2)) then 
+        return false 
+    end
 
-    -- Remove existing rigid constraint between the two bones
-    rag:RemoveInternalConstraint(phys1)
+	-- Check for limits before removing existing constraint to prevent detachment
+	local limits = bb_constraints_limit[bone1Name]
+	if not limits then 
+        return false 
+    end
 
-    -- Enable collisions and motion for interactivity
-    pBone1:EnableCollisions(true)
-    pBone2:EnableCollisions(true)
+    -- Helper to remove any conflicting constraints (like stiffness hinges) between these bones
+    if rag.Constraints then
+        for k, v in pairs(rag.Constraints) do
+            if (v.Bone1 == phys1 and v.Bone2 == phys2) or (v.Bone1 == phys2 and v.Bone2 == phys1) then
+                if IsValid(v.Constraint) then v.Constraint:Remove() end
+                rag.Constraints[k] = nil
+            end
+        end
+    end
+
+	-- Remove existing rigid constraint
+	pcall(function() rag:RemoveInternalConstraint(phys1) end)
+
+    -- Save current state
+    local pos_ori = pBone1:GetPos()
+	local pos_ori_par = pBone2:GetPos()
+	local ang_ori = pBone1:GetAngles()
+	local ang_ori_par = pBone2:GetAngles()
+
+	local vel_ori = pBone1:GetVelocity()
+	local vel_ori_par = pBone2:GetVelocity()
+	local avel_ori = pBone1:GetAngleVelocity()
+	local avel_ori_par = pBone2:GetAngleVelocity()
+
+    -- Move to bind pose for accurate constraint creation
+    local m_translation = rag:LocalToWorld(matrix:GetTranslation())
+	local p_translation = rag:LocalToWorld(matrix_par:GetTranslation())
+
+	pBone1:SetPos(m_translation)
+	pBone1:SetAngles(rag:LocalToWorldAngles(matrix:GetAngles()))
+	pBone2:SetPos(p_translation)
+	pBone2:SetAngles(rag:LocalToWorldAngles(matrix_par:GetAngles()))
+
+    -- Ensure collisions are enabled on both physics objects to avoid funky hits
+    if pBone1.EnableCollisions then pBone1:EnableCollisions(true) end
+    if pBone2.EnableCollisions then pBone2:EnableCollisions(true) end
+    if pBone1.Wake then pBone1:Wake() end
+    if pBone2.Wake then pBone2:Wake() end
     pBone1:EnableMotion(true)
     pBone2:EnableMotion(true)
-    pBone1:Wake()
-    pBone2:Wake()
 
-    -- Create a new advanced ballsocket constraint for floppy effect
-    local lpos, _ = WorldToLocal(pBone1:GetPos(), pBone1:GetAngles(), pBone2:GetPos(), pBone2:GetAngles())
+    -- Use spawnflags 1 to disable collision between constrained parts (cleaner than NoCollide)
+	-- Bone Buster–style ragdoll constraint
+	local cons = ents.Create("phys_ragdollconstraint")
+	
+    cons:SetPos(m_translation)
+    -- cons:SetAngles(rag:LocalToWorldAngles(matrix:GetAngles())) -- BoneBuster doesn't set angles on cons? 
+    -- But it sets angles of physics objects.
     
-    local limits = bb_constraints_limit[bone1Name] or {
-        [0] = { [0] = "90", [1] = "-90" },
-        [1] = { [0] = "90", [1] = "-90" },
-        [2] = { [0] = "90", [1] = "-90" },
-    }
+    cons:SetKeyValue("spawnflags", 1) 
+	cons:SetKeyValue("xmin", limits[0][1])
+	cons:SetKeyValue("xmax", limits[0][0])
+	cons:SetKeyValue("ymin", limits[1][1])
+	cons:SetKeyValue("ymax", limits[1][0])
+	cons:SetKeyValue("zmin", limits[2][1])
+	cons:SetKeyValue("zmax", limits[2][0])
+	cons:SetPhysConstraintObjects(pBone1, pBone2)
+	cons:Spawn()
+	cons:Activate()
+    
+    -- Restore original state
+    pBone1:SetPos(pos_ori)
+	pBone1:SetAngles(ang_ori)
+	pBone2:SetPos(pos_ori_par)
+	pBone2:SetAngles(ang_ori_par)
 
-    local cons = constraint.AdvBallsocket(
-        rag, rag,
-        phys2, phys1,
-        lpos, Vector(0,0,0),
-        0, 0,
-        tonumber(limits[0][1]), tonumber(limits[1][1]), tonumber(limits[2][1]),
-        tonumber(limits[0][0]), tonumber(limits[1][0]), tonumber(limits[2][0]),
-        0, 0, false
-    )
+	pBone1:SetVelocityInstantaneous(vel_ori)
+	pBone1:SetVelocity(vel_ori)
+	pBone2:SetVelocityInstantaneous(vel_ori_par)
+	pBone2:SetVelocity(vel_ori_par)
+	pBone1:SetAngleVelocityInstantaneous(avel_ori)
+	pBone1:SetAngleVelocity(avel_ori)
+	pBone2:SetAngleVelocityInstantaneous(avel_ori_par)
+	pBone2:SetAngleVelocity(avel_ori_par)
+    
+	rag:SetSaveValue("m_ragdoll.allowStretch", false)
 
-    return cons
+	return cons and IsValid(cons) and cons
 end
 
 -- Jaw pose: tilt down and slight left/right at random
@@ -973,6 +1040,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
         trackBoneBreak(org, key)
+        org.owner.brokenLimbSegments = org.owner.brokenLimbSegments or {}
         if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
             applyLimbFloppyEffect(org.owner, key)
         end

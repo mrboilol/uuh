@@ -576,8 +576,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		elseif scav_sound == 1 then -- despair only
 			play_despair = true
 		elseif scav_sound == 2 then -- both
-			play_conscious = true
-			play_despair = true
+			if not LowO2SoundChoice then
+				LowO2SoundChoice = math.random(2) == 1 and "conscious" or "despair"
+			end
+			if LowO2SoundChoice == "conscious" then play_conscious = true end
+			if LowO2SoundChoice == "despair" then play_despair = true end
 		end
 
 		if play_conscious then
@@ -957,7 +960,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		if o2 > 20 then
 			local scav_sound = GetConVar("hg_scavsound"):GetInt()
 
-			if (scav_sound == 0 or scav_sound == 2) then
+			if (scav_sound == 0) then
 				if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
 					sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
 						if IsValid(station) then
@@ -975,7 +978,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				if IsValid(DespairStation) then DespairStation:SetVolume(0) end
 			end
 
-			if (scav_sound == 1 or scav_sound == 2) then
+			if (scav_sound == 1) then
 				if o2 > 50 and !org.otrub then
 					if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
 						if not DespairSoundChoice then

@@ -71,29 +71,15 @@ if SERVER then
 	function SWEP:Heal(ent, mode)
 		if ent:IsNPC() then
 			self:NPCHeal(ent, 0.3, "snd_jack_hmcd_needleprick.wav")
+			return
 		end
 
 		local org = ent.organism
 		if not org then return end
-		self:SetBodygroup(1, 1)
-		local owner = self:GetOwner()
-		local entOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 
-		local injected = math.min(FrameTime() * 1, self.modeValues[1])
-        
-        -- Reduce internal bleeding and blood choke
-        org.internalBleed = math.max(0, (org.internalBleed or 0) - (injected * 20))
-        org.bloodChoke = math.max(0, (org.bloodChoke or 0) - (injected * 0.9))
-        
-        -- Small analgesic effect
-		org.analgesiaAdd = math.min((org.analgesiaAdd or 0) + injected * 0.5, 1)
+		-- Reduce internal bleeding and blood choke
+		org.internalBleed = math.max(0, (org.internalBleed or 0) - 20)
+		org.bloodChoke = math.max(0, (org.bloodChoke or 0) - 0.5)
 
-		self.modeValues[1] = math.max(self.modeValues[1] - injected, 0)
-
-		if self.modeValues[1] != 0 then
-			entOwner:EmitSound("pshiksnd_tranexamic")
-		else
-			-- self:Remove()
-		end
 	end
 end

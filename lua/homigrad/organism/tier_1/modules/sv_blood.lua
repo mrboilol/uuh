@@ -250,7 +250,7 @@ module[2] = function(owner, org, mulTime)
 	-- Choking on blood
 	local choke_increase = (org.internalBleed / 50) + (org.trachea * 0.1) + (((org.lungsL and org.lungsL[1] or 0) + (org.lungsR and org.lungsR[1] or 0)) * 0.05)
 	if choke_increase > 0 then
-		org.bloodChoke = math.min(org.bloodChoke + choke_increase * mulTime * 0.1, 1)
+		org.bloodChoke = math.min(org.bloodChoke + choke_increase * mulTime * 0.5, 1)
 	end
 
 	-- Natural decrease, and placeholder for treatments
@@ -259,7 +259,7 @@ module[2] = function(owner, org, mulTime)
 	org.bloodChoke = math.max(org.bloodChoke - choke_decrease_rate * mulTime, 0)
 
 	-- Coughing up blood
-	if org.bloodChoke > 0.7 and (org.lastBloodCough or 0) < CurTime() then
+	if org.bloodChoke > 0.4 and (org.lastBloodCough or 0) < CurTime() then
 		hg.organism.CoughUpBlood(org)
 		org.lastBloodCough = CurTime() + math.Rand(5, 15)
 	end

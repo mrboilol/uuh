@@ -176,6 +176,28 @@ function SWEP:Think()
 	end--]]
 end
 SWEP.net_cooldown2 = 0
+if SERVER then
+	function SWEP:DoHeal(ent, mode, bone)
+		local org = ent.organism
+		if not org then return end
+
+		local done = self:Bandage(ent, bone)
+		if self.modeValues[1] <= 0 and self.ShouldDeleteOnFullUse then
+			self:GetOwner():SelectWeapon("weapon_hands_sh")
+			self:Remove()
+		end
+		
+		return done
+	end
+
+	function SWEP:Heal(ent, mode, bone)
+		self:GetOwner().ActiveMinigameWeapon = self
+		net.Start("start_bandage_minigame")
+		net.WriteEntity(ent)
+		net.Send(self:GetOwner())
+	end
+end
+
 function SWEP:PrimaryAttack()
 	//self:SetHolding(math.min(self:GetHolding() + 9, 100))
 	if SERVER then--and not self.modeValuesdef[self.mode][2] then

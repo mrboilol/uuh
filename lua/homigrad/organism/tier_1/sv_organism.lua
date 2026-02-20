@@ -141,26 +141,21 @@ net.Receive("hg_dislocation_minigame_pain", function(len, ply)
     if not IsValid(ply) or not ply:Alive() then return end
     
     local target = net.ReadEntity()
+    local painAmount = net.ReadFloat()
     
+    local patient = ply
     -- If fixing someone else
     if IsValid(target) and target:IsPlayer() and target != ply then
-        -- Apply pain to target (maybe less fear since they aren't doing it?)
-        -- Or apply to both? Let's apply to target as they are the one being hurt
-        local org = target.organism
-        if not org then return end
-        
-        org.painadd = org.painadd + 5
-        org.fearadd = org.fearadd + 0.1
-        target:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
-        return
+        patient = target
     end
 
-    local org = ply.organism
+    local org = patient.organism
     if not org then return end
     
-    org.painadd = org.painadd + 5
-    org.fearadd = org.fearadd + 0.1
-    ply:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
+    -- Apply pain and fear proportional to the amount sent
+    org.painadd = org.painadd + (painAmount * 50)
+    org.fearadd = org.fearadd + (painAmount * 0.5)
+    patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
 end)
 
 net.Receive("hg_dislocation_minigame_success", function(len, ply)
@@ -575,6 +570,19 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if org.otrub then
 		org.uncon_timer = org.uncon_timer or 0
 		org.uncon_timer = org.uncon_timer + timeValue
+
+		-- Dreams/Memories System
+		if org.uncon_timer > 15 and CurTime() > (org.lastDreamTime or 0) then
+			local baseChance = 0.1 -- 10% base chance per second after 15s
+			local brainDamageBonus = (org.brain or 0) * 0.4 -- Up to 40% bonus chance
+			local chance = baseChance + brainDamageBonus
+
+			if math.random() < chance * timeValue then
+				net.Start("hg_dream_effect")
+				net.Send(owner)
+				org.lastDreamTime = CurTime() + math.random(10, 20) -- Cooldown
+			end
+		end
 	else
 		org.uncon_timer = 0
 	end
