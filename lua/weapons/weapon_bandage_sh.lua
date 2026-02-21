@@ -44,7 +44,6 @@ function SWEP:DrawWorldModel()
 	if not IsValid(self:GetOwner()) then
 		self:DrawWorldModel2()
 	end
-end
 
 function SWEP:DrawWorldModel2(nodraw)
 	if self.Color then
