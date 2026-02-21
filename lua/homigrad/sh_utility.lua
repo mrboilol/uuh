@@ -2153,6 +2153,10 @@ local IsValid = IsValid
 			end
 		end
 	end)
+
+	if SERVER then --// Force enable npc ragdolls collision
+		RunConsoleCommand("ai_serverragdolls", "1")
+	end
 --//
 --\\ Disable drive
 	--[[hook.Add("StartEntityDriving", "disabledriving", function(ent, ply)
