@@ -737,7 +737,7 @@ local function checkForGruesomeAccident(org)
 	end
 	
 	-- Check for gruesome accident: 3+ bones broken + neck break
-	if #recentBreaks >= 3 and hasNeckBreak then
+	if #recentBreaks >= 2 and hasNeckBreak then
 		org.gruesomeAccident = true
 		org.gruesomeAccidentTime = currentTime
 		
