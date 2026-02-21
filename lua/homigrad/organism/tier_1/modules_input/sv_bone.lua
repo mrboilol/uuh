@@ -1404,15 +1404,14 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
         org.shock = org.shock + (isBullet and dmg * 12 or dmg * 20)
         org.avgpain = org.avgpain + dmg * 20
 		
-    if !org.jawdislocation then
+        if !org.jawdislocation then
 			org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
-		end
-
 		end
 
         org.jawdislocation = true
     
         if org.isPly then org.owner:Notify(jaw_dislocated_msg[math.random(#jaw_dislocated_msg)], true, "jaw", 2) end
+	end
 	end
 
 

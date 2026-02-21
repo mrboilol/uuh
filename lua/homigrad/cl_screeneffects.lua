@@ -576,11 +576,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		elseif scav_sound == 1 then -- despair only
 			play_despair = true
 		elseif scav_sound == 2 then -- both
-			if not LowO2SoundChoice then
-				LowO2SoundChoice = math.random(2) == 1 and "conscious" or "despair"
-			end
-			if LowO2SoundChoice == "conscious" then play_conscious = true end
-			if LowO2SoundChoice == "despair" then play_despair = true end
+			play_conscious = true
+			play_despair = true
 		end
 
 		if play_conscious then
@@ -593,10 +590,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 						station:EnableLooping(true)
 					end
 				end)
-			else
-				if NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
-					NoiseStation:Play()
-				end
 			end
 		else
 			if IsValid(NoiseStation) then NoiseStation:Stop(); NoiseStation = nil; end
@@ -612,10 +605,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 						station:EnableLooping(true)
 					end
 				end)
-			else
-				if DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
-					DespairStation:Play()
-				end
 			end
 		else
 			if IsValid(DespairStation) then DespairStation:Stop(); DespairStation = nil; end
