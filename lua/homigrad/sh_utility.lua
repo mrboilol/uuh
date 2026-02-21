@@ -2200,14 +2200,19 @@ local IsValid = IsValid
 			for k, wep in pairs(loot) do
 				rag.inventory.Weapons[wep] = {}
 				rag:SetNetVar("Inventory", rag.inventory)
-				rag:SetNWString("PlayerName", nameNPCs[ent:GetClass()][1])
-				rag:SetNWVector("PlayerColor", nameNPCs[ent:GetClass()][2])
-				rag.GetPlayerName = function()
-					return nameNPCs[ent:GetClass()][1]
-				end
+			end
+
+			rag:SetNWString("PlayerName", nameNPCs[ent:GetClass()][1])
+			rag:SetNWVector("PlayerColor", nameNPCs[ent:GetClass()][2])
+			rag.GetPlayerName = function()
+				return nameNPCs[ent:GetClass()][1]
 			end
 		end
 	end)
+
+	if SERVER then --// Force enable npc ragdolls collision
+		RunConsoleCommand("ai_serverragdolls", "1")
+	end
 --//
 --\\ Disable drive
 	--[[hook.Add("StartEntityDriving", "disabledriving", function(ent, ply)
