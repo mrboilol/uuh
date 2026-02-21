@@ -1385,7 +1385,7 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 		net.Start("headtrauma_flash")
 		net.Send(org.owner)
 		applyJawPose(org.owner)
-	end
+--yay
 
 	local dislocated = (org.jaw - oldDmg) > math.Rand(0.1, 0.3)
 
@@ -1411,7 +1411,7 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
         org.jawdislocation = true
     
         if org.isPly then org.owner:Notify(jaw_dislocated_msg[math.random(#jaw_dislocated_msg)], true, "jaw", 2) end
-	end
+end
 
 
 	if (org.jaw - oldDmg) > 0.15 then
