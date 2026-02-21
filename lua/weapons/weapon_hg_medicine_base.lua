@@ -420,6 +420,27 @@ if SERVER then
 			done = true
 		end
 
+		if org.spine1 == 1 and self.modeValues[1] >= amt then
+			org.spine1 = org.spine1 - 0.05
+			self.modeValues[1] = self.modeValues[1] - amt
+			org.avgpain = math.max(org.avgpain - 7, 0)
+			done = true
+		end
+
+		if org.spine2 == 1 and self.modeValues[1] >= amt then
+			org.spine2 = org.spine2 - 0.05
+			self.modeValues[1] = self.modeValues[1] - amt
+			org.avgpain = math.max(org.avgpain - 7, 0)
+			done = true
+		end
+
+		if org.spine3 == 1 and self.modeValues[1] >= amt then
+			org.spine3 = org.spine3 - 0.05
+			self.modeValues[1] = self.modeValues[1] - amt
+			org.avgpain = math.max(org.avgpain - 7, 0)
+			done = true
+		end
+
 		if org.lleg == 1 and self.modeValues[1] >= amt and !org.llegamputated then
 			org.lleg = org.lleg - 0.05
 			self.modeValues[1] = self.modeValues[1] - amt

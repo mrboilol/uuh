@@ -1818,10 +1818,10 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 			applySpineFloppyEffect(org.owner)
 		end
 		local broke_spine = {
-						"I felt a crack in my spine!",
-						"My back is in shambles!",
-						"I think my spine just snapped!",
-						"A sharp pain shoots up my back!",
+						"Fuuck... I think i broke something in my back.",
+						"Something in my back snapped...",
+						"I think my back is broken.",
+						"Something is wrong, i cant even stand correctly...",
 					}
 					local random_message = broke_spine[math.random(#broke_spine)]
 					if hg.CreateNotification then hg.CreateNotification(org.owner, random_message, true, name, 3) end
@@ -1843,7 +1843,7 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 						local dislocation_key = name .. "_dislocations"
 						org[dislocation_key] = (org[dislocation_key] or 0) + 1
 						org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO)
-						if hg.CreateNotification then hg.CreateNotification(org.owner, "My spine has been dislocated!", true, name, 3) end
+						if hg.CreateNotification then hg.CreateNotification(org.owner, "I think i set my back in the wrong place...", true, name, 3) end
 						if name == "spine3" then
 							applyNeckFloppyEffect(org.owner)
 						else
