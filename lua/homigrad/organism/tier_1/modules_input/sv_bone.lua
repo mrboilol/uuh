@@ -328,7 +328,7 @@ local function checkForGruesomeAccident(org)
     end
     
 
-    if #recentBreaks >= 3 and hasNeckBreak then
+    if #recentBreaks >= 2 and hasNeckBreak then
         org.gruesomeAccident = true
         org.gruesomeAccidentTime = currentTime
         
@@ -365,22 +365,8 @@ local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
 		local segments = limbBoneSegments[limbKey]
 		if not segments then return end
 
-		-- Select a segment that isn't already broken
-		local randomSegment
-		local availableSegments = {}
-		for i = 1, #segments do
-			if not table.HasValue(ent.brokenLimbSegments[limbKey], i) then
-				table.insert(availableSegments, i)
-			end
-		end
-
-		if #availableSegments == 0 then return end -- No more segments to break
-
-		if segmentOverride and table.HasValue(availableSegments, segmentOverride) then
-			randomSegment = segmentOverride
-		else
-			randomSegment = table.Random(availableSegments)
-		end
+		-- Select a random segment
+		local randomSegment = segmentOverride or math.random(#segments)
 
 		if not randomSegment then return end
 
@@ -984,15 +970,14 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
             if org.recentBoneBreaks then
                 for _, breakData in ipairs(org.recentBoneBreaks) do
                     if currentTime - breakData.time <= 4 then
-                        applyGruesomeFloppiness(org.owner, breakData.bone)
+                        applyLimbFloppyEffect(org.owner, breakData.bone)
                     end
                 end
             end
+			org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
         else
             if not org.owner.brokenLimbSegments then org.owner.brokenLimbSegments = {} end
-            if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
-                applyLimbFloppyEffect(org.owner, key)
-            end
+            applyLimbFloppyEffect(org.owner, key)
         end
 		//broken
 	else
@@ -1040,8 +1025,17 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
         trackBoneBreak(org, key)
-        org.owner.brokenLimbSegments = org.owner.brokenLimbSegments or {}
-        if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
+        if checkForGruesomeAccident(org) then
+            local currentTime = CurTime()
+            if org.recentBoneBreaks then
+                for _, breakData in ipairs(org.recentBoneBreaks) do
+                    if currentTime - breakData.time <= 4 then
+                        applyLimbFloppyEffect(org.owner, breakData.bone)
+                    end
+                end
+            end
+			org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
+        else
             applyLimbFloppyEffect(org.owner, key)
         end
 		//dislocated
@@ -1203,14 +1197,13 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
             if org.recentBoneBreaks then
                 for _, breakData in ipairs(org.recentBoneBreaks) do
                     if currentTime - breakData.time <= 4 then
-                        applyGruesomeFloppiness(org.owner, breakData.bone)
+                        applyLimbFloppyEffect(org.owner, breakData.bone)
                     end
                 end
             end
+			org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
         else
-            if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
-                applyLimbFloppyEffect(org.owner, key)
-            end
+            applyLimbFloppyEffect(org.owner, key)
         end
 		//dislocated
 	end
@@ -1285,6 +1278,12 @@ local jaw_dislocated_msg = {
 	"MY JAW... ITS JUST STUCK THERE-- OH ITS PAINING",
 	"I CANT MOVE MY JAW AT ALL... AND ITS REALLY ACHING",
 	//"I CANT EVEN SPEAK, I NEED TO PUNCH IT BACK IN PLACE... BUT IT HURTS REAL BAD",
+}
+
+local jaw_disfigured_msg = {
+	"My jaw is completely shattered!",
+	"I don't think my jaw will ever be the same...",
+	"My face is ruined!",
 }
 
 hook.Add("PlayerDisconnected", "CleanupTinnitusSounds", function(ply)
@@ -1385,7 +1384,12 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 	hg.AddHarmToAttacker(dmgInfo, (org.jaw - oldDmg) * 3, "Jaw bone damage harm")
 
 	if org.jaw == 1 and (org.jaw - oldDmg) > 0 and org.isPly then
-		if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end
+		if (org.jaw - oldDmg) > 0.7 then
+			org.jawdisfigured = true
+			if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_disfigured_msg[math.random(#jaw_disfigured_msg)], true, "jaw", 2) end
+		else
+			if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end
+		end
 		net.Start("headtrauma_flash")
 		net.Send(org.owner)
 		applyJawPose(org.owner)

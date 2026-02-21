@@ -66,6 +66,7 @@ hook.Add("Org Clear", "Main", function(org)
 	org.rleg_perm_dmg = 0
 	org.larm_perm_dmg = 0
 	org.rarm_perm_dmg = 0
+	org.jaw_perm_dmg = 0
 
 	org.llegamputated = false
 	org.rlegamputated = false
@@ -639,7 +640,7 @@ end)
 		if org.rleg > (org.rleg_perm_dmg or 0) then org.rleg = math.Approach(org.rleg, org.rleg_perm_dmg or 0, boneHeal) end
 		if org.larm > (org.larm_perm_dmg or 0) then org.larm = math.Approach(org.larm, org.larm_perm_dmg or 0, boneHeal) end
 		if org.rarm > (org.rarm_perm_dmg or 0) then org.rarm = math.Approach(org.rarm, org.rarm_perm_dmg or 0, boneHeal) end
-		if org.jaw > 0 then org.jaw = math.Approach(org.jaw, 0, boneHeal) end
+		if org.jaw > (org.jaw_perm_dmg or 0) then org.jaw = math.Approach(org.jaw, (org.jaw_perm_dmg or 0), boneHeal) end
 		if org.spine1 > 0 then
 			local old_val = org.spine1
 			org.spine1 = math.Approach(org.spine1, 0, boneHeal)
@@ -1025,6 +1026,12 @@ local finally_fixed = {
 }
 
 local function fixlimb(org, key, fixer)
+	if key == "jaw" and org.jawdisfigured then
+		org.jawdislocation = true
+		org.jaw = 0
+		org.jaw_perm_dmg = 0.1
+		return
+	end
 	if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
 		org[key.."dislocation"] = false
 		org.painadd = org.painadd + 5 * math.random(1, 3)
