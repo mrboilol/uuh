@@ -39,7 +39,8 @@ hook.Add("OnPlayerHitGround","fallStun",function(ply,inwater,onfloater,speed)
 
 	tr = util.TraceHull(tr)
 
-	if ply:IsBerserk() then
+	local org = ply:getOrganism()
+	if org and org:IsBerserk() then
 		return
 	end
 
