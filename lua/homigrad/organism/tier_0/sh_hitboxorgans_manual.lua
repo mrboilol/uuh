@@ -81,7 +81,7 @@ male["ValveBiped.Bip01_Neck1"] = {
 		Vector(1, 1, 0),
 		Angle(0, 0, 0),
 		Vector(1.5, 0.25, 0.25),
-		Color(0, 125, 0)
+		Color(255, 255, 0)
 	},
 	{
 		"spine3", --spine3 neck
@@ -112,7 +112,7 @@ male["ValveBiped.Bip01_Neck1"] = {
 
 local bone = 0.5
 male["ValveBiped.Bip01_Spine2"] = {
-	{"spinal_cord2", spine, Vector(4, -1, 0), Angle(0, 0, 0), Vector(8, 0.25, 0.25), Color(0, 125, 0)},
+	{"spinal_cord2", spine, Vector(4, -1, 0), Angle(0, 0, 0), Vector(8, 0.25, 0.25), Color(255, 255, 0)},
 	{"spine2", spine, Vector(4, -1, 0), Angle(0, 0, 0), Vector(8, 0.5, 0.5), Color(0, 255, 0)},
 	{"spineartery", 0, Vector(2, -1, 1), Angle(0, 0, 0), Vector(6, 0.8, 0.8), Color(255, 0, 0)},
 	{
@@ -172,7 +172,7 @@ male["ValveBiped.Bip01_Spine2"] = {
 
 local bone = 0.5
 male["ValveBiped.Bip01_Pelvis"] = {
-	{"spinal_cord1", spine, Vector(0, 2, -5), Angle(0, 0, 0), Vector(0.25, 5, 0.25), Color(0, 125, 0)},
+	{"spinal_cord1", spine, Vector(0, 2, -5), Angle(0, 0, 0), Vector(0.25, 5, 0.25), Color(255, 255, 0)},
 	{"spine1", spine, Vector(0, 2, -5), Angle(0, 0, 0), Vector(0.5, 5, 0.5), Color(0, 255, 0)},
 	{"spineartery", 0, Vector(1, 2, -5), Angle(0, 0, 0), Vector(0.4, 5, 0.4), Color(255, 0, 0)},
 	{

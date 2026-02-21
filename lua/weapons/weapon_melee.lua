@@ -1,4 +1,4 @@
-if SERVER then AddCSLuaFile() end
+﻿if SERVER then AddCSLuaFile() end
 SWEP.PrintName = "Combat Knife"
 SWEP.Instructions = "A military grade combat knife designed to neutralize the enemy during combat operations and special operations."
 SWEP.Category = "Weapons - Melee"
@@ -766,22 +766,6 @@ function SWEP:MultiplyDMG(owner, ent, vellen, mul)
     if owner:IsBerserk() then
         mul = mul * (1 + owner.organism.berserk)
     end
-    
-    if owner.organism.fractures and (owner.organism.fractures.rarm or owner.organism.fractures.larm) then
-        mul = mul * 0.5
-    end
-    
-    local tourniquets = owner.GetNetVar and owner:GetNetVar("Tourniquets") or owner.tourniquets
-    if tourniquets then
-            for _, t in pairs(tourniquets) do
-            local b = t[3]
-            if b == "ValveBiped.Bip01_L_UpperArm" or b == "ValveBiped.Bip01_L_Forearm" or
-                b == "ValveBiped.Bip01_R_UpperArm" or b == "ValveBiped.Bip01_R_Forearm" then
-                mul = mul * 0.75
-                break
-            end
-        end
-    end
 
     return mul
 end
@@ -1229,16 +1213,6 @@ function SWEP:CustomThink()
             local shouldhit = (IsValid(ent) or ent:IsWorld())
 
             local dmg = math.random(self.DamageSecondary - 3, self.DamageSecondary + 3)
-
-            if owner.organism then
-                local org = owner.organism
-                local armBroken = (self.setrh and (org.rarmgruesome or org.rarmgruesome_dislocation)) or (self.setlh and (org.larmgruesome or org.larmgruesome_dislocation))
-                if armBroken then
-                    dmg = dmg * 0.5
-                elseif (self.setrh and org.rarm >= 1) or (self.setlh and org.larm >= 1) then
-                    dmg = dmg * 0.7
-                end
-            end
 
             if !shouldhit then
                 goto meleeskip2

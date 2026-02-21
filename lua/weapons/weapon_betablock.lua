@@ -75,8 +75,7 @@ if SERVER then
         local owner = self:GetOwner()
         local entOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
         entOwner:EmitSound("snd_jack_hmcd_pillsuse.wav", 60, math.random(95, 105))
-        org.adrenalineAdd = math.Approach(org.adrenalineAdd, -8, self.modeValues[1] * 2)
-		org.betaBlock = CurTime() + 30 -- Block adrenaline for 30 seconds
+        org.adrenalineAdd = math.Approach(org.adrenalineAdd, -4, self.modeValues[1] * 2)
         self.modeValues[1] = 0
         if self.modeValues[1] == 0 then
             owner:SelectWeapon("weapon_hands_sh")

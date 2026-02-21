@@ -923,7 +923,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	
 	--if hitbody then
 	if not org.superfighter then
-		dmgBlood = dmgBlood * 1.5
+		dmgBlood = dmgBlood * 3
 		local bleed_add = dmgBlood * bleedMul// / (RagdollDamageBoneMul[hitgroup] or 1)
 		--org.bleed = org.bleed + bleed_add
 		attacker.harm = attacker.harm + bleed_add / 50

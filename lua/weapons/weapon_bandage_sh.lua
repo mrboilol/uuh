@@ -44,6 +44,7 @@ function SWEP:DrawWorldModel()
 	if not IsValid(self:GetOwner()) then
 		self:DrawWorldModel2()
 	end
+end
 
 function SWEP:DrawWorldModel2(nodraw)
 	if self.Color then
@@ -175,49 +176,30 @@ function SWEP:Think()
 	end--]]
 end
 SWEP.net_cooldown2 = 0
+
 if SERVER then
-	function SWEP:DoHeal(ent, mode, bone)
-		local org = ent.organism
-		if not org then return end
+	util.AddNetworkString("hg_start_bandage_minigame")
+	util.AddNetworkString("hg_bandage_minigame_success")
+	util.AddNetworkString("hg_bandage_minigame_failure")
 
-		local done = self:Bandage(ent, bone)
-		if self.modeValues[1] <= 0 and self.ShouldDeleteOnFullUse then
-			self:GetOwner():SelectWeapon("weapon_hands_sh")
-			self:Remove()
-		end
-		
-		return done
-	end
+	net.Receive("hg_bandage_minigame_success", function(len, ply)
+		local wep = net.ReadEntity()
+		local target = net.ReadEntity()
+		if not IsValid(wep) or not IsValid(target) then return end
+		wep:Heal(target, wep.mode)
+	end)
+end
 
-	function SWEP:Heal(ent, mode, bone)
-		self:GetOwner().ActiveMinigameWeapon = self
-		self.minigame_ent = ent
-		self.minigame_mode = mode
-		self.minigame_bone = bone
-		net.Start("start_bandage_minigame")
-		net.WriteEntity(ent)
+function SWEP:PrimaryAttack()
+	if SERVER then
+		self.healbuddy = self:GetOwner()
+		net.Start("hg_start_bandage_minigame")
+		net.WriteEntity(self.healbuddy)
+		net.WriteEntity(self)
 		net.Send(self:GetOwner())
 	end
 end
 
-function SWEP:PrimaryAttack()
-	//self:SetHolding(math.min(self:GetHolding() + 9, 100))
-	if SERVER then--and not self.modeValuesdef[self.mode][2] then
-		//if self:GetHolding() < 100 then return end
-
-		self.healbuddy = self:GetOwner()
-		local done = self:Heal(self.healbuddy, self.mode)
-		
-		if(done and self.PostHeal)then
-			self:PostHeal(self.healbuddy, self.mode)
-		end
-
-		if self.net_cooldown2 < CurTime() then
-			self:SetNetVar("modeValues",self.modeValues)
-			--self.net_cooldown2 = CurTime() + 0.1
-		end
-	end
-end
 
 if CLIENT then
 	surface.CreateFont("huyhuy", {
@@ -332,6 +314,7 @@ end
 
 function SWEP:Initialize()
 	self:SetHold(self.HoldType)
+
 	self.modeValues = {
 		[1] = 40,
 	}
@@ -375,59 +358,21 @@ function SWEP:SetInfo(info)
 end
 
 function SWEP:SecondaryAttack()
-	--self:SetHolding(math.min(self:GetHolding() + 9, 100))
 	if SERVER then
 		if IsValid(self:GetNWEntity("fakeGun")) then return end
 		local ent = hg.eyeTrace(self:GetOwner()).Entity
 		self.healbuddy = ent
 		if !IsValid(self.healbuddy) then return end
 		if hg.GetCurrentCharacter(self.healbuddy) == hg.GetCurrentCharacter(self:GetOwner()) then return end
-		local done = self:Heal(self.healbuddy, self.mode)
-		if(done and self.PostHeal)then
-			self:PostHeal(self.healbuddy, self.mode)
-		end		
-
-		if self.net_cooldown2 < CurTime() then
-			self:SetNetVar("modeValues",self.modeValues)
-			--self.net_cooldown2 = CurTime() + 0.1 * game.GetTimeScale()
-		end
+		net.Start("hg_start_bandage_minigame")
+		net.WriteEntity(self.healbuddy)
+		net.WriteEntity(self)
+		net.Send(self:GetOwner())
 	end
 end
 
 if SERVER then
 	util.AddNetworkString("select_mode")
-
-	util.AddNetworkString("hg_bandage_heal_part")
-	net.Receive("hg_bandage_heal_part", function(len, ply)
-		local target = net.ReadEntity()
-		local part_name = net.ReadString()
-		local wep = ply:GetActiveWeapon()
-
-		if not IsValid(wep) or wep:GetClass() ~= "weapon_bandage_sh" then return end
-		if not IsValid(target) or not target:IsPlayer() then return end
-
-		local org = target.organism
-		if not org then return end
-
-		local amt = 5 -- amount of bandage to use
-		if wep.modeValues[1] < amt then return end
-
-		local done = false
-		if part_name == "spine1" and org.spine1 == 1 then
-			org.spine1 = org.spine1 - 0.05
-			done = true
-		elseif part_name == "spine2" and org.spine2 == 1 then
-			org.spine2 = org.spine2 - 0.05
-			done = true
-		elseif part_name == "spine3" and org.spine3 == 1 then
-			org.spine3 = org.spine3 - 0.05
-			done = true
-		end
-		if done then
-			wep.modeValues[1] = wep.modeValues[1] - amt
-			wep:SetNetVar("modeValues", wep.modeValues)
-		end
-	end)
 else
 	net.Receive("select_mode",function()
 		net.ReadEntity().mode = net.ReadInt(4)
@@ -462,7 +407,7 @@ if SERVER then
 		if not org then return end
 		
 		-- Если растрелять труп а потом его взорвать гранатой, после перевязать - крашнет сервер why?
-		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1 or org.spine1 == 1 or org.spine2 == 1 or org.spine3 == 1) then return end
+		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1) then return end
 		table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
 		
 		local done = false
@@ -561,28 +506,6 @@ if SERVER then
 			done = true
 		end
 
-		if org.spine1 == 1 and self.modeValues[1] >= amt then
-			org.spine1 = org.spine1 - 0.05
-			self.modeValues[1] = self.modeValues[1] - amt
-			org.avgpain = math.max(org.avgpain - 7, 0)
-			done = true
-		end
-
-		if org.spine2 == 1 and self.modeValues[1] >= amt then
-			org.spine2 = org.spine2 - 0.05
-			self.modeValues[1] = self.modeValues[1] - amt
-			org.avgpain = math.max(org.avgpain - 7, 0)
-			done = true
-		end
-
-		if org.spine3 == 1 and self.modeValues[1] >= amt then
-			org.spine3 = org.spine3 - 0.05
-			self.modeValues[1] = self.modeValues[1] - amt
-			org.avgpain = math.max(org.avgpain - 7, 0)
-			done = true
-		end
-		end
-
 		if org.lleg == 1 and self.modeValues[1] >= amt and !org.llegamputated then
 			org.lleg = org.lleg - 0.05
 			self.modeValues[1] = self.modeValues[1] - amt
@@ -611,6 +534,24 @@ if SERVER then
 			done = true
 		end
 
+		if org.spine1 > 0 and self.modeValues[1] >= amt then
+			healSpine(org, "spine1");
+			self.modeValues[1] = self.modeValues[1] - amt
+			done = true
+		end
+
+		if org.spine2 > 0 and self.modeValues[1] >= amt then
+			healSpine(org, "spine2");
+			self.modeValues[1] = self.modeValues[1] - amt
+			done = true
+		end
+
+		if org.spine3 > 0 and self.modeValues[1] >= amt then
+			healSpine(org, "spine3");
+			self.modeValues[1] = self.modeValues[1] - amt
+			done = true
+		end
+
 		if done then
 			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
 
@@ -624,50 +565,12 @@ if SERVER then
 		return done
 	end
 
-	function SWEP:Tourniquet(ent, bone)
-		local org = ent.organism
-		if not org then return false end
-
-		if self.modeValues[1] >= 1 then
-			local bonename = ent:GetBoneName(bone)
-			local done = false
-
-			if bonename == "ValveBiped.Bip01_L_Clavicle" then
-				for i, wound in ipairs(org.arterialwounds) do
-					if wound[4] == "subclavian_artery_l" then
-						table.remove(org.arterialwounds, i)
-						org.subclavian_artery = 0
-						done = true
-						break
-					end
-				end
-			elseif bonename == "ValveBiped.Bip01_R_Clavicle" then
-				for i, wound in ipairs(org.arterialwounds) do
-					if wound[4] == "subclavian_artery_r" then
-						table.remove(org.arterialwounds, i)
-						org.subclavian_artery = 0
-						done = true
-						break
-					end
-				end
-			end
-
-			if not done then
-				if hg.organism.ApplyTourniquet(ent, bonename) then
-					done = true
-				end
-			end
-
-			if done then
-				self.modeValues[1] = self.modeValues[1] - 1
-				return true
-			end
+	function SWEP:Heal(ent, mode, bone)
+		local owner = self:GetOwner()
+		if owner:IsNPC() then
+			self:NPCHeal(owner, 0.15, "snd_jack_hmcd_bandage.wav")
 		end
 
-		return false
-	end
-
-	function SWEP:DoHeal(ent, mode, bone)
 		local org = ent.organism
 		if not org then return end
 
@@ -678,13 +581,6 @@ if SERVER then
 		end
 		
 		return done
-	end
-
-	function SWEP:Heal(ent, mode, bone)
-		self:GetOwner().ActiveMinigameWeapon = self
-		net.Start("start_bandage_minigame")
-		net.WriteEntity(ent)
-		net.Send(self:GetOwner())
 	end
 	
 	function SWEP:PostHeal(ent, mode)
@@ -1190,10 +1086,46 @@ function SWEP:Holster(wep)
 	return true
 end
 
+function SWEP:NPCHeal(npc, mul, snd)
+	if not npc then
+		npc = self:GetOwner()
+	end
+
+	if npc:IsNPC() then
+		self:SetHold("melee")
+		if not mul then
+			mul = 0.3
+		end
+		npc:SetHealth(math.Clamp(npc:Health() + (npc:GetMaxHealth() * 1 * mul), 0, npc:GetMaxHealth() * math.Clamp(2 * mul, 2, 100)))
+		npc:EmitSound(snd or "snd_jack_hmcd_bandage.wav", 75, math.random(95, 105))
+
+		if SERVER then
+			self:Remove()
+		end
+	end
+end
+
+function SWEP:OwnerChanged()
+	local owner = self:GetOwner()
+	if IsValid(owner) and owner:IsNPC() then
+		self:NPCHeal(owner, 0.15, "snd_jack_hmcd_bandage.wav")
+	end
+end
+
 function SWEP:Deploy()
 	if SERVER or CLIENT and self:IsLocal() then
 		self:EmitSound(self.DeploySnd, 50, math.random(90, 110))
 	end
 
+	if self.DeployAdd then self:DeployAdd() end
+
 	return true
+end
+
+function SWEP:CanBePickedUpByNPCs()
+	return true
+end
+
+function SWEP:GetNPCRestTimes()
+	return 0.1, 0.1
 end

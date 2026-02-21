@@ -1,24 +1,37 @@
 
-local matWound = Material("vgui/wound.png", "noclamp smooth")
-local matBandage = Material("vgui/bandage_roll.png", "noclamp smooth")
+local matGhost = Material("vgui/dislocationBoneGhost.png", "noclamp smooth")
+local matMove = Material("vgui/dislocationBoneMove.png", "noclamp smooth")
+
+
+if CLIENT then
+    net.Receive("hg_start_bandage_minigame", function()
+        local target = net.ReadEntity()
+        local weapon = net.ReadEntity()
+        local panel = vgui.Create("hg_bandage_minigame")
+        panel:Init(target, weapon)
+    end)
+end
 
 local PANEL = {}
 
-function PANEL:Init()
+
+function PANEL:Init(target, weapon)
     self:SetSize(ScrW(), ScrH())
     self:MakePopup()
     self:SetAlpha(0)
     self:AlphaTo(255, 0.2)
     
-    self.success = false
-    self.targetPly = nil
+    self.limbType = 1 -- Default to leg
+    self.failures = 0
+    self.targetPly = target
+    self.weapon = weapon
     
     -- Minigame state
-    self.woundX = ScrW() * 0.5
-    self.woundY = ScrH() * 0.5
+    self.ghostX = ScrW() * 0.5
+    self.ghostY = ScrH() * 0.5
     
-    self.bandageX = ScrW() * 0.2
-    self.bandageY = ScrH() * 0.5
+    self.boneX = ScrW() * 0.5
+    self.boneY = ScrH() * 0.5
     
     self.isDragging = false
     self.dragOffsetX = 0
@@ -28,11 +41,16 @@ function PANEL:Init()
     self.lastMouseX = gui.MouseX()
     self.lastMouseY = gui.MouseY()
     
-    self.bandageWidth = 128
-    self.bandageHeight = 128
+    self.boneWidth = 400
+    self.boneHeight = 160
     
-    self.woundWidth = 256
-    self.woundHeight = 256
+    -- Randomize start state
+    self.boneX = self.boneX + math.random(-200, 200)
+    self.boneY = self.boneY + math.random(-100, 100)
+end
+
+function PANEL:SetLimbType(type)
+    self.limbType = type
 end
 
 function PANEL:SetTarget(ply)
@@ -48,16 +66,17 @@ function PANEL:Paint(w, h)
     surface.SetDrawColor(0, 0, 0, 200)
     surface.DrawRect(0, 0, w, h)
     
-    -- Draw Wound (Target)
+    -- Draw Ghost Bone (Target)
+    -- More obvious opacity as requested
     surface.SetDrawColor(255, 255, 255, 180) 
-    surface.SetMaterial(matWound)
-    surface.DrawTexturedRect(self.woundX - self.woundWidth / 2, self.woundY - self.woundHeight / 2, self.woundWidth, self.woundHeight)
+    surface.SetMaterial(matGhost)
+    surface.DrawTexturedRectRotated(self.ghostX, self.ghostY, self.boneWidth, self.boneHeight, 0)
     
     -- Handle Logic
     self:Logic()
     
-    -- Draw Movable Bandage
-    local drawX, drawY = self.bandageX, self.bandageY
+    -- Draw Movable Bone
+    local drawX, drawY = self.boneX, self.boneY
     
     -- Apply shake
     if self.shakeIntensity > 0 then
@@ -66,8 +85,8 @@ function PANEL:Paint(w, h)
     end
     
     surface.SetDrawColor(255, 255, 255, 255)
-    surface.SetMaterial(matBandage)
-    surface.DrawTexturedRect(drawX - self.bandageWidth / 2, drawY - self.bandageHeight / 2, self.bandageWidth, self.bandageHeight)
+    surface.SetMaterial(matMove)
+    surface.DrawTexturedRectRotated(drawX, drawY, self.boneWidth, self.boneHeight, 0)
 end
 
 function PANEL:Logic()
@@ -90,40 +109,48 @@ function PANEL:Logic()
     self.lastMouseX = mx
     self.lastMouseY = my
     
-    local halfW = self.bandageWidth / 2
-    local halfH = self.bandageHeight / 2
-    local hovering = mx >= (self.bandageX - halfW) and mx <= (self.bandageX + halfW) and
-                     my >= (self.bandageY - halfH) and my <= (self.bandageY + halfH)
+    -- Check for hover
+    -- Simple box check for non-rotated bone
+    local halfW = self.boneWidth / 2
+    local halfH = self.boneHeight / 2
+    local hovering = mx >= (self.boneX - halfW) and mx <= (self.boneX + halfW) and
+                     my >= (self.boneY - halfH) and my <= (self.boneY + halfH)
                      
+    -- Input handling
     if input.IsMouseDown(MOUSE_LEFT) then
         if not self.isDragging and hovering then
             self.isDragging = true
-            self.dragOffsetX = self.bandageX - mx
-            self.dragOffsetY = self.bandageY - my
+            self.dragOffsetX = self.boneX - mx
+            self.dragOffsetY = self.boneY - my
         end
     else
         self.isDragging = false
     end
     
     if self.isDragging then
+        -- Target position
         local targetX = mx + self.dragOffsetX
         local targetY = my + self.dragOffsetY
         
-        self.bandageX = Lerp(dt * 10, self.bandageX, targetX)
-        self.bandageY = Lerp(dt * 10, self.bandageY, targetY)
+        -- Smooth movement (Scav Prototype style feeling)
+        self.boneX = Lerp(dt * 10, self.boneX, targetX)
+        self.boneY = Lerp(dt * 10, self.boneY, targetY)
         
-        if mouseSpeed > 250 then
+        -- Speed penalty / Shake
+        if mouseSpeed > 150 then -- Threshold 150
             self.shakeIntensity = math.min(self.shakeIntensity + dt * 50, 20)
             
-            if self.shakeIntensity > 10 and math.random() < 0.1 then
+            -- Chance to drop the bone or cause pain
+            if self.shakeIntensity > 10 and math.random() < 0.05 then
                 self:Fail()
             end
         else
             self.shakeIntensity = math.max(self.shakeIntensity - dt * 20, 0)
         end
         
-        local dist = math.sqrt((self.bandageX - self.woundX)^2 + (self.bandageY - self.woundY)^2)
-        if dist < 50 and self.shakeIntensity < 5 then
+        -- Check win condition
+        local dist = math.sqrt((self.boneX - self.ghostX)^2 + (self.boneY - self.ghostY)^2)
+        if dist < 30 and self.shakeIntensity < 5 then
             self:Win()
         end
     else
@@ -133,8 +160,10 @@ end
 
 function PANEL:Fail()
     self.isDragging = false
+    self.failures = self.failures + 1
     
-    net.Start("hg_bandage_minigame_fail")
+    -- Send pain to server
+    net.Start("hg_bandage_minigame_failure")
     if IsValid(self.targetPly) then
         net.WriteEntity(self.targetPly)
     else
@@ -142,48 +171,40 @@ function PANEL:Fail()
     end
     net.SendToServer()
     
-    -- Reset bandage position
-    self.bandageX = ScrW() * 0.2
-    self.bandageY = ScrH() * 0.5
+    -- Reset bone position slightly
+    self.boneX = self.boneX + math.random(-50, 50)
+    self.boneY = self.boneY + math.random(-50, 50)
 end
 
 function PANEL:Win()
-    self.success = true
     net.Start("hg_bandage_minigame_success")
     if IsValid(self.targetPly) then
         net.WriteEntity(self.targetPly)
     else
         net.WriteEntity(LocalPlayer())
     end
-    net.WriteBool(true) -- Success
+    net.WriteEntity(self.weapon)
+    net.WriteInt(self.limbType, 4)
+    net.WriteInt(self.failures, 16)
     net.SendToServer()
     
     self:Close()
 end
 
 function PANEL:Close()
-    if not self.success then
-        net.Start("hg_bandage_minigame_success")
-        if IsValid(self.targetPly) then
-            net.WriteEntity(self.targetPly)
-        else
-            net.WriteEntity(LocalPlayer())
-        end
-        net.WriteBool(false) -- Failure
-        net.SendToServer()
-    end
     self:Remove()
     gui.EnableScreenClicker(false)
 end
 
-vgui.Register("HG_BandageMinigame", PANEL, "DPanel")
+vgui.Register("hg_bandage_minigame", PANEL, "DFrame")
 
-function hg.StartBandageMinigame(targetPly)
-    if IsValid(HG_BANDAGE_PANEL) then HG_BANDAGE_PANEL:Remove() end
+function hg.StartDislocationMinigame(limbType, targetPly)
+    if IsValid(HG_DISLOCATION_PANEL) then HG_DISLOCATION_PANEL:Remove() end
     
-    HG_BANDAGE_PANEL = vgui.Create("HG_BandageMinigame")
+    HG_DISLOCATION_PANEL = vgui.Create("HG_DislocationMinigame")
+    HG_DISLOCATION_PANEL:SetLimbType(limbType)
     if targetPly then
-        HG_BANDAGE_PANEL:SetTarget(targetPly)
+        HG_DISLOCATION_PANEL:SetTarget(targetPly)
     end
     gui.EnableScreenClicker(true)
 end

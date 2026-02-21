@@ -1,7 +1,7 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_bandage_sh"
-SWEP.PrintName = "Needle"
-SWEP.Instructions = "Can be used for many things! including treating tension pneumothorax. LMB to use on yourself; RMB to use on someone else."
+SWEP.PrintName = "Decompression needle"
+SWEP.Instructions = "Needle decompression is used to treat tension pneumothorax. LMB to use on yourself; RMB to use on someone else."
 SWEP.Category = "ZCity Medicine"
 SWEP.Spawnable = true
 SWEP.Primary.Wait = 1
@@ -75,10 +75,6 @@ if SERVER then
 		//org.lungsR[2] = 0
 		//org.lungsL[2] = 0
 		org.needle = 1
-		org.bloodChoke = math.max(0, (org.bloodChoke or 0) - 0.75)
-		if org.trachea and org.trachea > 0 then
-			org.trachea = math.max(0, org.trachea - 0.75)
-		end
 
 		if !(org.lungsR[2] == 1 or org.lungsL[2] == 1) then
 			if math.random(2) == 1 then 

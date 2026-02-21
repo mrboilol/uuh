@@ -1,7 +1,4 @@
-if SERVER then 
-	AddCSLuaFile() 
-	util.AddNetworkString("start_bandage_minigame")
-end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_bandage_sh"
 SWEP.PrintName = "Medkit"
 SWEP.Instructions = "A small bag containing medical supplies. Has bandages, painkillers, tourniquets and internal bleeding medicine. A necessary thing in hiking, military conditions and just a necessary thing in everyday life. RMB to apply on others, R to change use mode."
@@ -37,6 +34,7 @@ SWEP.ofsV = Vector(-2,-10,8)
 SWEP.ofsA = Angle(90,-90,90)
 function SWEP:InitializeAdd()
 	self:SetHold(self.HoldType)
+
 	self.modeValues = {
 		[1] = 80,
 		[2] = 1,
@@ -73,28 +71,25 @@ function SWEP:Animation()
     self:BoneSet("l_forearm", vector_origin, lang2)
 end
 
-if SERVER then
-	function SWEP:Heal(ent, mode, bone)
-		if self.mode == 1 or self.mode == 4 then -- Bandage or Tourniquet
-			self:GetOwner().ActiveMinigameWeapon = self
-			self.minigame_ent = ent
-			self.minigame_mode = mode
-			self.minigame_bone = bone
-			net.Start("start_bandage_minigame")
-			net.WriteEntity(ent)
-			net.Send(self:GetOwner())
-		else
-			self:DoHeal(ent, mode, bone)
-		end
+function SWEP:OwnerChanged()
+	local owner = self:GetOwner()
+	if IsValid(owner) and owner:IsNPC() then
+		self:NPCHeal(owner, 0.6, "snd_jack_hmcd_bandage.wav")
 	end
+end
 
-	function SWEP:DoHeal(ent, mode, bone)
+if SERVER then
+	function SWEP:Heal(ent, mode)
+		if ent:IsNPC() then
+			self:NPCHeal(ent, 0.6, "snd_jack_hmcd_bandage.wav")
+		end
+
 		local org = ent.organism
 		if not org then return end
 
 		local owner = self:GetOwner()
 		local entOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
-		if mode == 2 then
+		if self.mode == 2 then
 			if self.modeValues[2] == 0 then return end
 			if ent ~= owner and not org.otrub then return end
 			//org.painkiller = math.min(org.painkiller + self.modeValues[2], 3)
@@ -102,7 +97,7 @@ if SERVER then
 			org.analgesiaAdd = math.min(org.analgesiaAdd + self.modeValues[2] * 0.3, 4)
 			self.modeValues[2] = 0
 			entOwner:EmitSound("snds_jack_gmod/ez_medical/15.wav", 60, math.random(95, 105))
-		elseif mode == 3 then
+		elseif self.mode == 3 then
 			if self.modeValues[3] == 0 then return end
 			/*local val = org.lungsL[1]
 			local healed = math.max(val - self.modeValues[3], 0)
@@ -126,11 +121,11 @@ if SERVER then
 				org.internalBleedHeal = org.internalBleedHeal + (internalBleed - healed)
 				entOwner:EmitSound("snds_jack_gmod/ez_medical/" .. math.random(16, 18) .. ".wav", 60, math.random(95, 105))
 			end
-		elseif mode == 1 then
+		elseif self.mode == 1 then
 			self:Bandage(ent, bone)
-		elseif mode == 4 then
+		elseif self.mode == 4 then
 			if self:Tourniquet(ent, bone) then self.modeValues[4] = 0 end
-		elseif mode == 5 then
+		elseif self.mode == 5 then
 			//if ((org.lungsL[2] + org.lungsR[2]) / 2 >= 0.5) and not org.needle then
 				if self.modeValues[5] == 0 then return end
 				if self.poisoned2 then

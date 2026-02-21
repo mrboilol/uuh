@@ -32,8 +32,6 @@ function PANEL:Init()
     self.boneWidth = 400
     self.boneHeight = 160
     
-    self.nextPainTime = 0
-    
     -- Randomize start state
     self.boneX = self.boneX + math.random(-200, 200)
     self.boneY = self.boneY + math.random(-100, 100)
@@ -130,26 +128,12 @@ function PANEL:Logic()
         if mouseSpeed > 150 then -- Threshold 150
             self.shakeIntensity = math.min(self.shakeIntensity + dt * 50, 20)
             
-            -- Chance to drop the bone
+            -- Chance to drop the bone or cause pain
             if self.shakeIntensity > 10 and math.random() < 0.05 then
                 self:Fail()
             end
         else
             self.shakeIntensity = math.max(self.shakeIntensity - dt * 20, 0)
-        end
-
-        -- Pain from movement
-        if CurTime() > self.nextPainTime and mouseSpeed > 50 then
-            local painAmount = math.Clamp(mouseSpeed / 1000, 0.01, 0.1)
-            net.Start("hg_dislocation_minigame_pain")
-            if IsValid(self.targetPly) then
-                net.WriteEntity(self.targetPly)
-            else
-                net.WriteEntity(LocalPlayer())
-            end
-            net.WriteFloat(painAmount)
-            net.SendToServer()
-            self.nextPainTime = CurTime() + 0.25
         end
         
         -- Check win condition
@@ -166,14 +150,13 @@ function PANEL:Fail()
     self.isDragging = false
     self.failures = self.failures + 1
     
-    -- Send pain to server (a larger amount for failure)
+    -- Send pain to server
     net.Start("hg_dislocation_minigame_pain")
     if IsValid(self.targetPly) then
         net.WriteEntity(self.targetPly)
     else
         net.WriteEntity(LocalPlayer())
     end
-    net.WriteFloat(0.2) -- Send a fixed, larger pain amount on failure
     net.SendToServer()
     
     -- Reset bone position slightly
