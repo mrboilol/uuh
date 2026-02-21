@@ -1368,6 +1368,7 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 	hg.AddHarmToAttacker(dmgInfo, (org.jaw - oldDmg) * 3, "Jaw bone damage harm")
 
 		if (org.jaw - oldDmg) > 0.7 then
+			print("DEBUG: Jaw disfigured.")
 			org.jaw_disfigured = true
 			org.jaw_permanently_damaged = true
 			applyJawPose(org.owner)
