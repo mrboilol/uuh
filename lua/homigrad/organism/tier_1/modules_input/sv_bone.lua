@@ -1207,6 +1207,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 end
 
 local function spinal_cord(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricochet)
+	print("DEBUG: spinal_cord function called for spinal_cord" .. number)
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 3 end
 
 	local name = "spinal_cord" .. number
@@ -1220,6 +1221,10 @@ local function spinal_cord(org, bone, dmg, dmgInfo, number, boneindex, dir, hit,
 	local result, vecrand = damageBone(org, 0.1, isCrush(dmgInfo) and dmg * 4 or dmg * 4, dmgInfo, name, boneindex, dir, hit, ricochet)
 	
 	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 10, "Spinal cord damage harm")
+
+	if oldDmg < 1 and org[name] >= 1 then
+		print("DEBUG: spinal_cord" .. number .. " severed.")
+	end
 	
 	if (name == "spinal_cord3" || name == "spinal_cord2") then
 		hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 16, "Broken spinal cord harm")
@@ -1261,7 +1266,7 @@ local jaw_dislocated_msg = {
 	"I CAN'T CLOSE MY JAW... IT FUCKING HURTS",
 	"MY JAW... ITS JUST STUCK THERE-- OH ITS PAINING",
 	"I CANT MOVE MY JAW AT ALL... AND ITS REALLY ACHING",
-	//"I CANT EVEN SPEAK, I NEED TO PUNCH IT BACK IN PLACE... BUT IT HURTS REAL BAD",
+	"I CANT EVEN SPEAK, I NEED TO PUNCH IT BACK IN PLACE... BUT IT HURTS REAL BAD",
 }
 
 local jaw_disfigured_msg = {
@@ -1805,12 +1810,17 @@ input_list.spinal_cord2 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit,
 input_list.spinal_cord3 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spinal_cord(org, bone, dmg, dmgInfo, 3, boneindex, dir, hit, ricochet) end
 
 local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricochet)
+	print("DEBUG: spine function called for spine" .. number)
 	local name = "spine" .. number
 	local oldDmg = org[name]
 
 	local result, vecrand = damageBone(org, 0.2, isCrush(dmgInfo) and dmg or dmg, dmgInfo, name, boneindex, dir, hit, ricochet)
 
 	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
+
+	if oldDmg < 1 and org[name] >= 1 then
+		print("DEBUG: spine" .. number .. " broken.")
+	end
 
 	if org[name] >= 1 and org.isPly then
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)

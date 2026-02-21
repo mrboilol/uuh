@@ -624,6 +624,49 @@ if SERVER then
 		return done
 	end
 
+	function SWEP:Tourniquet(ent, bone)
+		local org = ent.organism
+		if not org then return false end
+
+		if self.modeValues[1] >= 1 then
+			local bonename = ent:GetBoneName(bone)
+			local done = false
+
+			if bonename == "ValveBiped.Bip01_L_Clavicle" then
+				for i, wound in ipairs(org.arterialwounds) do
+					if wound[4] == "subclavian_artery_l" then
+						table.remove(org.arterialwounds, i)
+						org.subclavian_artery = 0
+						done = true
+						break
+					end
+				end
+			elseif bonename == "ValveBiped.Bip01_R_Clavicle" then
+				for i, wound in ipairs(org.arterialwounds) do
+					if wound[4] == "subclavian_artery_r" then
+						table.remove(org.arterialwounds, i)
+						org.subclavian_artery = 0
+						done = true
+						break
+					end
+				end
+			end
+
+			if not done then
+				if hg.organism.ApplyTourniquet(ent, bonename) then
+					done = true
+				end
+			end
+
+			if done then
+				self.modeValues[1] = self.modeValues[1] - 1
+				return true
+			end
+		end
+
+		return false
+	end
+
 	function SWEP:DoHeal(ent, mode, bone)
 		local org = ent.organism
 		if not org then return end
