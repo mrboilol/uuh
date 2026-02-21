@@ -286,8 +286,8 @@ local function applyJawPose(ent)
         local physObj = rag:GetPhysicsObjectNum(physBone)
         if not IsValid(physObj) then return end
 
-        local yaw = (math.random(2) == 1) and -10 or 10
-        local pitch = 18
+        local yaw = (math.random(2) == 1) and -25 or 25
+        local pitch = 35
         rag:ManipulateBoneAngles(targetBone, Angle(pitch, yaw, 0))
     end)
 end
@@ -923,17 +923,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			elseif org[limb_gruesome] then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg_gruesome[math.random(#broke_leg_gruesome)], 3, colred) end
 			else
-				if current_breaks < max_breaks then
-					org[break_key] = current_breaks + 1
-					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg[math.random(#broke_leg)], 3, colred) end
-				
-					if org[break_key] == max_breaks then
-						org[limb_gruesome] = true
-						if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg_gruesome[math.random(#broke_leg_gruesome)], 3, colred) end
-					end
-				else
-					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg[math.random(#broke_leg)], 3, colred) end
-				end
+                if hg.CreateNotification then hg.CreateNotification(org.owner, broke_leg[math.random(#broke_leg)], 3, colred) end
 			end
 		end
 		
@@ -1106,17 +1096,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			elseif org[limb_gruesome] then
 				if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm_gruesome[math.random(#broke_arm_gruesome)], 3, colred) end
 			else
-				if current_breaks < max_breaks then
-					org[break_key] = current_breaks + 1
-					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm[math.random(#broke_arm)], 3, colred) end
-				
-					if org[break_key] == max_breaks then
-						org[limb_gruesome] = true
-						if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm_gruesome[math.random(#broke_arm_gruesome)], 3, colred) end
-					end
-				else
-					if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm[math.random(#broke_arm)], 3, colred) end
-				end
+                if hg.CreateNotification then hg.CreateNotification(org.owner, broke_arm[math.random(#broke_arm)], 3, colred) end
 			end
 		end
 
@@ -1226,30 +1206,34 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 	return result, vecrand
 end
 
-local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricochet)
+local function spinal_cord(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricochet)
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 3 end
 
-	local name = "spine" .. number
-	local name2 = "fake_spine" .. number
-	if org[name] >= hg.organism[name2] then return 0 end
+	local name = "spinal_cord" .. number
+	local spine_name = "spine" .. number
+
+	if org[spine_name] < 1 then return 0 end -- Can't damage spinal cord if spine isn't broken
+
+	local name2 = "fake_spinal_cord" .. number
 	local oldDmg = org[name]
 
-	local result, vecrand = damageBone(org, 0.1, isCrush(dmgInfo) and dmg * 2 or dmg * 2, dmgInfo, name, boneindex, dir, hit, ricochet)
+	local result, vecrand = damageBone(org, 0.1, isCrush(dmgInfo) and dmg * 4 or dmg * 4, dmgInfo, name, boneindex, dir, hit, ricochet)
 	
-	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
+	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 10, "Spinal cord damage harm")
 	
-	if (name == "spine3" || name == "spine2") then
-		hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 8, "Broken spine harm")
+	if (name == "spinal_cord3" || name == "spinal_cord2") then
+		hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 16, "Broken spinal cord harm")
 	end
 
 	if org[name] >= hg.organism[name2] and org.isPly then
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
-		if name == "spine3" then
-			applyNeckFloppyEffect(org.owner)
-		end
-		if name == "spine1" or name == "spine2" then
-			applySpineFloppyEffect(org.owner)
-		end
+		-- if name == "spine3" then
+					-- 	applyNeckFloppyEffect(org.owner)
+					-- end
+					-- if name == "spine1" or name == "spine2" then
+					-- 	applySpineFloppyEffect(org.owner)
+					-- end
+		if hg.CreateNotification then hg.CreateNotification(org.owner, "My spinal cord has been severed!", true, name, 5) end
 		if org.owner:IsPlayer() then
 			org.owner:Notify(huyasd[name], true, name, 2)
 		end
@@ -1383,9 +1367,11 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 
 	hg.AddHarmToAttacker(dmgInfo, (org.jaw - oldDmg) * 3, "Jaw bone damage harm")
 
-	if org.jaw == 1 and (org.jaw - oldDmg) > 0 and org.isPly then
 		if (org.jaw - oldDmg) > 0.7 then
-			org.jawdisfigured = true
+			org.jaw_disfigured = true
+			org.jaw_permanently_damaged = true
+			applyJawPose(org.owner)
+			if hg.CreateNotification then hg.CreateNotification(org.owner, "My jaw... it's completely shattered!", true, "jaw_disfigured", 5) end
 			if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_disfigured_msg[math.random(#jaw_disfigured_msg)], true, "jaw", 2) end
 		else
 			if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end
@@ -1810,3 +1796,62 @@ input_list.llegdown = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ric
 input_list.spine1 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spine(org, bone, dmg, dmgInfo, 1, boneindex, dir, hit, ricochet) end
 input_list.spine2 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spine(org, bone, dmg, dmgInfo, 2, boneindex, dir, hit, ricochet) end
 input_list.spine3 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spine(org, bone, dmg, dmgInfo, 3, boneindex, dir, hit, ricochet) end
+
+input_list.spinal_cord1 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spinal_cord(org, bone, dmg, dmgInfo, 1, boneindex, dir, hit, ricochet) end
+input_list.spinal_cord2 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spinal_cord(org, bone, dmg, dmgInfo, 2, boneindex, dir, hit, ricochet) end
+input_list.spinal_cord3 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spinal_cord(org, bone, dmg, dmgInfo, 3, boneindex, dir, hit, ricochet) end
+
+local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricochet)
+	local name = "spine" .. number
+	local oldDmg = org[name]
+
+	local result, vecrand = damageBone(org, 0.2, isCrush(dmgInfo) and dmg or dmg, dmgInfo, name, boneindex, dir, hit, ricochet)
+
+	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
+
+	if org[name] >= 1 and org.isPly then
+		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+		if name == "spine3" then
+			applyNeckFloppyEffect(org.owner)
+		end
+		if name == "spine1" or name == "spine2" then
+			applySpineFloppyEffect(org.owner)
+		end
+		local broke_spine = {
+						"I felt a crack in my spine!",
+						"My back is in shambles!",
+						"I think my spine just snapped!",
+						"A sharp pain shoots up my back!",
+					}
+					local random_message = broke_spine[math.random(#broke_spine)]
+					if hg.CreateNotification then hg.CreateNotification(org.owner, random_message, true, name, 3) end
+					if org.owner:IsPlayer() then
+						org.owner:Notify(random_message, true, name, 2)
+					end
+					local spinal_cord_name = "spinal_cord" .. number
+					if org[spinal_cord_name] < 1 then
+						if name == "spine1" then
+							org.painadd = org.painadd + 5
+						elseif name == "spine2" then
+							org.painadd = org.painadd + 5
+						elseif name == "spine3" then
+							org.painadd = org.painadd + 8
+						end
+					end
+
+					if math.random(1, 100) <= 15 then
+						local dislocation_key = name .. "_dislocations"
+						org[dislocation_key] = (org[dislocation_key] or 0) + 1
+						org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO)
+						if hg.CreateNotification then hg.CreateNotification(org.owner, "My spine has been dislocated!", true, name, 3) end
+						if name == "spine3" then
+							applyNeckFloppyEffect(org.owner)
+						else
+							applySpineFloppyEffect(org.owner)
+						end
+						return
+					end
+				end
+
+	return result, vecrand
+end

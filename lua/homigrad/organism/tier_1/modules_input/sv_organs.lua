@@ -245,6 +245,8 @@ local arterySize = {
 	["rlegartery"] = 9,
 	["llegartery"] = 9,
 	["spineartery"] = 10,
+	["subclavian_artery_l"] = 7,
+	["subclavian_artery_r"] = 7,
 }
 
 local arteryMessages ={
@@ -292,6 +294,9 @@ input_list.larmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) r
 input_list.rlegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("rlegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.llegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("llegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.subclavian_artery_l = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("subclavian_artery_l", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.subclavian_artery_r = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("subclavian_artery_r", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.aorta = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("aorta", org, dmg, dmgInfo, "ValveBiped.Bip01_Spine2", dir, hit) end
 input_list.lungsL = function(org, bone, dmg, dmgInfo)
 	if not org or not org.lungsL then return 0 end
 	local prot = math.max(0.3 - org.lungsL[1],0)

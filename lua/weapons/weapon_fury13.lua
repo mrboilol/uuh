@@ -167,6 +167,23 @@ if SERVER then
 
 		if ent.PlayerClassName and ent.PlayerClassName != "furry" then
 			org.berserk = org.berserk + 2
+			
+			-- Heal spine and subclavian artery
+			if org.spine1 > 0 then
+				org.spine1 = math.max(org.spine1 - 0.1, 0)
+			end
+			if org.spine2 > 0 then
+				org.spine2 = math.max(org.spine2 - 0.1, 0)
+			end
+			if org.spine3 > 0 then
+				org.spine3 = math.max(org.spine3 - 0.1, 0)
+			end
+			if org.subclavian_artery_l > 0 then
+				org.subclavian_artery_l = math.max(org.subclavian_artery_l - 0.1, 0)
+			end
+			if org.subclavian_artery_r > 0 then
+				org.subclavian_artery_r = math.max(org.subclavian_artery_r - 0.1, 0)
+			end
 		else
 			org.o2["curregen"] = 0
 			org.o2["regen"] = 0

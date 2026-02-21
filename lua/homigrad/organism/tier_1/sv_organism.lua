@@ -38,6 +38,9 @@ hook.Add("Org Clear", "Main", function(org)
 	org.eyeR = 0
 	org.nose = 0
 	org.trachea = 0
+	org.aorta = 0
+	org.subclavian_artery_l = 0
+	org.subclavian_artery_r = 0
 
 	org.thiamine = 0
 
@@ -634,8 +637,10 @@ end)
 		if org.eyeR < 1 then org.eyeR = math.Approach(org.eyeR, 0, naturalHeal) end
 		if org.nose < 1 then org.nose = math.Approach(org.nose, 0, naturalHeal) end
 
+
 		-- Heal bone damage
 		local boneHeal = naturalHeal / 2
+		local spineHeal = naturalHeal / 8 -- Spines heal 4x slower than other bones
 		if org.lleg > (org.lleg_perm_dmg or 0) then org.lleg = math.Approach(org.lleg, org.lleg_perm_dmg or 0, boneHeal) end
 		if org.rleg > (org.rleg_perm_dmg or 0) then org.rleg = math.Approach(org.rleg, org.rleg_perm_dmg or 0, boneHeal) end
 		if org.larm > (org.larm_perm_dmg or 0) then org.larm = math.Approach(org.larm, org.larm_perm_dmg or 0, boneHeal) end
@@ -643,7 +648,7 @@ end)
 		if org.jaw > (org.jaw_perm_dmg or 0) then org.jaw = math.Approach(org.jaw, (org.jaw_perm_dmg or 0), boneHeal) end
 		if org.spine1 > 0 then
 			local old_val = org.spine1
-			org.spine1 = math.Approach(org.spine1, 0, boneHeal)
+			org.spine1 = math.Approach(org.spine1, 0, spineHeal)
 			if old_val > 0 and org.spine1 == 0 then
 				local rag = hg.GetCurrentCharacter(org.owner)
 				if IsValid(rag) then
@@ -653,7 +658,7 @@ end)
 		end
 		if org.spine2 > 0 then
 			local old_val = org.spine2
-			org.spine2 = math.Approach(org.spine2, 0, boneHeal)
+			org.spine2 = math.Approach(org.spine2, 0, spineHeal)
 			if old_val > 0 and org.spine2 == 0 then
 				local rag = hg.GetCurrentCharacter(org.owner)
 				if IsValid(rag) then
@@ -663,7 +668,7 @@ end)
 		end
 		if org.spine3 > 0 then
 			local old_val = org.spine3
-			org.spine3 = math.Approach(org.spine3, 0, boneHeal)
+			org.spine3 = math.Approach(org.spine3, 0, spineHeal)
 			if old_val > 0 and org.spine3 == 0 then
 				local rag = hg.GetCurrentCharacter(org.owner)
 				if IsValid(rag) then
@@ -1032,6 +1037,42 @@ local function fixlimb(org, key, fixer)
 		org.jaw_perm_dmg = 0.1
 		return
 	end
+
+    if string.sub(key, 1, 5) == "spine" then
+        if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
+            org[key.."_dislocations"] = math.max(0, (org[key.."_dislocations"] or 0) - 1)
+            org.painadd = org.painadd + 90
+            org.fearadd = org.fearadd + 0.2
+
+            org.owner:EmitSound("physics/body/body_medium_impact_hard"..math.random(1,4)..".wav", 75, 100, 1, CHAN_VOICE)
+
+            if fixer == org.owner and (fixer.tries or 0) > 3 and math.random(3) == 1 then
+                fixer:Notify(finally_fixed[math.random(#finally_fixed)], 1, "dislocations_unlucky", 1, nil, Color(255, 255, 255, 255))
+            end
+
+            fixer.tries = 0
+        else
+            fixer.tries = (fixer.tries or 0) + 1
+            org.painadd = org.painadd + 180
+
+            org.fearadd = org.fearadd + 0.4
+
+            org.owner:EmitSound("physics/body/body_medium_impact_soft"..math.random(7)..".wav", 65)
+            
+            if fixer.Profession != "doctor" and math.random(5) == 1 then
+                local dmgInfo = DamageInfo()
+                dmgInfo:SetDamage(50)
+                dmgInfo:SetDamageType(DMG_CLUB)
+                hg.organism.input_list[key.."down"](org.owner.organism, 1, 6, dmgInfo, 0, vector_up)
+            end
+
+            if fixer == org.owner and fixer.tries > 3 and math.random(3) == 1 then
+                fixer:Notify(unlucky_dislocations[math.random(#unlucky_dislocations)], 1, "dislocations_unlucky", 1, nil, Color(255, 255, 255, 255))
+            end
+        end
+        return
+    end
+
 	if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
 		org[key.."dislocation"] = false
 		org.painadd = org.painadd + 5 * math.random(1, 3)
@@ -1097,6 +1138,14 @@ concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	elseif math.Round(tonumber(args[1])) == 3 then
 		if org.jawdislocation then
 			fixlimb(org, "jaw", fixer)
+		end
+	elseif math.Round(tonumber(args[1])) == 4 then
+		if org.spine1_dislocations and org.spine1_dislocations > 0 then
+			fixlimb(org, "spine1", fixer)
+		elseif org.spine2_dislocations and org.spine2_dislocations > 0 then
+			fixlimb(org, "spine2", fixer)
+		elseif org.spine3_dislocations and org.spine3_dislocations > 0 then
+			fixlimb(org, "spine3", fixer)
 		end
 	end
 end)

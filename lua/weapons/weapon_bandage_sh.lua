@@ -397,6 +397,38 @@ end
 
 if SERVER then
 	util.AddNetworkString("select_mode")
+
+	util.AddNetworkString("hg_bandage_heal_part")
+	net.Receive("hg_bandage_heal_part", function(len, ply)
+		local target = net.ReadEntity()
+		local part_name = net.ReadString()
+		local wep = ply:GetActiveWeapon()
+
+		if not IsValid(wep) or wep:GetClass() ~= "weapon_bandage_sh" then return end
+		if not IsValid(target) or not target:IsPlayer() then return end
+
+		local org = target.organism
+		if not org then return end
+
+		local amt = 5 -- amount of bandage to use
+		if wep.modeValues[1] < amt then return end
+
+		local done = false
+		if part_name == "spine1" and org.spine1 == 1 then
+			org.spine1 = org.spine1 - 0.05
+			done = true
+		elseif part_name == "spine2" and org.spine2 == 1 then
+			org.spine2 = org.spine2 - 0.05
+			done = true
+		elseif part_name == "spine3" and org.spine3 == 1 then
+			org.spine3 = org.spine3 - 0.05
+			done = true
+		end
+		if done then
+			wep.modeValues[1] = wep.modeValues[1] - amt
+			wep:SetNetVar("modeValues", wep.modeValues)
+		end
+	end)
 else
 	net.Receive("select_mode",function()
 		net.ReadEntity().mode = net.ReadInt(4)
@@ -431,7 +463,7 @@ if SERVER then
 		if not org then return end
 		
 		-- Если растрелять труп а потом его взорвать гранатой, после перевязать - крашнет сервер why?
-		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1) then return end
+		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1 or org.spine1 == 1 or org.spine2 == 1 or org.spine3 == 1) then return end
 		table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
 		
 		local done = false
@@ -528,6 +560,28 @@ if SERVER then
 			self.modeValues[1] = self.modeValues[1] - amt
 			org.avgpain = math.max(org.avgpain - 7, 0)
 			done = true
+		end
+
+		if org.spine1 == 1 and self.modeValues[1] >= amt then
+			org.spine1 = org.spine1 - 0.05
+			self.modeValues[1] = self.modeValues[1] - amt
+			org.avgpain = math.max(org.avgpain - 7, 0)
+			done = true
+		end
+
+		if org.spine2 == 1 and self.modeValues[1] >= amt then
+			org.spine2 = org.spine2 - 0.05
+			self.modeValues[1] = self.modeValues[1] - amt
+			org.avgpain = math.max(org.avgpain - 7, 0)
+			done = true
+		end
+
+		if org.spine3 == 1 and self.modeValues[1] >= amt then
+			org.spine3 = org.spine3 - 0.05
+			self.modeValues[1] = self.modeValues[1] - amt
+			org.avgpain = math.max(org.avgpain - 7, 0)
+			done = true
+		end
 		end
 
 		if org.lleg == 1 and self.modeValues[1] >= amt and !org.llegamputated then
