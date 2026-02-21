@@ -111,7 +111,7 @@ end
 function hg.organism.AddAttackAdrenaline(org, damage)
 	if not org then return end
 	
-	local gain = math.min(damage, 50) * 0.01 
+	local gain = math.min(damage, 50) * 0.001 
 	
 	local naturalGain = gain * 0.8
 	org.adrenaline = math.min(org.adrenaline + naturalGain, 5)

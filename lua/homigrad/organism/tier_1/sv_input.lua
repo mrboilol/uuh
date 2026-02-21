@@ -489,7 +489,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	if IsValid(attacker) and attacker:IsPlayer() and attacker.organism and ent ~= attacker then
 		if not attacker.organism.betaBlock or CurTime() > attacker.organism.betaBlock then
 			local dmgType = dmgInfo:GetDamageType()
-			if bit.band(dmgType, DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH + DMG_CLUB) ~= 0 then
+			if bit.band(dmgType, DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH + DMG_CLUB) ~= 0 and (ent:IsPlayer() or ent:IsNPC()) then
 				local dmg = dmgInfo:GetDamage()
 				hg.organism.AddAttackAdrenaline(attacker.organism, dmg)
 			end

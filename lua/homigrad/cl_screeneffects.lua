@@ -561,11 +561,13 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	local brain = org.brain or 0
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
 
-	if o2 > 20 then
+	if o2 < 20 then
+		local painVolume = math.Clamp(PainLerp / 100, 0.1, 1)
 		local scav_sound = GetConVar("hg_scavsound"):GetInt()
 		
 		local play_conscious = false
 		local play_despair = false
+		local despair_sound_path = "sound/itswraps/despair.ogg"
 
 		if scav_sound == 0 then -- normal
 			if not LowO2SoundChoice then
@@ -573,46 +575,95 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			end
 			if LowO2SoundChoice == "conscious" then play_conscious = true end
 			if LowO2SoundChoice == "despair" then play_despair = true end
-		elseif scav_sound == 1 then -- despair only
+		elseif scav_sound == 1 then -- despair or itswraps
 			play_despair = true
-		elseif scav_sound == 2 then -- both
+			if not DespairSoundChoice then
+				DespairSoundChoice = math.random(2) == 1 and "sound/itswraps/despair.ogg" or "sound/itfuckinghurts.mp3"
+			end
+			despair_sound_path = DespairSoundChoice
+		elseif scav_sound == 2 then -- conscious as background, with despair/itswraps
 			play_conscious = true
 			play_despair = true
+			if not DespairSoundChoice then
+				DespairSoundChoice = math.random(2) == 1 and "sound/itswraps/despair.ogg" or "sound/itfuckinghurts.mp3"
+			end
+			despair_sound_path = DespairSoundChoice
 		end
 
 		if play_conscious then
 			if !IsValid(NoiseStation) then
 				sound.PlayFile("sound/conscioustypebeat.ogg", "noblock noplay", function(station)
 					if IsValid(station) then
-						station:SetVolume(0.5)
+						station:SetVolume(Lerp(FrameTime() * 2, 0, 0.5 * painVolume))
 						station:Play()
 						NoiseStation = station
 						station:EnableLooping(true)
 					end
 				end)
+			else
+				local targetVol = 0.5 * painVolume
+				if scav_sound == 2 then targetVol = 0.3 * painVolume end -- Lower volume for background
+				NoiseStation:SetVolume(Lerp(FrameTime() * 2, NoiseStation:GetVolume(), targetVol))
 			end
 		else
-			if IsValid(NoiseStation) then NoiseStation:Stop(); NoiseStation = nil; end
+			if IsValid(NoiseStation) then
+				local vol = NoiseStation:GetVolume()
+				if vol < 0.05 then
+					NoiseStation:Stop()
+					NoiseStation = nil
+				else
+					NoiseStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
+				end
+			end
 		end
 
 		if play_despair then
 			if !IsValid(DespairStation) then
-				sound.PlayFile("sound/itswraps/despair.ogg", "noblock noplay", function(station)
+				sound.PlayFile(despair_sound_path, "noblock noplay", function(station)
 					if IsValid(station) then
-						station:SetVolume(0.5)
+						station:SetVolume(Lerp(FrameTime() * 2, 0, 0.5 * painVolume))
 						station:Play()
 						DespairStation = station
 						station:EnableLooping(true)
 					end
 				end)
+			else
+				DespairStation:SetVolume(Lerp(FrameTime() * 2, DespairStation:GetVolume(), 0.5 * painVolume))
 			end
 		else
-			if IsValid(DespairStation) then DespairStation:Stop(); DespairStation = nil; end
+			if IsValid(DespairStation) then
+				local vol = DespairStation:GetVolume()
+				if vol < 0.05 then
+					DespairStation:Stop()
+					DespairStation = nil
+					DespairSoundChoice = nil -- Reset choice when sound stops
+				else
+					DespairStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
+				end
+			end
 		end
 	else
 		LowO2SoundChoice = nil
-		if IsValid(NoiseStation) then NoiseStation:Stop(); NoiseStation = nil; end
-		if IsValid(DespairStation) then DespairStation:Stop(); DespairStation = nil; end
+		DespairSoundChoice = nil
+		if IsValid(NoiseStation) then
+			local vol = NoiseStation:GetVolume()
+			if vol < 0.05 then
+				NoiseStation:Stop()
+				NoiseStation = nil
+			else
+				NoiseStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
+			end
+		end
+		if IsValid(DespairStation) then
+			local vol = DespairStation:GetVolume()
+			if vol < 0.05 then
+				DespairStation:Stop()
+				DespairStation = nil
+				DespairSoundChoice = nil -- Reset choice when sound stops
+			else
+				DespairStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
+			end
+		end
 	end
 
 	tempLerp = LerpFT(0.01, tempLerp, org.temperature)
