@@ -1,10 +1,4 @@
 if SERVER then AddCSLuaFile() end
-
-local function healSpine(org, spineName)
-    if org[spineName] > 0 then
-        org[spineName] = math.max(org[spineName] - 0.05, 0)
-    end
-end
 SWEP.Base = "weapon_base"
 SWEP.PrintName = "Bandage"
 SWEP.Instructions = "A wad of gauze bandage, can help stop light bleeding. Since the bandage is not in its packaging, there is little chance that it is sterilized. RMB to use on someone else."
@@ -101,7 +95,12 @@ function SWEP:DrawWorldModel2(nodraw)
 	end
 end
 
+function SWEP:OnDrop()
+	if CLIENT and self.StopMinigame then self:StopMinigame() end
+end
+
 function SWEP:OnRemove()
+	if CLIENT and self.StopMinigame then self:StopMinigame() end
 	if SERVER then return end
 end
 
@@ -139,54 +138,24 @@ SWEP.usetime = 2
 local math = math
 function SWEP:Think()
 	self:SetHold(self.HoldType)
+	-- Include holding cooldown from minigame version if desired:
+	-- self:SetHolding(math.max(self:GetHolding() - 4,0))
 
 	if self:GetClass() == "weapon_bandage_sh" then
 		self.ModelScale = math.Clamp(self.modeValues[1] / (self.modeValuesdef[1][1] * 0.8), 0.5, 1)
 	end
-
-	--[[if self.modeValuesdef[self.mode][2] then
-		local time = CurTime()
-		local ply = self:GetOwner()
-		local entownr = hg.GetCurrentCharacter(ply)
-
-		if not self.attack and ply:KeyPressed(IN_ATTACK) then
-			self.startedheal = CurTime()
-			self.healsubject = ply
-			self.attack = 1
-		end
-
-		if self.attack == 1 and ply:KeyReleased(IN_ATTACK) then
-			self.endheal = CurTime()
-		end
-
-		if not self.attack and ply:KeyPressed(IN_ATTACK2) then
-			self.startedheal = CurTime()
-			self.healsubject = hg.eyeTrace(self:GetOwner()).Entity
-			self.attack = 2
-		end
-
-		if self.attack == 2 and ply:KeyReleased(IN_ATTACK2) then
-			self.endheal = CurTime()
-		end
-
-		if self.startheal and (self.endheal or (self.startheal + self.usetime <= CurTime())) then
-			self.endheal = self.endheal or self.startheal + self.usetime
-			local usedmuch = (self.endheal - self.startheal) / self.usetime
-
-			self:Heal(self.healsubject, self.mode, usedmuch)
-			self.startheal = nil 
-			self.endheal = nil 
-			self.attack = nil 
-			self.healsubject = nil
-		end
-	end--]]
 end
+
 SWEP.net_cooldown2 = 0
 function SWEP:PrimaryAttack()
-	//self:SetHolding(math.min(self:GetHolding() + 9, 100))
-	if SERVER then--and not self.modeValuesdef[self.mode][2] then
-		//if self:GetHolding() < 100 then return end
+	if self.UseMinigame then
+		if CLIENT and IsFirstTimePredicted() then
+			self:StartMinigame(1)
+		end
+		return
+	end
 
+	if SERVER then
 		self.healbuddy = self:GetOwner()
 		local done = self:Heal(self.healbuddy, self.mode)
 		
@@ -196,14 +165,13 @@ function SWEP:PrimaryAttack()
 
 		if self.net_cooldown2 < CurTime() then
 			self:SetNetVar("modeValues",self.modeValues)
-			--self.net_cooldown2 = CurTime() + 0.1
 		end
 	end
 end
 
 if CLIENT then
 	surface.CreateFont("huyhuy", {
-		font = "CloseCaption_Normal", --  Use the font-name which is shown to you by your operating system Font Viewer, not the file name
+		font = "CloseCaption_Normal",
 		extended = true,
 		size = ScreenScale(15),
 		weight = 500,
@@ -215,7 +183,6 @@ if CLIENT then
 		outline = false,
 	})
 	
-
 	local colWhite = Color(255, 255, 255, 255)
 	local colGray = Color(200, 200, 200, 200)
 	local lerpthing = 1
@@ -224,16 +191,20 @@ if CLIENT then
 	SWEP.ofsV = Vector(10,-2,1)
 	SWEP.ofsA = Angle(-90,-40,270)
 	local vector_one = Vector(1,1,1)
+	
 	function SWEP:DrawHUD()
 		local owner = self:GetOwner()
 		if !owner:IsPlayer() then return end
 		if GetViewEntity() ~= owner then return end
 		if owner:InVehicle() then return end
 		if not IsValid(modelshuy[self.Model or self.WorldModel]) then return end
+		
 		local Tr = hg.eyeTrace(owner)
 		if !Tr then return end
+		
 		local Size = math.max(math.min(1 - Tr.Fraction, 0.5), 0.1)
 		local x, y = Tr.HitPos:ToScreen().x, Tr.HitPos:ToScreen().y
+		
 		if Tr.Hit then
 			lerpthing = Lerp(0.1, lerpthing, 1)
 			colWhite.a = 255 * Size
@@ -249,47 +220,50 @@ if CLIENT then
 			draw.DrawText(Tr.Entity:IsPlayer() and Tr.Entity:GetPlayerName() or Tr.Entity:IsRagdoll() and Tr.Entity:GetPlayerName() or "", "HomigradFontLarge", x + 1, y + 31, coloutline, TEXT_ALIGN_CENTER)
 			draw.DrawText(Tr.Entity:IsPlayer() and Tr.Entity:GetPlayerName() or Tr.Entity:IsRagdoll() and Tr.Entity:GetPlayerName() or "", "HomigradFontLarge", x, y + 30, col, TEXT_ALIGN_CENTER)
 		end
+		
 		local mdl = modelshuy[self.Model or self.WorldModel]
 		self:DrawWorldModel2(true)
 		local p,a = mdl:GetPos(), mdl:GetAngles()
 		local pos,ang = LocalToWorld(self.ofsV,self.ofsA,p,a)
+		
 		if self.showstats and self.modeValues and istable(self.modeValues) then
-			//cam.Start3D()
-				//cam.Start3D2D(pos,ang,0.01)
-				render.PushFilterMag( TEXFILTER.LINEAR )
-				render.PushFilterMin( TEXFILTER.LINEAR )
-				local m = Matrix()
-				m:Translate( Vector(  ScrW() / 2-ScreenScale(60), ScrH() / 2 + ScreenScaleH(125), 0 ) )
-				m:Scale( vector_one * 0.5 )
+			render.PushFilterMag( TEXFILTER.LINEAR )
+			render.PushFilterMin( TEXFILTER.LINEAR )
+			local m = Matrix()
+			m:Translate( Vector(  ScrW() / 2-ScreenScale(60), ScrH() / 2 + ScreenScaleH(125), 0 ) )
+			m:Scale( vector_one * 0.5 )
 
-				cam.PushModelMatrix( m, true )
-					for i, val in ipairs(self.modeValues) do
-						if not isnumber(i) or not val or not self.modeValuesdef or not self.modeValuesdef[i][1] then continue end
-						local val = math.Round(val / self.modeValuesdef[i][1] * 100)
-						local x,y = 0, i * ScrH() / 20
-						local reveal = 1//math.Clamp(lply:EyeAngles()[1] / 90 - 0.25, 0, 1) * 4 / 3
-						colBrown.a = reveal * 185
-						draw.RoundedBox(2,x,y,x + ScreenScale(210) + ScrW() / 10,ScrH() / 25 + (#self.modeValues > 0 and 0 or 0),colBrown)
-						surface.SetFont("ZCity_Small")
-						surface.SetTextPos(x,y)
-						surface.SetTextColor(255,255,255,255 * reveal)
-						local txt = string.NiceName(tostring(self.modeNames[i]))
-						local w, h = surface.GetTextSize(txt)
-						--surface.DrawText(tostring(self.modeNames[i]))
-						colBrown.a = reveal * 255
-						draw.SimpleTextOutlined(txt, "ZCity_Small", x, y, Color(255,i == self.mode and 0 or 255,i == self.mode and 0 or 255, 255 * reveal), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1.5, colBrown)
-					
-						surface.SetDrawColor(0,100,0,255 * reveal)
-						surface.DrawRect(x + ScreenScale(210),y,ScrW() / 10 * val / 100,ScrH() / 25)
-						surface.SetDrawColor(0,0,0,255 * reveal)
-						surface.DrawOutlinedRect(x + ScreenScale(210),y,ScrW() / 10,ScrH() / 25, 4)
-					end
-				cam.PopModelMatrix()
+			cam.PushModelMatrix( m, true )
+				for i, val in ipairs(self.modeValues) do
+					if not isnumber(i) or not val or not self.modeValuesdef or not self.modeValuesdef[i][1] then continue end
+					local val = math.Round(val / self.modeValuesdef[i][1] * 100)
+					local x,y = 0, i * ScrH() / 20
+					local reveal = 1
+					colBrown.a = reveal * 185
+					draw.RoundedBox(2,x,y,x + ScreenScale(210) + ScrW() / 10,ScrH() / 25 + (#self.modeValues > 0 and 0 or 0),colBrown)
+					surface.SetFont("ZCity_Small")
+					surface.SetTextPos(x,y)
+					surface.SetTextColor(255,255,255,255 * reveal)
+					local txt = string.NiceName(tostring(self.modeNames[i]))
+					colBrown.a = reveal * 255
+					draw.SimpleTextOutlined(txt, "ZCity_Small", x, y, Color(255,i == self.mode and 0 or 255,i == self.mode and 0 or 255, 255 * reveal), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP, 1.5, colBrown)
+				
+					surface.SetDrawColor(0,100,0,255 * reveal)
+					surface.DrawRect(x + ScreenScale(210),y,ScrW() / 10 * val / 100,ScrH() / 25)
+					surface.SetDrawColor(0,0,0,255 * reveal)
+					surface.DrawOutlinedRect(x + ScreenScale(210),y,ScrW() / 10,ScrH() / 25, 4)
+				end
+			cam.PopModelMatrix()
 
-				render.PopFilterMag()
-				render.PopFilterMin()
-				//cam.End3D2D()
-			//cam.End3D()
+			render.PopFilterMag()
+			render.PopFilterMin()
+		end
+
+		if self.UseMinigame then
+			self:MinigameThink()
+			if self.MinigameActive then
+				self:DrawMinigame()
+			end
 		end
 	end
 end
@@ -313,6 +287,10 @@ if CLIENT then
 end
 
 function SWEP:Initialize()
+	if self:GetClass() == "weapon_bandage_sh" then
+		self.UseMinigame = true
+	end
+
 	self:SetHold(self.HoldType)
 
 	self.modeValues = {
@@ -358,7 +336,13 @@ function SWEP:SetInfo(info)
 end
 
 function SWEP:SecondaryAttack()
-	--self:SetHolding(math.min(self:GetHolding() + 9, 100))
+	if self.UseMinigame then
+		if CLIENT and IsFirstTimePredicted() then
+			self:StartMinigame(2)
+		end
+		return
+	end
+
 	if SERVER then
 		if IsValid(self:GetNWEntity("fakeGun")) then return end
 		local ent = hg.eyeTrace(self:GetOwner()).Entity
@@ -372,13 +356,13 @@ function SWEP:SecondaryAttack()
 
 		if self.net_cooldown2 < CurTime() then
 			self:SetNetVar("modeValues",self.modeValues)
-			--self.net_cooldown2 = CurTime() + 0.1 * game.GetTimeScale()
 		end
 	end
 end
 
 if SERVER then
 	util.AddNetworkString("select_mode")
+	util.AddNetworkString("BandageMinigameComplete")
 else
 	net.Receive("select_mode",function()
 		net.ReadEntity().mode = net.ReadInt(4)
@@ -388,23 +372,22 @@ end
 function SWEP:Reload()
 	if SERVER and self:GetOwner():KeyPressed(IN_RELOAD) and #self.modeValuesdef > 1 then
 		self.mode = ((self.mode + 1) > self.modes) and 1 or (self.mode + 1)
-		--self:GetOwner():ChatPrint("You have chosen the " .. self.modeNames[self.mode] .. " mode")
 		net.Start("select_mode")
 		net.WriteEntity(self)
 		net.WriteInt(self.mode,4)
 		net.Broadcast()
 	end
 end
+
 if CLIENT then
 	hook.Add("OnNetVarSet","bandage-net-var",function(index,key,var)
 		if key == "modeValues" then
 			local ent = Entity(index)
-
 			ent.modeValues = var
 		end
 	end)
 end
--- WoundTBL = {dmgBlood / 2, localPos, localAng, bone, time}
+
 SWEP.ShouldDeleteOnFullUse = true
 if SERVER then
 	function SWEP:Bandage(ent, bone)
@@ -412,7 +395,6 @@ if SERVER then
 		local owner = self:GetOwner()
 		if not org then return end
 		
-		-- Если растрелять труп а потом его взорвать гранатой, после перевязать - крашнет сервер why?
 		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1) then return end
 		table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
 		
@@ -420,12 +402,11 @@ if SERVER then
 		local bandaged = false
 		
 		if not bone then
-			--print(#org.wounds)
 			for i = 1, #org.wounds do
 				if self.modeValues[1] > 0 and #org.wounds > 0 then
 					local biggestWound = org.wounds[1][1]
 					local healedWound = math.max(biggestWound - self.modeValues[1], 0)
-					local woundHeal = self.modeValues[1] - (biggestWound - healedWound)-- * ((owner.Profession == "doctor") and 0.33 or 1)
+					local woundHeal = self.modeValues[1] - (biggestWound - healedWound)
 					org.bleed = math.max(org.bleed - (biggestWound - healedWound), 0)
 					org.wounds[1][1] = healedWound
 					self.modeValues[1] = woundHeal > 0.1 and woundHeal or 0
@@ -434,10 +415,6 @@ if SERVER then
 						bandaged = true
 					end
 
-					local owner = self:GetOwner()
-					if owner.Karma then
-						--owner.Karma = math.Clamp(owner.Karma + 0.25,0,zb.MaxKarma)
-					end
 					ent.bandaged_limbs = ent.bandaged_limbs or {}
 					local bone_name = org.wounds[1][4]
 					if not ent.bandaged_limbs[bone_name] then
@@ -534,43 +511,26 @@ if SERVER then
 		end
 
 		if org.larm == 1 and self.modeValues[1] >= amt and !org.larmamputated then
-            org.larm = org.larm - 0.05
-            self.modeValues[1] = self.modeValues[1] - amt
-            org.avgpain = math.max(org.avgpain - 7, 0)
-            done = true
-        end
-
-        if org.spine1 > 0 and self.modeValues[1] >= amt then
-            healSpine(org, "spine1")
-            self.modeValues[1] = self.modeValues[1] - amt
-            done = true
-        end
-
-        if org.spine2 > 0 and self.modeValues[1] >= amt then
-            healSpine(org, "spine2")
-            self.modeValues[1] = self.modeValues[1] - amt
-            done = true
-        end
-
-        if org.spine3 > 0 and self.modeValues[1] >= amt then
-            healSpine(org, "spine3")
-            self.modeValues[1] = self.modeValues[1] - amt
-            done = true
-        end
-				if org.spine1 > 0 and self.modeValues[1] >= amt then
-			healSpine(org, "spine1");
+			org.larm = org.larm - 0.05
+			self.modeValues[1] = self.modeValues[1] - amt
+			org.avgpain = math.max(org.avgpain - 7, 0)
+			done = true
+		end
+		
+		if org.spine1 and org.spine1 > 0 and self.modeValues[1] >= amt then
+			if healSpine then healSpine(org, "spine1") end
 			self.modeValues[1] = self.modeValues[1] - amt
 			done = true
 		end
 
-		if org.spine2 > 0 and self.modeValues[1] >= amt then
-			healSpine(org, "spine2");
+		if org.spine2 and org.spine2 > 0 and self.modeValues[1] >= amt then
+			if healSpine then healSpine(org, "spine2") end
 			self.modeValues[1] = self.modeValues[1] - amt
 			done = true
 		end
 
-		if org.spine3 > 0 and self.modeValues[1] >= amt then
-			healSpine(org, "spine3");
+		if org.spine3 and org.spine3 > 0 and self.modeValues[1] >= amt then
+			if healSpine then healSpine(org, "spine3") end
 			self.modeValues[1] = self.modeValues[1] - amt
 			done = true
 		end
@@ -580,7 +540,6 @@ if SERVER then
 
 			if self.poisoned2 then
 				org.poison4 = CurTime()
-
 				self.poisoned2 = nil
 			end
 		end
@@ -675,9 +634,6 @@ if SERVER then
 		local physbonerh = GetPhysBoneNum(ragdoll,"ValveBiped.Bip01_R_Hand")
 		local lh = ragdoll:GetPhysicsObjectNum(physbonelh)
 		local rh = ragdoll:GetPhysicsObjectNum(physbonerh)
-		--rh:SetPos(rh:GetPos() + self:GetOwner():EyeAngles():Forward() * 20)
-		--rh:SetAngles(self:GetOwner():EyeAngles() + Angle(0, 0, -90))
-		--lh:SetPos(rh:GetPos())
 		ent:SetModel(self.WorldModel)
 		ent:SetPos(rh:GetPos())
 		ent:SetAngles(rh:GetAngles() + Angle(0, 0, 180))
@@ -697,7 +653,6 @@ if SERVER then
 		local vec = Vector(0, 0, 0)
 		vec:Set(self.RHandPos or vector_origin)
 		vec:Rotate(ent:GetAngles())
-		--rh:SetPos(ent:GetPos() + vec)
 		constraint.Weld( ragdoll, ent, physbonerh, 0, 0, false, false )
 	end
 
@@ -707,12 +662,10 @@ if SERVER then
 		shadowControl = shadowControl or hg.ShadowControl
 		local fakeGun = ragdoll.fakeGun
 		pos:Add(angles:Forward() * 20)
-		--shadowControl(fakeGun, 0, 0.001, angles, 100, 90, pos, 1000, 900)
 		angles:RotateAroundAxis(angles:Forward(), 180)
 		shadowControl(ragdoll, 7, 0.001, angles, 500, 30, pos, 500, 50)
 	end
 end
-
 
 hg.TourniquetGuys = hg.TourniquetGuys or {}
 
@@ -768,16 +721,12 @@ if SERVER then
 							if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
 							local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
 							local sec_bonename = ent:GetBoneName(ent:LookupBone(wound[4]))
-							--print(1,bonename,sec_bonename)
 							if bonename == sec_bonename or (tourniqet_bones[sec_bonename] and tourniqet_bones[sec_bonename][bonename]) then
-								--print(2,bonename,sec_bonename)
 								table.insert(bonewounds,i1)
 							end
 						end
-						--PrintTable(bonewounds)
 					break end
 				end
-				
 			else
 				for i,wound in pairs(org.arterialwounds) do
 					if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then pw = i break end
@@ -805,7 +754,6 @@ if SERVER then
 
 			for i = 1, #bonewounds do
 				if org.wounds[bonewounds[i]] then
-					--print(org.wounds[bonewounds[i]], bonewounds[i])
 					org.wounds[bonewounds[i]][1] = 0
 				end
 			end
@@ -947,7 +895,6 @@ else
 		remove_tourniquets(ply)
 	end)
 
-	--hook.Add("PostDrawPlayerRagdoll", "draw_tourniquets", function(ent,ply)
 	function hg.RenderTourniquets(ent, ply)
 		if !ply.tourniquets or !next(ply.tourniquets) then return end
 		for i, wound in ipairs(ply.tourniquets) do
@@ -983,9 +930,6 @@ else
 			model:DrawModel()
 		end
 	end
-	--end)
-
-	
 
 	function remove_bandages(ent)
 		if IsValid(ent.bandagesModel) then
@@ -997,13 +941,9 @@ else
 	hook.Add("OnNetVarSet","bandage_netvar",function(index, key, var)
 		if key == "bandaged_limbs" then
 			local ent = Entity(index)
-	
 			if IsValid(ent) then
-	
 				remove_bandages(ent)
-	
 				ent.bandaged_limbs = var
-	
 				ent:CallOnRemove("remove_bandages",function()
 					remove_bandages(ent)
 				end)
@@ -1047,9 +987,7 @@ else
 		["ValveBiped.Bip01_R_Calf"] = "LegDownRught-f",
 	}
 
-	--hook.Add("PostDrawPlayerRagdoll", "draw_bandages", function(ent,ply)
 	function hg.RenderBandages(ent, ply)
-		--PrintTable(ent.bandaged_limbs)
 		if not ent.bandaged_limbs then return end
 		if !next(ent.bandaged_limbs) then return end
 		if not IsValid( ent.bandagesModel ) then
@@ -1073,7 +1011,7 @@ else
 		
 		if not model.BodygroupsApplied then 
 			for k, v in pairs(ent.bandaged_limbs) do
-				if dontmakehands and (k == "ValveBiped.Bip01_L_Hand" or k == "ValveBiped.Bip01_R_Hand") then continue end -- ez
+				if dontmakehands and (k == "ValveBiped.Bip01_L_Hand" or k == "ValveBiped.Bip01_R_Hand") then continue end
 				model:SetBodygroup(model:FindBodygroupByName( ThatPlyIsFemale(ent) and BodyGroupsFemale[k] or BodyGroupsMale[k] or ""), 1)
 			end
 
@@ -1092,7 +1030,6 @@ else
 		end
 		model:DrawModel()
 	end
-	--end)
 end
 
 function SWEP:IsLocal()
@@ -1104,6 +1041,7 @@ function SWEP:Holster(wep)
 
 	if SERVER or CLIENT and self:IsLocal() then
 		self:EmitSound(self.HolsterSnd,50)
+		if CLIENT and self.StopMinigame then self:StopMinigame() end
 	end
 
 	return true
@@ -1151,4 +1089,217 @@ end
 
 function SWEP:GetNPCRestTimes()
 	return 0.1, 0.1
+end
+
+-- ==========================================
+-- Minigame Implementation
+-- ==========================================
+
+if CLIENT then
+	local matCircleInner = Material("vgui/bandageCircleInner.png")
+	local matOuter = Material("vgui/bandageOuter.png")
+	local matRoll = Material("vgui/bandageRoll.png")
+	local matStick = Material("vgui/bandageStick.png")
+
+	function SWEP:StartMinigame(attackType)
+		if self.MinigameActive then 
+			return 
+		end
+		
+		self.MinigameActive = true
+		self.MinigameAttackType = attackType
+		self.MinigameAngle = -90
+		self.MinigameProgress = 0
+		self.MinigameLastMouseAngle = nil
+		self.MinigameDragging = false
+		
+		gui.EnableScreenClicker(true)
+
+		local hookName = "BandageMinigameSafety_" .. self:EntIndex()
+		hook.Add("Think", hookName, function()
+			if not IsValid(self) or not self.MinigameActive or self:GetOwner() ~= LocalPlayer() or LocalPlayer():GetActiveWeapon() ~= self then
+				if IsValid(self) and self.StopMinigame then
+					self:StopMinigame()
+				else
+					gui.EnableScreenClicker(false)
+					hook.Remove("Think", hookName)
+				end
+			end
+		end)
+	end
+
+	function SWEP:StopMinigame()
+		self.MinigameActive = false
+		self.MinigameDragging = false
+		gui.EnableScreenClicker(false)
+		hook.Remove("Think", "BandageMinigameSafety_" .. self:EntIndex())
+	end
+
+	function SWEP:MinigameThink()
+		if not self.MinigameActive then return end
+
+		if not IsValid(self) or self:GetOwner() ~= LocalPlayer() then
+			self:StopMinigame()
+			return
+		end
+
+		local cx, cy = ScrW() / 2, ScrH() / 2
+		local size = ScreenScale(64)
+		local rad = math.rad(self.MinigameAngle)
+		local rollDist = size * 0.8
+		local rx = cx + math.cos(rad) * rollDist
+		local ry = cy + math.sin(rad) * rollDist
+		
+		local mx, my = input.GetCursorPos()
+		local dist = math.sqrt((mx - rx)^2 + (my - ry)^2)
+		local interactRadius = size * 0.4 
+		
+		if input.IsMouseDown(MOUSE_LEFT) then
+			if not self.MinigameDragging then
+				if dist <= interactRadius then
+					self.MinigameDragging = true
+					self.MinigameLastMouseAngle = math.deg(math.atan2(my - cy, mx - cx))
+				end
+			end
+		else
+			self.MinigameDragging = false
+			self.MinigameLastMouseAngle = nil
+		end
+		
+		if self.MinigameDragging then
+			local angle = math.deg(math.atan2(my - cy, mx - cx))
+			
+			if self.MinigameLastMouseAngle then
+				local delta = angle - self.MinigameLastMouseAngle
+				if delta > 180 then delta = delta - 360 end
+				if delta < -180 then delta = delta + 360 end
+				
+				if delta > 0 then
+					self.MinigameProgress = self.MinigameProgress + delta
+					self.MinigameAngle = self.MinigameAngle + delta
+				end
+			end
+			self.MinigameLastMouseAngle = angle
+		end
+
+		if self.MinigameProgress >= 360 then
+			self:FinishMinigame()
+		end
+	end
+	
+	function SWEP:FinishMinigame()
+		net.Start("BandageMinigameComplete")
+		net.WriteEntity(self)
+		net.WriteInt(self.MinigameAttackType, 3)
+		net.SendToServer()
+		self:StopMinigame()
+	end
+	
+	function SWEP:DrawArc(cx, cy, radius, thickness, startAng, endAng, segs)
+		local vertices = {}
+		
+		table.insert(vertices, { x = cx, y = cy })
+		
+		local range = endAng - startAng
+		local numSegs = math.max(math.ceil(math.abs(range) / 10), 10) 
+
+		for i = 0, numSegs do
+			local ang = math.rad(startAng + (i / numSegs) * range)
+			table.insert(vertices, {
+				x = cx + math.cos(ang) * radius,
+				y = cy + math.sin(ang) * radius
+			})
+		end
+		
+		surface.DrawPoly(vertices)
+	end
+
+	function SWEP:DrawMinigame()
+		local cx, cy = ScrW() / 2, ScrH() / 2
+		local size = ScreenScale(64)
+		
+		surface.SetDrawColor(255, 255, 255, 255)
+		
+		surface.SetMaterial(matCircleInner)
+		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
+		
+		render.SetStencilWriteMask( 0xFF )
+		render.SetStencilTestMask( 0xFF )
+		render.SetStencilReferenceValue( 1 )
+		render.SetStencilCompareFunction( STENCIL_ALWAYS )
+		render.SetStencilPassOperation( STENCIL_REPLACE )
+		render.SetStencilFailOperation( STENCIL_KEEP )
+		render.SetStencilZFailOperation( STENCIL_KEEP )
+		render.ClearStencil()
+		render.EnableStencil( true )
+		
+		draw.NoTexture()
+		surface.SetDrawColor( 255, 255, 255, 255 )
+		
+		local startAng = self.MinigameAngle - self.MinigameProgress
+		local endAng = self.MinigameAngle
+		
+		surface.SetDrawColor(255, 255, 255, 1)
+		self:DrawArc(cx, cy, size * 1.5, size * 0, startAng, endAng, 36)
+		
+		render.SetStencilCompareFunction( STENCIL_EQUAL )
+		render.SetStencilPassOperation( STENCIL_KEEP )
+		
+		surface.SetMaterial(matOuter)
+		
+		local alpha = (self.MinigameProgress / 360) * 255
+		surface.SetDrawColor(255, 255, 255, alpha)
+		
+		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
+		
+		render.EnableStencil( false )
+		
+		surface.SetDrawColor(255, 255, 255, 255)
+		
+		surface.SetMaterial(matStick)
+		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, -self.MinigameAngle) 
+		
+		local rad = math.rad(self.MinigameAngle)
+		local rollDist = size * 0.8
+		local rx = cx + math.cos(rad) * rollDist
+		local ry = cy + math.sin(rad) * rollDist
+		
+		surface.SetMaterial(matRoll)
+		surface.DrawTexturedRectRotated(rx, ry, size * 0.6, size * 0.6, -self.MinigameAngle)
+	end
+end
+
+if SERVER then
+	net.Receive("BandageMinigameComplete", function(len, ply)
+		local wep = net.ReadEntity()
+		local mode = net.ReadInt(3)
+		
+		if not IsValid(wep) or not IsValid(ply) or wep:GetOwner() ~= ply then return end
+		if not wep.UseMinigame then return end
+		
+		if mode == 1 then
+			wep.healbuddy = ply
+			local done = wep:Heal(wep.healbuddy, wep.mode)
+			if(done and wep.PostHeal)then
+				wep:PostHeal(wep.healbuddy, wep.mode)
+			end
+			if wep.net_cooldown2 < CurTime() then
+				wep:SetNetVar("modeValues",wep.modeValues)
+			end
+		elseif mode == 2 then
+			if IsValid(wep:GetNWEntity("fakeGun")) then return end
+			local ent = hg.eyeTrace(ply).Entity
+			wep.healbuddy = ent
+			if !IsValid(wep.healbuddy) then return end
+			if hg.GetCurrentCharacter(wep.healbuddy) == hg.GetCurrentCharacter(ply) then return end
+
+			local done = wep:Heal(wep.healbuddy, wep.mode)
+			if(done and wep.PostHeal)then
+				wep:PostHeal(wep.healbuddy, wep.mode)
+			end		
+			if wep.net_cooldown2 < CurTime() then
+				wep:SetNetVar("modeValues",wep.modeValues)
+			end
+		end
+	end)
 end

@@ -72,8 +72,11 @@ if SERVER then
 		self:SetBodygroup(1, 1)
 		local entOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 		entOwner:EmitSound("snd_jack_hmcd_needleprick.wav", 60, math.random(95, 105))
-		//org.lungsR[2] = 0
-		//org.lungsL[2] = 0
+		if org.bloodChoke and org.bloodChoke > 0.1 then
+            org.bloodChoke = 0
+        end
+		--//org.lungsR[2] = 0
+		--//org.lungsL[2] = 0
 		org.needle = 1
 
 		if !(org.lungsR[2] == 1 or org.lungsL[2] == 1) then

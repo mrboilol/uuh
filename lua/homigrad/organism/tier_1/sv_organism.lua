@@ -200,11 +200,26 @@ net.Receive("hg_dislocation_minigame_success", function(len, ply)
         key = "rarm"
     elseif limbType == 5 then
         key = "jaw"
+    elseif limbType == 6 then
+        key = "spine"
     end
     
     if not key then return end
-    
-    hg.organism.fixlimb(org, key, ply)
+      
+     local rag = hg.GetCurrentCharacter(patient)
+     if not IsValid(rag) then return end
+
+    if key == "spine" then
+        if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
+            org.spine1dislocation = false
+            org.spine2dislocation = false
+            org.spine3dislocation = false
+            hg.organism.restoreSpineConstraints(rag)
+            ply:EmitSound("physics/flesh/flesh_impact_bullet" .. math.random(1, 5) .. ".wav", 60, 100, 1, CHAN_AUTO)
+        end
+    else
+        hg.organism.fixlimb(org, key, ply)
+    end
 end)
 
 net.Receive("hg_bandage_minigame_fail", function(len, ply)

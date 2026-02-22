@@ -173,6 +173,7 @@ local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
     end
 
     -- Helper to remove any conflicting constraints (like stiffness hinges) between these bones
+    -- Helper to remove any conflicting constraints (like stiffness hinges) between these bones
     if rag.Constraints then
         for k, v in pairs(rag.Constraints) do
             if (v.Bone1 == phys1 and v.Bone2 == phys2) or (v.Bone1 == phys2 and v.Bone2 == phys1) then
@@ -181,6 +182,7 @@ local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
             end
         end
     end
+	constraint.RemoveAll(pBone1)
 
 	-- Remove existing rigid constraint
 	pcall(function() rag:RemoveInternalConstraint(phys1) end)
@@ -221,7 +223,7 @@ local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
     -- cons:SetAngles(rag:LocalToWorldAngles(matrix:GetAngles())) -- BoneBuster doesn't set angles on cons? 
     -- But it sets angles of physics objects.
     
-    cons:SetKeyValue("spawnflags", 1) 
+    cons:SetKeyValue("spawnflags", 0) 
 	cons:SetKeyValue("xmin", limits[0][1])
 	cons:SetKeyValue("xmax", limits[0][0])
 	cons:SetKeyValue("ymin", limits[1][1])
@@ -312,30 +314,40 @@ end
 
 local function checkForGruesomeAccident(org)
     if not org.recentBoneBreaks then return false end
-    
-    local currentTime = CurTime()
-    local recentBreaks = {}
-    local hasNeckBreak = false
-    
 
+    local currentTime = CurTime()
+    local boneCounts = {}
+
+    -- Count recent breaks for each bone
     for _, breakData in ipairs(org.recentBoneBreaks) do
         if currentTime - breakData.time <= 4 then
-            table.insert(recentBreaks, breakData.bone)
-            if breakData.bone == "spine3" then
-                hasNeckBreak = true
-            end
+            local bone = breakData.bone
+            boneCounts[bone] = (boneCounts[bone] or 0) + 1
         end
     end
-    
 
-    if #recentBreaks >= 2 and hasNeckBreak then
-        org.gruesomeAccident = true
-        org.gruesomeAccidentTime = currentTime
-        
-        
-        return true
+
+    for bone, count in pairs(boneCounts) do
+        if count >= 2 then
+            org.gruesomeAccident = true
+            org.gruesomeAccidentTime = currentTime
+
+            -- Play gruesome break sound
+            local sound
+            if string.find(bone, "arm") then
+                sound = table.Random(broke_arm_gruesome)
+            elseif string.find(bone, "leg") then
+                sound = table.Random(broke_leg_gruesome)
+            end
+
+            if sound and IsValid(org.owner) then
+                org.owner:EmitSound(sound)
+            end
+
+            return true
+        end
     end
-    
+
     return false
 end
 
@@ -344,7 +356,6 @@ end
 
 -- Function to apply visual floppy effect to a limb
 local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
-	print("Applying floppy effect to: " .. tostring(limbKey))
 	if not IsValid(ent) then return end
 	
 	ent.brokenLimbSegments = ent.brokenLimbSegments or {}
@@ -863,14 +874,32 @@ local function cleanupGruesomeAccident(org)
 	end
 end
 
-local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
+    local limbKey = string.match(key, "^[^_]+")
+    local isBroken = org[key] and org[key] >= 1
+
+    if isBroken and isCrush(dmgInfo) then
+        -- Gruesome break logic for already broken limbs
+        org[key .. "_perm_dmg"] = math.min((org[key .. "_perm_dmg"] or 0) + 0.05, 1)
+
+        -- Apply a second floppy effect
+        applyLimbFloppyEffect(org.owner, limbKey)
+
+        -- Play sound
+        local sound = table.Random(broke_leg_gruesome)
+        if IsValid(org.owner) then
+            org.owner:EmitSound(sound)
+        end
+
+        -- Track the break for other systems
+        trackBoneBreak(org, key)
+    end
     if org.lastBoneHitTime and org.lastBoneHitTime[key] and (CurTime() - org.lastBoneHitTime[key] < 2) then
         dmg = dmg * 1.5
 
         if org[key.."gruesome"] then
             org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.1, 1)
             if org.isPly then
-                hg.CreateNotification(org.owner, "The damage to your " .. string.gsub(key, "l", "left "):gsub("r", "right ") .. " has worsened!", 3, colred)
+                --hg.CreateNotification(org.owner, "The damage to your " .. string.gsub(key, "l", "left "):gsub("r", "right ") .. " has worsened!", 3, colred)
             end
         end
     end
@@ -968,7 +997,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 			org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
         else
             if not org.owner.brokenLimbSegments then org.owner.brokenLimbSegments = {} end
-            applyLimbFloppyEffect(org.owner, key)
+            applyLimbFloppyEffect(org.owner, limbKey)
         end
 		//broken
 	else
@@ -1038,13 +1067,34 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 end
 
 local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
+	local limbKey = string.match(key, "^[^_]+")
+    local isBroken = org[key] and org[key] >= 1
+
+    if isBroken and isCrush(dmgInfo) then
+        -- Gruesome break logic for already broken limbs
+        org[key .. "_perm_dmg"] = math.min((org[key .. "_perm_dmg"] or 0) + 0.05, 1)
+
+        -- Apply a second floppy effect
+        if limbKey then
+			applyLimbFloppyEffect(org.owner, limbKey)
+		end
+
+        -- Play sound
+        local sound = table.Random(broke_arm_gruesome)
+        if IsValid(org.owner) then
+            org.owner:EmitSound(sound)
+        end
+
+        -- Track the break for other systems
+        trackBoneBreak(org, key)
+    end
     if org.lastBoneHitTime and org.lastBoneHitTime[key] and (CurTime() - org.lastBoneHitTime[key] < 2) then
         dmg = dmg * 1.5
 
         if org[key.."gruesome"] then
             org[key.."_perm_dmg"] = math.min((org[key.."_perm_dmg"] or 0) + 0.1, 1)
             if org.isPly then
-                hg.CreateNotification(org.owner, "The damage to your " .. string.gsub(key, "l", "left "):gsub("r", "right ") .. " has worsened!", 3, colred)
+                --hg.CreateNotification(org.owner, "The damage to your " .. string.gsub(key, "l", "left "):gsub("r", "right ") .. " has worsened!", 3, colred)
             end
         end
     end
@@ -1127,7 +1177,9 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
         trackBoneBreak(org, key)
         if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
-            applyLimbFloppyEffect(org.owner, key)
+            if limbKey then
+				applyLimbFloppyEffect(org.owner, limbKey)
+			end
         end
 		//broken
 	else
@@ -1178,13 +1230,18 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
             if org.recentBoneBreaks then
                 for _, breakData in ipairs(org.recentBoneBreaks) do
                     if currentTime - breakData.time <= 4 then
-                        applyLimbFloppyEffect(org.owner, breakData.bone)
+                        local breakLimbKey = string.match(breakData.bone, "^[^_]+")
+						if breakLimbKey then
+							applyLimbFloppyEffect(org.owner, breakLimbKey)
+						end
                     end
                 end
             end
 			org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
         else
-            applyLimbFloppyEffect(org.owner, key)
+            if limbKey then
+				applyLimbFloppyEffect(org.owner, limbKey)
+			end
         end
 		//dislocated
 	end
@@ -1239,7 +1296,7 @@ local function spinal_cord(org, bone, dmg, dmgInfo, number, boneindex, dir, hit,
 					-- if name == "spine1" or name == "spine2" then
 					-- 	applySpineFloppyEffect(org.owner)
 					-- end
-		if hg.CreateNotification then hg.CreateNotification(org.owner, "My spinal cord has been severed!", true, name, 5) end
+		--if hg.CreateNotification then hg.CreateNotification(org.owner, "My spinal cord has been severed!", true, name, 5) end
 		if org.owner:IsPlayer() then
 			org.owner:Notify(huyasd[name], true, name, 2)
 		end
@@ -1271,9 +1328,9 @@ local jaw_dislocated_msg = {
 }
 
 local jaw_disfigured_msg = {
-	"My jaw is completely shattered!",
-	"I don't think my jaw will ever be the same...",
-	"My face is ruined!",
+	"OH GOD- MY JAW HURTS SO BAD I CAN FEEL THE PIECES",
+	"MY JAW IS RUINED- COMPLETELY RUINED!",
+	"I CAN BARELY MOVE MY JAW, OHH FUCK IT HURTS SO BAD",
 }
 
 hook.Add("PlayerDisconnected", "CleanupTinnitusSounds", function(ply)
@@ -1378,7 +1435,7 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 			org.jaw_disfigured = true
 			org.jaw_permanently_damaged = true
 			applyJawPose(org.owner)
-			if hg.CreateNotification then hg.CreateNotification(org.owner, "My jaw... it's completely shattered!", true, "jaw_disfigured", 5) end
+			--if hg.CreateNotification then hg.CreateNotification(org.owner, "My jaw... it's completely shattered!", true, "jaw_disfigured", 5) end
 			if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_disfigured_msg[math.random(#jaw_disfigured_msg)], true, "jaw", 2) end
 		else
 			if hg.CreateNotification then hg.CreateNotification(org.owner, jaw_broken_msg[math.random(#jaw_broken_msg)], true, "jaw", 2) end
@@ -1793,6 +1850,23 @@ end
 
 
 
+local function handleSpinePain(org, name)
+	local owner = org.owner
+	if not IsValid(owner) then return end
+
+	if name == "spine1" then
+		if owner:GetVelocity():LengthSqr() > 100 and owner:OnGround() then
+			org.painadd = org.painadd + 0.5
+		end
+	elseif name == "spine2" then
+		if owner:GetVelocity():LengthSqr() > 100 or owner:GetActiveWeapon():GetClass() == "weapon_hands_sh" then
+			org.painadd = org.painadd + 1
+		end
+	elseif name == "spine3" then
+		org.painadd = org.painadd + 0.2
+	end
+end
+
 local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricochet)
 	print("DEBUG: spine function called for spine" .. number)
 	local name = "spine" .. number
@@ -1803,6 +1877,7 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
 
 	if oldDmg < 1 and org[name] >= 1 then
+		handleSpinePain(org, name)
 		print("DEBUG: spine" .. number .. " broken.")
 	end
 
@@ -1825,22 +1900,13 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 					if org.owner:IsPlayer() then
 						org.owner:Notify(random_message, true, name, 2)
 					end
-					local spinal_cord_name = "spinal_cord" .. number
-					if org[spinal_cord_name] < 1 then
-						if name == "spine1" then
-							org.painadd = org.painadd + 5
-						elseif name == "spine2" then
-							org.painadd = org.painadd + 5
-						elseif name == "spine3" then
-							org.painadd = org.painadd + 8
-						end
-					end
+
 
 					if math.random(1, 100) <= 15 then
 						local dislocation_key = name .. "_dislocations"
 						org[dislocation_key] = (org[dislocation_key] or 0) + 1
 						org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO)
-						if hg.CreateNotification then hg.CreateNotification(org.owner, "I think i set my back in the wrong place...", true, name, 3) end
+						if hg.CreateNotification then hg.CreateNotification(org.owner, "Something is wrong in my back.", true, name, 3) end
 						if name == "spine3" then
 							applyNeckFloppyEffect(org.owner)
 						else

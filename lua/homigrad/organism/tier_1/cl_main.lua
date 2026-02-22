@@ -273,6 +273,37 @@ hook.Add("radialOptions", "DislocatedJaw", function()
     end
 end)
 
+hook.Add("radialOptions", "MYFUCKINGSPINE", function()
+    if !lply:Alive() or !lply.organism or lply.organism.otrub then return end
+    if (lply.tried_fixing_limb or 0) > CurTime() then return end
+    local org = lply.organism
+    if org.pain > 60 then return end
+    
+    if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
+        local tbl = {
+            function()
+                lply.tried_fixing_limb = CurTime() + 0.5
+                hg.StartDislocationMinigame(6)
+            end,
+            "Fix dislocation (spine)"
+        }
+        hg.radialOptions[#hg.radialOptions + 1] = tbl
+    else
+        local ent = hg.eyeTrace(lply).Entity
+
+        if ent.organism and (ent.organism.spine1dislocation or ent.organism.spine2dislocation or ent.organism.spine3dislocation) then
+            local tbl = {
+                function()
+                    lply.tried_fixing_limb = CurTime() + 0.5
+                    hg.StartDislocationMinigame(6, ent)
+                end,
+                "Fix "..ent:GetPlayerName().."\'s dislocation (spine)"
+            }
+            hg.radialOptions[#hg.radialOptions + 1] = tbl
+        end
+    end
+end)
+
 hook.Add("PostRender", "screenshot_think", function()
 	local org = lply.organism
 	

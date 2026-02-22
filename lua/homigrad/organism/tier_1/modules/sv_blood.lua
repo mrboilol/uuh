@@ -255,7 +255,7 @@ module[2] = function(owner, org, mulTime)
 
 	-- Natural decrease, and placeholder for treatments
 	local choke_decrease_rate = 0.01 -- very slow natural decrease
-	-- if cpr_active then choke_decrease_rate = choke_decrease_rate + 0.5 end -- placeholder
+	if org.cpr_active then choke_decrease_rate = choke_decrease_rate + 0.5 end
 	org.bloodChoke = math.max(org.bloodChoke - choke_decrease_rate * mulTime, 0)
 
 	-- Coughing up blood
