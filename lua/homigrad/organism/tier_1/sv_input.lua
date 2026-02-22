@@ -1167,7 +1167,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 				rag.headexploded = true
 				org.headamputated = true
-				
+				rag.organism.headamputated = true
+
 				org.dmgstack[hitgroup][1] = nil
 				org.dmgstack[hitgroup][2] = nil
 			end
