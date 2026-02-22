@@ -673,15 +673,7 @@ end)
 		if org.chest > 0 then org.chest = math.Approach(org.chest, 0, boneHeal) end
 		if org.pelvis > 0 then org.pelvis = math.Approach(org.pelvis, 0, boneHeal) end
 		if org.skull > 0 then org.skull = math.Approach(org.skull, 0, boneHeal) end
-	end
 
-	if org.isPly and org.o2 and org.o2 < 20 and not org.otrub then
-		if not owner.next_o2_sound or owner.next_o2_sound < CurTime() then
-			owner.next_o2_sound = CurTime() + 3
-			owner:EmitSound("player/drown1.wav", 75, 100)
-		end
-	end
-end)	-- Heal permanent damage very slowly
 		local permHeal = naturalHeal / 20 -- Slower healing for permanent damage
 		for _, key in ipairs({"lleg", "rleg", "larm", "rarm"}) do
 			local permDmgKey = key .. "_perm_dmg"
@@ -692,7 +684,7 @@ end)	-- Heal permanent damage very slowly
 					org[key .. "gruesome"] = false
 					org[key .. "gruesome_dislocation"] = false
 					if org.isPly and hg.CreateNotification then
-						hg.CreateNotification(org.owner, "Your gruesome wound seems to have stabilized.", 5)
+						--hg.CreateNotification(org.owner, "Your gruesome wound seems to have stabilized.", 5)
 					end
 				end
 			end
@@ -708,7 +700,7 @@ end)	-- Heal permanent damage very slowly
 				org[limb.."gruesome"] = nil
 				org[limb] = 0.95 -- Set bone health to almost broken
 				if org.isPly then
-					hg.CreateNotification(org.owner, "Your gruesome break seems to have set, but it is still broken.", 5, colred)
+					--hg.CreateNotification(org.owner, "Your gruesome break seems to have set, but it is still broken.", 5, colred)
 				end
 			end
 		end
@@ -717,7 +709,7 @@ end)	-- Heal permanent damage very slowly
 			naturalHeal = naturalHeal * 2
 			
 			if org.brain < 1 then org.brain = math.Approach(org.brain, 0, naturalHeal) end
-			
+		end
 	elseif org.brain < 0.4 then
 		local naturalHeal = timeValue / 1800
 		
