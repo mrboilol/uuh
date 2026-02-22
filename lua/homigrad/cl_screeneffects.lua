@@ -570,11 +570,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		local despair_sound_path = "sound/itswraps/despair.ogg"
 
 		if scav_sound == 0 then -- normal
-			if not LowO2SoundChoice then
-				LowO2SoundChoice = math.random(2) == 1 and "conscious" or "despair"
-			end
-			if LowO2SoundChoice == "conscious" then play_conscious = true end
-			if LowO2SoundChoice == "despair" then play_despair = true end
+			play_conscious = true
 		elseif scav_sound == 1 then -- despair or itswraps
 			play_despair = true
 			if not DespairSoundChoice then

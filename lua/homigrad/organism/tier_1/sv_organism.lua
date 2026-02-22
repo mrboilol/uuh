@@ -138,7 +138,8 @@ util.AddNetworkString("hg_bandage_minigame_success")
 util.AddNetworkString("hg_bandage_minigame_fail")
 
 hook.Add("PlayerDeath", "ClearOtrub", function(ply)
-org.otrub = nil
+	if not ply or not ply:IsPlayer() or not ply.organism then return end
+	ply.organism.otrub = nil
 end)
 
 net.Receive("hg_dislocation_minigame_pain", function(len, ply)
@@ -162,8 +163,15 @@ net.Receive("hg_dislocation_minigame_pain", function(len, ply)
     patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
 end)
 
+
 net.Receive("hg_dislocation_minigame_success", function(len, ply)
     if not IsValid(ply) or not ply:Alive() then return end
+
+    local wep = ply:GetActiveWeapon()
+    if IsValid(wep) and wep:GetClass() == "style_bandages" then
+        wep:DoHeal(ply, wep.minigame_ent, wep.minigame_mode, wep.minigame_bone)
+        return
+    end
     
     local target = net.ReadEntity()
     local patient = ply
@@ -213,21 +221,7 @@ net.Receive("hg_bandage_minigame_fail", function(len, ply)
     patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
 end)
 
-net.Receive("hg_bandage_minigame_success", function(len, ply)
-    if not IsValid(ply) or not ply:Alive() then return end
 
-    local target = net.ReadEntity()
-    local success = net.ReadBool()
-
-    if not success then return end
-
-    if not IsValid(ply.ActiveMinigameWeapon) then return end
-
-    local wep = ply.ActiveMinigameWeapon
-    wep:DoHeal(wep.minigame_ent, wep.minigame_mode, wep.minigame_bone)
-
-    ply.ActiveMinigameWeapon = nil
-end)
 local CurTime = CurTime
 local nullTbl = {}
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"Toggle developer mode (enables damage traces)",0,1)
@@ -604,7 +598,7 @@ end)
 
 	local just_went_uncon = not org.otrub and org.needotrub
 
-	if org.posturing then //-- the decerebrate one
+	if org.posturing then -- the decerebrate one
 		local ent = hg.GetCurrentCharacter(org.owner)
 
 		local rleg = ent:GetPhysicsObjectNum(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_R_Foot")))
@@ -679,8 +673,15 @@ end)
 		if org.chest > 0 then org.chest = math.Approach(org.chest, 0, boneHeal) end
 		if org.pelvis > 0 then org.pelvis = math.Approach(org.pelvis, 0, boneHeal) end
 		if org.skull > 0 then org.skull = math.Approach(org.skull, 0, boneHeal) end
+	end
 
-		-- Heal permanent damage very slowly
+	if org.isPly and org.o2 and org.o2 < 20 and not org.otrub then
+		if not owner.next_o2_sound or owner.next_o2_sound < CurTime() then
+			owner.next_o2_sound = CurTime() + 3
+			owner:EmitSound("player/drown1.wav", 75, 100)
+		end
+	end
+end)	-- Heal permanent damage very slowly
 		local permHeal = naturalHeal / 20 -- Slower healing for permanent damage
 		for _, key in ipairs({"lleg", "rleg", "larm", "rarm"}) do
 			local permDmgKey = key .. "_perm_dmg"
@@ -716,7 +717,7 @@ end)
 			naturalHeal = naturalHeal * 2
 			
 			if org.brain < 1 then org.brain = math.Approach(org.brain, 0, naturalHeal) end
-		end
+			
 	elseif org.brain < 0.4 then
 		local naturalHeal = timeValue / 1800
 		
@@ -732,8 +733,8 @@ end)
     local critical_organs = 0
 	if org.liver >= 1 then critical_organs = critical_organs + 1 end
 	if org.heart >= 1 then critical_organs = critical_organs + 1 end
-	if org.stomach >= 1 then critical_organs = critical_organs + 1 end
-	if org.intestines >= 1 then critical_organs = critical_organs + 1 end
+	--if org.stomach >= 1 then critical_organs = critical_organs + 1 end
+	--if org.intestines >= 1 then critical_organs = critical_organs + 1 end
 	if org.lungsR[1] >= 1 then critical_organs = critical_organs + 1 end
 	if org.lungsL[1] >= 1 then critical_organs = critical_organs + 1 end
     if org.trachea >= 1 then critical_organs = critical_organs + 1 end
@@ -742,7 +743,7 @@ end)
     
     if is_critical then
         org.brain = math.min(org.brain + timeValue / 60, 1)
-        org.shock = org.shock + timeValue * 5
+        --org.shock = org.shock + timeValue * 5
     end
 
 	if org.otrub and isPly and org.owner:Alive() then

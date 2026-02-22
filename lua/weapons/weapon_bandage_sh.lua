@@ -183,8 +183,10 @@ if SERVER then
 	util.AddNetworkString("hg_bandage_minigame_failure")
 
 	net.Receive("hg_bandage_minigame_success", function(len, ply)
-		local wep = net.ReadEntity()
 		local target = net.ReadEntity()
+		local wep = net.ReadEntity()
+		local limbType = net.ReadInt(4)
+		local failures = net.ReadInt(16)
 		if not IsValid(wep) or not IsValid(target) then return end
 		wep:Heal(target, wep.mode)
 	end)

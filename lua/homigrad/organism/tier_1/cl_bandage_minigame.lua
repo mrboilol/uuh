@@ -197,14 +197,3 @@ function PANEL:Close()
 end
 
 vgui.Register("hg_bandage_minigame", PANEL, "DFrame")
-
-function hg.StartDislocationMinigame(limbType, targetPly)
-    if IsValid(HG_DISLOCATION_PANEL) then HG_DISLOCATION_PANEL:Remove() end
-    
-    HG_DISLOCATION_PANEL = vgui.Create("HG_DislocationMinigame")
-    HG_DISLOCATION_PANEL:SetLimbType(limbType)
-    if targetPly then
-        HG_DISLOCATION_PANEL:SetTarget(targetPly)
-    end
-    gui.EnableScreenClicker(true)
-end
