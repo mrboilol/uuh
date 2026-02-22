@@ -873,7 +873,7 @@ local function cleanupGruesomeAccident(org)
 		end
 	end
 end
-
+local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
     local limbKey = string.match(key, "^[^_]+")
     local isBroken = org[key] and org[key] >= 1
 
