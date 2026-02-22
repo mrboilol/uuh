@@ -134,6 +134,7 @@ util.AddNetworkString("organism_send")
 util.AddNetworkString("organism_sendply")
 util.AddNetworkString("hg_dislocation_minigame_pain")
 util.AddNetworkString("hg_dislocation_minigame_success")
+util.AddNetworkString("hg_head_trauma_saturation")
 util.AddNetworkString("hg_bandage_minigame_success")
 util.AddNetworkString("hg_bandage_minigame_fail")
 
@@ -605,8 +606,8 @@ hook.Add("HG_OnWakeOtrub", "SaturationFlashOnWake", function(owner)
     end
 end)
 
-	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
-	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
+	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub and (org.spinal_cord1 or 0) < 1 and (org.spinal_cord2 or 0) < 1
+	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub and (org.spinal_cord3 or 0) < 1
 	
 	if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
 	if (org.blood < 2700) then org.needfake = true end

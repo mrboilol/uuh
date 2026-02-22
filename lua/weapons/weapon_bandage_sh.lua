@@ -1233,6 +1233,7 @@ if CLIENT then
 		surface.SetMaterial(matCircleInner)
 		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
 		
+		if not render then return end
 		render.SetStencilWriteMask( 0xFF )
 		render.SetStencilTestMask( 0xFF )
 		render.SetStencilReferenceValue( 1 )

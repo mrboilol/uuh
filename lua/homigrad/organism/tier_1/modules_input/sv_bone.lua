@@ -1,3 +1,7 @@
+if SERVER then
+	CreateConVar("hg_use_floppy_system", "1", FCVAR_ARCHIVE, "Enable/disable the floppy bone system.")
+end
+
 --local Organism = hg.organism
 
 
@@ -223,7 +227,7 @@ local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
     -- cons:SetAngles(rag:LocalToWorldAngles(matrix:GetAngles())) -- BoneBuster doesn't set angles on cons? 
     -- But it sets angles of physics objects.
     
-    cons:SetKeyValue("spawnflags", 0) 
+    cons:SetKeyValue("spawnflags", 1) 
 	cons:SetKeyValue("xmin", limits[0][1])
 	cons:SetKeyValue("xmax", limits[0][0])
 	cons:SetKeyValue("ymin", limits[1][1])
@@ -355,9 +359,9 @@ end
 
 
 -- Function to apply visual floppy effect to a limb
-local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
+local function applyLimbFloppyEffect(ent, limbKey, segmentIndex)
 	if not IsValid(ent) then return end
-	
+
 	ent.brokenLimbSegments = ent.brokenLimbSegments or {}
 	ent.brokenLimbSegments[limbKey] = ent.brokenLimbSegments[limbKey] or {}
 
@@ -377,45 +381,42 @@ local function applyLimbFloppyEffect(ent, limbKey, segmentOverride)
 		local segments = limbBoneSegments[limbKey]
 		if not segments then return end
 
-		-- Select a random segment
-		local randomSegment = segmentOverride or math.random(#segments)
+		if not segmentIndex then return end
 
-		if not randomSegment then return end
+		local selectedSegment = segments[segmentIndex]
 
-		local selectedSegment = segments[randomSegment]
-		
 		-- save chosen segment on player for persistence
 		if IsValid(ent) and ent:IsPlayer() then
-			table.insert(ent.brokenLimbSegments[limbKey], randomSegment)
+			table.insert(ent.brokenLimbSegments[limbKey], segmentIndex)
 			ent.HG_FloppyPersistSeg = ent.HG_FloppyPersistSeg or {}
 			ent.HG_FloppyPersistSeg[limbKey] = ent.brokenLimbSegments[limbKey]
 		end
 
 		if selectedSegment then
 			local bone1Name, bone2Name = selectedSegment[1], selectedSegment[2]
-			
+
 			-- Check if bones exist before creating constraint
 			local bone1 = rag:LookupBone(bone1Name)
 			local bone2 = rag:LookupBone(bone2Name)
 			if not bone1 or not bone2 then return end
-			
+
 			-- Check if physics objects are valid
 			local phys1 = rag:TranslateBoneToPhysBone(bone1)
 			local phys2 = rag:TranslateBoneToPhysBone(bone2)
 			if not phys1 or not phys2 or phys1 < 0 or phys2 < 0 then return end
-			
+
 			local physObj1 = rag:GetPhysicsObjectNum(phys1)
 			local physObj2 = rag:GetPhysicsObjectNum(phys2)
 			if not IsValid(physObj1) or not IsValid(physObj2) then return end
-			
+
 			local cons = createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbKey)
-			
+
 			if cons then
 				-- Store which limb segment is floppy for healing restoration
 				rag.floppyLimbs = rag.floppyLimbs or {}
 				rag.floppyLimbs[limbKey] = rag.floppyLimbs[limbKey] or {}
-				rag.floppyLimbs[limbKey][randomSegment] = {
-					segment = randomSegment,
+				rag.floppyLimbs[limbKey][segmentIndex] = {
+					segment = segmentIndex,
 					bone1 = bone1Name,
 					bone2 = bone2Name,
 					constraint = cons
@@ -605,6 +606,134 @@ end
 
 local halfValue2 = util.halfValue2
 local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet, nodmgchange)
+    if not org[key] then org[key] = 0 end
+
+    if string.find(key, "spine") and org[key] >= 1 then
+        if org.damageOrgan then
+            org:damageOrgan("spinal_cord", dmg, dmgInfo)
+            --hg.netstream.to(org.owner, "hg_debug_msg", "Spinal cord damaged due to broken spine!")
+        end
+        return
+    end
+
+    local isCrush = isCrush(dmgInfo)
+    local isExplosion = dmgInfo:IsDamageType(DMG_BLAST)
+    local isBullet = dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)
+
+    local boneHealth = org[key] or 0
+    local damageMultiplier = 1
+
+    if isCrush then
+        damageMultiplier = 2
+    elseif isExplosion then
+        damageMultiplier = 1.5
+    end
+
+    local finalDamage = dmg * damageMultiplier / 100
+
+    if boneHealth >= 1 then
+        finalDamage = finalDamage * 0.5 -- Reduced damage if bone is already broken
+    end
+
+    org[key] = math.Clamp(boneHealth + finalDamage, 0, 1)
+
+    if org[key] >= 1 and boneHealth < 1 then
+        -- Bone just broke
+        trackBoneBreak(org, key)
+        checkForGruesomeAccident(org)
+
+        local sound
+        if string.find(key, "arm") then
+            sound = table.Random(broke_arm)
+        elseif string.find(key, "leg") then
+            sound = table.Random(broke_leg)
+        elseif string.find(key, "spine") then
+            sound = table.Random(broke_spine)
+        end
+
+        if sound and IsValid(org.owner) then
+            org.owner:EmitSound(sound)
+        end
+
+        -- Apply floppy effects when a bone breaks
+        local function applyEffects(limbKey, segmentIndex)
+            if GetConVar("hg_use_floppy_system"):GetBool() then
+                applyLimbFloppyEffect(org.owner, limbKey, segmentIndex)
+            end
+        end
+
+        local function arms(boneindex, limbKey)
+            org.owner.brokenLimbSegments = org.owner.brokenLimbSegments or {}
+            if not org.owner.brokenLimbSegments[limbKey] then org.owner.brokenLimbSegments[limbKey] = {} end
+
+            local segmentIndex
+            if string.find(bone, "UpperArm") then
+                segmentIndex = 1
+            elseif string.find(bone, "Forearm") then
+                segmentIndex = 2
+            elseif string.find(bone, "Hand") then
+                segmentIndex = 3
+            end
+
+            if segmentIndex and not table.HasValue(org.owner.brokenLimbSegments[limbKey], segmentIndex) then
+                applyEffects(limbKey, segmentIndex)
+            end
+        end
+
+        local function legs(boneindex, limbKey)
+            org.owner.brokenLimbSegments = org.owner.brokenLimbSegments or {}
+            if not org.owner.brokenLimbSegments[limbKey] then org.owner.brokenLimbSegments[limbKey] = {} end
+
+            local segmentIndex
+            if string.find(bone, "Thigh") then
+                segmentIndex = 1
+            elseif string.find(bone, "Calf") then
+                segmentIndex = 2
+            elseif string.find(bone, "Foot") then
+                segmentIndex = 3
+            end
+
+            if segmentIndex and not table.HasValue(org.owner.brokenLimbSegments[limbKey], segmentIndex) then
+                applyEffects(limbKey, segmentIndex)
+            end
+        end
+
+        local function spine(boneindex)
+            if GetConVar("hg_use_floppy_system"):GetBool() then
+                if string.find(key, "spine1") or string.find(key, "spine2") then
+                    applySpineFloppyEffect(org.owner)
+                elseif string.find(key, "spine3") then
+                    applyNeckFloppyEffect(org.owner)
+                end
+            end
+        end
+
+        if string.find(key, "larm") then
+            arms(boneindex, "larm")
+        elseif string.find(key, "rarm") then
+            arms(boneindex, "rarm")
+        elseif string.find(key, "lleg") then
+            legs(boneindex, "lleg")
+        elseif string.find(key, "rleg") then
+            legs(boneindex, "rleg")
+        elseif string.find(key, "spine") then
+            spine(boneindex)
+        end
+    end
+
+    if org.owner:IsPlayer() and isBullet and not nodmgchange then
+        local newDmg = halfValue2(dmg, ricochet)
+        if newDmg > 0 then
+            dmgInfo:SetDamage(newDmg)
+            org.owner:TakeDamageInfo(dmgInfo)
+        end
+    end
+end
+            print("Spinal cord damaged because " .. key .. " is already broken.")
+        end
+        return
+    end
+
 	local crush = isCrush(dmgInfo)
 	
 	if dmgInfo:IsDamageType(DMG_SLASH) and dmg > 1.5 then
@@ -882,7 +1011,9 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
         org[key .. "_perm_dmg"] = math.min((org[key .. "_perm_dmg"] or 0) + 0.05, 1)
 
         -- Apply a second floppy effect
-        applyLimbFloppyEffect(org.owner, limbKey)
+        if GetConVar("hg_use_floppy_system"):GetBool() then
+				applyLimbFloppyEffect(org.owner, limbKey)
+			end
 
         -- Play sound
         local sound = table.Random(broke_leg_gruesome)
@@ -990,14 +1121,18 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
             if org.recentBoneBreaks then
                 for _, breakData in ipairs(org.recentBoneBreaks) do
                     if currentTime - breakData.time <= 4 then
-                        applyLimbFloppyEffect(org.owner, breakData.bone)
+						if GetConVar("hg_use_floppy_system"):GetBool() then
+							applyLimbFloppyEffect(org.owner, breakData.bone)
+						end
                     end
                 end
             end
 			org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
         else
             if not org.owner.brokenLimbSegments then org.owner.brokenLimbSegments = {} end
-            applyLimbFloppyEffect(org.owner, limbKey)
+			if GetConVar("hg_use_floppy_system"):GetBool() then
+				applyLimbFloppyEffect(org.owner, limbKey)
+			end
         end
 		//broken
 	else
@@ -1050,13 +1185,17 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
             if org.recentBoneBreaks then
                 for _, breakData in ipairs(org.recentBoneBreaks) do
                     if currentTime - breakData.time <= 4 then
-                        applyLimbFloppyEffect(org.owner, breakData.bone)
+						if GetConVar("hg_use_floppy_system"):GetBool() then
+							applyLimbFloppyEffect(org.owner, breakData.bone)
+						end
                     end
                 end
             end
 			org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 75, 100, 1, CHAN_AUTO)
         else
-            applyLimbFloppyEffect(org.owner, key)
+			if GetConVar("hg_use_floppy_system"):GetBool() then
+				applyLimbFloppyEffect(org.owner, key)
+			end
         end
 		//dislocated
 	end
@@ -1076,7 +1215,9 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 
         -- Apply a second floppy effect
         if limbKey then
-			applyLimbFloppyEffect(org.owner, limbKey)
+			if GetConVar("hg_use_floppy_system"):GetBool() then
+				applyLimbFloppyEffect(org.owner, limbKey)
+			end
 		end
 
         -- Play sound
@@ -1176,7 +1317,9 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
         trackBoneBreak(org, key)
+        		org.owner.brokenLimbSegments = org.owner.brokenLimbSegments or {}
         if table.Count(org.owner.brokenLimbSegments[key] or {}) < (maxLimbBreaks[key] or 3) then
+            if GetConVar("hg_use_floppy_system"):GetBool() then
             if limbKey then
 				applyLimbFloppyEffect(org.owner, limbKey)
 			end
@@ -1232,7 +1375,9 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
                     if currentTime - breakData.time <= 4 then
                         local breakLimbKey = string.match(breakData.bone, "^[^_]+")
 						if breakLimbKey then
+							if GetConVar("hg_use_floppy_system"):GetBool() then
 							applyLimbFloppyEffect(org.owner, breakLimbKey)
+						end
 						end
                     end
                 end
@@ -1294,7 +1439,9 @@ local function spinal_cord(org, bone, dmg, dmgInfo, number, boneindex, dir, hit,
 					-- 	applyNeckFloppyEffect(org.owner)
 					-- end
 					-- if name == "spine1" or name == "spine2" then
-					-- 	applySpineFloppyEffect(org.owner)
+					-- 	if GetConVar("hg_use_floppy_system"):GetBool() then
+							applySpineFloppyEffect(org.owner)
+						end
 					-- end
 		--if hg.CreateNotification then hg.CreateNotification(org.owner, "My spinal cord has been severed!", true, name, 5) end
 		if org.owner:IsPlayer() then
@@ -1884,10 +2031,14 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 	if org[name] >= 1 and org.isPly then
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
 		if name == "spine3" then
-			applyNeckFloppyEffect(org.owner)
+			if GetConVar("hg_use_floppy_system"):GetBool() then
+				applyNeckFloppyEffect(org.owner)
+			end
 		end
 		if name == "spine1" or name == "spine2" then
-			applySpineFloppyEffect(org.owner)
+			if GetConVar("hg_use_floppy_system"):GetBool() then
+				applySpineFloppyEffect(org.owner)
+			end
 		end
 		local broke_spine = {
 						"Fuuck... I think i broke something in my back.",
@@ -1908,9 +2059,13 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 						org.owner:EmitSound("disloc"..math.random(1,2)..".ogg", 75, 100, 1, CHAN_AUTO)
 						if hg.CreateNotification then hg.CreateNotification(org.owner, "Something is wrong in my back.", true, name, 3) end
 						if name == "spine3" then
-							applyNeckFloppyEffect(org.owner)
+							if GetConVar("hg_use_floppy_system"):GetBool() then
+								applyNeckFloppyEffect(org.owner)
+							end
 						else
-							applySpineFloppyEffect(org.owner)
+							if GetConVar("hg_use_floppy_system"):GetBool() then
+								applySpineFloppyEffect(org.owner)
+							end
 						end
 						return
 					end
