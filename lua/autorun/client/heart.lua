@@ -21,7 +21,7 @@ if CLIENT then
         { name = "SKULL FRACTURE", priority = 55, color = Color(255, 200, 0), check = function(m, s) return m.skull > 0.5 end },
         { name = "HYPOVOLEMIA", priority = 50, color = Color(255, 255, 0), check = function(m, s) return s.isHemorrhagic end },
         { name = "INTERNAL BLEEDING", priority = 45, color = Color(255, 255, 0), check = function(m, s) return m.internalBleed > 0 end },
-        { name = "HYPOXIA", priority = 40, color = Color(0, 150, 255), check = function(m, s) return s.isHypoxic end },
+        { name = "HYPOXIA", priority = 40, color = Color(0, 150, 255), check = function(m, s) return s.isHypoxic and m.o2 >= 15 end },
         { name = "BLEEDING", priority = 35, color = Color(255, 255, 100), check = function(m, s) return m.bleed > 0 end },
         { name = "TACHYCARDIA", priority = 30, color = Color(255, 255, 0), check = function(m, s) return s.isTachycardia end },
         { name = "BRADYCARDIA", priority = 20, color = Color(0, 200, 255), check = function(m, s) return s.isBradycardia end },
@@ -227,7 +227,7 @@ if CLIENT then
             heartDamage = org.heart or 0,
             heartStop = org.heartstop or false,
             blood = org.blood or 5000,
-            o2 = org.o2 and org.o2[1] or 30,
+            o2 = (org.o2 and org.o2[1]) or 30,
             brain = org.brain or 0,
             unconscious = org.otrub or false,
             critical = org.critical or false,
@@ -236,7 +236,7 @@ if CLIENT then
             shock = org.shock or 0,
             bleed = org.bleed or 0,
             internalBleed = org.internalBleed or 0,
-            stamina = org.stamina and org.stamina[1] or 180,
+            stamina = (org.stamina and org.stamina[1]) or 180,
             pneumothorax = org.pneumothorax or 0,
             lungsL = org.lungsL and org.lungsL[1] or 0,
             lungsR = org.lungsR and org.lungsR[1] or 0,
@@ -407,6 +407,9 @@ if CLIENT then
         end
         
         if state.isHemorrhagic then
+            if type(metrics.blood) ~= "number" then
+                metrics.blood = 5000
+            end
             local bloodEffect = (5000 - metrics.blood) / 3000
             wave = wave * (1 - bloodEffect * 0.4)
             
@@ -613,9 +616,9 @@ if CLIENT then
         
        
         self:DrawTraumaWindow(x, y, org, metrics, state)
-        if self.Monitor:GetBool() then
-            self:DrawStatsWindow(x, y, metrics, state)
-        end  
+        -- if self.Monitor:GetBool() then
+        --     self:DrawStatsWindow(x, y, metrics, state)
+        -- end  
         
         
         local frameColor = Color(0, 150, 0, 255)

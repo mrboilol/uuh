@@ -735,7 +735,6 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
         end
     end
 end
-    end
 
 	local crush = isCrush(dmgInfo)
 	

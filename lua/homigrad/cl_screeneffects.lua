@@ -69,7 +69,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 		addtiveLayer["brightness"] = Lerp(weight, 0, layer["brightness"] or 0)
 		--end
 	end
-	
+
 	//DrawBloom(addtiveLayer.bloom_darken, addtiveLayer.bloom_mul, addtiveLayer.bloom_sizex, addtiveLayer.bloom_sizey, addtiveLayer.bloom_passes, addtiveLayer.bloom_colormul, addtiveLayer.bloom_colorr, addtiveLayer.bloom_colorg, addtiveLayer.bloom_colorb)
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
@@ -125,14 +125,10 @@ local LayerSetWeight = postprs.LayerSetWeight
 local CurTime = CurTime
 local timecheck = CurTime()
 hook.Add("Post Processing", "Main", function()
-	local lply = LocalPlayer()
-	if not IsValid(lply) then return end
-	
 	//if potatopc:GetInt() >= 1 then return end
 	//if !lply:Alive() then return end
 	local ply = lply:Alive() and lply or lply:GetNWEntity("spect")
 	if !IsValid(ply) then return end
-	
 	local waterLevel = oldWaterLevel
 	if timecheck < CurTime() then
 		local pos = hg.eye(lply)
@@ -188,10 +184,9 @@ local haloents = {
 	["weapon_hg_f1_tpik"] = true
 }
 
---[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсветкой всего в радиусе
+hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсветкой всего в радиусе
 	local pickuphalo = {}
-	local lply = LocalPlayer()
-	if not IsValid(lply) then return end
+	 
 	local lpos = lply:GetPos()
 	for _, ent in ipairs(ents.FindInSphere(lpos, 256)) do
 		if IsValid(ent) and (haloents[ent.Base] or haloents[ent:GetClass()]) and not IsValid(ent:GetOwner()) then
@@ -203,12 +198,11 @@ local haloents = {
 		end
 	end
 	halo.Add( pickuphalo, color_red, 1, 1, 1 )
-end )]]
+end )
 
---[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсвечиванием только когда смотришь
+hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсвечиванием только когда смотришь
 	local pickuphalo = {}
-	local lply = LocalPlayer()
-	if not IsValid(lply) then return end
+	 
 	local tr = hg.eyeTrace(lply,72)
 	if IsValid(tr.Entity) and haloents[tr.Entity.Base] then
 		table.insert(pickuphalo, tr.Entity)
@@ -221,7 +215,7 @@ end )]]
 		color_red.g = Lerp(FrameTime()*2,color_red.g,0)
 	end
 	halo.Add( pickuphalo, color_red, 1, 1, 1 )
-end )]]
+end )
 
 -- funny :)
 
@@ -254,7 +248,6 @@ local lobotomy_mats = {
 	[7] = Material("overlays/tallflash2.png"),
 	[8] = Material("overlays/tallflash3.png")
 }
-
 local LEFT_EYE_GONE_OVERLAY = Material("overlays/lefteyegone.png")
 local RIGHT_EYE_GONE_OVERLAY = Material("overlays/righteyegone.png")
 
@@ -291,17 +284,7 @@ hook.Add("RenderScreenspaceEffects", "HG_DrawEyeLossOverlay", function()
         surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
     end
 end)
-
-local PainSoundChoice
-local LowO2SoundChoice
-local DespairSoundChoice
-local TiredStation
-local SleepyStation
-
 local function stopthings()
-	PainSoundChoice = nil
-	LowO2SoundChoice = nil
-	DespairSoundChoice = nil
 	PainLerp = 0
 	O2Lerp = 0
 	shockLerp = 0
@@ -309,15 +292,12 @@ local function stopthings()
 	tempLerp = 36.6
 	consciousnessLerp = 1
 
-	local lply = LocalPlayer()
-	if IsValid(lply) then
-		lply.tinnitus = nil
-	end
-
-	if IsValid(PainStation) then
+	lply.tinnitus = 0
+	
+	--[[if IsValid(PainStation) then
 		PainStation:Stop()
 		PainStation = nil
-	end
+	end--]]
 
 	if IsValid(NoiseStation) then
 		NoiseStation:Stop()
@@ -328,21 +308,6 @@ local function stopthings()
 		NoiseStation2:Stop()
 		NoiseStation2 = nil
 	end
-
-	if IsValid(DespairStation) then
-		DespairStation:Stop()
-		DespairStation = nil
-	end
-
-    if IsValid(TiredStation) then
-        TiredStation:Stop()
-        TiredStation = nil
-    end
-
-    if IsValid(SleepyStation) then
-        SleepyStation:Stop()
-        SleepyStation = nil
-    end
 
 	if IsValid(BrainTraumaStation) then
 		BrainTraumaStation:Stop()
@@ -386,7 +351,6 @@ local stations = {
 	0.15,
 	0.22,
 	0.27,
-	0.33,
 }
 
 local choosera = 1
@@ -504,9 +468,6 @@ if CLIENT then
     end)
 end
 hook.Add("Post Post Processing", "ItHurts", function()
-	local lply = LocalPlayer()
-	if not IsValid(lply) then return end
-
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	
 	if IsValid(PainStation) then
@@ -520,36 +481,16 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	if not organism.brain then stopthings() return end
 	local org = organism
 	
-	if PainLerp > 1 then
-		if !IsValid(PainStation) then
-			if not PainSoundChoice then
-				local scav_pain = GetConVar("hg_scavpain"):GetInt()
-				if scav_pain == 1 then
-					PainSoundChoice = "sound/itfuckinghurts.mp3"
-				else -- 0 = normal
-					PainSoundChoice = (math.random(2) == 1) and "sound/zbattle/pain_beat.ogg" or "sound/itfuckinghurts.mp3"
-				end
+	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
+		sound.PlayFile("sound/zbattle/pain_beat.ogg", "noblock noplay", function(station)
+			if IsValid(station) then
+				station:SetVolume(0)
+				station:Play()
+				station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
+				PainStation = station
+				station:EnableLooping(true)
 			end
-
-			sound.PlayFile(PainSoundChoice, "noblock noplay", function(station)
-				if IsValid(station) then
-					station:SetVolume(0)
-					station:Play()
-					station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
-					PainStation = station
-					station:EnableLooping(true)
-				end
-			end)
-		else
-			if PainStation:GetState() != GMOD_CHANNEL_PLAYING then
-				PainStation:Play()
-			end
-		end
-	else
-		if IsValid(PainStation) then
-			PainStation:Stop()
-			PainStation = nil
-		end
+		end)
 	end
 
 	local LerpFT = LerpFT or Lerp
@@ -560,107 +501,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	o2 = o2 + (org.CO or 0)
 	local brain = org.brain or 0
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
-
-	if o2 < 20 then
-		local painVolume = math.Clamp(PainLerp / 100, 0.1, 1)
-		local scav_sound = GetConVar("hg_scavsound"):GetInt()
-		
-		local play_conscious = false
-		local play_despair = false
-		local despair_sound_path = "sound/itswraps/despair.ogg"
-
-		if scav_sound == 0 then -- normal
-			play_conscious = true
-		elseif scav_sound == 1 then -- despair or itswraps
-			play_despair = true
-			if not DespairSoundChoice then
-				DespairSoundChoice = math.random(2) == 1 and "sound/itswraps/despair.ogg" or "sound/itfuckinghurts.mp3"
-			end
-			despair_sound_path = DespairSoundChoice
-		elseif scav_sound == 2 then -- conscious as background, with despair/itswraps
-			play_conscious = true
-			play_despair = true
-			if not DespairSoundChoice then
-				DespairSoundChoice = math.random(2) == 1 and "sound/itswraps/despair.ogg" or "sound/itfuckinghurts.mp3"
-			end
-			despair_sound_path = DespairSoundChoice
-		end
-
-		if play_conscious then
-			if !IsValid(NoiseStation) then
-				sound.PlayFile("sound/conscioustypebeat.ogg", "noblock noplay", function(station)
-					if IsValid(station) then
-						station:SetVolume(Lerp(FrameTime() * 2, 0, 0.5 * painVolume))
-						station:Play()
-						NoiseStation = station
-						station:EnableLooping(true)
-					end
-				end)
-			else
-				local targetVol = 0.5 * painVolume
-				if scav_sound == 2 then targetVol = 0.3 * painVolume end -- Lower volume for background
-				NoiseStation:SetVolume(Lerp(FrameTime() * 2, NoiseStation:GetVolume(), targetVol))
-			end
-		else
-			if IsValid(NoiseStation) then
-				local vol = NoiseStation:GetVolume()
-				if vol < 0.05 then
-					NoiseStation:Stop()
-					NoiseStation = nil
-				else
-					NoiseStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
-				end
-			end
-		end
-
-		if play_despair then
-			if !IsValid(DespairStation) then
-				sound.PlayFile(despair_sound_path, "noblock noplay", function(station)
-					if IsValid(station) then
-						station:SetVolume(Lerp(FrameTime() * 2, 0, 0.5 * painVolume))
-						station:Play()
-						DespairStation = station
-						station:EnableLooping(true)
-					end
-				end)
-			else
-				DespairStation:SetVolume(Lerp(FrameTime() * 2, DespairStation:GetVolume(), 0.5 * painVolume))
-			end
-		else
-			if IsValid(DespairStation) then
-				local vol = DespairStation:GetVolume()
-				if vol < 0.05 then
-					DespairStation:Stop()
-					DespairStation = nil
-					DespairSoundChoice = nil -- Reset choice when sound stops
-				else
-					DespairStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
-				end
-			end
-		end
-	else
-		LowO2SoundChoice = nil
-		DespairSoundChoice = nil
-		if IsValid(NoiseStation) then
-			local vol = NoiseStation:GetVolume()
-			if vol < 0.05 then
-				NoiseStation:Stop()
-				NoiseStation = nil
-			else
-				NoiseStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
-			end
-		end
-		if IsValid(DespairStation) then
-			local vol = DespairStation:GetVolume()
-			if vol < 0.05 then
-				DespairStation:Stop()
-				DespairStation = nil
-				DespairSoundChoice = nil -- Reset choice when sound stops
-			else
-				DespairStation:SetVolume(Lerp(FrameTime() * 2, vol, 0))
-			end
-		end
-	end
 
 	tempLerp = LerpFT(0.01, tempLerp, org.temperature)
 
@@ -714,7 +554,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	PainLerp = LerpFT(0.05, PainLerp, math.max(pain * (org.otrub and 0.2 or 1), 0))
 	assimilatedLerp = LerpFT(0.01, assimilatedLerp, (org.assimilated or 0))
 
-    local stamina = org.stamina and org.stamina[1] or 100
+	    local stamina = org.stamina and org.stamina[1] or 100
     if stamina < 30 and !org.otrub then
         if !IsValid(TiredStation) then
             sound.PlayFile("sound/tired.ogg", "noblock noplay", function(station)
@@ -767,7 +607,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
             SleepyStation = nil
         end
     end
-
 	if assimilatedLerp > 0.001 then
 		render.UpdateScreenEffectTexture()
 
@@ -779,7 +618,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		assimilationMat:SetFloat("$c1_y", val)
 		assimilationMat:SetFloat("$c1_x", val2 - 0.5)
 
-		if !IsValid(AssimilationStation) then
+		if !IsValid(AssimilationStation) or AssimilationStation:GetState() != GMOD_CHANNEL_PLAYING then
 			sound.PlayFile("sound/zbattle/furry/conversion/assimilation_noise3.ogg", "noblock noplay", function(station, err)
 				if IsValid(station) then
 					station:SetVolume(0)
@@ -789,9 +628,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				end
 			end)
 		else
-			if AssimilationStation:GetState() != GMOD_CHANNEL_PLAYING then
-				AssimilationStation:Play()
-			end
 			AssimilationStation:SetVolume(assimilatedLerp * 2)
 			//AssimilationStation:SetPlaybackRate(assimilatedLerp * 1)
 		end
@@ -891,7 +727,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			end
 		end
 	
-		if !IsValid(BrainTraumaStation) or choosera != chooser then
+		if !IsValid(BrainTraumaStation) or choosera != chooser or BrainTraumaStation:GetState() != GMOD_CHANNEL_PLAYING then
 			if IsValid(BrainTraumaStation) then
 				BrainTraumaStation:Stop()
 				BrainTraumaStation = nil
@@ -906,10 +742,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				end
 			end)
 			choosera = chooser
-		else
-			if BrainTraumaStation:GetState() != GMOD_CHANNEL_PLAYING then
-				BrainTraumaStation:Play()
-			end
 		end
 
 		if IsValid(BrainTraumaStation) then
@@ -924,7 +756,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 	//if brain > 0.1 and not org.otrub and show_some_images_time > 0 and false then
 	if lply.tinnitus and lply.tinnitus > CurTime() and lply:Alive() then
-		if !IsValid(Tinnitus) then
+		if !IsValid(Tinnitus) or Tinnitus:GetState() != GMOD_CHANNEL_PLAYING  then
 			sound.PlayFile("sound/zcitysnd/real_sonar/tinnitus"..math.random(3)..".mp3", "noblock noplay", function(station, err)
 				if IsValid(station) then
 					station:SetVolume(0)
@@ -933,10 +765,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 					station:EnableLooping(true)
 				end
 			end)
-		else
-			if Tinnitus:GetState() != GMOD_CHANNEL_PLAYING then
-				Tinnitus:Play()
-			end
 		end
 
 		if IsValid(Tinnitus) then
@@ -993,119 +821,68 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.SetMaterial(noiseMat)
 		render.DrawScreenQuad()
 		
-		if o2 > 20 then
-			local scav_sound = GetConVar("hg_scavsound"):GetInt()
-
-			if (scav_sound == 0) then
-				if !IsValid(DespairStation) or DespairStation:GetState() != GMOD_CHANNEL_PLAYING then
-					sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
-						if IsValid(station) then
-							station:SetVolume(0)
-							station:Play()
-							DespairStation = station
-							station:EnableLooping(true)
-						end
-					end)
-				end
-				if IsValid(DespairStation) then
-					DespairStation:SetVolume(math.Clamp((o2 - 20) / 100, 0, 0.6))
-				end
-			else
-				if IsValid(DespairStation) then DespairStation:SetVolume(0) end
-			end
-
-			if (scav_sound == 1) then
-				if o2 > 50 and !org.otrub then
-					if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
-						if not DespairSoundChoice then
-							DespairSoundChoice = (math.random(2) == 1) and "sound/scav/despair.ogg" or "sound/itswraps.ogg"
-						end
-	
-						sound.PlayFile(DespairSoundChoice, "noblock noplay", function(station)
-							if IsValid(station) then
-								station:SetVolume(0)
-								station:Play()
-								station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
-								NoiseStation2 = station
-								station:EnableLooping(true)
-							end
-						end)
+		if o2 > 50 and !org.otrub then
+			if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
+				sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
+					if IsValid(station) then
+						station:SetVolume(0)
+						station:Play()
+						station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
+						NoiseStation2 = station
+						station:EnableLooping(true)
 					end
-					
-					if IsValid(NoiseStation2) then
-						NoiseStation2:SetVolume(math.Clamp((o2 - 50) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 0.25))
-					end
-				else
-					if IsValid(NoiseStation2) then
-						NoiseStation2:SetVolume(0)
-					end
-				end
-			else
-				if IsValid(NoiseStation2) then NoiseStation2:SetVolume(0) end
+				end)
 			end
 			
-			if org.otrub then
-				if !IsValid(NoiseStation) or NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
-					sound.PlayFile("sound/zbattle/unconscious_type_beat.ogg", "noblock noplay", function(station)
-						if IsValid(station) then
-							station:SetVolume(0)
-							station:Play()
-							station:SetTime(math.min(brain / 0.5 * station:GetLength(), 200))
-							NoiseStation = station
-							station:EnableLooping(true)
-						end
-					end)
-				end
-
-				if IsValid(NoiseStation) then
-					NoiseStation:SetVolume(math.Clamp((o2 - 30) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 1))
-				end
-			else
-				if IsValid(NoiseStation) then
-					NoiseStation:SetVolume(0)
-				end
+			if IsValid(NoiseStation2) then
+				NoiseStation2:SetVolume(math.Clamp((o2 - 50) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 0.25))
 			end
 		else
-			if IsValid(DespairStation) then
-				DespairStation:SetVolume(0)
-			end
-			if IsValid(NoiseStation) then
-				NoiseStation:SetVolume(0)
-			end
 			if IsValid(NoiseStation2) then
 				NoiseStation2:SetVolume(0)
 			end
 		end
-	else
-		if IsValid(DespairStation) then
-			DespairStation:Stop()
-			DespairStation = nil
+		
+		if o2 > 20 and org.otrub then
+			if !IsValid(NoiseStation) or NoiseStation:GetState() != GMOD_CHANNEL_PLAYING then
+				sound.PlayFile("sound/zbattle/unconscious_type_beat.ogg", "noblock noplay", function(station)
+					if IsValid(station) then
+						station:SetVolume(0)
+						station:Play()
+						station:SetTime(math.min(brain / 0.5 * station:GetLength(), 200))
+						NoiseStation = station
+						station:EnableLooping(true)
+					end
+				end)
+			end
+
+			if IsValid(NoiseStation) then
+				NoiseStation:SetVolume(math.Clamp((o2 - 30) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 1))
+			end
+		else
+			if IsValid(NoiseStation) then
+				NoiseStation:SetVolume(0)
+			end
 		end
+	else
 		if IsValid(NoiseStation) then
 			NoiseStation:Stop()
 			NoiseStation = nil
-		end
-		if IsValid(NoiseStation2) then
-			NoiseStation2:Stop()
-			NoiseStation2 = nil
 		end
 	end
 end)
 
 hook.Add("Player_Death", "ItDoesntNow", function(ply)
-	local lply = LocalPlayer()
 	if !((ply == lply) or (ply == lply:GetNWEntity("spect"))) then return end
 
 	stopthings()
 end)
 
 hook.Add("Player Spawn", "ItDoesntNow", function(ply)
-	local lply = LocalPlayer()
 	if ply != lply then return end
 
 	stopthings()
 end)
-
 net.Receive("hg_play_client_sound", function()
 	local soundPath = net.ReadString()
 	surface.PlaySound(soundPath)
