@@ -343,6 +343,7 @@ end)
 local braindeathstart = CurTime() + 20
 local lerpedpart = 0
 local lerpedbrain = 0
+local otrubStartTime = 0
 
 hook.Add("Post Pre Post Processing", "ShowScreens", function()
 	local org = lply.organism
@@ -384,7 +385,7 @@ local addtime = CurTime()
 
 local hg_potatopc
 local old = false
-local otrubStartTime = 0
+
 local tinnitusSoundFactor
 local lerpblood = 0
 hook.Add("RenderScreenspaceEffects", "organism-effects", function()

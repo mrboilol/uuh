@@ -34,45 +34,59 @@ local function isDeadBodyAllowed(ply, owner)
 	return true
 end
 
+local deadSound
+
 hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
     local death_effect_enabled = GetConVar("hg_death_effect_enabled")
     if not death_effect_enabled or not death_effect_enabled:GetBool() then return end
 
     local lply = LocalPlayer()
-    if not IsValid(lply) or not lply:Alive() then return end
-	local deadOwner = getDeadBodyOwner(lply)
+    if not IsValid(lply) then return end
 
-    if deadOwner then
-        if isDeadBodyAllowed(lply, deadOwner) then
-            deadBodyHoldUntil = CurTime() + deadBodyHoldSeconds
-        else
-            deadBodyHoldUntil = 0
+    local isEffectActive = false
+    if not lply:Alive() then
+        -- The player is dead, so the effect should be active for them.
+        isEffectActive = true
+    else
+        -- The player is alive, use the original logic to check for nearby dead bodies.
+        local deadOwner = getDeadBodyOwner(lply)
+        if deadOwner then
+            if isDeadBodyAllowed(lply, deadOwner) then
+                deadBodyHoldUntil = CurTime() + deadBodyHoldSeconds
+            else
+                deadBodyHoldUntil = 0
+            end
         end
+        isEffectActive = deadBodyHoldUntil > CurTime()
     end
 
-	local deadActive = deadBodyHoldUntil > CurTime()
-	tunnelWaveFade = LerpFT(0.08, tunnelWaveFade, deadActive and 1 or 0)
-	if tunnelWaveFade < 0.01 then return end
+	tunnelWaveFade = LerpFT(0.08, tunnelWaveFade, isEffectActive and 1 or 0)
+	if tunnelWaveFade < 0.01 then
+        if deadSound and deadSound:IsPlaying() then
+            deadSound:Stop()
+        end
+        return
+    end
 	render.UpdateScreenEffectTexture()
 	tunnelWaveMat:SetFloat("$c1_w", tunnelWaveBase * tunnelWaveFade)
 	render.SetMaterial(tunnelWaveMat)
 	render.DrawScreenQuad()
 
-    if deadActive and not deadBodySoundPlaying then
-        deadBodySoundPlaying = true
-        surface.PlaySound(table.Random(DeadBodySounds))
-    elseif not deadActive and deadBodySoundPlaying then
-        deadBodySoundPlaying = false
+    if not deadSound then
+        deadSound = CreateSound(lply, "ambient/creatures/town_moan1.wav") -- Using one sound for consistency
+    end
+
+    if isEffectActive then
+        if not deadSound:IsPlaying() then
+            deadSound:PlayEx(1, 100) -- Play at full volume initially
+        end
+    end
+
+    if deadSound:IsPlaying() then
+        deadSound:ChangeVolume(tunnelWaveFade, 0.1) -- Fade volume with the visual effect
+    end
+
+    if not isEffectActive and deadSound:IsPlaying() then
+        deadSound:Stop()
     end
 end)
-
-local DeadBodySounds = {
-    "ambient/creatures/town_moan1.wav",
-    "ambient/creatures/town_muffled_cry1.wav",
-    "ambient/creatures/town_scared_breathing1.wav",
-    "ambient/creatures/town_scared_breathing2.wav",
-    "ambient/creatures/town_scared_sob1.wav",
-    "ambient/creatures/town_scared_sob2.wav",
-}
-
-local deadBodySoundPlaying = false

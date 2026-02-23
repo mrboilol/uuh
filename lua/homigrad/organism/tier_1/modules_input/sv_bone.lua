@@ -617,7 +617,7 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
     if string.find(key, "spine") and org[key] >= 1 then
         if org.damageOrgan then
             org:damageOrgan("spinal_cord", dmg, dmgInfo)
-            --hg.netstream.to(org.owner, "hg_debug_msg", "Spinal cord damaged due to broken spine!")
+            print("Spinal cord damaged because " .. key .. " is already broken.")
         end
         return
     end
@@ -707,9 +707,9 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
         local function spine(boneindex)
             if GetConVar("hg_use_floppy_system"):GetBool() then
                 if string.find(key, "spine1") or string.find(key, "spine2") then
-                    applySpineFloppyEffect(org.owner)
+                    if hg.organism.applySpineFloppyEffect then hg.organism.applySpineFloppyEffect(org.owner) end
                 elseif string.find(key, "spine3") then
-                    applyNeckFloppyEffect(org.owner)
+                    if hg.organism.applyNeckFloppyEffect then hg.organism.applyNeckFloppyEffect(org.owner) end
                 end
             end
         end
@@ -735,9 +735,6 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
         end
     end
 end
-            print("Spinal cord damaged because " .. key .. " is already broken.")
-        end
-        return
     end
 
 	local crush = isCrush(dmgInfo)
