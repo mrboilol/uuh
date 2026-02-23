@@ -234,9 +234,15 @@ local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
 	cons:SetKeyValue("ymax", limits[1][0])
 	cons:SetKeyValue("zmin", limits[2][1])
 	cons:SetKeyValue("zmax", limits[2][0])
-	cons:SetPhysConstraintObjects(pBone1, pBone2)
+
+    -- Apply a slight positional offset to make the break more visually apparent
+    local offset = (pBone1:GetPos() - pBone2:GetPos()):GetNormalized() * 2
+    pBone1:SetPos(pBone1:GetPos() + offset)
+
+    cons:SetPhysConstraintObjects(pBone1, pBone2)
 	cons:Spawn()
 	cons:Activate()
+	if cons.Wake then cons:Wake() end
     
     -- Restore original state
     pBone1:SetPos(pos_ori)
@@ -244,14 +250,14 @@ local function createFloppyLimbConstraint(rag, bone1Name, bone2Name, limbType)
 	pBone2:SetPos(pos_ori_par)
 	pBone2:SetAngles(ang_ori_par)
 
-	pBone1:SetVelocityInstantaneous(vel_ori)
 	pBone1:SetVelocity(vel_ori)
-	pBone2:SetVelocityInstantaneous(vel_ori_par)
 	pBone2:SetVelocity(vel_ori_par)
-	pBone1:SetAngleVelocityInstantaneous(avel_ori)
 	pBone1:SetAngleVelocity(avel_ori)
-	pBone2:SetAngleVelocityInstantaneous(avel_ori_par)
 	pBone2:SetAngleVelocity(avel_ori_par)
+
+    -- Wake the physics objects after restoring their state to ensure they are active
+    if pBone1.Wake then pBone1:Wake() end
+    if pBone2.Wake then pBone2:Wake() end
     
 	rag:SetSaveValue("m_ragdoll.allowStretch", false)
 
@@ -380,7 +386,7 @@ local function applyLimbFloppyEffect(ent, limbKey, segmentIndex)
 
 		local segments = limbBoneSegments[limbKey]
 		if not segments then return end
-
+--holy fucking shit finally
 		if not segmentIndex then return end
 
 		local selectedSegment = segments[segmentIndex]
@@ -493,7 +499,7 @@ local function createFloppySpineConstraint(rag, bone1Name, bone2Name)
 end
 
 -- Function to apply floppy effect to the spine
-local function applySpineFloppyEffect(ent)
+function hg.organism.applySpineFloppyEffect(ent)
     if not IsValid(ent) then return end
 
     timer.Simple(0.1, function()
@@ -566,7 +572,7 @@ local function createFloppyNeckConstraint(rag)
 end
 
 -- Function to apply floppy effect to the neck
-local function applyNeckFloppyEffect(ent)
+function hg.organism.applyNeckFloppyEffect(ent)
     if not IsValid(ent) then return end
 
     timer.Simple(0.1, function()
@@ -1425,7 +1431,24 @@ local function spinal_cord(org, bone, dmg, dmgInfo, number, boneindex, dir, hit,
 	
 	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 10, "Spinal cord damage harm")
 
-	if oldDmg < 1 and org[name] >= 1 then
+	if oldDmg < 1 and org[key] >= 1 then
+            -- yeowch
+            if string.find(key, "spine") then
+                local spineNum = string.match(key, "%d")
+                if spineNum then
+                    local spinalCordKey = "spinal_cord" .. spineNum
+                    if math.random() <= 0.15 then
+                        org[spinalCordKey] = 1
+                    end
+
+                    -- ouch
+                    if key == "spine3" and (org.spinal_cord3 or 0) >= 1 then
+                        if math.random() <= 0.20 then
+                            hg.BreakNeck(org.owner)
+                        end
+                    end
+                end
+            end
 		print("DEBUG: spinal_cord" .. number .. " severed.")
 	end
 	

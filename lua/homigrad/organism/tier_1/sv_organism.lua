@@ -29,6 +29,9 @@ hook.Add("Org Clear", "Main", function(org)
 	org.spine1 = 0
 	org.spine2 = 0
 	org.spine3 = 0
+	org.spinal_cord1 = 0
+	org.spinal_cord2 = 0
+	org.spinal_cord3 = 0
 	org.chest = 0
 	org.pelvis = 0
 	org.skull = 0
@@ -606,11 +609,17 @@ hook.Add("HG_OnWakeOtrub", "SaturationFlashOnWake", function(owner)
     end
 end)
 
-	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub and (org.spinal_cord1 or 0) < 1 and (org.spinal_cord2 or 0) < 1
-	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub and (org.spinal_cord3 or 0) < 1
+	org.canmove = not org.otrub and (org.spinal_cord1 or 0) < 1 and (org.spinal_cord2 or 0) < 1
+	org.canmovehead = not org.otrub and (org.spinal_cord3 or 0) < 1
 	
 	if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
 	if (org.blood < 2700) then org.needfake = true end
+
+	-- Neck break and death logic
+	if (org.spine3 >= 1 or (org.spinal_cord3 or 0) >= 1) and not org.neckBroken then
+		hg.BreakNeck(org.owner)
+		org.neckBroken = true
+	end
 
 	local just_went_uncon = not org.otrub and org.needotrub
 
