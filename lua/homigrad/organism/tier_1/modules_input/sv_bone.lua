@@ -607,7 +607,8 @@ end
 local colred = Color(255, 0, 0)
 
 local function isCrush(dmgInfo)
-	return (not dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_BLAST)) or dmgInfo:GetInflictor().RubberBullets
+    if not IsValid(dmgInfo) then return false end
+	return (not dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_BLAST)) or (IsValid(dmgInfo:GetInflictor()) and dmgInfo:GetInflictor().RubberBullets)
 end
 
 local halfValue2 = util.halfValue2

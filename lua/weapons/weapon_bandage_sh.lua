@@ -43,6 +43,7 @@ SWEP.Slot = 3
 SWEP.SlotPos = 1
 
 SWEP.WorkWithFake = true
+SWEP.UseMinigame = true
 SWEP.offsetVec = Vector(4, -3.5, 0)
 SWEP.offsetAng = Angle(90, 90, 0)
 
@@ -154,7 +155,7 @@ end
 
 SWEP.net_cooldown2 = 0
 function SWEP:PrimaryAttack()
-	if self.UseMinigame then
+	if self.UseMinigame and (not self:GetOwner():IsDoctor()) then
 		if CLIENT and IsFirstTimePredicted() then
 			self:StartMinigame(1)
 		end
@@ -338,7 +339,7 @@ function SWEP:SetInfo(info)
 end
 
 function SWEP:SecondaryAttack()
-	if self.UseMinigame then
+	if self.UseMinigame and (not self:GetOwner():IsDoctor()) then
 		if CLIENT and IsFirstTimePredicted() then
 			self:StartMinigame(2)
 		end
@@ -1162,7 +1163,7 @@ if CLIENT then
 		
 		local mx, my = input.GetCursorPos()
 		local dist = math.sqrt((mx - rx)^2 + (my - ry)^2)
-		local interactRadius = size * 0.4 
+		local interactRadius = size * 0.3 
 		
 		if input.IsMouseDown(MOUSE_LEFT) then
 			if not self.MinigameDragging then
@@ -1185,8 +1186,8 @@ if CLIENT then
 				if delta < -180 then delta = delta + 360 end
 				
 				if delta > 0 then
-					self.MinigameProgress = self.MinigameProgress + delta
-					self.MinigameAngle = self.MinigameAngle + delta
+					self.MinigameProgress = self.MinigameProgress + delta * 0.7
+					self.MinigameAngle = self.MinigameAngle + delta * 0.7
 				end
 			end
 			self.MinigameLastMouseAngle = angle
@@ -1234,36 +1235,38 @@ if CLIENT then
 		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
 		
 		if not render then return end
-		render.SetStencilWriteMask( 0xFF )
-		render.SetStencilTestMask( 0xFF )
-		render.SetStencilReferenceValue( 1 )
-		render.SetStencilCompareFunction( STENCIL_ALWAYS )
-		render.SetStencilPassOperation( STENCIL_REPLACE )
-		render.SetStencilFailOperation( STENCIL_KEEP )
-		render.SetStencilZFailOperation( STENCIL_KEEP )
-		render.ClearStencil()
-		render.EnableStencil( true )
+		        render.PushFilter(function()
+            render.SetStencilWriteMask( 0xFF )
+		    render.SetStencilTestMask( 0xFF )
+		    render.SetStencilReferenceValue( 1 )
+		    render.SetStencilCompareFunction( STENCIL_ALWAYS )
+		    render.SetStencilPassOperation( STENCIL_REPLACE )
+		    render.SetStencilFailOperation( STENCIL_KEEP )
+		    render.SetStencilZFailOperation( STENCIL_KEEP )
+		    render.ClearStencil()
+		    render.EnableStencil( true )
 		
-		draw.NoTexture()
-		surface.SetDrawColor( 255, 255, 255, 255 )
+		    draw.NoTexture()
+		    surface.SetDrawColor( 255, 255, 255, 255 )
 		
-		local startAng = self.MinigameAngle - self.MinigameProgress
-		local endAng = self.MinigameAngle
+		    local startAng = self.MinigameAngle - self.MinigameProgress
+		    local endAng = self.MinigameAngle
 		
-		surface.SetDrawColor(255, 255, 255, 1)
-		self:DrawArc(cx, cy, size * 1.5, size * 0, startAng, endAng, 36)
+		    surface.SetDrawColor(255, 255, 255, 1)
+		    self:DrawArc(cx, cy, size * 1.5, size * 0, startAng, endAng, 36)
 		
-		render.SetStencilCompareFunction( STENCIL_EQUAL )
-		render.SetStencilPassOperation( STENCIL_KEEP )
+		    render.SetStencilCompareFunction( STENCIL_EQUAL )
+		    render.SetStencilPassOperation( STENCIL_KEEP )
 		
-		surface.SetMaterial(matOuter)
+		    surface.SetMaterial(matOuter)
 		
-		local alpha = (self.MinigameProgress / 360) * 255
-		surface.SetDrawColor(255, 255, 255, alpha)
+		    local alpha = (self.MinigameProgress / 360) * 255
+		    surface.SetDrawColor(255, 255, 255, alpha)
 		
-		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
+		    surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
 		
-		render.EnableStencil( false )
+		    render.EnableStencil( false )
+        end, cx - size, cy - size, size * 2, size * 2)
 		
 		surface.SetDrawColor(255, 255, 255, 255)
 		

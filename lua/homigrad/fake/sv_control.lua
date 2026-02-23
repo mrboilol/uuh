@@ -611,10 +611,10 @@ hook.Add("Think", "Fake", function()
 					end
 				end
 			end
-
+--yea no
 			if org.stamina[1] < 2 then
 				ply.HandsStun = CurTime() + 2
-				ply:Notify(math.random(1,2) == 1 and "SHIT!" or "OH NOO!", 2, "ragdoll_fall", 0, nil, Color(255, 0, 0))
+				--ply:Notify(math.random(1,2) == 1 and "SHIT!" or "OH NOO!", 2, "ragdoll_fall", 0, nil, Color(255, 0, 0))
 			end
 
 			if org.stamina[1] < 50 and (IsValid(ragdoll.ConsRH) or IsValid(ragdoll.ConsLH)) then

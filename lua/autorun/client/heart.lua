@@ -12,12 +12,14 @@ if CLIENT then
     Heartbeat.Conditions = {
         { name = "CARDIAC ARREST", priority = 100, color = Color(255, 0, 0), check = function(m, s) return s.isCardiacArrest end },
         { name = "CRITICAL DAMAGE", priority = 90, color = Color(255, 0, 0), check = function(m, s) return s.isCritical end },
+        { name = "ARTERIAL BLEEDING", priority = 85, color = Color(255, 0, 0), check = function(m, s) return table.Count(m.arterialwounds) > 0 end },
         { name = "SEVERELY HYPOVOLEMIC", priority = 80, color = Color(255, 100, 0), check = function(m, s) return s.isHemorrhagic and m.blood < 2500 end },
         { name = "SEVERELY HYPOXEMIC", priority = 75, color = Color(255, 100, 0), check = function(m, s) return s.isHypoxic and m.o2 < 15 end },
         { name = "BRAIN DAMAGE", priority = 70, color = Color(255, 100, 100), check = function(m, s) return s.isBrainDamaged end },
         { name = "ARRHYTHMIA", priority = 60, color = Color(255, 150, 0), check = function(m, s) return s.isArrhythmia end },
         { name = "PNEUMOTHORAX", priority = 65, color = Color(255, 120, 0), check = function(m, s) return m.pneumothorax > 0.3 end },
         { name = "SPINE FRACTURE", priority = 55, color = Color(255, 200, 0), check = function(m, s) return m.spine2 > 0.5 or m.spine3 > 0.5 end },
+        { name = "LIMB FRACTURE", priority = 54, color = Color(255, 200, 0), check = function(m, s) return m.larm >= 1 or m.rarm >= 1 or m.lleg >= 1 or m.rleg >= 1 end },
         { name = "SKULL FRACTURE", priority = 55, color = Color(255, 200, 0), check = function(m, s) return m.skull > 0.5 end },
         { name = "HYPOVOLEMIA", priority = 50, color = Color(255, 255, 0), check = function(m, s) return s.isHemorrhagic end },
         { name = "INTERNAL BLEEDING", priority = 45, color = Color(255, 255, 0), check = function(m, s) return m.internalBleed > 0 end },
@@ -218,7 +220,12 @@ if CLIENT then
                 stamina = 180,
                 pneumothorax = 0,
                 spine2 = 0,
-                spine3 = 0
+            spine3 = 0,
+            larm = 0,
+            rarm = 0,
+            lleg = 0,
+            rleg = 0,
+            arterialwounds = {}
             }
         end
         
@@ -245,7 +252,12 @@ if CLIENT then
             skull = org.skull or 0,
             spine2 = org.spine2 or 0,
             spine3 = org.spine3 or 0,
-            incapacitated = org.incapacitated or false
+            incapacitated = org.incapacitated or false,
+            larm = org.larm or 0,
+            rarm = org.rarm or 0,
+            lleg = org.lleg or 0,
+            rleg = org.rleg or 0,
+            arterialwounds = org.arterialwounds or {}
         }
     end
     
@@ -305,7 +317,7 @@ if CLIENT then
     end
     
     function Heartbeat:PlayHeartStopSound()
-        sound.Play("ambient/alarms/apc_alarm_loop1.wav", LocalPlayer():GetPos(), 75, 100, 1)
+        --sound.Play("ambient/alarms/apc_alarm_loop1.wav", LocalPlayer():GetPos(), 38, 100, 1)
     end
     
     function Heartbeat:StopHeartStopSound()

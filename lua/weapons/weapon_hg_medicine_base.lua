@@ -38,6 +38,7 @@ SWEP.Slot = 3
 SWEP.SlotPos = 1
 
 SWEP.WorkWithFake = true
+SWEP.UseMinigame = true
 
 SWEP.setlh = true
 SWEP.setrh = true
@@ -96,6 +97,13 @@ end
 SWEP.net_cooldown2 = 0
 
 function SWEP:PrimaryAttack()
+	if self.UseMinigame and (not self:GetOwner():IsDoctor()) then
+		if CLIENT and IsFirstTimePredicted() then
+			self:StartMinigame(1)
+		end
+		return
+	end
+
 	if SERVER and self:CanHeal(self:GetOwner()) then
 		self:PlayAnim("heal")
 	end
@@ -194,6 +202,186 @@ if CLIENT then
 	end
 end
 
+-- ==========================================
+-- Minigame Implementation
+-- ==========================================
+
+	local matCircleInner = Material("vgui/bandageCircleInner.png")
+	local matOuter = Material("vgui/bandageOuter.png")
+	local matRoll = Material("vgui/bandageRoll.png")
+	local matStick = Material("vgui/bandageStick.png")
+
+	function SWEP:StartMinigame(attackType)
+		if self.MinigameActive then 
+			return 
+		end
+		
+		self.MinigameActive = true
+		self.MinigameAttackType = attackType
+		self.MinigameAngle = -90
+		self.MinigameProgress = 0
+		self.MinigameLastMouseAngle = nil
+		self.MinigameDragging = false
+		
+		gui.EnableScreenClicker(true)
+
+		local hookName = "BandageMinigameSafety_" .. self:EntIndex()
+		hook.Add("Think", hookName, function()
+			if not IsValid(self) or not self.MinigameActive or self:GetOwner() ~= LocalPlayer() or LocalPlayer():GetActiveWeapon() ~= self then
+				if IsValid(self) and self.StopMinigame then
+					self:StopMinigame()
+				else
+					gui.EnableScreenClicker(false)
+					hook.Remove("Think", hookName)
+				end
+			end
+		end)
+	end
+
+	function SWEP:StopMinigame()
+		self.MinigameActive = false
+		self.MinigameDragging = false
+		gui.EnableScreenClicker(false)
+		hook.Remove("Think", "BandageMinigameSafety_" .. self:EntIndex())
+	end
+
+	function SWEP:MinigameThink()
+		if not self.MinigameActive then return end
+
+		if not IsValid(self) or self:GetOwner() ~= LocalPlayer() then
+			self:StopMinigame()
+			return
+		end
+
+		local cx, cy = ScrW() / 2, ScrH() / 2
+		local size = ScreenScale(64)
+		local rad = math.rad(self.MinigameAngle)
+		local rollDist = size * 0.8
+		local rx = cx + math.cos(rad) * rollDist
+		local ry = cy + math.sin(rad) * rollDist
+		
+		local mx, my = input.GetCursorPos()
+		local dist = math.sqrt((mx - rx)^2 + (my - ry)^2)
+		local interactRadius = size * 0.3
+		
+		if input.IsMouseDown(MOUSE_LEFT) then
+			if not self.MinigameDragging then
+				if dist <= interactRadius then
+					self.MinigameDragging = true
+					self.MinigameLastMouseAngle = math.deg(math.atan2(my - cy, mx - cx))
+				end
+			end
+		else
+			self.MinigameDragging = false
+			self.MinigameLastMouseAngle = nil
+		end
+		
+		if self.MinigameDragging then
+			local angle = math.deg(math.atan2(my - cy, mx - cx))
+			
+			if self.MinigameLastMouseAngle then
+				local delta = angle - self.MinigameLastMouseAngle
+				if delta > 180 then delta = delta - 360 end
+				if delta < -180 then delta = delta + 360 end
+				
+				if delta > 0 then
+					self.MinigameProgress = self.MinigameProgress + delta * 0.7
+					self.MinigameAngle = self.MinigameAngle + delta * 0.7
+				end
+			end
+			self.MinigameLastMouseAngle = angle
+		end
+
+		if self.MinigameProgress >= 360 then
+			self:FinishMinigame()
+		end
+	end
+	
+	function SWEP:FinishMinigame()
+		net.Start("BandageMinigameComplete")
+		net.WriteEntity(self)
+		net.WriteInt(self.MinigameAttackType, 3)
+		net.SendToServer()
+		self:StopMinigame()
+	end
+	
+	function SWEP:DrawArc(cx, cy, radius, thickness, startAng, endAng, segs)
+		local vertices = {}
+		
+		table.insert(vertices, { x = cx, y = cy })
+		
+		local range = endAng - startAng
+		local numSegs = math.max(math.ceil(math.abs(range) / 10), 10) 
+
+		for i = 0, numSegs do
+			local ang = math.rad(startAng + (i / numSegs) * range)
+			table.insert(vertices, {
+				x = cx + math.cos(ang) * radius,
+				y = cy + math.sin(ang) * radius
+			})
+		end
+		
+		surface.DrawPoly(vertices)
+	end
+
+	function SWEP:DrawMinigame()
+		local cx, cy = ScrW() / 2, ScrH() / 2
+		local size = ScreenScale(64)
+		
+		surface.SetDrawColor(255, 255, 255, 255)
+		
+		surface.SetMaterial(matCircleInner)
+		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
+		
+		if not render then return end
+		        render.PushFilter(function()
+            render.SetStencilWriteMask( 0xFF )
+		    render.SetStencilTestMask( 0xFF )
+		    render.SetStencilReferenceValue( 1 )
+		    render.SetStencilCompareFunction( STENCIL_ALWAYS )
+		    render.SetStencilPassOperation( STENCIL_REPLACE )
+		    render.SetStencilFailOperation( STENCIL_KEEP )
+		    render.SetStencilZFailOperation( STENCIL_KEEP )
+		    render.ClearStencil()
+		    render.EnableStencil( true )
+		
+		    draw.NoTexture()
+		    surface.SetDrawColor( 255, 255, 255, 255 )
+		
+		    local startAng = self.MinigameAngle - self.MinigameProgress
+		    local endAng = self.MinigameAngle
+		
+		    surface.SetDrawColor(255, 255, 255, 1)
+		    self:DrawArc(cx, cy, size * 1.5, size * 0, startAng, endAng, 36)
+		
+		    render.SetStencilCompareFunction( STENCIL_EQUAL )
+		    render.SetStencilPassOperation( STENCIL_KEEP )
+		
+		    surface.SetMaterial(matOuter)
+		
+		    local alpha = (self.MinigameProgress / 360) * 255
+		    surface.SetDrawColor(255, 255, 255, alpha)
+		
+		    surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, 0)
+		
+		    render.EnableStencil( false )
+        end, cx - size, cy - size, size * 2, size * 2)
+		
+		surface.SetDrawColor(255, 255, 255, 255)
+		
+		surface.SetMaterial(matStick)
+		surface.DrawTexturedRectRotated(cx, cy, size * 2, size * 2, -self.MinigameAngle) 
+		
+		local rad = math.rad(self.MinigameAngle)
+		local rollDist = size * 0.8
+		local rx = cx + math.cos(rad) * rollDist
+		local ry = cy + math.sin(rad) * rollDist
+		
+		surface.SetMaterial(matRoll)
+		surface.DrawTexturedRectRotated(rx, ry, size * 0.6, size * 0.6, -self.MinigameAngle)
+	end
+
+
 SWEP.mode = 1
 SWEP.modes = 1
 SWEP.modeNames = {
@@ -258,6 +446,13 @@ function SWEP:SetInfo(info)
 end
 
 function SWEP:SecondaryAttack()
+	if self.UseMinigame and (not self:GetOwner():IsDoctor()) then
+		if CLIENT and IsFirstTimePredicted() then
+			self:StartMinigame(2)
+		end
+		return
+	end
+
 	--self:SetHolding(math.min(self:GetHolding() + 9, 100))
 	if SERVER then
 		if IsValid(self:GetNWEntity("fakeGun")) then return end
@@ -586,6 +781,41 @@ if SERVER then
 	end
 end
 
+
+if SERVER then
+	net.Receive("BandageMinigameComplete", function(len, ply)
+		local wep = net.ReadEntity()
+		local mode = net.ReadInt(3)
+		
+		if not IsValid(wep) or not IsValid(ply) or wep:GetOwner() ~= ply then return end
+		if not wep.UseMinigame then return end
+		
+		if mode == 1 then
+			wep.healbuddy = ply
+			local done = wep:Heal(wep.healbuddy, wep.mode)
+			if(done and wep.PostHeal)then
+				wep:PostHeal(wep.healbuddy, wep.mode)
+			end
+			if wep.net_cooldown2 < CurTime() then
+				wep:SetNetVar("modeValues",wep.modeValues)
+			end
+		elseif mode == 2 then
+			if IsValid(wep:GetNWEntity("fakeGun")) then return end
+			local ent = hg.eyeTrace(ply).Entity
+			wep.healbuddy = ent
+			if !IsValid(wep.healbuddy) then return end
+			if hg.GetCurrentCharacter(wep.healbuddy) == hg.GetCurrentCharacter(ply) then return end
+
+			local done = wep:Heal(wep.healbuddy, wep.mode)
+			if(done and wep.PostHeal)then
+				wep:PostHeal(wep.healbuddy, wep.mode)
+			end		
+			if wep.net_cooldown2 < CurTime() then
+				wep:SetNetVar("modeValues",wep.modeValues)
+			end
+		end
+	end)
+end
 
 hg.TourniquetGuys = hg.TourniquetGuys or {}
 
