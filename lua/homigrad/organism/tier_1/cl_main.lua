@@ -345,7 +345,7 @@ local lerpedpart = 0
 local lerpedbrain = 0
 local otrubStartTime = 0
 
-hook.Add("Post Pre Post Processing", "ShowScreens", function()
+hook.Add("Post Post Pre Post Processing", "ShowScreens", function()
 	local org = lply.organism
 	
 	if !lply:Alive() then return end
@@ -366,7 +366,7 @@ hook.Add("Post Pre Post Processing", "ShowScreens", function()
 			surface.SetDrawColor(255, 255, 255, math.Clamp(lerpedpart * 50, 0, 255))
 			surface.SetMaterial(screens[curscreen])
 			surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-
+			
 			DrawToyTown(4, ScrH())
 		else
 			if switch then

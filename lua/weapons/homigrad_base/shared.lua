@@ -652,7 +652,8 @@ function SWEP:EmitShoot()
 
 		self:PlaySnd("zcitysnd/sound/weapons/firearms/hndg_colt1911/colt_1911_fire1.wav", nil, nil, vol * (insideVal / 16), 150, 51256, true)
 		self:PlaySnd("zcitysnd/sound/weapons/firearms/hndg_colt1911/colt_1911_fire1.wav", nil, nil, vol * (insideVal / 16), 80, 50256, true)
-
+		self:PlaySnd("grenades/grenade_flash_start_indoor_distant.wav", nil, nil, vol * (insideVal / 16), 80, 50256, true)
+		
 		self:PlaySnd("weapons/shoot/shot1.wav", nil, nil, vol * 1, 150, 52256, true)
 	end
 	local nearDist = (GetViewEntity() == ply or GetViewEntity():GetPos():Distance( self:GetPos() ) < 150)
@@ -930,7 +931,7 @@ if CLIENT then
 
 	function SWEP:DrawHUD()
 		if not IsValid(self:GetOwner()) then return end
-		local ammotype = hg.ammotypeshuy[self.Primary.Ammo].BulletSettings and hg.ammotypeshuy[self.Primary.Ammo].BulletSettings.Icon or matPistolAmmo
+		local ammotype = (hg.ammotypeshuy[self.Primary.Ammo].BulletSettings and hg.ammotypeshuy[self.Primary.Ammo].BulletSettings.Icon) or matPistolAmmo
 		self.DrawAmmoMetods[self.AmmoDrawMetod](self,ammotype)
 		
 		self.isscoping = false
@@ -1940,7 +1941,7 @@ function SWEP:SetHandPos(noset)
 	end
 	
 	if (ent ~= ply and ent ~= ply.OldRagdoll) then
-		self.lhandik = self.lhandik and !hg.KeyDown(ply, IN_FORWARD + IN_BACK)
+		self.lhandik = self.lhandik and !(hg.KeyDown(ply, IN_FORWARD + IN_BACK) and !self.reload and !ply:InVehicle())
 	end
 
 	--ply:SetIK(false)

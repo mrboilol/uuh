@@ -1812,6 +1812,15 @@ hook.Add("PlayerTick", "ilovefurries", function(ply)
 	ply.lastcall_tick = SysTime()
 end)
 
+hook.Add("VehicleMove", "ilovefurries", function(ply, veh, mv)
+	ply.lastcall_tick = ply.lastcall_tick or SysTime() - 0.01
+	local dtime = SysTime() - ply.lastcall_tick
+
+	hook_Run("Player Think", ply, CurTime(), dtime)
+
+	ply.lastcall_tick = SysTime()
+end)
+
 hook.Add("Player Think", "homigrad-viewoffset", function(ply)
 	if !ply:Alive() and IsValid(ply.bull) then
 		ply.bull:Remove()

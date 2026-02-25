@@ -650,7 +650,7 @@ hook.Add("Think", "Fake", function()
 						})
 
 						local useent = (IsValid(usetrace.Entity) and usetrace.Entity) or false
-						if useent and not useent:IsVehicle() then useent:Use(ply) end
+						if useent and not useent:IsVehicle() and hook.Run("PlayerUse", ply, useent) then useent:Use(ply) end
 						local wep = useent and useent:IsWeapon() and useent or false
 						ply.force_pickup = true
 						if IsValid(wep) and hook.Run("PlayerCanPickupWeapon", ply, wep) then ply:PickupWeapon(wep) end
@@ -738,7 +738,7 @@ hook.Add("Think", "Fake", function()
 						})
 
 						local useent = (IsValid(usetrace.Entity) and usetrace.Entity) or false
-						if useent and not useent:IsVehicle() then useent:Use(ply) end
+						if useent and not useent:IsVehicle() and hook.Run("PlayerUse", ply, useent) then useent:Use(ply) end
 						local wep = useent and useent:IsWeapon() and useent or false
 						ply.force_pickup = true
 						if IsValid(wep) and hook.Run("PlayerCanPickupWeapon", ply, wep) then ply:PickupWeapon(wep) end

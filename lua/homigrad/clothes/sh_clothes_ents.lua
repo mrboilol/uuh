@@ -215,12 +215,19 @@ local clothes = {
         },
         Male = {
             Model = "models/tnb/halflife/male_legs_medic.mdl",
+            ModelSubMaterials = {
+                [0] = "models/humans/male/group03/citizen_sheet"
+            },
+            --models/humans/male/group03/citizen_sheet
             HideSubMaterails = {"distac/gloves/pants", "distac/gloves/cross"},
             Skin = 5,
             Bodygroups = "0000000000000"
         },
         FeMale = {
             Model = "models/tnb/halflife/female_legs_medic.mdl",
+            ModelSubMaterials = {
+                [0] = "models/humans/female/group03/citizen_sheet"
+            },
             HideSubMaterails = {"distac/gloves/pants", "distac/gloves/cross"},
             Skin = 0,
             Bodygroups = "0000000000000"

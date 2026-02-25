@@ -36,14 +36,15 @@ ENT.NameAng = Angle(0,-90,0)
 local textcolor = Color(0, 0, 0)
 
 function ENT:Draw()
+    if self:GetMoveType() == MOVETYPE_NONE then self:DrawShadow(false) return end
     self:DrawModel()
 
     local pos, ang = LocalToWorld(self.NamePos * self:GetModelScale(), self.NameAng, self:GetPos(), self:GetAngles())
     cam.Start3D2D(pos,ang, 0.10 * self:GetModelScale())
-		local light1 = render.ComputeLighting(pos, ang:Up() * 1)
-		local light2 = render.ComputeDynamicLighting(pos, ang:Up() * 1)
+        local light1 = render.ComputeLighting(pos, ang:Up() * 1)
+        local light2 = render.ComputeDynamicLighting(pos, ang:Up() * 1)
 
-		local light = (light1 + light2) * 2
+        local light = (light1 + light2) * 2
         textcolor.r = 255 * light[1]
         textcolor.g = 55 * light[2]
         textcolor.b = 55 * light[3]
@@ -81,15 +82,16 @@ end
         local Clothes = entUser:GetNetVar("zc_clothes", {})
         if IsValid(self.WearOwner) then return false end
         for _,v in pairs(Clothes) do
-            if !IsValid(v) then continue end
+            local cloth = Entity(v)
+            if !IsValid(cloth) then continue end
             --PrintTable(v.SlotOccupation)
             --PrintTable(self.SlotOccupation)
-            for slot, _ in pairs(v.SlotOccupation) do
+            for slot, _ in pairs(cloth.SlotOccupation) do
                 if isnumber(slot) and self.SlotOccupation[slot] then return false end
             end
 
             for slot, _ in pairs(self.SlotOccupation) do
-                if isnumber(slot) and v.SlotOccupation[slot] then return false end
+                if isnumber(slot) and cloth.SlotOccupation[slot] then return false end
             end
         end
 
@@ -107,7 +109,7 @@ end
     function ENT:Wear(entUser, bDontChangeMaterials, noChange)
         if !noChange then
             local Clothes = entUser:GetNetVar("zc_clothes", {})
-            Clothes[#Clothes + 1] = self
+            Clothes[#Clothes + 1] = self:EntIndex()
             entUser:SetNetVar("zc_clothes", Clothes)
         end
 
@@ -132,12 +134,13 @@ end
         self:SetParent(entUser, 0)
         self.WearOwner = entUser
 
-        self:SetNoDraw(true)
+        self:SetNoDraw(false)
         self:SetMoveType(MOVETYPE_NONE)
         self:SetCollisionGroup(COLLISION_GROUP_DEBRIS)
         self:AddSolidFlags(FSOLID_NOT_SOLID)
         self:SetSolid(SOLID_NONE)
         self:AddEFlags(EFL_KEEP_ON_RECREATE_ENTITIES)
+        self:DrawShadow(false)
 
         self:OnWear(entUser)
     end
@@ -146,7 +149,7 @@ end
     function ENT:Unwear(entUser, bDontChangeMaterials, noChange)
         if !noChange then
             local Clothes = entUser:GetNetVar("zc_clothes", {})
-            table.RemoveByValue(Clothes, self)
+            table.RemoveByValue(Clothes, self:EntIndex())
             entUser:SetNetVar("zc_clothes", Clothes)
         end
 
@@ -168,8 +171,10 @@ end
         self:RemoveSolidFlags(FSOLID_NOT_SOLID)
         self:SetSolid(SOLID_VPHYSICS)
         self:RemoveEFlags(EFL_KEEP_ON_RECREATE_ENTITIES)
+        self:DrawShadow(true)
 
         timer.Simple(0,function()
+            if !IsValid(self) and !IsValid(entUser) then return end
             self:SetPos(entUser:IsPlayer() and hg.eyeTrace(entUser).StartPos or entUser:GetPos())
         end)
         if !noChange then
@@ -215,7 +220,7 @@ end
 
             if data.ModelSubMaterials then
                 for k,v in pairs(data.ModelSubMaterials) do
-                    local id = model:GetSubMaterialIdByName(k)
+                    local id = isnumber(k) and k or model:GetSubMaterialIdByName(k)
                     if !id then continue end
                     model:SetSubMaterial(id, v)
                 end
@@ -248,7 +253,7 @@ end
         if #Clothes < 1 then return end
 
         for i = 1, #Clothes do
-            local Cloth = Clothes[i]
+            local Cloth = Entity(Clothes[i])
             if !IsValid(Cloth) then continue end
             Cloth:RenderOnBody(ent)
         end
@@ -261,7 +266,7 @@ end
         if #Clothes < 1 then return end
 
         for i = 1, #Clothes do
-            local Cloth = Clothes[i]
+            local Cloth = Entity(Clothes[i])
             if !IsValid(Cloth) then continue end
             Cloth:Unwear(ply, true, true)
             Cloth:Wear(ragdoll, true, true)
@@ -277,7 +282,7 @@ end
         if #Clothes < 1 then return end
 
         for i = 1, #Clothes do
-            local Cloth = Clothes[i]
+            local Cloth = Entity(Clothes[i])
             if !IsValid(Cloth) then continue end
             if !Cloth.WarmSave then continue end
             MaxWarmMul = MaxWarmMul + (Cloth.WarmSave / 1.5)
@@ -298,7 +303,7 @@ end
             local Clothes = ply:GetNetVar("zc_clothes", {})
 
             for i = 1, #Clothes do
-                local Cloth = Clothes[i]
+                local Cloth = Entity(Clothes[i])
 
                 for slot, _ in pairs(Cloth.SlotOccupation) do
                     if isnumber(slot) and tonumber(args[1]) == slot then
@@ -320,7 +325,7 @@ end
             local tbl = {function()
                 local commands = {}
                 for i = 1, #Clothes do
-                    local Cloth = Clothes[i]
+                    local Cloth = Entity(Clothes[i])
 
                     for slot, _ in pairs(Cloth.SlotOccupation) do
                         commands[i] = {

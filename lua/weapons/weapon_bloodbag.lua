@@ -108,7 +108,7 @@ if SERVER then
 		if self:GetOwner():KeyPressed(IN_RELOAD) then
 			local mode = self:GetNetVar("mode",2)
 			self:SetNetVar("mode",((mode + 1) > 2) and 1 or (mode + 1))
-			self:GetOwner():ChatPrint("You have chosen the " .. self.modeNames2[mode] .. " mode")
+			--self:GetOwner():ChatPrint("You have chosen the " .. self.modeNames2[mode] .. " mode")
 		end
 	end
 
@@ -213,16 +213,18 @@ else
 
 		local aimvec = owner:GetAimVector()
 		if not aimvec then return end
-		local ducking = owner:IsFlagSet(FL_ANIMDUCKING)
+		local ducking = owner:IsFlagSet(FL_ANIMDUCKING) or owner:GetVelocity():LengthSqr() >= 5000
 
-		self:BoneSet("r_upperarm", vector_origin, Angle(10, -65 - 20 * aimvec[3] * (ducking and 3 or 1), 10))
+		self:BoneSet("r_upperarm", vector_origin, Angle(10, -65 - (20 * aimvec[3]) * (ducking and 3 or 1), 10))
 	end
 
 	function SWEP:Think()
 		local ent = hg.eyeTrace(self:GetOwner()).Entity
 		ent = IsValid(ent) and ent.organism and ent or self:GetOwner()
-		local mode = self:GetNetVar("mode",2)
-		self.modeNames[1] = self:GetNetVar("modeValues", {})[1] == 0 and self.modeNames2[mode] .. " | Recipent: " .. ent.organism.bloodtype or self.modeNames2[mode] .. " | in: "..self:GetNetVar("type","o-").." | recipent: "..ent.organism.bloodtype
+		local mode = self:GetNetVar("mode",2) - 1
+		if mode == 0 then mode = 2 end
+		local modeStr = self.modeNames2[mode]
+		self.modeNames[1] = self:GetNetVar("modeValues", {})[1] == 0 and modeStr .. " | Recipent: " .. ent.organism.bloodtype or modeStr .. " | in: "..self:GetNetVar("type","o-").." | recipent: "..ent.organism.bloodtype
 	end
 
 	function SWEP:AfterDrawModel(wm,nodraw)

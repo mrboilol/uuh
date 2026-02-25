@@ -7,8 +7,9 @@ MODE.ROUND_TIME = 9000
 hg.NextMap = ""
 
 
-local coop_rts = CreateConVar("zb_coop_rts", "0", FCVAR_PROTECTED, "Toggle NPC rebel possess in Half-Life 2 CO-OP mode", 0, 1)
-local coop_rts_cmb = CreateConVar("zb_coop_rts_cmb", "0", FCVAR_PROTECTED, "Toggle NPC combine possess in Half-Life 2 CO-OP mode if zb_coop_rts is enabled", 0, 1)
+local coop_rts = CreateConVar("zb_coop_rts", "1", FCVAR_PROTECTED, "Toggle NPC rebel possess in Half-Life 2 CO-OP mode", 0, 1)
+local coop_rts_cmb = CreateConVar("zb_coop_rts_cmb", "1", FCVAR_PROTECTED, "Toggle NPC combine possess in Half-Life 2 CO-OP mode if zb_coop_rts is enabled", 0, 1)
+local coop_rts_zmb = CreateConVar("zb_coop_rts_zmb", "0", FCVAR_PROTECTED, "Toggle NPC zombie possess in Half-Life 2 CO-OP mode if zb_coop_rts is enabled", 0, 1) --!! WIP
 
 MODE.LootSpawn = false
 
@@ -479,6 +480,10 @@ local combineNPCClasses = {
     ["npc_metropolice"] = true,
 }
 
+local zombieNPCClasses = {
+    ["npc_zombie"] = true,
+}
+
 local zb_coop_maxpossesses = ConVarExists("zb_coop_maxpossesses") and GetConVar("zb_coop_maxpossesses") or CreateConVar("zb_coop_maxpossesses",3,FCVAR_SERVER_CAN_EXECUTE,"Max NPC possession amount in Half-Life 2 CO-OP round",1,100)
 
 local function CanPossessNPC(ply, npc)
@@ -491,6 +496,7 @@ local function CanPossessNPC(ply, npc)
     local npcClass = npc:GetClass()
     if friendlyNPCClasses[npcClass] then return true end
     if coop_rts_cmb:GetBool() and combineNPCClasses[npcClass] then return true end
+	if coop_rts_zmb:GetBool() and zombieNPCClasses[npcClass] then return true end
 
     return false
 end
@@ -506,7 +512,7 @@ local function GetNPCWeapon(npc)
     return nil
 end
 
-local clr_combine, clr_metrocop = Color(0, 180, 180), Color(0, 100, 255)
+local clr_combine, clr_metrocop, clr_zombie = Color(0, 180, 180), Color(0, 100, 255), Color(100, 0, 0)
 local function PossessNPC(ply, npc)
     if not CanPossessNPC(ply, npc) then return false end
     
@@ -516,6 +522,7 @@ local function PossessNPC(ply, npc)
     local npcHealth = npc:Health()
     local npcClass = npc:GetClass()
     local isCombine = combineNPCClasses[npcClass]
+	local isZombie = zombieNPCClasses[npcClass]
     
     local currentMap = game.GetMap()
     local mapData = CurrentRound().Maps[currentMap] or {PlayerEqipment = "rebel"}
@@ -544,7 +551,7 @@ local function PossessNPC(ply, npc)
             ply:SetNetVar("Inventory", inv)
         end
         
-        if isCombine then
+        if isCombine then --!! TODO: rewrite all of this elseif shit to beautiful table
             if npcClass == "npc_combine_s" then
                 ply:SetPlayerClass("Combine")
                 zb.GiveRole(ply, "Combine", clr_combine)
@@ -558,6 +565,9 @@ local function PossessNPC(ply, npc)
         elseif playerClass == "rebel" then
             ply:SetPlayerClass("Rebel")
             zb.GiveRole(ply, "Rebel", clr_rebel)
+		elseif isZombie then
+            ply:SetPlayerClass("headcrabzombie")
+            zb.GiveRole(ply, "Zombie", clr_zombie)
         else
             ply:SetPlayerClass("Rebel")
             zb.GiveRole(ply, "Rebel", clr_rebel)

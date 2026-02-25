@@ -99,8 +99,10 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 	local angle2 = -(-angle)
 	rollang = follow == lply.OldRagdoll and 0 or rollang
 	angle2.roll = rollang
-	angle = LerpAngleFT(follow == lply.OldRagdoll and 0.05 or 0.01, angle, angle2)--math.Approach(angle.roll, rollang, adda * ftlerped * 80)
-	
+	if GetGlobalBool("hg_shitty_fake", true) then
+		angle = LerpAngleFT(follow == lply.OldRagdoll and 0.05 or 0.01, angle, angle2)--math.Approach(angle.roll, rollang, adda * ftlerped * 80)
+	end
+
 	local fucke = false--!hg_newfakecam:GetBool()
 	local oldroll = angle.roll
 	angle.roll = fucke and 0 or angle.roll
@@ -133,7 +135,7 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 	end
 
 	if lply:InVehicle() then
-		angle.roll = 0
+		angle.roll = math.Clamp(angle.roll, -15, 15)
 	end
 	
 	tbl.override_angle = true

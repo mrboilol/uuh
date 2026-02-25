@@ -18,7 +18,7 @@ if CLIENT then
 		CreateChat()
 	end)
 
-	hook.Add("PlayerStartVoice","RemoveVoicePanles",function()
+	hook.Add("PlayerStartVoice","RemoveVoicePanles",function(ply)
 		if !IsValid(ply) then return end
 
 		local other_alive = (ply:Alive() and LocalPlayer() != ply) or (ply.organism and (ply.organism.otrub or (ply.organism.brain and ply.organism.brain > 0.05)))
@@ -226,6 +226,8 @@ else
  		local txtTbl = {text}
 		hook.Run("HG_PlayerSay", ply, txtTbl, text) // our shit gets called later
 		text = isstring(txtTbl[1]) and txtTbl[1] or text // checks to see if shit hits the ceiling
+
+		if text == "" then return end
 
 		if ply:Alive() and ply.organism and ply.organism.otrub then return end
 
