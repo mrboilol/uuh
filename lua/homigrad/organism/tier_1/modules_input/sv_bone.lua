@@ -737,28 +737,7 @@ local function damageBone(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ric
     end
 end
 
-	local crush = isCrush(dmgInfo)
-	
-	if dmgInfo:IsDamageType(DMG_SLASH) and dmg > 1.5 then
-		//crush = false
-	end
-	
-	dmg = dmg * (dmgInfo:GetInflictor().BreakBoneMul or 1)
-	
-	if crush then
-		crush = halfValue2(1 - org[key], 1, 0.5)
-		dmg = dmg / math.max(10 * crush * (bone or 1), 1)
-		if dmgInfo:GetInflictor().RubberBullets then dmg = dmg * dmgInfo:GetInflictor().Penetration end
-	end
 
-	local val = org[key]
-	org[key] = math.min(org[key] + dmg, 1)
-	local scale = 1 - (org[key] - val)
-	
-	if !nodmgchange then dmgInfo:ScaleDamage(1 - (crush and 1 * crush * math.max((1 - org[key]) ^ 0.1, 0.5) or (1 - org[key]) * (bone))) end
-
-	return (crush and 1 * crush * math.max((1 - org[key]) ^ 0.1, 0.5) or (1 - org[key]) * (bone)), VectorRand(-0.2,0.2) / math.Clamp(dmg,0.4,0.8)
-end
 
 local huyasd = {
 	["spine1"] = "I cant feel my legs...",

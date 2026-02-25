@@ -392,7 +392,7 @@ if CLIENT then
         
         wave = baseWave + pWave + qrsComplex + tWave
         
-        if state.isArrhythmia then
+        if state.isArrhythmia and metrics.heartDamage then
             local arrhythmiaStrength = metrics.heartDamage * 0.5
             local arrhythmiaFreq = 15 + math.sin(CurTime() * 2) * 5
             local arrhythmiaWave = math.sin(phase * arrhythmiaFreq) * 0.3 * arrhythmiaStrength
