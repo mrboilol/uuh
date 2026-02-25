@@ -30,6 +30,8 @@ if CLIENT then
         { name = "UNCONSCIOUS", priority = 15, color = Color(200, 200, 200), check = function(m, s) return s.isUnconscious end },
     }
     
+    Heartbeat.Afflictions = CreateClientConVar("hg_afflictions", "1", true, false)
+
     Heartbeat.LastHeartStopState = false
     Heartbeat.HeartStopSoundPlayed = false
 
@@ -755,13 +757,68 @@ if CLIENT then
             statusColor, 
             TEXT_ALIGN_CENTER)
     end
-    
+
+
+    function Heartbeat:DrawAfflictions()
+        if not self.Enabled:GetBool() then return end
+        if not self.Afflictions:GetBool() then return end
+        if not self:CheckPlayerState() then return end
+        if not self.IsActive then return end
+
+        local org = self:GetPlayerOrganism()
+        if not org then return end
+
+        local metrics = self:GetMedicalMetrics(org)
+        local state = self:DetermineMedicalState(metrics)
+        local activeConditions = self:GetActiveConditions(metrics, state)
+
+        if #activeConditions == 0 then return end
+
+        local width = 250
+        local padding = 10
+        local lineHeight = 18
+        local headerHeight = 25
+        local height = headerHeight + (#activeConditions * lineHeight) + padding
+
+        local x = ScrW() - width - 20
+        local y = (ScrH() - height) / 2
+
+        -- Draw background
+        surface.SetDrawColor(10, 15, 10, 220)
+        surface.DrawRect(x, y, width, height)
+
+        -- Draw border
+        local mostSevereColor = activeConditions[1].color
+        surface.SetDrawColor(mostSevereColor.r, mostSevereColor.g, mostSevereColor.b, 180)
+        surface.DrawOutlinedRect(x, y, width, height)
+        surface.DrawOutlinedRect(x + 1, y + 1, width - 2, height - 2)
+
+        -- Draw header
+        draw.SimpleText("AFFLICTIONS", "Heartbeat_Medium", x + width / 2, y + headerHeight / 2, mostSevereColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+
+        -- Draw separator
+        surface.SetDrawColor(mostSevereColor.r, mostSevereColor.g, mostSevereColor.b, 100)
+        surface.DrawLine(x + padding, y + headerHeight, x + width - padding, y + headerHeight)
+
+        -- Draw conditions
+        local currentY = y + headerHeight + (padding / 2)
+        for i, condition in ipairs(activeConditions) do
+            local alpha = 255
+            if i > 1 then
+                alpha = 180 - (i * 20)
+            end
+            local textColor = Color(condition.color.r, condition.color.g, condition.color.b, alpha)
+            draw.SimpleText(condition.name, "Heartbeat_Small", x + padding, currentY, textColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+            currentY = currentY + lineHeight
+        end
+    end
+
     hook.Add("Think", "HeartbeatMonitor_Update", function()
         Heartbeat:Update()
     end)
     
     hook.Add("HUDPaint", "HeartbeatMonitor_Draw", function()
-        Heartbeat:Draw()
+        Heartbeat:DrawAfflictions()
     end)
     
     
