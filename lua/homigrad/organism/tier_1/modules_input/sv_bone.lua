@@ -2088,3 +2088,4 @@ input_list.spine3 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoc
 input_list.spinal_cord1 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spinal_cord(org, bone, dmg, dmgInfo, 1, boneindex, dir, hit, ricochet) end
 input_list.spinal_cord2 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spinal_cord(org, bone, dmg, dmgInfo, 2, boneindex, dir, hit, ricochet) end
 input_list.spinal_cord3 = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet) return spinal_cord(org, bone, dmg, dmgInfo, 3, boneindex, dir, hit, ricochet) end
+end

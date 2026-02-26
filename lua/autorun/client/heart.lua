@@ -10,24 +10,32 @@ if CLIENT then
     Heartbeat.StatsWidth = 200  
     
     Heartbeat.Conditions = {
-        { name = "CARDIAC ARREST", priority = 100, color = Color(255, 0, 0), check = function(m, s) return s.isCardiacArrest end },
-        { name = "CRITICAL DAMAGE", priority = 90, color = Color(255, 0, 0), check = function(m, s) return s.isCritical end },
-        { name = "ARTERIAL BLEEDING", priority = 85, color = Color(255, 0, 0), check = function(m, s) return table.Count(m.arterialwounds) > 0 end },
-        { name = "SEVERELY HYPOVOLEMIC", priority = 80, color = Color(255, 100, 0), check = function(m, s) return s.isHemorrhagic and m.blood < 2500 end },
-        { name = "SEVERELY HYPOXEMIC", priority = 75, color = Color(255, 100, 0), check = function(m, s) return s.isHypoxic and m.o2 < 15 end },
-        { name = "BRAIN DAMAGE", priority = 70, color = Color(255, 100, 100), check = function(m, s) return s.isBrainDamaged end },
-        { name = "ARRHYTHMIA", priority = 60, color = Color(255, 150, 0), check = function(m, s) return s.isArrhythmia end },
-        { name = "PNEUMOTHORAX", priority = 65, color = Color(255, 120, 0), check = function(m, s) return m.pneumothorax > 0.3 end },
-        { name = "SPINE FRACTURE", priority = 55, color = Color(255, 200, 0), check = function(m, s) return m.spine2 > 0.5 or m.spine3 > 0.5 end },
-        { name = "LIMB FRACTURE", priority = 54, color = Color(255, 200, 0), check = function(m, s) return m.larm >= 1 or m.rarm >= 1 or m.lleg >= 1 or m.rleg >= 1 end },
-        { name = "SKULL FRACTURE", priority = 55, color = Color(255, 200, 0), check = function(m, s) return m.skull > 0.5 end },
-        { name = "HYPOVOLEMIA", priority = 50, color = Color(255, 255, 0), check = function(m, s) return s.isHemorrhagic end },
-        { name = "INTERNAL BLEEDING", priority = 45, color = Color(255, 255, 0), check = function(m, s) return m.internalBleed > 0 end },
-        { name = "HYPOXIA", priority = 40, color = Color(0, 150, 255), check = function(m, s) return s.isHypoxic and m.o2 >= 15 end },
-        { name = "BLEEDING", priority = 35, color = Color(255, 255, 100), check = function(m, s) return m.bleed > 0 end },
-        { name = "TACHYCARDIA", priority = 30, color = Color(255, 255, 0), check = function(m, s) return s.isTachycardia end },
-        { name = "BRADYCARDIA", priority = 20, color = Color(0, 200, 255), check = function(m, s) return s.isBradycardia end },
-        { name = "UNCONSCIOUS", priority = 15, color = Color(200, 200, 200), check = function(m, s) return s.isUnconscious end },
+        { name = "Asystolic", priority = 100, color = Color(255, 0, 0), check = function(m, s) return s.isCardiacArrest end },
+        { name = "Critically Injured", priority = 90, color = Color(255, 0, 0), check = function(m, s) return s.isCritical end },
+        { name = "Arterial Rupture", priority = 85, color = Color(255, 0, 0), check = function(m, s) return table.Count(m.arterialwounds) > 0 end },
+        { name = "Severe Hypovolemia", priority = 80, color = Color(255, 100, 0), check = function(m, s) return s.isHemorrhagic and m.blood < 2500 end },
+        { name = "Severe Hypoxemia", priority = 75, color = Color(255, 100, 0), check = function(m, s) return s.isHypoxic and m.o2 < 15 end },
+        { name = "Brain Damaged", priority = 70, color = Color(255, 100, 100), check = function(m, s) return s.isBrainDamaged end },
+        { name = "Arrythmic", priority = 60, color = Color(255, 150, 0), check = function(m, s) return s.isArrhythmia end },
+        { name = "Pneumothorax", priority = 65, color = Color(255, 120, 0), check = function(m, s) return m.pneumothorax > 0.3 end },
+        { name = "Spinal Fracture", priority = 55, color = Color(255, 200, 0), check = function(m, s) return m.spine2 > 0.5 or m.spine3 > 0.5 end },
+        { name = "Arm Fracture", priority = 54, color = Color(255, 200, 0), check = function(m, s) return m.larm >= 1 or m.rarm >= 1 end },
+        { name = "Leg Fracture", priority = 53, color = Color(255, 200, 0), check = function(m, s) return m.lleg >= 1 or m.rleg >= 1 end },
+        { name = "Cranial Fracture", priority = 55, color = Color(255, 200, 0), check = function(m, s) return m.skull > 0.5 end },
+        { name = "Hypovolemic", priority = 50, color = Color(255, 255, 0), check = function(m, s) return s.isHemorrhagic end },
+        { name = "Internal Bleeding", priority = 45, color = Color(255, 255, 0), check = function(m, s) return m.internalBleed > 0 end },
+        { name = "Hypoxemic", priority = 40, color = Color(0, 150, 255), check = function(m, s) return s.isHypoxic and m.o2 >= 15 end },
+        { name = "Bleeding", priority = 35, color = Color(255, 255, 100), check = function(m, s) return m.bleed > 0 end },
+        { name = "Tachycardic", priority = 30, color = Color(255, 255, 0), check = function(m, s) return s.isTachycardia end },
+        { name = "Bradycardic", priority = 20, color = Color(0, 200, 255), check = function(m, s) return s.isBradycardia end },
+        { name = "Panicked", priority = 25, color = Color(255, 100, 255), check = function(m, s) return m.adrenaline > 1.5 and m.pain > 40 end },
+        { name = "Fainting", priority = 18, color = Color(180, 180, 180), check = function(m, s) return m.unconscious and not s.isCritical end },
+        { name = "Unresponsive", priority = 15, color = Color(200, 200, 200), check = function(m, s) return s.isUnconscious end },
+        { name = "Systemic Organ Failure", priority = 88, color = Color(255, 20, 20), check = function(m, s) return m.heart > 0.8 or m.liver > 0.8 or m.kidneys > 0.8 or m.stomach > 0.8 end },
+        { name = "Heart Failure", priority = 86, color = Color(255, 50, 50), check = function(m, s) return m.heart > 0.6 end },
+        { name = "Liver Failure", priority = 68, color = Color(255, 120, 50), check = function(m, s) return m.liver > 0.6 end },
+        { name = "Kidney Failure", priority = 67, color = Color(255, 120, 50), check = function(m, s) return m.kidneys > 0.6 end },
+        { name = "Stomach Rupture", priority = 66, color = Color(255, 120, 50), check = function(m, s) return m.stomach > 0.6 end },
     }
     
     Heartbeat.Afflictions = CreateClientConVar("hg_afflictions", "1", true, false)
@@ -232,34 +240,38 @@ if CLIENT then
         end
         
         return {
-            pulse = org.pulse or 70,
-            heartDamage = org.heart or 0,
+            pulse = tonumber(org.pulse) or 70,
+            heartDamage = tonumber(org.heart) or 0,
             heartStop = org.heartstop or false,
-            blood = org.blood or 5000,
-            o2 = (org.o2 and org.o2[1]) or 30,
-            brain = org.brain or 0,
+            blood = tonumber(org.blood) or 5000,
+            o2 = (org.o2 and tonumber(org.o2[1])) or 30,
+            brain = tonumber(org.brain) or 0,
             unconscious = org.otrub or false,
             critical = org.critical or false,
-            pain = org.pain or 0,
-            adrenaline = org.adrenaline or 0,
-            shock = org.shock or 0,
-            bleed = org.bleed or 0,
-            internalBleed = org.internalBleed or 0,
-            stamina = (org.stamina and org.stamina[1]) or 180,
-            pneumothorax = org.pneumothorax or 0,
-            lungsL = org.lungsL and org.lungsL[1] or 0,
-            lungsR = org.lungsR and org.lungsR[1] or 0,
-            trachea = org.trachea or 0,
-            chest = org.chest or 0,
-            skull = org.skull or 0,
-            spine2 = org.spine2 or 0,
-            spine3 = org.spine3 or 0,
+            pain = tonumber(org.pain) or 0,
+            adrenaline = tonumber(org.adrenaline) or 0,
+            shock = tonumber(org.shock) or 0,
+            bleed = tonumber(org.bleed) or 0,
+            internalBleed = tonumber(org.internalBleed) or 0,
+            stamina = (org.stamina and tonumber(org.stamina[1])) or 180,
+            pneumothorax = tonumber(org.pneumothorax) or 0,
+            lungsL = (org.lungsL and tonumber(org.lungsL[1])) or 0,
+            lungsR = (org.lungsR and tonumber(org.lungsR[1])) or 0,
+            trachea = tonumber(org.trachea) or 0,
+            chest = tonumber(org.chest) or 0,
+            skull = tonumber(org.skull) or 0,
+            spine2 = tonumber(org.spine2) or 0,
+            spine3 = tonumber(org.spine3) or 0,
             incapacitated = org.incapacitated or false,
-            larm = org.larm or 0,
-            rarm = org.rarm or 0,
-            lleg = org.lleg or 0,
-            rleg = org.rleg or 0,
-            arterialwounds = org.arterialwounds or {}
+            larm = tonumber(org.larm) or 0,
+            rarm = tonumber(org.rarm) or 0,
+            lleg = tonumber(org.lleg) or 0,
+            rleg = tonumber(org.rleg) or 0,
+            arterialwounds = org.arterialwounds or {},
+            heart = tonumber(org.heart) or 0,
+            liver = tonumber(org.liver) or 0,
+            kidneys = tonumber(org.kidneys) or 0,
+            stomach = tonumber(org.stomach) or 0
         }
     end
     
@@ -774,43 +786,104 @@ if CLIENT then
 
         if #activeConditions == 0 then return end
 
+        local conditionsToHide = {
+            ["Asystolic"] = state.isCardiacArrest,
+            ["Critically Injured"] = state.isCritical,
+            ["Arrythmic"] = state.isArrhythmia,
+            ["Tachycardic"] = state.isTachycardia,
+            ["Bradycardic"] = state.isBradycardia,
+            ["Hypoxemic"] = state.isHypoxic,
+            ["Hypovolemic"] = state.isHemorrhagic,
+            ["Unresponsive"] = state.isUnconscious
+        }
+
+        local filteredConditions = {}
+        for _, condition in ipairs(activeConditions) do
+            if not conditionsToHide[condition.name] then
+                table.insert(filteredConditions, condition)
+            end
+        end
+
+        if #filteredConditions == 0 then return end
+
         local width = 250
         local padding = 10
-        local lineHeight = 18
+        local lineHeight = 30
         local headerHeight = 25
-        local height = headerHeight + (#activeConditions * lineHeight) + padding
+        local height = headerHeight + (#filteredConditions * lineHeight) + padding
 
         local x = ScrW() - width - 20
-        local y = (ScrH() - height) / 2
+        local y = 20
 
         -- Draw background
         surface.SetDrawColor(10, 15, 10, 220)
         surface.DrawRect(x, y, width, height)
 
         -- Draw border
-        local mostSevereColor = activeConditions[1].color
-        surface.SetDrawColor(mostSevereColor.r, mostSevereColor.g, mostSevereColor.b, 180)
-        surface.DrawOutlinedRect(x, y, width, height)
-        surface.DrawOutlinedRect(x + 1, y + 1, width - 2, height - 2)
+        local isUnconscious = state.isUnconscious
 
-        -- Draw header
-        draw.SimpleText("AFFLICTIONS", "Heartbeat_Medium", x + width / 2, y + headerHeight / 2, mostSevereColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-
-        -- Draw separator
-        surface.SetDrawColor(mostSevereColor.r, mostSevereColor.g, mostSevereColor.b, 100)
-        surface.DrawLine(x + padding, y + headerHeight, x + width - padding, y + headerHeight)
+        if isUnconscious then
+            local grayColor = Color(100, 100, 100, 150)
+            surface.SetDrawColor(grayColor.r, grayColor.g, grayColor.b, 180)
+            surface.DrawOutlinedRect(x, y, width, height)
+            surface.DrawOutlinedRect(x + 1, y + 1, width - 2, height - 2)
+            draw.SimpleText("UNRESPONSIVE", "Heartbeat_Medium", x + width / 2, y + headerHeight / 2, grayColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            surface.SetDrawColor(grayColor.r, grayColor.g, grayColor.b, 100)
+            surface.DrawLine(x + padding, y + headerHeight, x + width - padding, y + headerHeight)
+        else
+            local mostSevereColor = activeConditions[1].color
+            surface.SetDrawColor(mostSevereColor.r, mostSevereColor.g, mostSevereColor.b, 180)
+            surface.DrawOutlinedRect(x, y, width, height)
+            surface.DrawOutlinedRect(x + 1, y + 1, width - 2, height - 2)
+            draw.SimpleText("CONDITIONS", "Heartbeat_Medium", x + width / 2, y + headerHeight / 2, mostSevereColor, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+            surface.SetDrawColor(mostSevereColor.r, mostSevereColor.g, mostSevereColor.b, 100)
+            surface.DrawLine(x + padding, y + headerHeight, x + width - padding, y + headerHeight)
+        end
 
         -- Draw conditions
         local currentY = y + headerHeight + (padding / 2)
-        for i, condition in ipairs(activeConditions) do
+        for i, condition in ipairs(filteredConditions) do
             local alpha = 255
             if i > 1 then
                 alpha = 180 - (i * 20)
             end
-            local textColor = Color(condition.color.r, condition.color.g, condition.color.b, alpha)
-            draw.SimpleText(condition.name, "Heartbeat_Small", x + padding, currentY, textColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+
+            if isUnconscious then
+                local textColor = Color(120, 120, 120, alpha)
+                draw.SimpleText(condition.name, "Heartbeat_Small", x + padding, currentY, textColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+
+                if condition.name == "Asystolic" or condition.name == "Severe Hypoxemia" or condition.name == "Hypoxemic" then
+                    local details = self:GetAfflictionDetails(condition, metrics, state)
+                    if details then
+                        draw.SimpleText(details, "Heartbeat_Small", x + padding, currentY + 12, Color(150, 150, 150, alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+                    end
+                end
+            else
+                local textColor = Color(condition.color.r, condition.color.g, condition.color.b, alpha)
+                draw.SimpleText(condition.name, "Heartbeat_Small", x + padding, currentY, textColor, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+
+                local details = self:GetAfflictionDetails(condition, metrics, state)
+                if details then
+                    draw.SimpleText(details, "Heartbeat_Small", x + padding, currentY + 12, Color(200, 200, 200, alpha), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP)
+                end
+            end
+
             currentY = currentY + lineHeight
         end
+    end
+
+    function Heartbeat:GetAfflictionDetails(condition, metrics, state)
+        if condition.name == "Heart Failure" then
+            return "Damage: " .. math.Round(metrics.heart * 100) .. "%"
+        elseif condition.name == "Liver Failure" then
+            return "Damage: " .. math.Round(metrics.liver * 100) .. "%"
+        elseif condition.name == "Kidney Failure" then
+            return "Damage: " .. math.Round(metrics.kidneys * 100) .. "%"
+        elseif condition.name == "Stomach Rupture" then
+            return "Damage: " .. math.Round(metrics.stomach * 100) .. "%"
+        end
+
+        return nil
     end
 
     hook.Add("Think", "HeartbeatMonitor_Update", function()
