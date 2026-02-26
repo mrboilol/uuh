@@ -132,6 +132,10 @@ module[2] = function(owner, org, timeValue)
 		org.analgesia =  Approach(org.analgesia, 4, timeValue / 15)
 		org.analgesiaAdd = Approach(org.analgesiaAdd, 0, timeValue / 15)
 	end
+--scav brototype
+	if org.analgesia > 0.85 then
+		org.brain = math.min(org.brain + timeValue * (org.analgesia - 0.85) * 0.001, 1)
+	end
 
 	org.naloxone = Approach(org.naloxone, org.naloxoneadd > 0 and 4 or 0, org.naloxoneadd > 0 and timeValue / 30 or timeValue / 60)
 	org.naloxoneadd = Approach(org.naloxoneadd, 0, timeValue / 15)
