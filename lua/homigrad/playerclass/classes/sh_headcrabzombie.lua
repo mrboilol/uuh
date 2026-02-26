@@ -253,7 +253,7 @@ function CLASS.Think(self)
 		org.painadd = -5
 	end
 
-	if org.pain >= 45 then
+	if org.pain >= 30 then
 		org.consciousness = 1
 		org.adrenalineAdd = 1
 		org.painadd = -15
@@ -261,6 +261,10 @@ function CLASS.Think(self)
 
 	org.pulse = 70
 	org.o2["curregen"] = 2
+
+	if org.brain >= 0.1 then
+		org.brain = 0.05
+	end
 
 	if org.consciousness <= 0.3 then
 		org.consciousness = 1
@@ -337,7 +341,8 @@ end)
 
 hook.Add("UpdateAnimation", "ZombAnimRate", function(ply, vel, maxSeqGroundSpeed)
 	if ply.PlayerClassName == "headcrabzombie" then
-		if not IsValid(ply) or not ply:Alive() then return end
+		local isAmputated = ply:IsBerserk() and ply.organism and (ply.organism.llegamputated or ply.organism.rlegamputated)
+		if not IsValid(ply) or not ply:Alive() or isAmputated then return end
 
 		if vel:LengthSqr() >= 77000 and vel:LengthSqr() < 110000 then
 			ply:SetPlaybackRate(1.1)
