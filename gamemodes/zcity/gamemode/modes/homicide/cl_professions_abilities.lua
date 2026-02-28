@@ -156,10 +156,6 @@ local function createMolotov()
 	RunConsoleCommand("hg_create_molotov")
 end
 
-local function createWoodenSpear()
-	RunConsoleCommand("hg_create_wooden_spear")
-end
-
 hook.Add("radialOptions", "EngineerCraft", function()
     local ply = LocalPlayer()
     local organism = ply.organism or {}
@@ -203,14 +199,6 @@ hook.Add("radialOptions", "EngineerCraft", function()
 
 		if have_barrel_nearby and have_bandage and have_bottle then
 			local tbl = {createMolotov, "Create molotov"}
-        	hg.radialOptions[#hg.radialOptions + 1] = tbl
-		end
-
-		local have_hammer = ply:HasWeapon("weapon_hammer")
-		local have_table_leg = ply:HasWeapon("weapon_table_leg")
-
-		if have_hammer and have_table_leg then
-			local tbl = {createWoodenSpear, "Create wooden spear"}
         	hg.radialOptions[#hg.radialOptions + 1] = tbl
 		end
     end

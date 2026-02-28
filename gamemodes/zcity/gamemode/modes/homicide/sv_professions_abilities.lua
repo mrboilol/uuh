@@ -126,16 +126,4 @@ concommand.Add("hg_create_molotov", function(ply)
 		end
     end
 end)
-
-concommand.Add("hg_create_wooden_spear", function(ply)
-	if ply:Alive() and not ply.organism.otrub and ply.Profession == "engineer" then
-		local have_hammer = ply:HasWeapon("weapon_hammer")
-		local have_table_leg = ply:HasWeapon("weapon_table_leg")
-
-		if have_hammer and have_table_leg then
-			ply:StripWeapon("weapon_table_leg")
-			ply:Give("weapon_hg_spear")
-		end
-    end
-end)
 --//
