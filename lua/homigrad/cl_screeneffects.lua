@@ -236,6 +236,7 @@ local PainLerp = 0
 local O2Lerp = 0
 local assimilatedLerp = 0
 local tempLerp = 36.6
+local unconscious_time_start = nil
 
 local show_image_time = 0
 local show_some_images_time = 0
@@ -470,6 +471,21 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	local shock = (org.shock or 0) * 1 + (1 - org.consciousness) * 40
 	shockLerp = LerpFT(0.01, shockLerp or 0, shock + (lply.suiciding and math.max(0, org.heartbeat - 90) or 0))
 	consciousnessLerp = LerpFT(org.consciousness < (consciousnessLerp or 1) and 1 or 0.01, consciousnessLerp or 1, org.consciousness)
+
+	local UNCONSCIOUS_THRESHOLD = 0.2
+	local MEMORY_TRIGGER_DURATION = 5
+
+	if consciousnessLerp < UNCONSCIOUS_THRESHOLD then
+		if not unconscious_time_start then
+			unconscious_time_start = CurTime()
+		elseif (CurTime() - unconscious_time_start) > MEMORY_TRIGGER_DURATION then
+			show_some_images_time = 250
+			unconscious_time_start = nil
+		end
+	else
+		unconscious_time_start = nil
+	end
+
 	-- local immobilization = org.immobilization
 	PainLerp = LerpFT(0.05, PainLerp, math.max(pain * (org.otrub and 0.2 or 1), 0))
 	assimilatedLerp = LerpFT(0.01, assimilatedLerp, (org.assimilated or 0))
