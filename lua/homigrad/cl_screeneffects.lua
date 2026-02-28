@@ -69,7 +69,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 		addtiveLayer["brightness"] = Lerp(weight, 0, layer["brightness"] or 0)
 		--end
 	end
-
+	
 	//DrawBloom(addtiveLayer.bloom_darken, addtiveLayer.bloom_mul, addtiveLayer.bloom_sizex, addtiveLayer.bloom_sizey, addtiveLayer.bloom_passes, addtiveLayer.bloom_colormul, addtiveLayer.bloom_colorr, addtiveLayer.bloom_colorg, addtiveLayer.bloom_colorb)
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
@@ -80,7 +80,6 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	hook_Run("Post Pre Post Processing")
 
 	hook_Run("Post Post Processing")
-
 	hook_Run("Post Post Pre Post Processing")
 end)
 
@@ -231,6 +230,7 @@ local assimilationMat = Material("effects/shaders/zb_assimilation")
 local coldMat = Material("effects/shaders/zb_colda")
 local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
+local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 
 local PainLerp = 0
 local O2Lerp = 0
@@ -249,6 +249,100 @@ local lobotomy_mats = {
 	[7] = Material("overlays/tallflash2.png"),
 	[8] = Material("overlays/tallflash3.png")
 }
+
+local pvpModes = {
+	tdm = true,
+	gwars = true,
+	hl2dm = true,
+	dm = true,
+	tdm_cstrike = true,
+	smo = true,
+	sfd = true,
+	scugarena = true,
+	bart_vs_homer = true
+}
+
+local teamPvpModes = {
+	tdm = true,
+	gwars = true,
+	hl2dm = true,
+	tdm_cstrike = true,
+	smo = true
+}
+
+local function getDeadBodyOwner(ply)
+	if not IsValid(ply) then return nil end
+	local tr = hg.eyeTrace(ply, 160)
+	if not tr or not IsValid(tr.Entity) then return nil end
+	local ent = tr.Entity
+	if ent:IsPlayer() then
+		return not ent:Alive() and ent or nil
+	end
+	if ent:IsRagdoll() then
+		local owner = hg.RagdollOwner(ent) or ent:GetNWEntity("ply") or ent.ply
+		if IsValid(owner) and owner:IsPlayer() then
+			return not owner:Alive() and owner or nil
+		end
+		return nil
+	end
+	return nil
+end
+
+local function isDeadBodyAllowed(ply, owner)
+	if not IsValid(ply) then return false end
+	if ply.isTraitor then return false end
+	local mode = CurrentRound()
+	local modeName = mode and (mode.Type or mode.name) or nil
+	if modeName and pvpModes[modeName] then
+		if not teamPvpModes[modeName] then return false end
+		if not IsValid(owner) or not owner:IsPlayer() then return false end
+		return owner:Team() == ply:Team() and ply:Team() != TEAM_SPECTATOR
+	end
+	return true
+end
+
+local function isSuicideIntent(ply)
+	if not IsValid(ply) then return false end
+	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon() or nil
+	local wepCanSuicide = IsValid(wep) and wep.CanSuicide
+	local weaponSuicide = wepCanSuicide and (wep.SuicideStart or wep.cutthroat)
+	local suicideNet = ply:GetNWBool("suiciding", false)
+	local suiciding = ply.suiciding or suicideNet
+	if ply:GetNWFloat("willsuicide", 0) > 0 then return true end
+	if weaponSuicide then return true end
+	if suiciding and (wepCanSuicide or hg.CanSuicide(ply)) then return true end
+	return false
+end
+
+local tunnelWaveFade = 0
+local tunnelWaveBase = 0.9
+local deadBodyHoldUntil = 0
+local deadBodyHoldSeconds = 1.2
+hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
+	if not IsValid(lply) or not lply:Alive() then return end
+	local deadOwner = getDeadBodyOwner(lply)
+	local mode = CurrentRound()
+	local modeName = mode and (mode.Type or mode.name) or nil
+	if lply.isTraitor or (modeName and pvpModes[modeName] and not teamPvpModes[modeName]) then
+		deadBodyHoldUntil = 0
+	else
+		if deadOwner then
+			if isDeadBodyAllowed(lply, deadOwner) then
+				deadBodyHoldUntil = CurTime() + deadBodyHoldSeconds
+			else
+				deadBodyHoldUntil = 0
+			end
+		end
+	end
+	local deadActive = deadBodyHoldUntil > CurTime()
+	local active = deadActive or isSuicideIntent(lply)
+	tunnelWaveFade = LerpFT(0.08, tunnelWaveFade, active and 1 or 0)
+	if tunnelWaveFade < 0.01 then return end
+	render.UpdateScreenEffectTexture()
+	tunnelWaveMat:SetFloat("$c1_w", tunnelWaveBase * tunnelWaveFade)
+	render.SetMaterial(tunnelWaveMat)
+	render.DrawScreenQuad()
+end)
 
 local function stopthings()
 	PainLerp = 0
@@ -580,7 +674,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		lobotomy_index = 0
 	end
 	
-
 	if O2Lerp > 1 then
 		render.UpdateScreenEffectTexture()
 		
@@ -657,3 +750,76 @@ hook.Add("Player Spawn", "ItDoesntNow", function(ply)
 
 	stopthings()
 end)
+
+
+local fatman = {
+	nextCheck = 0,
+	activeUntil = 0,
+	startedAt = 0,
+	duration = 0,
+	regular = CreateMaterial("hg_fatman_regular", "UnlitGeneric", {
+		["$basetexture"] = "custom/REGULARfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	}),
+	shocked = CreateMaterial("hg_fatman_shocked", "UnlitGeneric", {
+		["$basetexture"] = "custom/SHOCKEDfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	}),
+	dead = CreateMaterial("hg_fatman_dead", "UnlitGeneric", {
+		["$basetexture"] = "custom/DEADfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	})
+}
+
+hook.Add("Think", "hg-aprilfools-fatman", function()
+	if not GetGlobalBool("hg_aprilfools", false) then return end
+	local now = CurTime()
+	if now < fatman.nextCheck then return end
+	fatman.nextCheck = now + 5
+	if now < fatman.activeUntil then return end
+	if math.random() <= 0.2 then
+		local duration = SoundDuration("fatman.wav")
+		if not duration or duration <= 0 then
+			duration = 3
+		end
+		fatman.duration = duration
+		fatman.startedAt = now
+		fatman.activeUntil = now + duration
+		surface.PlaySound("fatman.wav")
+	end
+end)
+
+hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
+	local now = CurTime()
+	if now >= fatman.activeUntil or fatman.startedAt <= 0 then return end
+	local elapsed = now - fatman.startedAt
+	local mat
+	if elapsed < 1 then
+		mat = fatman.regular
+	elseif elapsed < 2 then
+		mat = fatman.shocked
+	else
+		mat = fatman.dead
+	end
+	if not mat then return end
+	local scrW, scrH = ScrW(), ScrH()
+	local maxW = scrW * 0.6
+	local maxH = scrH * 0.8
+	local targetW = maxH * (9 / 16)
+	local targetH = maxH
+	if targetW > maxW then
+		targetW = maxW
+		targetH = maxW * (16 / 9)
+	end
+	local x = (scrW - targetW) * 0.5
+	local y = (scrH - targetH) * 0.5
+	render.SetLightingMode(1)
+	surface.SetMaterial(mat)
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.DrawTexturedRect(x, y, targetW, targetH)
+	render.SetLightingMode(0)
+end)
+
