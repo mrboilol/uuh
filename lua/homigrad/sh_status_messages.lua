@@ -190,6 +190,10 @@ local broken_limb = {
 	"It hurts just thinking about it. Definitely broken.",
 	"I dont think it should bend here.",
 	"Oh fuck. It is snapped.",
+	"THE BONE IS PAINING SO BAD...",
+	"FUCK, ILL NEVER BE ABLE TO USE IT RIGHT AGAIN",
+	"SHIT. I NEED A DOCTOR",
+	"I can see the bone poking out...",
 	"I dont see any open fracture, but I feel like I broke something",
 }
 
@@ -198,6 +202,13 @@ local dislocated_limb = {
 	"I have to get this bone back in.",
 	"No, I have to move it back in place.",
 	"It just hurts so much there. I might need a check up.",
+	"My bone is bending in the wrong place.",
+	"I cant just leave it like that.",
+	"Its dislocated, I have to place it correctly.",
+	"I dont think its broken, but its definitively not in the right place.",
+	"I heard a snap, but its not broken...",
+	"I can already feel the pain radiating from there...",
+	"Its aching so bad...",
 	"My limb is out of place.",
 }
 
@@ -431,8 +442,8 @@ end
 		if hungry and hungry > 25 and math.random(5) == 1 then
 			most_wanted_phraselist = hungry > 45 and very_hungry or hungry_a_bit
 		end
-	--elseif hg.fearful(ply) then
-		--most_wanted_phraselist = ((IsAimedAt(ply) > 0.9) and is_aimed_at_phrases or (math.random(10) == 1 and fear_hurt_ironic or fear_phrases))
+	elseif hg.fearful(ply) then
+		most_wanted_phraselist = ((IsAimedAt(ply) > 0.9) and is_aimed_at_phrases or (math.random(10) == 1 and fear_hurt_ironic or fear_phrases))
 	end
 
 	if temperature < 35 then

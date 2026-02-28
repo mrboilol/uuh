@@ -340,17 +340,17 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 
 	if org.skull == 1 then
 		if org.isPly then
-			//org.owner:Notify(huyasd["skull"],true,"skull",4)
+			org.owner:Notify(huyasd["skull"],true,"skull",4)
 		end
 
-		--[[if dir then
+		if dir then
 			net.Start("hg_bloodimpact")
 			net.WriteVector(dmgInfo:GetDamagePosition())
 			net.WriteVector(dir / 10)
 			net.WriteFloat(3)
 			net.WriteInt(1,8)
 			net.Broadcast()
-		end--]]
+		end
 	end
 
 	org.disorientation = org.disorientation + (isCrush(dmgInfo) and dmg * 1 or dmg * 1)
@@ -359,10 +359,10 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 end
 
 local ribs = {
-	"MY CHEST... SNAPPED",
-	"SOMETHING SNAPPED IN MY TORSO",
-	"THERE'S SOMETHING SHARP IN MY CHEST...",
-	"I FEEL SOMETHING SHARP IN MY TORSO",
+	"Fuck, I think I broke a rib...",
+	"I can feel something poking my lungs.",
+	"Something is floating in my chest...",
+	"My chest isnt supposed to cave inwards...",
 }
 
 input_list.chest = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet)	
@@ -381,7 +381,7 @@ input_list.chest = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 		org.brokenribs = math.Round(org.chest * 3)
 		
 		if org.brokenribs > 0 then
-			//org.owner:Notify(ribs[math.random(#ribs)], 5, "ribs", 4)
+			org.owner:Notify(ribs[math.random(#ribs)], 5, "ribs", 4)
 
 			org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
 
@@ -402,7 +402,7 @@ input_list.pelvis = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoc
 	hg.AddHarmToAttacker(dmgInfo, (org.pelvis - oldDmg) / 2, "Pelvis bone damage harm")
 
 	if org.isPly and org.pelvis == 1 then
-		//org.owner:Notify("My pelvis is agonizingly hurting.", true, "pelvis", 4)
+		org.owner:Notify("My pelvis is agonizingly hurting.", true, "pelvis", 4)
 	end
 
 	return result

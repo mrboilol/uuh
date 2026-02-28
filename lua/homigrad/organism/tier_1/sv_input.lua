@@ -686,12 +686,12 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 		timer.Simple(0,function()
 			timer.Create("Blood_burst_input"..ent:EntIndex(),0.02,1,function()
-				--[[net.Start("hg_bloodimpact")
+				net.Start("hg_bloodimpact")
 				net.WriteVector(inputHole[1])
 				net.WriteVector(dir / 2)
 				net.WriteFloat(dmg)
 				net.WriteInt(ent.bloodamt2,8)
-				net.Broadcast()--]]
+				net.Broadcast()
 				ent.bloodamt2 = 0
 			end)
 		end)
@@ -704,7 +704,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		ent.bloodamt = ent.bloodamt + 1
 		
 		timer.Simple(0,function()
-			/*if IsValid(ent) then
+			if IsValid(ent) then
 				timer.Create("Blood_burst"..ent:EntIndex(),0.02,1,function()
 					if IsValid(ent) and ent.bloodamt then
 						net.Start("hg_bloodimpact")
@@ -716,7 +716,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 						ent.bloodamt = 0
 					end
 				end)
-			end*/
+			end
 
 			if bullet and false then
 				local mul = distance / pen
@@ -1105,14 +1105,14 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 			if (hitgroup ~= HITGROUP_HEAD) then
 				if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
-					--local effdata = EffectData()
-					--effdata:SetOrigin( dmgPos )
-					--effdata:SetRadius(0)
-					--effdata:SetMagnitude(0)
-					--effdata:SetScale(0)
-					--util.Effect("BloodImpact",effdata)
+					local effdata = EffectData()
+					effdata:SetOrigin( dmgPos )
+					effdata:SetRadius(0)
+					effdata:SetMagnitude(0)
+					effdata:SetScale(0)
+					util.Effect("BloodImpact",effdata)
 				else
-					--ParticleEffect( "headshot", dmgPos, dirCool:Angle() )
+					ParticleEffect( "headshot", dmgPos, dirCool:Angle() )
 				end
 			end	
 		end
