@@ -1077,14 +1077,14 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	-- EFFECT
 	if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH) then
 		if dmgBlood > 1 and #inputHole > 0 then
-			--[[net.Start("hg_bloodimpact")
+			net.Start("hg_bloodimpact")
 			net.WriteVector(dmgPos)
 			net.WriteVector(dirCool/15)
 			net.WriteFloat(dmg/10)
 			net.WriteInt(1,8)
-			net.Broadcast()--]]
+			net.Broadcast()
 
-			if (hitgroup ~= HITGROUP_HEAD) then
+			--[[if (hitgroup ~= HITGROUP_HEAD) then
 				if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
 					local effdata = EffectData()
 					effdata:SetOrigin( dmgPos )
@@ -1095,7 +1095,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				else
 					ParticleEffect( "headshot", dmgPos, dirCool:Angle() )
 				end
-			end	
+			end	]]
 		end
 	end
 	
