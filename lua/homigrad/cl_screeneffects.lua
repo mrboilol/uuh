@@ -321,7 +321,7 @@ local deadBodyHoldSeconds = 1.2
 hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
 	if not IsValid(lply) or not lply:Alive() then return end
 	local deadOwner = getDeadBodyOwner(lply)
-	local mode = CurrentRound()
+	local mode = GAMEMODE and GAMEMODE.CurrentRound and GAMEMODE:CurrentRound()
 	local modeName = mode and (mode.Type or mode.name) or nil
 	if lply.isTraitor or (modeName and pvpModes[modeName] and not teamPvpModes[modeName]) then
 		deadBodyHoldUntil = 0
