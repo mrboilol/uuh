@@ -18,7 +18,7 @@ if CLIENT then
 		CreateChat()
 	end)
 
-	hook.Add("PlayerStartVoice","RemoveVoicePanles",function()
+	hook.Add("PlayerStartVoice","RemoveVoicePanles",function(ply)
 		if !IsValid(ply) then return end
 
 		local other_alive = (ply:Alive() and LocalPlayer() != ply) or (ply.organism and (ply.organism.otrub or (ply.organism.brain and ply.organism.brain > 0.05)))
@@ -39,6 +39,7 @@ if CLIENT then
 	end)
 
 	hook.Add("OnShowZCityPause", "ZChat", function()
+		if !hg.chat:GetActive() then return end
 		hg.chat:SetActive(false)
 
 		return false
@@ -65,6 +66,12 @@ if CLIENT then
 		end
 
 		CHAT_SPEAKER = nil
+	end)
+
+	net.Receive("zChatGlobalMessage", function(len)
+		local buffer = net.ReadTable()
+
+		chat.AddText(unpack(buffer))
 	end)
 
 	hook.Add("ChatText", "ZChat", function(index, name, text, messageType)
@@ -112,9 +119,25 @@ if CLIENT then
 
 		surface.CreateFont("zChatFontSmall", {
 			font = font,
-			size = ScreenScale(3),
+			size = ScreenScale(4),
 			extended = true,
 			weight = fontW,
+			antialias = fontAntiAliasing
+		})
+
+		surface.CreateFont("ZB_ProotOSChat", {
+			font = "Ari-W9500",
+			size = ScreenScale(size),
+			extended = true,
+			weight = fontW,
+			antialias = fontAntiAliasing
+		})
+
+		surface.CreateFont("BerserkChatFont", {
+			font = "Who asks Satan",
+			size = ScreenScale(size + 3),
+			extended = true,
+			weight = 0,
 			antialias = fontAntiAliasing
 		})
 	end
@@ -135,6 +158,11 @@ if CLIENT then
 	end)
 
 	cvars.AddChangeCallback("zchat_fontweight", function()
+		LoadFonts()
+		CreateChat()
+	end)
+
+	concommand.Add("zchat_reload", function()
 		LoadFonts()
 		CreateChat()
 	end)
@@ -170,15 +198,16 @@ if CLIENT then
 	end
 
 	local ghost = Color(118, 159, 255)
-
+	local dead = Color(255, 0, 0)
 	hook.Add("OnPlayerChat", "ZChatDead", function(ply, text, bTeam, bDead, bWhisper)
 		if ( ply:IsPlayer() and !ply:Alive() ) then
-			chat.AddText( ply:GetPlayerColor():ToColor(), ply:Nick(), ghost, ": "..text )
+			chat.AddText( dead, "*DEAD* ", ghost, ply:Nick(), ghost, ": "..text )
 			return true
 		end
 	end)
 else
 	util.AddNetworkString("zChatMessage")
+	util.AddNetworkString("zChatGlobalMessage")
 	util.AddNetworkString("zChatTyping")
 
 	net.Receive("zChatMessage", function(len, ply)
@@ -198,12 +227,14 @@ else
 		hook.Run("HG_PlayerSay", ply, txtTbl, text) // our shit gets called later
 		text = isstring(txtTbl[1]) and txtTbl[1] or text // checks to see if shit hits the ceiling
 
+		if text == "" then return end
+
 		if ply:Alive() and ply.organism and ply.organism.otrub then return end
 
-		ply.ChatWhisper = ply.ChatWhisper or false
+		ply.ChatWhisper = ply:Alive() and ply.ChatWhisper or false
 
 		local rf = RecipientFilter()
-		local checkdist = ply.ChatWhisper and 128 * 128 or 1024 * 1024
+		-- local checkdist = ply.ChatWhisper and 128 * 128 or 1024 * 1024
 		for i, plya in player.Iterator() do
 			if plya:Alive() and plya.organism and plya.organism.otrub then continue end
 			if plya:Alive() and !ply:Alive() then continue end
@@ -243,5 +274,17 @@ else
 
 	function META:IsTyping()
 		return self:GetNetVar("bIsTyping")
+	end
+
+	function META:zChatPrint(...)
+		net.Start("zChatGlobalMessage")
+			net.WriteTable({...})
+		net.Send(self)
+	end
+
+	function zChatPrint(...)
+		net.Start("zChatGlobalMessage")
+			net.WriteTable({...})
+		net.Broadcast()
 	end
 end

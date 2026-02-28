@@ -1,11 +1,4 @@
-
 local CLASS = player.RegClass("Combine")
-
-
-local combine_models = {
-    "models/player/combine_soldier.mdl"
-}
-
 
 local callsigns = {
     "Alfa","Bravo","Charlie","Delta","Echo",
@@ -91,7 +84,10 @@ local primary_weapons = {
 local combine_subclasses = {
     default = {
         color = Color(0,220,220),
-        models = combine_models,
+        models = Model("models/player/combine_soldier.mdl"),
+		mat = {
+			["models/combine_soldier/combinesoldiersheet_player"] = "models/combine_soldier/combinesoldiersheet"
+		},
         loadout = {
             {weapon = "weapon_melee"}, --;; ближний бой мясо кишки
             {
@@ -112,7 +108,11 @@ local combine_subclasses = {
 
     elite = {
         color = Color(246,13,13),
-        models = {"models/player/combine_super_soldier.mdl"},
+        models = Model("models/player/combine_super_soldier.mdl"),
+		mat = {
+			["models/combine_soldier/combine_elite_player"] = "models/combine_soldier/combine_elite",
+			["models/combine_soldier/combine_elite_player_head"] = "models/combine_soldier/combine_elite"
+		},
         loadout = {
             {weapon = "weapon_melee"},
             {
@@ -133,7 +133,7 @@ local combine_subclasses = {
 
     sniper = {
         color = Color(0,220,220),
-        models = combine_models,
+        models = Model("models/player/combine_soldier.mdl"),
         loadout = {
             {weapon = "weapon_melee"},
             {
@@ -153,8 +153,11 @@ local combine_subclasses = {
 
     shotgunner = {
         color = Color(220,0,0),
-        models = combine_models,
+        models = Model("models/player/combine_soldier.mdl"),
         skin = 1,
+		mat = {
+			["models/combine_soldier/combinesoldiersheet_player_shotgun"] = "models/combine_soldier/combinesoldiersheet_shotgun"
+		},
         loadout = {
             {weapon = "weapon_melee"},
             {
@@ -210,6 +213,11 @@ local rebels = {
 
 function CLASS.Off(self)
     if CLIENT then return end
+
+	if eightbit and eightbit.EnableEffect and self.UserID then
+		eightbit.EnableEffect(self:UserID(), 0)
+	end
+
     RemoveCombineFromSquad(self)
 
     for k,v in ipairs(ents.FindByClass("npc_*")) do
@@ -224,10 +232,12 @@ function CLASS.Off(self)
 	self:SetNWString("PlayerName", self.oldname_cmb or self:GetNWString("PlayerName"))
     self.organism.CantCheckPulse = nil
     self.leader = nil
+	hook.Remove("OnEntityCreated", "relation_shipdo"..self:EntIndex())
 end
 
 
 CLASS.NoFreeze = true
+CLASS.CanEmitRNDSound = false
 
 local function giveSubClassLoadout(ply, subclass)
     local config = combine_subclasses[subclass] or combine_subclasses["default"]
@@ -277,7 +287,7 @@ function CLASS.On(self, data)
 
     local sub = self.subClass or "default"
     local cfg = combine_subclasses[sub] or combine_subclasses["default"]
-    local useModel = cfg.models[math.random(#cfg.models)]
+    local useModel = istable(cfg.models) and cfg.models[math.random(#cfg.models)] or cfg.models
     self:SetModel(useModel)
     self:SetSubMaterial()
     self:SetNetVar("Accessories", "")
@@ -285,6 +295,12 @@ function CLASS.On(self, data)
 
     if cfg.skin then
         self:SetSkin(cfg.skin)
+    end
+
+    if cfg.mat then
+		for k, v in pairs(cfg.mat) do
+        	self:SetSubMaterial(self:GetSubMaterialIdByName(k), v)
+		end
     end
 
     self.organism.CantCheckPulse = true
@@ -297,10 +313,6 @@ function CLASS.On(self, data)
 
     if not data.bNoEquipment then
         giveSubClassLoadout(self, sub)
-    end
-
-    if sub == "elite" then
-        self:SetModel("models/player/combine_super_soldier.mdl")
     end
 
     self.subClass = nil
@@ -523,7 +535,7 @@ if CLIENT then
             )
         end
 
-        --;; Пульс
+        --;; Pulse
         do
             local pos, size = drawBGPanel(0.035,0.925)
             surface.SetFont("CMBFontSmall")
@@ -560,7 +572,7 @@ if CLIENT then
             )
         end
 
-        --;; Выносливость
+        --;; Stamina
         do
             local pos, size = drawBGPanel(0.035,0.895)
             surface.SetFont("CMBFontSmall")
@@ -596,6 +608,7 @@ if CLIENT then
                 TEXT_ALIGN_LEFT
             )
         end
+
         --;; Silent mode
         do
             local pos, size = drawBGPanel(0.5,0.99)
@@ -618,7 +631,8 @@ if CLIENT then
                 TEXT_ALIGN_CENTER
             )
         end
-        --;; Боезапас
+
+        --;; Ammunition
         local wep = self:GetActiveWeapon()
         if IsValid(wep) and wep.Clip1 then
             ammolerp = Lerp(frt,ammolerp,(wep:Clip1() < 0) and 0 or 1)
@@ -694,6 +708,12 @@ if CLIENT then
         end
     end)
 end
+
+hook.Add("HG_CanThoughts", "CombineCantDumat", function(ply)
+	if ply.PlayerClassName == "Combine" then
+		return false
+	end
+end)
 
 --;; Серверные хуки и звуки шагов/смерти
 if SERVER then

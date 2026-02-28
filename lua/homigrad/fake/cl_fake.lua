@@ -39,6 +39,7 @@ hook.Add("InputMouseApply", "fakeCameraAngles", function(cmd, x, y, angle)
 	end
 
 	cmd:SetViewAngles(angle)
+	lply.fakeangles = angle
 
 	return true
 end)
@@ -72,42 +73,23 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 
 	ViewPunch4(Angle(y / 50 / 16, -x / 50 / 16, -x / 50 / 1) * 0.1)
 
-	--anglesadd[1] = LerpFT(0.2, anglesadd[1] + y / 1, 0)
-	--anglesadd[2] = LerpFT(0.2, anglesadd[2] + x / 1, 0)
+	if !IsValid(lply) or !lply:Alive() then return end
 
-	--tbl.x = tbl.x * 0.15 + anglesadd[2] * 0.05
-	--tbl.y = tbl.y * 0.15 + anglesadd[1] * 0.05
-
-	if not IsValid(LocalPlayer()) or not LocalPlayer():Alive() then return end
-
-	if LocalPlayer().lean and math.abs(LocalPlayer().lean) < 0.01 then
+	if lply.lean and math.abs(lply.lean) < 0.01 then
 		oldlean = 0
 		lean_lerp = 0
 	end
 	
-	if LocalPlayer():InVehicle() and not IsValid(follow) then
+	--local follow = follow or lply
+	if lply:InVehicle() and not IsValid(follow) then
 		tbl.override_angle = true
 		tbl.angle = angle_zero
 		return true
 	end
 
-	angle.roll = (turned and 180 or 0) + lean_lerp * 10
-
-	if not IsValid(follow) then
-		turned = false
-		--[[if turned then
-			tbl.angle.roll = tbl.angle.roll - 180
-			tbl.angle.yaw = tbl.angle.yaw - 180
-			turned = false
-		end--]]
+	if !IsValid(follow) then
+		tbl.angle.roll = 0 + lean_lerp * 10
 		
-		/*if math.EqualWithTolerance and math.EqualWithTolerance(tbl.angle.roll, 180, 10) then
-			tbl.angle.roll = 0
-			tbl.angle.yaw = tbl.angle.yaw - 180
-		end*/
-
-		//tbl.override_angle = false
-		tbl.angle = angle
 		return
 	end
 
@@ -160,7 +142,9 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 		angle.roll = math.Clamp(angle.roll, -15, 15)
 	end
 
-	--ViewPunch(Angle(-newY / 50 / 8, newX / 50 / 8, 0))
+	if lply:InVehicle() then
+		angle.roll = math.Clamp(angle.roll, -15, 15)
+	end
 	
 	tbl.override_angle = true
 	tbl.angle = angle
@@ -190,10 +174,10 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	lerpfovadd2 = LerpFT(0.1, lerpfovadd2, zooming and -25 or 0)
 	
 	if not lply:Alive() then
-		fakeTimer = fakeTimer or CurTime() + 6
+		fakeTimer = fakeTimer or CurTime() + 30
 	end
 	
-	if not lply:Alive() and follow and ((fakeTimer < CurTime()) or lply:KeyPressed(IN_RELOAD)) then
+	if not lply:Alive() and follow and ((fakeTimer < CurTime()) or lply:KeyPressed(IN_RELOAD) or lply:KeyPressed(IN_ATTACK) or lply:KeyPressed(IN_ATTACK2)) then
 		follow = nil
 
 		return
@@ -221,7 +205,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 		end
 	end
 
-	
+
 	if not lply:Alive() and hg.DeathCam and hg.DeathCamAvailable(ply) then return hg.DeathCam(ply,origin,angles,fov,znear,zfar) end
 
 	if not IsValid(ply) then return end
@@ -250,7 +234,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	local _, angEye = LocalToWorld(vector_origin, ot, vector_origin, att_Ang)
 	angEye:Normalize()
 	
-	angEye[3] = ang[3]
+	angEye[3] = false--[[!hg_newfakecam:GetBool()]] and (math.Round(ply.fakeangles[3] / 180) * 180) or (ply.fakeangles and ply.fakeangles[3] or 0)
 	--angEye = ang
 	--angEye = att_Ang
 
@@ -326,7 +310,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	else
 		view.origin = pos
 	end
-
+	
 	view.angles:Add(ply:GetViewPunchAngles())
 	//view.origin, view.angles = HGAddView(lply, view.origin, view.angles, 0)
 	local vpang = GetViewPunchAngles2() + GetViewPunchAngles3()
@@ -408,7 +392,7 @@ hook.Add("NetworkEntityCreated", "HG_GiveRenderOverride", function(ragdoll)
 			end
 		end
 
-		for _, v in ipairs(ents.FindInSphere(ragdoll:GetPos(),32)) do
+		for _, v in ipairs(ents.FindInSphere(ragdoll:GetPos(),16)) do
 			if IsValid(v) and v:IsPlayer() and v:GetModel() == ragdoll:GetModel() then
 				--ragdoll:SetNWString("PlayerName", v:Name())
 				ragdoll:SetNWVector("PlayerColor", v:GetPlayerColor())

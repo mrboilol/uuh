@@ -66,7 +66,6 @@ local random_phrase = {
 	"Breathing feels oddly satisfying right now.",
 	"What if this quiet lasts forever?",
 	"Why isn't anything happening?",
-	"I feel, oddly happy for some reason.",
 }
 
 local fear_hurt_ironic = {
@@ -99,46 +98,10 @@ local fear_phrases = {
 	"Breathe. Just breathe.",
 	"Cold hands. Steady hands.",
 }
-local schizo_monologue = {
-    "They're whispering again.",
-    "Keep your hands steady.",
-    "Don't trust the silence.",
-    "Every shadow breathes.",
-    "They think you're not watching.",
-    "The hunt never ends.",
-    "Footsteps. Heartbeat. Close.",
-    "They will run. You will end it.",
-    "No turning back.",
-    "Quiet. Listen. Move.",
-    "They are worthless.",
-    "Three little pigs..",
-    "My name is not important.",
-    "If I don't do it, who will?",
-    "This party stinks, I fucking hate these people.",
-    "Look what they did to you, Jason.",
-    "Humanity is disgusting.",
-    "Fucking animals.",
-    "What was that?",
-    "I'm hearing things..",
-    "No good pieces of shit.",
-    "Who's there?",
-    "I'll make them beg.",
-    "No mercy.",
-    "You should just kill yourself, It's not worth it.",
-    "Your life means nothing, nobody will remember you.",
-    "Cut your throat, put an end to your misery already.",
-    "You'll be on the news for this.",
-    "Tragedy? More like comedy to me.",
-    "Who the fuck wants to be Daniel Lamb?",
-    "Get revenge now. Grab a rifle.",
-    "KILL THEM ALL.",
-    "Watch them bleed.",
-    "Empathy is weakness.",
-}
+
 local is_aimed_at_phrases = {
     "Oh God. This is it.",
     "Don't. move.",
-	"I can see their finger hesitating to pull the trigger. Fuck.",
     "Is this really how I die?",
     "I should've run. Why didn't I run?",
     "Please don't pull the trigger. Please.",
@@ -153,7 +116,7 @@ local is_aimed_at_phrases = {
 }
 
 local near_death_poetic = {
-	"Trying to stand... but I just cant...",
+	"Trying to stand... but I just can't...",
 	"Breathing's just shallow sips of nothing...",
 	"Can't tell if my eyes are open or not anymore...",
 	"Last thing I'll taste is my own blood and copper.",
@@ -184,31 +147,20 @@ local near_death_positive = {
 }
 
 local broken_limb = {
-	"FUCK. FUCK. ITS DEFINITELY BROKEN",
-	"I CAN FEEL THE BONE PIECES MOVING",
-	"ITS FUCKING BROKEN. I THINK..",
+	"FUCK. FUCK. ITS DEFINITELY BROKEN!",
+	"I CAN FEEL THE BONE PIECES MOVING!",
+	"IT'S FUCKING BROKEN. I THINK..",
 	"It hurts just thinking about it. Definitely broken.",
-	"I dont think it should bend here.",
+	"I don't think it should bend here.",
 	"Oh fuck. It is snapped.",
-	"THE BONE IS PAINING SO BAD...",
-	"FUCK, ILL NEVER BE ABLE TO USE IT RIGHT AGAIN",
-	"SHIT. I NEED A DOCTOR",
-	"I can see the bone poking out...",
-	"I dont see any open fracture, but I feel like I broke something",
+	"I don't see any open fracture, but I feel like I broke something",
 }
 
 local dislocated_limb = {
 	"Yeah that shouldn't be bending like that.",
 	"I have to get this bone back in.",
-	"No, I have to move it back in place.",
+	"No... I have to move it back in place.",
 	"It just hurts so much there. I might need a check up.",
-	"My bone is bending in the wrong place.",
-	"I cant just leave it like that.",
-	"Its dislocated, I have to place it correctly.",
-	"I dont think its broken, but its definitively not in the right place.",
-	"I heard a snap, but its not broken...",
-	"I can already feel the pain radiating from there...",
-	"Its aching so bad...",
 	"My limb is out of place.",
 }
 
@@ -216,7 +168,7 @@ local hungry_a_bit = {
     "Mgh, I'm hungry...",
     "Some food would be great...",
     "I'm hungry...",
-    "It's time to eat",
+    "I should eat something.",
 }
 
 local very_hungry = {
@@ -236,7 +188,7 @@ local after_unconscious = {
 	"Ohh-fuck... my head is aching...",
 	"Oh it's gonna be hard to get up right now... but I have to...",
 	"I don't recognize this place at all... or do I?",
-	"I don't want to experience this EVER AGAIN",
+	"I don't want to experience this EVER AGAIN!",
 }
 
 local slight_braindamage_phraselist = {
@@ -269,40 +221,43 @@ local cold_phraselist = {
 	"Too cold for me.",
 	"I'm shivering, fucking hell, man.",
 	"Extremely chilly out here..",
-	"Need something to heat up",
+	"Need something to heat up...",
+	"I feel pretty cold...",
 	"I feel sick from that cold, fuck."
 }
 
 local freezing_phraselist = {
-	"I.. Do not feel m-my b-body..",
-	"I cant.. f-feel my legs",
+	"I.. ca.. can't feel m-my b-body..",
+	"I can't.. f-feel my legs...",
 	"I'm f-fuck-king fre-ezing..",
 	"I-I think-k my face is num-mb..",
 	"Cold-d..",
-	"I.. Cannot feel any-ythi-ing..",
+	"I.. can't feel any-ythi-ing..",
 }
 
 local numb_phraselist = {
 	"It's not.. cold anymore..",
-	"Why.. does it feel warm..?",
-	"I think I'm okay.. I think...",
+	"Why... does it feel warm..?",
+	"I think I'm okay... I think...",
 	"Finally some warmth...",
+	"I'm warm again... Somehow...",
+	"I was just freezing... Where did this heat come from..?",
 }
 
 local hot_phraselist = {
 	"I'm so sweaty..",
-	"This hot is killing me..",
+	"This heat is killing me..",
 	"My clothing is covered in sweat, fuck.",
-	"I'm smelling like shit!",
+	"My sweat fucking reeks. I should really cool down...",
 	"It's a bit too hot, fuck, man.",
-	"I'm heating up real bad",
-	"Why is it so hot in here",
+	"I'm heating up real bad...",
+	"Why is it so hot in here?",
 }
 
 local heatstroke_phraselist = {
 	"I NEED WATER!!",
-	"Please, water..",
-	"I feel dizzy.. Fuuck-",
+	"Please... water...",
+	"I feel dizzy... Fuuck-",
 	"MY HEAD!- It hurts..",
 	"My head is aching..",
 }
@@ -310,10 +265,10 @@ local heatstroke_phraselist = {
 local heatvomit_phraselist = {
 	"That heat..- I'm gonna vomit-",
 	"Ugghhh... I'm about to puke-",
-	"Fuuck.. Oughhh.. I dont feel-"
+	"Fuuck.. Oughhh.. I don't feel-"
 }
 
-local hg_showthoughts = ConVarExists("hg_showthoughts") and GetConVar("hg_showthoughts") or CreateClientConVar("hg_showthoughts", "1", true, true, "Show the thoughts of your character", 0, 1)
+local hg_showthoughts = ConVarExists("hg_showthoughts") and GetConVar("hg_showthoughts") or CreateClientConVar("hg_showthoughts", "1", true, true, "Toggle thoughts of your character", 0, 1)
 
 function string.Random(length)
 	local length = tonumber(length)
@@ -343,9 +298,6 @@ end
 
 function hg.likely_to_phrase(ply)
 	local org = ply.organism
-	if ply.GetNetVar and ply:GetNetVar("HNS_Schizo", false) and zb and ((zb.CROUND_MAIN == "hideseek") or (zb.CROUND == "hideseek")) then
-    return 3
-end
 
 	local pain = org.pain
 	local brain = org.brain
@@ -378,9 +330,9 @@ local function get_status_message(ply)
 		end
 	end
 
-	local nomessage = ply.PlayerClassName == "Gordon" || ply.PlayerClassName == "Combine"
+	local nomessage = hook.Run("HG_CanThoughts", ply) --ply.PlayerClassName == "Gordon" || ply.PlayerClassName == "Combine"
+	if nomessage ~= nil and nomessage == false then return "" end
 
-	if nomessage then return "" end
     if ply:GetInfoNum("hg_showthoughts", 1) == 0 then return "" end
 
 	local org = ply.organism
@@ -392,10 +344,6 @@ local function get_status_message(ply)
 	local temperature = org.temperature
 	local blood = org.blood
 	local hungry = org.hungry
-	local isHNS = (zb and ((zb.CROUND_MAIN == "hideseek") or (zb.CROUND == "hideseek"))) or false
-if isHNS and ply.GetNetVar and ply:GetNetVar("HNS_Schizo", false) then
-    return schizo_monologue[math.random(#schizo_monologue)]
-end
 	local broken_dislocated = org.just_damaged_bone and ((org.just_damaged_bone + 3 - CurTime()) < -3)
 
 	if broken_dislocated and org.just_damaged_bone then
@@ -411,6 +359,16 @@ end
 	local str = ""
 
 	local most_wanted_phraselist
+	
+	if temperature < 35 then
+		most_wanted_phraselist = temperature > 31 and cold_phraselist or (temperature < 28 and numb_phraselist or freezing_phraselist)
+	elseif temperature > 38 then
+		most_wanted_phraselist = temperature < 40 and hot_phraselist or heatstroke_phraselist
+	end
+
+	if not most_wanted_phraselist and hungry and hungry > 25 and math.random(3) == 1 then
+		most_wanted_phraselist = hungry > 45 and very_hungry or hungry_a_bit
+	end
 
 	if (blood < 3100) or (pain > 75) or (broken_dislocated) or (broken_notify) or (dislocated_notify) then
 		if pain > 75 and (broken_dislocated) then
@@ -437,23 +395,13 @@ end
 	elseif after_unconscious_notify then
 		most_wanted_phraselist = after_unconscious
 	elseif hg.nothing_happening(ply) then
-		//most_wanted_phraselist = random_phrase
+		most_wanted_phraselist = random_phrase
 
 		if hungry and hungry > 25 and math.random(5) == 1 then
 			most_wanted_phraselist = hungry > 45 and very_hungry or hungry_a_bit
 		end
 	elseif hg.fearful(ply) then
 		most_wanted_phraselist = ((IsAimedAt(ply) > 0.9) and is_aimed_at_phrases or (math.random(10) == 1 and fear_hurt_ironic or fear_phrases))
-	end
-
-	if temperature < 35 then
-		most_wanted_phraselist = temperature > 31 and cold_phraselist or (temperature < 28 and numb_phraselist or freezing_phraselist)
-	elseif temperature > 38 then
-		most_wanted_phraselist = temperature < 40 and hot_phraselist or heatstroke_phraselist
-	end
-
-	if not most_wanted_phraselist and hungry and hungry > 25 and math.random(3) == 1 then
-		most_wanted_phraselist = hungry > 45 and very_hungry or hungry_a_bit
 	end
 
 	if brain > 0.1 then

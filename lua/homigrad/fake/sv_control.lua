@@ -281,8 +281,8 @@ hook.Add("Think", "Fake", function()
 			ang:RotateAroundAxis(ang:Up(), 30)
 		end
 
-		if (!ply:InVehicle() && (ply:KeyDown(IN_USE) || ((ishgweapon(wep)) && ply:KeyDown(IN_ATTACK2)) || (wep.ismelee && (ply:KeyDown(IN_ATTACK2) || ply:KeyDown(IN_ATTACK))))) || (ply:InVehicle() && not ply:KeyDown(IN_USE)) or ragdollcombat then
-			if org.canmove and (not ply:KeyDown(IN_MOVELEFT) and not ply:KeyDown(IN_MOVERIGHT) or ply:InVehicle()) then
+		if (!ply:InVehicle() && (ply:KeyDown(IN_USE) || ((ishgweapon(wep)) && (ply:KeyDown(IN_ATTACK2) || (wep.IsResting and wep:IsResting()))) || (wep.ismelee && (ply:KeyDown(IN_ATTACK2) || ply:KeyDown(IN_ATTACK))))) || (ply:InVehicle() && not ply:KeyDown(IN_USE)) or ragdollcombat then
+			if org.canmove and (!((ply:KeyDown(IN_MOVELEFT) or ply:KeyDown(IN_MOVERIGHT)) and ragdoll:IsOnFire()) or ply:InVehicle()) then
 				local angl = angZero
 				angl:Set(ang)
 				if ply:KeyDown(IN_DUCK) then
@@ -563,16 +563,35 @@ hook.Add("Think", "Fake", function()
 				local wepinreload = wep and wep.reload
 				phys = ragdoll:GetPhysicsObjectNum(realPhysNum(ragdoll, 5))
 				if (ragdoll.cooldownLH or 0) < time and not IsValid(ragdoll.ConsLH) and not wepinreload then
-					
+
+					--\\ Find Use Entity in ragdoll
+						local usetrace = util_TraceHull({
+							start = phys:GetPos(),
+							endpos = phys:GetPos(),
+							maxs = vector_usehull,
+							mins = -vector_usehull,
+							filter = {ragdoll, game.GetWorld()},
+							mask = MASK_SOLID
+						})
+
+						local useent = (IsValid(usetrace.Entity) and usetrace.Entity) or false
+						if useent and not useent:IsVehicle() and hook.Run("PlayerUse", ply, useent) then useent:Use(ply) end
+						local wep = useent and useent:IsWeapon() and useent or false
+						ply.force_pickup = true
+						if IsValid(wep) and hook.Run("PlayerCanPickupWeapon", ply, wep) then ply:PickupWeapon(wep) end
+						ply.force_pickup = nil
+					--//
+
 					local trace
 					for i = 1,3 do
 						if trace and trace.Hit and not trace.HitSky then continue end
 						tr.start = phys:GetPos()
 						tr.endpos = phys:GetPos() + phys:GetAngles():Right() * 6 + phys:GetAngles():Up() * (i - 2) * 3
 						tr.filter = ragdoll
+						tr.mask = MASK_SOLID
 						trace = util_TraceLine(tr)
 					end
-					
+
 					if IsValid(choking) or (trace.Hit and not trace.HitSky) then
 						ent = IsValid(choking) and choking or trace.Entity
 						ragdoll.staminaLeftModifyer = 1.5 - trace.HitNormal.z
@@ -602,13 +621,6 @@ hook.Add("Think", "Fake", function()
 								ragdoll:ManipulateBoneAngles(ragdoll:LookupBone("ValveBiped.Bip01_L_Finger" .. tostring(i) .. "1"), Angle(0, -45, 0))
 							end
 						end
-
-						local useent = (IsValid(ent) and ent.Use and ent) or false 
-						if useent and not useent:IsVehicle() then useent:Use(ply) end
-						local wep = ent:IsWeapon() and ent or false
-						ply.force_pickup = true
-						if IsValid(wep) and hook.Run("PlayerCanPickupWeapon", ply, wep) then ply:PickupWeapon(wep) end
-						ply.force_pickup = nil
 					end
 				end
 			else
@@ -641,6 +653,24 @@ hook.Add("Think", "Fake", function()
 
 				if (ragdoll.cooldownRH or 0) < time and not IsValid(ragdoll.ConsRH) then
 					
+					--\\ Find Use Entity in ragdoll
+						local usetrace = util_TraceHull({
+							start = phys:GetPos(),
+							endpos = phys:GetPos(),
+							maxs = vector_usehull,
+							mins = -vector_usehull,
+							filter = {ragdoll, game.GetWorld()},
+							mask = MASK_SOLID
+						})
+
+						local useent = (IsValid(usetrace.Entity) and usetrace.Entity) or false
+						if useent and not useent:IsVehicle() and hook.Run("PlayerUse", ply, useent) then useent:Use(ply) end
+						local wep = useent and useent:IsWeapon() and useent or false
+						ply.force_pickup = true
+						if IsValid(wep) and hook.Run("PlayerCanPickupWeapon", ply, wep) then ply:PickupWeapon(wep) end
+						ply.force_pickup = nil
+					--//
+
 					local trace
 					for i = 1,3 do
 						if trace and trace.Hit and not trace.HitSky then continue end
@@ -679,14 +709,6 @@ hook.Add("Think", "Fake", function()
 								ragdoll:ManipulateBoneAngles(ragdoll:LookupBone("ValveBiped.Bip01_R_Finger" .. tostring(i) .. "1"), Angle(0, -45, 0))
 							end
 						end
-
-						local useent = (IsValid(ent) and ent.Use and ent) or false 
-						if useent and not useent:IsVehicle() then useent:Use(ply) end
-
-						local wep = ent:IsWeapon() and ent or false
-						ply.force_pickup = true
-						if IsValid(wep) and hook.Run("PlayerCanPickupWeapon", ply, wep) then ply:PickupWeapon(wep) end
-						ply.force_pickup = nil
 					end
 				end
 			else
@@ -728,7 +750,7 @@ hook.Add("Think", "Fake", function()
 			--print("huy")
 		end
 
-		if ply:KeyDown(IN_MOVELEFT) and not inmove and !ply:InVehicle() then
+		if ply:KeyDown(IN_MOVELEFT) and ragdoll:IsOnFire() and not inmove and !ply:InVehicle() then
 			if org.canmove then
 				local angle = spine:GetAngles()
 				angle[3] = angle[3] - 20 * (ragdoll:IsOnFire() and 1.5 or 1)
@@ -755,7 +777,7 @@ hook.Add("Think", "Fake", function()
 			end
 		end
 
-		if ply:KeyDown(IN_MOVERIGHT) and not inmove and !ply:InVehicle() then
+		if ply:KeyDown(IN_MOVERIGHT) and ragdoll:IsOnFire() and not inmove and !ply:InVehicle() then
 			if org.canmove and not org.otrub then
 				local angle = spine:GetAngles()
 				angle[3] = angle[3] + 20 * (ragdoll:IsOnFire() and 1.5 or 1)

@@ -465,7 +465,7 @@ hg.ConVars = hg.ConVars or {}
 				vp_punch_angle_velocity4 = Angle()
 			end
 
-			--if not LocalPlayer():Alive() then vp_punch_angle:Zero() vp_punch_angle_velocity:Zero() vp_punch_angle2:Zero() vp_punch_angle_velocity2:Zero() end
+			--if not lply:Alive() then vp_punch_angle:Zero() vp_punch_angle_velocity:Zero() vp_punch_angle2:Zero() vp_punch_angle_velocity2:Zero() end
 
 			local consmulrev = 1 - consmul
 			if vp_punch_angle:IsZero() and vp_punch_angle_velocity:IsZero() and vp_punch_angle2:IsZero() and vp_punch_angle_velocity2:IsZero() and vp_punch_angle3:IsZero() and vp_punch_angle_velocity3:IsZero() and  vp_punch_angle4:IsZero() and vp_punch_angle_velocity4:IsZero() then return end
@@ -648,7 +648,7 @@ hg.ConVars = hg.ConVars or {}
 	function ActivateNoCollision(target, min) // gmodwiki my beloved
 		if !IsValid(target) then return end
 
-		local oldCollision = COLLISION_GROUP_PLAYER
+		local oldCollision = target:GetCollisionGroup()
 		target:SetCollisionGroup(COLLISION_GROUP_PASSABLE_DOOR)
 
 		timer.Simple(min or 0, function()
@@ -672,7 +672,9 @@ hg.ConVars = hg.ConVars or {}
 				//print(target, penetrating, tooNearPlayer, target:GetCollisionGroup())
 
 				if (!penetrating and !tooNearPlayer) or i >= (math.Round(time / checkdtime) - 1) then
-					target:SetCollisionGroup(oldCollision)
+					if target:GetCollisionGroup() == COLLISION_GROUP_PASSABLE_DOOR then -- if it somehow changed, we shouldn't touch it
+						target:SetCollisionGroup(oldCollision)
+					end
 
 					timer.Destroy(target:SteamID64().."_checkBounds_cycle")
 				end
@@ -908,7 +910,7 @@ local IsValid = IsValid
 	end
 --//
 --\\ DrawPlayerRagdoll
-	local hg_ragdollcombat = ConVarExists("hg_ragdollcombat") and GetConVar("hg_ragdollcombat") or CreateConVar("hg_ragdollcombat", 0, FCVAR_REPLICATED, "ragdoll combat", 0, 1)
+	local hg_ragdollcombat = ConVarExists("hg_ragdollcombat") and GetConVar("hg_ragdollcombat") or CreateConVar("hg_ragdollcombat", 0, FCVAR_REPLICATED, "Toggle ragdoll combat-like ragdoll mode (walking, running in ragdoll, etc.)", 0, 1)
 	
 	function hg.RagdollCombatInUse(ply)
 		return hg_ragdollcombat:GetBool() and IsValid(ply.FakeRagdoll)
@@ -974,7 +976,7 @@ local IsValid = IsValid
 
 		--local current = ent:GetManipulateBoneScale(lkp)
 		local fountains = GetNetVar("fountains") or {}
-		local wawanted = (GetViewEntity() != ply) and !fountains[ent] and !(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1) and vector_full or vector_small
+		local wawanted = (GetViewEntity() != ply) and !fountains[ent] and (!(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1) and !(hg_firstperson_death:GetBool() and follow == ent)) and vector_full or vector_small
 		--print(ent, wawanted, GetViewEntity(), ply, (GetViewEntity() != ply), !fountains[ent], !(!lply:Alive() and lply:GetNWEntity("spect") == ply and viewmode == 1))
 		--if !current:IsEqualTol(wawanted, 0.01) then
 			--ent:ManipulateBoneScale(lkp, wawanted)
@@ -1029,7 +1031,7 @@ local IsValid = IsValid
 		if !self.shouldTransmit then return end
 
 		ent = IsValid(ent) and ent or self
-
+		if ent:GetMaterial() == "NULL" then ent:DrawShadow( false ) return end
 		if not IsValid(ent) then return end
 
 		--local drawornot = hook_Run("PreDrawPlayer2", ent, self) // true means nodraw
@@ -1037,6 +1039,7 @@ local IsValid = IsValid
 
 		DrawPlayerRagdoll(ent, self)
 		RenderAccessoriesCool(ent, self)
+		hook_Run("CoolPostDrawAppearance", ent, self)
 		//hg.HomigradBones(self, CurTime(), FrameTime())
 
 		if IsValid(self.OldRagdoll) then DrawAppearance(ent, self, true) end
@@ -1062,7 +1065,7 @@ local IsValid = IsValid
 		curlean = curlean or 0
 		unmodified_angle = unmodified_angle or 0
 		local time = SysTime() - 0.01
-		hook.Add("Think", "leanin", function()
+		hook.Add("HUDPaint", "leanin", function()
 			local ply = LocalPlayer()
 			local angles = ply:EyeAngles()
 
@@ -1539,8 +1542,9 @@ local IsValid = IsValid
 		hg.approach_vector = approach_vector
 	--//
 
-
+	local hg_movement_stamina_debuff = CreateConVar("hg_movement_stamina_debuff","0.3",{FCVAR_REPLICATED,FCVAR_ARCHIVE,FCVAR_NOTIFY},"Multiply movement debuff when having low stamina",0,1)
 	local vecZero = Vector()
+	local vomitVPAng = Angle(1,0,0)
 	hook.Add("SetupMove", "HG(StartCommand)", function(ply, mv, cmd)
 		--if CLIENT then return end
 		-- if(1)then return end
@@ -1560,16 +1564,6 @@ local IsValid = IsValid
 		if( ( not org ) or ( not org.brain ) )then
 			return
 		end
-
-	
-	if ply:GetNWFloat("hg_dance_until", 0) > CurTime() then
-		cmd:SetForwardMove(0)
-		cmd:SetSideMove(0)
-		cmd:RemoveKey(IN_JUMP)
-		cmd:RemoveKey(IN_DUCK)
-		mv:SetForwardSpeed(0)
-		mv:SetSideSpeed(0)
-	end
 
 		if !hg.RagdollCombatInUse(ply) and (IsValid(ply.FakeRagdoll) or IsValid(ply:GetNWEntity("FakeRagdollOld"))) then
 			if IsValid(ply.FakeRagdoll) then
@@ -1672,7 +1666,7 @@ local IsValid = IsValid
 		if ply:GetNetVar("vomiting", 0) > CurTime() then
 			cmd:AddKey(IN_DUCK)
 			mv:AddKey(IN_DUCK)
-			if ply == lply then ViewPunch(Angle(1,0,0)) end
+			if ply == lply then ViewPunch(vomitVPAng) end
 		end
 
 		--\\Running
@@ -1863,11 +1857,12 @@ local IsValid = IsValid
 		k = 1 * weightmul
 		k = k * math.Clamp(consmul, 0.7, 1)
 		k = k * math.Clamp((org.temperature and (1 - (org.temperature - 38) * 0.25) or 1), 0.5, 1)
-		k = k * math.Clamp((org.stamina and org.stamina[1] or 180) / 120, 0.3, 1)
+		k = k * math.Clamp((org.temperature and ((org.temperature - 35) * 0.25 + 1) or 1), 0.5, 1)
+		k = k * math.Clamp(math.Round((org.stamina and org.stamina[1] or 180), 0) / 120, hg_movement_stamina_debuff:GetFloat(), 1)
 		k = k * math.Clamp(5 / ((org.immobilization or 0) + 1), 0.25, 1)
 		k = k * math.Clamp((org.blood or 0) / 5000, 0, 1)
 		k = k * math.Clamp(10 / ((org.shock or 0) + 1), 0.25, 1)
-		k = k * (math.min((org.adrenaline or 0) / 24, 0.3) + 1)
+		k = k * (math.min(math.Round((org.adrenaline or 0), 1) / 24, 0.3) + 1)
 		k = k * math.Clamp((org.lleg and org.lleg >= 0.5 and math.max(1 - org.lleg, 0.6) or 1) * (org.lleg and org.rleg >= 0.5 and math.max(1 - org.rleg, 0.6) or 1) * ((org.analgesia * 1 + 1)), 0, 1)
 		k = k * (org.llegdislocation and 0.75 or 1) * (org.rlegdislocation and 0.75 or 1)
 		k = k * (org.pelvis == 1 and 0.4 or 1)
@@ -1987,7 +1982,11 @@ local IsValid = IsValid
 		if ply:GetMoveType() == MOVETYPE_LADDER or ply:GetMoveType() == MOVETYPE_NONE then
 			speed = 100
 		end
-
+		
+		if org.noradrenaline and org.noradrenaline > 0 then
+			speed = speed + 200 * math.Round(org.noradrenaline, 1)
+		end
+		
 		mv:SetMaxSpeed(speed)
 		mv:SetMaxClientSpeed(speed)
 		ply:SetMaxSpeed(speed)
@@ -2050,10 +2049,12 @@ local IsValid = IsValid
 		end
 
 		if SERVER then
-
 			if ply:GetNetVar("Armor", {})["torso"] then
 				EmitSound("arc9_eft_shared/weapon_generic_rifle_spin"..math.random(9)..".ogg", pos, ply:EntIndex(), CHAN_AUTO, changePitch(math.min(len / 100, 0.89)), 80)
 			end
+
+			local Hook = hook_Run("HG_PlayerFootstep", ply, pos, foot, sound, volume, rf)
+			if Hook then return Hook end
 
 			if !(ply:IsWalking() or ply:Crouching()) and ent == ply then
 				local snd
@@ -2100,11 +2101,38 @@ local IsValid = IsValid
 		if self.ReloadSound then util.PrecacheSound(self.ReloadSound) end
 	end
 --//
---\\ Faster npcs (does not works)
-	--[[hook.Add("OnEntityCreated", "fasternpcs", function(ent)
-		if IsValid(ent) and ent:IsNPC() then
-			timer.Simple(.1, function()
+--\\ Tough npcs
+	local hg_toughnpcs = CreateConVar("hg_toughnpcs", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "Toggle more health for npcs", 0, 1)
+	local npcToBuff = {
+		["npc_metropolice"] = 100,
+		["npc_combine_s"] = 150,
+		["npc_citizen"] = 100,
+		["npc_kleiner"] = 100,
+		["npc_magnusson"] = 100,
+		["npc_eli"] = 100,
+		["npc_odessa"] = 100,
+		["npc_breen"] = 100,
+		["npc_zombie"] = 120,
+		["npc_fastzombie"] = 90,
+		["npc_headcrab"] = 50,
+		["npc_headcrab_fast"] = 40,
+		["npc_headcrab_black"] = 70,
+		["npc_fastzombie_torso"] = 80,
+		["npc_zombie_torso"] = 110,
+		["npc_manhack"] = 50,
+		["npc_antlion_grub"] = 20,
+	}
+	hook.Add("OnEntityCreated", "toughnpcs", function(ent)
+		if SERVER and hg_toughnpcs:GetBool() and IsValid(ent) and ent:IsNPC() and npcToBuff[ent:GetClass()] then
+			timer.Simple(0.2, function()
+				if not IsValid(ent) then return end
+
+				ent:SetHealth(npcToBuff[ent:GetClass()])
+				ent:SetMaxHealth(npcToBuff[ent:GetClass()])
 				ent:SetPlaybackRate(2)
+				ent:SetKeyValue("m_flPlaybackSpeed", 2)
+
+				print(ent:Health())
 			end)
 		end
 	end)
@@ -2250,7 +2278,7 @@ local IsValid = IsValid
 	local adjust = {
 		["steering"] = {Vector(7,9,0),Angle(0,-80,0),Vector(-7,9,0),Angle(0,-100,180)},
 		["steeringwheel"] = {Vector(7.5,-3.5,0),Angle(180,-90,0),Vector(-7.5,-3.5,0),Angle(0,90,0)},
-		["steering_wheel"] = {Vector(7,0,-4),Angle(-90,-90,0),Vector(-7,0,-4),Angle(-90,90,0)},
+		["steering_wheel"] = {Vector(9,13,-1),Angle(0,-90,0),Vector(-9,13,-1),Angle(-180,90,0)},
 		["Rig_Buggy.Steer_Wheel"] = {Vector(8,-2.5,0),Angle(0,-90,0),Vector(-8,-2.5,0),Angle(180,90,0)},
 		["car.steeringwheel"] = {Vector(15,-10,0),Angle(0,180,0),Vector(15,10,0),Angle(180,0,0)},
 		["Airboat.Steer"] = {Vector(-11,-1.5,10),Angle(70,50,50),Vector(11,-1.5,10),Angle(70,50,50)},
@@ -2265,8 +2293,8 @@ local IsValid = IsValid
 	}
 
 	local modelAdjust = {
-		["models/left4dead/vehicles/apc_body.mdl"] = {Vector(11,-11,-1.5),Angle(0,-90,20),Vector(-11,-11,-1.5),Angle(180,90,-20)},
-		["models/left4dead/vehicles/nuke_car.mdl"] = {Vector(7,-12,-1),Angle(0,-90,0),Vector(-7,-12,-1),Angle(180,90,0)},
+		["models/left4dead/vehicles/apc_body_glide.mdl"] = {Vector(10.5,14,-1),Angle(0,-90,0),Vector(-10.5,14,-1),Angle(-180,90,0)},
+		["models/left4dead/vehicles/nuke_car_glide.mdl"] = {Vector(7,12,-1),Angle(0,-90,0),Vector(-7,12,-1),Angle(180,90,0)},
 		["models/gta5/vehicles/sanchez/chassis.mdl"] = {
 			Vector(15,17,-4.5),
 			Angle(-95,90,-90),
@@ -2497,8 +2525,8 @@ local IsValid = IsValid
 			if PhysObj and PhysObj.GetMass and PhysObj:GetMass() > 14 then return false end
 		end
 
-		if IsValid(ply.FakeRagdoll) then return false end
-		if ply.PickUpCooldown > CurTime() then return false end
+		--if IsValid(ply.FakeRagdoll) then return false end
+		if ply.PickUpCooldown > CurTime() and not IsValid(ply.FakeRagdoll) then return false end
 
 		ply.PickUpCooldown = CurTime() + 0.15
 	end)
@@ -2598,20 +2626,37 @@ duplicator.Allow( "homigrad_base" )
 --//
 
 --\\ Custom running anim activity
-	hook.Add( "CalcMainActivity", "RunningAnim", function( Player, Velocity )
-		if (not Player:InVehicle()) and Player:IsOnGround() and Velocity:Length() > 250 and IsValid(Player:GetActiveWeapon()) and Player:GetActiveWeapon():GetClass() == "weapon_hands_sh" then
-			local isFurry = Player.PlayerClassName == "furry"
+	local runHoldTypes = {
+		["normal"] = true,
+		["slam"] = true,
+		["grenade"] = true
+	}
+
+	hook.Add( "CalcMainActivity", "RunningAnim", function(ply, vel)
+		local wep = IsValid(ply:GetActiveWeapon()) and ply:GetActiveWeapon()
+		local isAmputated = ply:IsBerserk() and ply.organism and (ply.organism.llegamputated or ply.organism.rlegamputated)
+		if (not ply:InVehicle()) and ply:IsOnGround() and vel:Length() > 250 and wep and runHoldTypes[wep:GetHoldType()] and not isAmputated then
+			local isFurry = ply.PlayerClassName == "furry"
 			local anim = ACT_HL2MP_RUN_FAST
-			if Player:IsOnFire() then
+			if ply:IsOnFire() then
 				anim = ACT_HL2MP_RUN_PANICKED
 			elseif isFurry then
-				if hg.KeyDown(Player, IN_WALK) and not hg.KeyDown(Player, IN_BACK) then
+				if hg.KeyDown(ply, IN_WALK) and not hg.KeyDown(ply, IN_BACK) then
 					anim = ACT_HL2MP_RUN_ZOMBIE_FAST
 				else
 					anim = ACT_HL2MP_RUN_FAST
 				end
 			else
 				anim = ACT_HL2MP_RUN_FAST
+			end
+
+			return anim, -1
+		end
+
+		if (not ply:InVehicle()) and ply:IsOnGround() and isAmputated then
+			local anim = ACT_HL2MP_WALK_ZOMBIE_06
+			if vel:Length() > 250 then
+				anim = ACT_HL2MP_RUN_ZOMBIE_FAST
 			end
 			return anim, -1
 		end
@@ -2674,7 +2719,7 @@ duplicator.Allow( "homigrad_base" )
 			amtflashed2 = 0
 		end)
 
-		hook.Add("RenderScreenspaceEffects","flasheseffect",function()
+		hook.Add("Post Post Processing","flasheseffect",function()
 			if !lply:Alive() then
 				if !next(hg.flashes) then
 					hg.flashes = {}
@@ -2738,27 +2783,6 @@ duplicator.Allow( "homigrad_base" )
 			PrintMessage(HUD_PRINTTALK, ply:Nick().." - zteam dev here!")
 		end
 	end)
---//
-
-
---\\ Shared maps with temperatures
-hg.TemperatureMaps = {
-	["gm_wintertown"] = true,
-	["cs_drugbust_winter"] = true,
-	["cs_office"] = true,
-	["gm_zabroshka_winter"] = true,
-	["mu_smallotown_v2_snow"] = true,
-	["ttt_cosy_winter"] = true,
-	["ttt_winterplant_v4"] = true,
-	["gm_everpine_mall"] = true,
-	["gm_boreas"] = true,
-	["gm_reservoir_a1"] = true,
-	["mu_riverside_snow"] = true,
-	["gm_fork_north"] = true,
-	["gm_fork_north_day"] = true,
-	["gm_ijm_boreas"] = true,
-	["gm_construct"] = true, -- test
-}
 --//
 
 --\\ Fireworks effects? why so many, we use only one lol
@@ -2933,370 +2957,133 @@ hg.TemperatureMaps = {
 		return next( tab ) == nil
 	end
 --//
+
+--\\ Custom Screen Shake
 if SERVER then
-	util.AddNetworkString("DOG_AntiCheat_Ping")
-	util.AddNetworkString("DOG_AntiCheat_Report")
-	util.AddNetworkString("DOG_Screengrab_Request")
-	util.AddNetworkString("DOG_Screengrab_Chunk")
-	util.AddNetworkString("DOG_Screengrab_AdminChunk")
-	util.AddNetworkString("DOG_Screengrab_AdminFinish")
+	util.AddNetworkString("util.ScreenShake")
+end
 
-	local dogSuspects = {}
-	local screengrabSessions = {}
-	local screengrabCounter = 0
+hg.OldScreenShake = hg.OldScreenShake or util.ScreenShake
 
-	local function dogGetAdmins()
-		if zb and zb.GetAllAdmins then
-			return zb.GetAllAdmins()
+local ScreenShakers = {} -- Shake your a... don't :3
+--[[
+	ScreenShakers[#ScreenShakers + 1] = {
+		vPos = vPos,
+		nAmplitude = nAmplitude,
+		nFrequency = nFrequency,
+		nDuration = nDuration or 1,
+		nRadius = nRadius,
+		bAirshake = bAirshake,
+		tCreated = CurTime()
+	}
+--]]
+function util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter)
+	if SERVER then -- SERVER SIDE
+		vPos = vPos or Vector(0,0,0)
+		nRadius = nRadius or (nAmplitude * 100)
+		local tEnts = ents.FindInSphere(vPos, nRadius * nRadius)
+		--PrintTable(tEnts)
+		local crf = RecipientFilter()
+		--print(#tEnts)
+		for i = 1, #tEnts do
+			local eEnt = tEnts[i]
+			if !IsValid(eEnt) then continue end
+			if !eEnt:IsPlayer() then continue end
+			crf:AddPlayer(eEnt)
 		end
-
-		local admins = {}
-		for _, ply in ipairs(player.GetAll()) do
-			if ply:IsAdmin() then
-				admins[#admins + 1] = ply
-			end
-		end
-		return admins
-	end
-
-	local function dogAlertAdmins(ply, signals)
-		local now = CurTime()
-		local state = dogSuspects[ply] or {}
-		if state.nextAlert and state.nextAlert > now then return end
-		state.nextAlert = now + 30
-		dogSuspects[ply] = state
-
-		local cheats = {}
-		if istable(signals) then
-			for _, signal in ipairs(signals) do
-				if string.find(signal, "^epstein_") or string.find(signal, "^EPSTEIN_") then
-					cheats.devver15 = true
-				end
-				if string.find(signal, "^DW_") then
-					cheats.dobroware = true
-				end
-			end
-		end
-
-		local cheatText = "unknown"
-		if next(cheats) then
-			local list = {}
-			for name in pairs(cheats) do
-				list[#list + 1] = name
-			end
-			table.sort(list)
-			cheatText = table.concat(list, ", ")
-		end
-
-		for _, admin in ipairs(dogGetAdmins()) do
-			if IsValid(admin) then
-				admin:ChatPrint(("DOG: Found a cheater on the server. permanently banning in 20 seconds, Do not intervene. %s (%s) cheat=%s"):format(ply:Nick(), ply:SteamID(), cheatText))
-			end
-		end
-
-		if istable(signals) and #signals > 0 then
-			print(("[DOG] Cheater detected: %s (%s) signals=%s"):format(ply:Nick(), ply:SteamID(), table.concat(signals, ", ")))
-		else
-			print(("[DOG] Cheater detected: %s (%s)"):format(ply:Nick(), ply:SteamID()))
-		end
-
-		if not state.banScheduled then
-			state.banScheduled = true
-			local steam64 = ply:SteamID64()
-			local timerName = "DOG_AntiCheat_Ban_" .. (steam64 and steam64 ~= "0" and steam64 or ply:EntIndex())
-			state.banTimerName = timerName
-			dogSuspects[ply] = state
-
-			if not timer.Exists(timerName) then
-				timer.Create(timerName, 20, 1, function()
-					if not IsValid(ply) or not ply:IsPlayer() then return end
-					local steamId = ply:SteamID()
-					if ULib and ULib.addBan then
-						ULib.addBan(steamId, 0, "Get good loser", ply:Nick(), "Dog")
-					else
-						ply:Ban(0, true)
-					end
-				end)
-			end
-		end
-	end
-
-	net.Receive("DOG_AntiCheat_Report", function(_, ply)
-		if not IsValid(ply) then return end
-		local found = net.ReadBool()
-		local signals = net.ReadTable()
-		if found then
-			dogAlertAdmins(ply, signals)
-		end
-	end)
-
-	local function dogRequestCheck(ply)
-		if not IsValid(ply) or not ply:IsPlayer() then return end
-		net.Start("DOG_AntiCheat_Ping")
-		net.Send(ply)
-	end
-
-	hook.Add("PlayerInitialSpawn", "DOG_AntiCheat_Initial", function(ply)
-		timer.Simple(5, function()
-			if IsValid(ply) then
-				dogRequestCheck(ply)
-			end
-		end)
-	end)
-
-	timer.Create("DOG_AntiCheat_Periodic", 30, 0, function()
-		for _, ply in ipairs(player.GetAll()) do
-			dogRequestCheck(ply)
-		end
-	end)
-
-	function hg.RequestScreengrab(admin, target)
-		if not IsValid(admin) or not IsValid(target) then return end
-		screengrabCounter = screengrabCounter + 1
-		local id = screengrabCounter
-		screengrabSessions[id] = {
-			admin = admin,
-			target = target,
-			total = 0,
-			chunks = {},
-			received = 0,
-			chunkCount = 0
+		crf = crf or crfFilter
+		--print(crf)
+		net.Start("util.ScreenShake")
+			net.WriteVector(vPos)
+			net.WriteFloat(nAmplitude)
+			net.WriteFloat(nFrequency)
+			net.WriteFloat(nDuration or 1)
+			net.WriteFloat(nRadius)
+			net.WriteBool(bAirshake)
+		net.Send(crf)
+	elseif CLIENT then -- CLIENT SIDE
+		nRadius = nRadius or (nAmplitude * 100)
+		ScreenShakers[#ScreenShakers + 1] = {
+			vPos = vPos,
+			nAmplitude = nAmplitude,
+			nFrequency = nFrequency,
+			nDuration = nDuration or 1,
+			nRadius = nRadius,
+			bAirshake = bAirshake,
+			tCreated = CurTime()
 		}
-
-		net.Start("DOG_Screengrab_Request")
-		net.WriteUInt(id, 32)
-		net.Send(target)
-
-		admin:ChatPrint("Screengrab requested from " .. target:Nick())
+		hg.OldScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter)
 	end
+end
 
-	net.Receive("DOG_Screengrab_Chunk", function(_, ply)
-		local id = net.ReadUInt(32)
-		local total = net.ReadUInt(32)
-		local chunkIndex = net.ReadUInt(16)
-		local chunkCount = net.ReadUInt(16)
-		local chunkSize = net.ReadUInt(16)
-		local data = net.ReadData(chunkSize)
-
-		local session = screengrabSessions[id]
-		if not session or session.target ~= ply then return end
-
-		session.total = total
-		session.chunkCount = chunkCount
-
-		if not session.chunks[chunkIndex] then
-			session.chunks[chunkIndex] = data
-			session.received = session.received + 1
-		end
-
-		if session.received >= session.chunkCount then
-			local combined = table.concat(session.chunks)
-			if #combined == session.total then
-				local admin = session.admin
-				if IsValid(admin) then
-					local size = #combined
-					local outChunkSize = 60000
-					local outCount = math.ceil(size / outChunkSize)
-					for i = 1, outCount do
-						local startPos = (i - 1) * outChunkSize + 1
-						local part = combined:sub(startPos, math.min(startPos + outChunkSize - 1, size))
-						net.Start("DOG_Screengrab_AdminChunk")
-						net.WriteUInt(id, 32)
-						net.WriteUInt(size, 32)
-						net.WriteUInt(i, 16)
-						net.WriteUInt(outCount, 16)
-						net.WriteUInt(#part, 16)
-						net.WriteData(part, #part)
-						net.Send(admin)
-					end
-
-					net.Start("DOG_Screengrab_AdminFinish")
-					net.WriteUInt(id, 32)
-					net.Send(admin)
-				end
-			end
-
-			screengrabSessions[id] = nil
-		end
-	end)
-
-	hook.Add("PlayerDisconnected", "DOG_Screengrab_Cleanup", function(ply)
-		for id, session in pairs(screengrabSessions) do
-			if session.admin == ply or session.target == ply then
-				screengrabSessions[id] = nil
-			end
-		end
-
-		local state = dogSuspects[ply]
-		if state and state.banTimerName and timer.Exists(state.banTimerName) then
-			timer.Remove(state.banTimerName)
-		end
-		dogSuspects[ply] = nil
-	end)
+local plyMeta = FindMetaTable("Player")
+function plyMeta:ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake)
+	if SERVER then
+		local crfFilter = RecipientFilter()
+		crfFilter:AddPlayer(self)
+		util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake, crfFilter)
+	elseif CLIENT and self == lply then
+		util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake)
+	end
 end
 
 if CLIENT then
-	local dogConvars = {
-		"disable_spray",
-		"epstein_aimbot",
-		"epstein_fov",
-		"epstein_ignore_team",
-		"epstein_esp",
-		"epstein_draw_fov",
-		"epstein_dot",
-		"epstein_esp_traitor",
-		"epstein_norecoil",
-		"epstein_nospread",
-		"epstein_bhop",
-		"epstein_watermark",
-		"epstein_esp_box",
-		"epstein_esp_skeleton",
-		"epstein_esp_name",
-		"epstein_esp_health",
-		"epstein_esp_weapon",
-		"epstein_esp_distance",
-		"epstein_esp_bar",
-		"epstein_antiscreen",
-		"epstein_antiaim",
-		"epstein_antiaim_power",
-		"epstein_antiaim_speed",
-		"epstein_antiaim_mode",
-		"epstein_inventory_exploit",
-		"epstein_esp_headpos",
-		"epstein_preview_esp"
-	}
+	-- Clientside receive
+	net.Receive("util.ScreenShake",function()
+		local vPos = net.ReadVector()
+		local nAmplitude = net.ReadFloat()
+		local nFrequency = net.ReadFloat()
+		local nDuration = net.ReadFloat()
+		local nRadius = net.ReadFloat()
+		local bAirshake = net.ReadBool(bAirshake)
 
-	local function dogCheckCheat()
-		local signals = {}
-		local found = false
-
-		local dobroGlobals = {
-			"DW_Init",
-			"DW_SetCursorG",
-			"DW_TableModRepair",
-			"DW_avaiable_cursor",
-			"DW_cursorediting",
-			"DW_avataraccountntnfg"
-		}
-
-		for _, name in ipairs(dogConvars) do
-			if ConVarExists(name) then
-				signals[#signals + 1] = name
-				found = true
-			end
-		end
-
-		if _G.EPSTEIN_AIMBOT_ENABLED ~= nil then signals[#signals + 1] = "EPSTEIN_AIMBOT_ENABLED" found = true end
-		if _G.EPSTEIN_ESP_ENABLED ~= nil then signals[#signals + 1] = "EPSTEIN_ESP_ENABLED" found = true end
-		if _G.EPSTEIN_WATERMARK_ENABLED ~= nil then signals[#signals + 1] = "EPSTEIN_WATERMARK_ENABLED" found = true end
-		if _G.EPSTEIN_INVENTORY_EXPLOIT ~= nil then signals[#signals + 1] = "EPSTEIN_INVENTORY_EXPLOIT" found = true end
-		for _, name in ipairs(dobroGlobals) do
-			if _G[name] ~= nil then
-				signals[#signals + 1] = name
-				found = true
-			end
-		end
-
-		return found, signals
-	end
-
-	net.Receive("DOG_AntiCheat_Ping", function()
-		local found, signals = dogCheckCheat()
-		net.Start("DOG_AntiCheat_Report")
-		net.WriteBool(found)
-		net.WriteTable(signals)
-		net.SendToServer()
+		util.ScreenShake(vPos, nAmplitude, nFrequency, nDuration, nRadius, bAirshake)
 	end)
 
-	local screengrabInbox = {}
+	hook.Add("PostHGCalcView","util.ScreenShake",function(ply, view)
+		for i = 1, #ScreenShakers do
+			local shake = ScreenShakers[i]
+			if shake then
+				if !ply:IsOnGround() and !shake.bAirshake then continue end
+				local distance = shake.vPos:DistToSqr(ply:GetPos())
+				local mul = 1 - (distance / (shake.nRadius * shake.nRadius) / 2)
+				mul = math.max(mul, 0)
+				mul = Lerp(math.ease.InExpo(mul),0,1)
 
-	net.Receive("DOG_Screengrab_Request", function()
-		local id = net.ReadUInt(32)
-		timer.Simple(0, function()
-			local w = math.min(640, ScrW())
-			local h = math.min(360, ScrH())
-			local data = render.Capture({
-				format = "jpeg",
-				x = 0,
-				y = 0,
-				w = w,
-				h = h,
-				quality = 50
-			})
+				local timeMul = ((shake.tCreated + shake.nDuration) - CurTime()) / shake.nDuration
+				shake.vNormal = shake.vNormal or VectorRand(-1,1)
+				shake.vShake =  shake.vNormal * (math.Rand(0,2) * timeMul)
+				local vNoise = VectorRand(-0.2,0.2)
+				shake.vShake = shake.vShake + vNoise
+				if !shake.gFrequency or shake.gFrequency < CurTime() then
+					shake.gFrequency = CurTime() + (100 - shake.nFrequency) / 100
+					shake.vNormal = VectorRand(-1,1)
+				end
 
-			if not data then return end
+				shake.finalShake = LerpVectorFT(0.3, shake.finalShake or Vector(0,0,0), shake.vShake)
+				local vShake = shake.finalShake
+				vShake = vShake * shake.nAmplitude / 5
+				vShake = vShake * mul
+				vShake = vShake * timeMul
+				vShake.z = vShake.z * 0.5
+				vShake.x = math.max(vShake.x, 0)
 
-			local size = #data
-			local chunkSize = 60000
-			local chunkCount = math.ceil(size / chunkSize)
+				local angles = view.angles
+				view.origin = view.origin
+					+ angles:Forward() * vShake.x
+					+ angles:Right() * vShake.y
+					+ angles:Up() * vShake.z
 
-			for i = 1, chunkCount do
-				local startPos = (i - 1) * chunkSize + 1
-				local part = data:sub(startPos, math.min(startPos + chunkSize - 1, size))
-				net.Start("DOG_Screengrab_Chunk")
-				net.WriteUInt(id, 32)
-				net.WriteUInt(size, 32)
-				net.WriteUInt(i, 16)
-				net.WriteUInt(chunkCount, 16)
-				net.WriteUInt(#part, 16)
-				net.WriteData(part, #part)
-				net.SendToServer()
+				angles[1] = angles[1] + vShake.z
+				--angles[2] = angles[2] + vShake.x
+				angles[3] = angles[3] + vShake.y
+
+				if timeMul <= 0 then
+					table.remove(ScreenShakers, i)
+				end
 			end
-		end)
-	end)
-
-	net.Receive("DOG_Screengrab_AdminChunk", function()
-		local id = net.ReadUInt(32)
-		local total = net.ReadUInt(32)
-		local chunkIndex = net.ReadUInt(16)
-		local chunkCount = net.ReadUInt(16)
-		local chunkSize = net.ReadUInt(16)
-		local data = net.ReadData(chunkSize)
-
-		local session = screengrabInbox[id]
-		if not session then
-			session = {
-				total = total,
-				chunkCount = chunkCount,
-				chunks = {},
-				received = 0
-			}
-			screengrabInbox[id] = session
 		end
-
-		if not session.chunks[chunkIndex] then
-			session.chunks[chunkIndex] = data
-			session.received = session.received + 1
-		end
-	end)
-
-	net.Receive("DOG_Screengrab_AdminFinish", function()
-		local id = net.ReadUInt(32)
-		local session = screengrabInbox[id]
-		if not session or session.received < session.chunkCount then return end
-
-		local data = table.concat(session.chunks)
-		if #data ~= session.total then return end
-
-		file.CreateDir("screengrabs")
-		local filename = "screengrabs/screengrab_" .. id .. ".jpg"
-		file.Write(filename, data)
-
-		local mat = Material("data/" .. filename, "noclamp smooth")
-		local frame = vgui.Create("DFrame")
-		frame:SetTitle("Screengrab")
-		frame:SetSize(800, 450)
-		frame:Center()
-		frame:MakePopup()
-
-		local panel = vgui.Create("DPanel", frame)
-		panel:Dock(FILL)
-		function panel:Paint(w, h)
-			surface.SetDrawColor(255, 255, 255, 255)
-			surface.SetMaterial(mat)
-			surface.DrawTexturedRect(0, 0, w, h)
-		end
-
-		screengrabInbox[id] = nil
+		return view
 	end)
 end
+--//
