@@ -259,6 +259,12 @@ players : 1 humans, 0 bots (20 max)
 			if not lply:Alive() then return end
 			if not IsValid(lply) or not lply:IsPlayer() then return end
 			if !lply:Alive() or !lply.organism or lply.organism.otrub then return end
+			local CustomAmmoType = false
+			if hg.ammotypeshuy[bullet.AmmoType] then
+				CustomAmmoType = hg.ammotypeshuy[bullet.AmmoType]
+			end
+			local subsonic = !(CustomAmmoType and CustomAmmoType.BulletSettings and CustomAmmoType.BulletSettings.Speed and CustomAmmoType.BulletSettings.Speed > 340)
+			
 			local tr = bullet.Trace
 			local mr = math.random(17)
 			local view = render.GetViewSetup(true)
@@ -294,10 +300,21 @@ players : 1 humans, 0 bots (20 max)
 			local mr = math.random(9)
 
 			if shooterdist < 200 and not IsLookingAt(self:GetOwner(),eyePos) then return end
-			if dist < 180 then EmitSound("cracks/heavy/heav_crack_0" .. mr .. ".ogg", pos, 0, CHAN_AUTO, 1,65) end
-			if dist > 120 then return end
+			local SND = subsonic and "weapons/bullets/fx/subsonic_0" .. mr .. ".wav"
+				or bullet.Damage >= 50 and "cracks/" .. "heavy/heav" .. "_crack_0" .. mr .. ".ogg"
+				or bullet.Damage >= 30 and "cracks/" .. "medium/med" .. "_crack_0" .. mr .. ".ogg"
+				or "cracks/" .. "light/light" .. "_crack_0" .. mr .. ".ogg"
 
-			EmitSound("cracks/heavy/heav_crack_0" .. mr .. ".ogg", pos, 0, CHAN_AUTO, 1,85)
+			if dist < 180 then
+				timer.Simple(0.01,function()
+					EmitSound("weapons/bullets/fx/subsonic_0" .. mr .. ".wav", pos - tr.Normal * 25, 0, CHAN_AUTO, 1, 55)
+				end)
+				-- EmitSound(SND, pos - tr.Normal * 25, 0, CHAN_AUTO, 1, 65) 
+			end
+			if dist > 120 then return end
+			if !subsonic then
+				EmitSound(SND, pos - tr.Normal * 25, 0, CHAN_AUTO, 1, 75)
+			end
 
 			dist = dist / math.abs((tr.HitPos - tr.StartPos):GetNormalized():Dot((tr.StartPos - eyePos):GetNormalized()))
 			dist = math.Clamp(1 / dist, 0.05,0.25)

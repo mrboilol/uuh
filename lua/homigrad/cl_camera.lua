@@ -297,7 +297,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	if g_VR and g_VR.active then return end
 	if GetViewEntity() ~= (ply or LocalPlayer()) then return end
 	local rlEnt = hg.GetCurrentCharacter(ply)
-	lerpfovadd = LerpFT(0.001, lerpfovadd, (ply:IsSprinting() and rlEnt == ply and rlEnt:GetVelocity():LengthSqr() > 1500 and 10 or 0) - ( ply.organism and (ply.organism and (((ply.organism.immobilization or 0) / 4) - (ply.organism.adrenaline or 0) * 5)) or 0) / 2 - (ply.suiciding and (ply:GetNetVar("suicide_time",CurTime()) < CurTime()) and (1 - math.max(ply:GetNetVar("suicide_time",CurTime()) + 8 - CurTime(),0) / 8) * 20 or 0))
+	lerpfovadd = LerpFT(0.001, lerpfovadd, (ply:IsSprinting() and rlEnt == ply and rlEnt:GetVelocity():LengthSqr() > 1500 and 10 or 0) - ( ply.organism and (ply.organism and (((ply.organism.immobilization or 0) / 4) - (ply.organism.adrenaline or 0) * 5 - (ply.organism.noradrenaline or 0) * 45)) or 0) / 2 - (ply.suiciding and (ply:GetNetVar("suicide_time",CurTime()) < CurTime()) and (1 - math.max(ply:GetNetVar("suicide_time",CurTime()) + 8 - CurTime(),0) / 8) * 20 or 0))
 	lerpfovadd2 = LerpFT(0.1, lerpfovadd2, zooming and -25 or 0)
 
 	fov = hg_fov:GetInt()
@@ -487,7 +487,15 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 		view.angles = FPersPos.Ang
 		return view
 	end--]]
-	if hg_gopro:GetBool() then return SpecCam(ply, origin, angles, fov, znear, zfa) end
+	if hg_gopro:GetBool() then
+		local vpangs = GetAllViewPunchAngles()
+		local anglegopro = Angle(0, vpangs[1], -vpangs[2]) * 1--Angle(vpangs[2], -vpangs[1], vpangs[3])
+		anglegopro[2] = anglegopro[2] + math.sin(CurTime() * 2) * math.cos(CurTime() * 1) * 2
+		anglegopro[1] = anglegopro[1] + math.cos(CurTime() * 1) * math.sin(CurTime() * 1.25) * 3
+		
+		hg.bone.Set(ply, "head", vector_origin, anglegopro, "gopro")
+		return SpecCam(ply, origin, angles, fov, znear, zfa)
+	end
 
 	if result == view then
 		traceBuilder.start = origin

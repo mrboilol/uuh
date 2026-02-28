@@ -80,6 +80,8 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	hook_Run("Post Pre Post Processing")
 
 	hook_Run("Post Post Processing")
+
+	hook_Run("Post Post Pre Post Processing")
 end)
 
 local postprs = hg.postprocess

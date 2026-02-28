@@ -517,7 +517,8 @@ local hg_potatopc
 local old = false
 local tinnitusSoundFactor
 local lerpblood = 0
-hook.Add("RenderScreenspaceEffects", "organism-effects", function()
+local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
+hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	local organism = lply:Alive() and lply.organism or (viewmode == 1 and IsValid(spect) and spect.organism) or {}
 	local new_organism = lply:Alive() and lply.new_organism or (viewmode == 1 and IsValid(spect) and spect.new_organism) or {}
@@ -580,15 +581,19 @@ hook.Add("RenderScreenspaceEffects", "organism-effects", function()
 		//DrawMotionBlur(0.1, 1., 0.1)
 		//lply:ScreenFade( SCREENFADE.IN, clr_black2, 2, 0.5 )
 	end
+	
+	--maybe 56, 30?
+	local normaldsp = hg_gopro:GetBool() and 55 or 0
+	lply:SetDSP(normaldsp)
 
-	if otrub or (fakeTimer and fakeTimer - 2 > CurTime()) then
+	if otrub or ((fakeTimer and fakeTimer - 2 > CurTime()) and GetConVar("hg_deathfadeout"):GetBool()) then
 		--if otrub or (fakeTimer and fakeTimer - 2 > CurTime()) then
 		clr_black1.a = math.Clamp(pain / 50 * 255, 250, 255)
 		//lply:ScreenFade( SCREENFADE.IN, clr_black2, 2, 0.5 )
 		--lply:ScreenFade( SCREENFADE.IN, Color(0,0,0,255), 2, 0.5 )
 		
 		if isnumber(zb.ROUND_STATE) and (zb.ROUND_STATE ~= 1) then
-			lply:SetDSP(0)
+			lply:SetDSP(normaldsp)
 			plyCommand(lply,"soundfade "..tinnitusSoundFactor2.." 25")
 		elseif lply:Alive() then
 			lply:SetDSP(17)
@@ -603,7 +608,7 @@ hook.Add("RenderScreenspaceEffects", "organism-effects", function()
 		if auto_dsp_convar:GetBool() then
 			MegaDSP(lply)
 		else
-			lply:SetDSP(0)
+			lply:SetDSP((lply.suiciding and lply:Alive()) and 130 or normaldsp)
 		end
 	end
 
@@ -877,8 +882,8 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 	if org and org.pulse and org.o2 and org.o2[1] then
 		local pulse = org.heartbeat
 		ent.pulsethink = ent.pulsethink or 0
-		local speed = math.Clamp(org.heartbeat / 60, 1, 120) * 0.5 * (org.o2[1] < 8 and 0 or 1)
-		ent.pulsethink = ent.pulsethink + (org.heartbeat > 1 and 1 or 0) * (org.holdingbreath and 0 or 1) * FrameTime() * 4 * (speed)
+		local speed = math.Clamp(org.heartbeat / 60, 1, 4) * (0.4 / math.max(org.o2.curregen, 0.3)) * 0.5 * (org.o2[1] < 8 and 0 or 1)
+		ent.pulsethink = ent.pulsethink + (org.heartbeat > 1 and 1 or 0) * (org.holdingbreath and 0 or 1) * FrameTime() * 4 * (speed) * (org.lungsfunction and 1 or 0)
 
 		local torso = ent:LookupBone("ValveBiped.Bip01_Spine2")
 		--local chest = ent:LookupBone("ValveBiped.Bip01_Spine1")
@@ -903,7 +908,8 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 				org.breathed = true
 				local heartbeat = org.heartbeat or 0
 				local muffed
-				
+				local pitch = math.Clamp(heartbeat / 200 * 100, 90, 120) * math.Clamp((org.stamina and org.stamina[1] and (1 + (1 - org.stamina[1] / 180) * 0.2) or 1), 1, 1.2)
+
 				if ent.armors then
 					muffed = ent.armors["face"] == "mask2" or ent.PlayerClassName == "Combine"
 				end
