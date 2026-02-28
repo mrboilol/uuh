@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.PrintName = "Combat Knife"
 SWEP.Instructions = "A military grade combat knife designed to neutralize the enemy during combat operations and special operations."
 SWEP.Category = "Weapons - Melee"
@@ -494,10 +494,6 @@ function SWEP:ModelAnim(model, pos, ang)
 
 	self.timetick2 = SysTime()
 
-    if self.ModelAnimAdd then
-        return self:ModelAnimAdd(model,pos,ang)
-    end
-
     return pos, ang
 end
 
@@ -760,7 +756,7 @@ function SWEP:MultiplyDMG(owner, ent, vellen, mul)
     mul = mul * (owner.MeleeDamageMul or 1)
 
     if owner.organism.superfighter then
-        mul = mul * 5
+		mul = mul * 1
     end
 
     if owner:IsBerserk() then
@@ -1920,9 +1916,6 @@ function SWEP:SetupWeaponHoldTypeForAI( t )
 	end
 end
 
-function SWEP:CanBePickedUpByNPCs()
-	return true
-end
 
 --[[function SWEP:CustomAttack2() -- prikol
     local ent = ents.Create("ent_throwable")

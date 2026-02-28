@@ -4,6 +4,14 @@ hg.berserkStartTime = hg.berserkStartTime or 0
 hg.berserkStartTime2 = hg.berserkStartTime2 or 0
 hg.berserkStation = hg.berserkStation or nil
 
+surface.CreateFont("BerserkChatFont", {
+	font = "Who asks Satan",
+	size = ScreenScale(4),
+	extended = true,
+	weight = 400,
+	antialias = true,
+})
+
 local tab = {
 	[ "$pp_colour_addr" ] = 0,
 	[ "$pp_colour_addg" ] = 0,
@@ -73,9 +81,9 @@ hook.Add("RenderScreenspaceEffects", "berserkEffect", function()
 				part:StopEmission( false, true, false )
 			end
 
-			for i = 1, 120 do
-				timer.Simple(i/90,function()
-					ViewPunch(AngleRand(-1.5,1.5))
+			for i = 1, 30 do
+				timer.Simple(i/120,function()
+					ViewPunch(AngleRand(-1,1))
 				end)
 			end
 

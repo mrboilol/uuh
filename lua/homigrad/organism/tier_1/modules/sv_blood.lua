@@ -1,4 +1,3 @@
-
 local CurTime = CurTime
 local time
 local max, min, Round = math.max, math.min, math.Round
@@ -18,44 +17,6 @@ hg.organism.bloodtypes = {
 	["c-"] = {["c-"] = true,["o-"] = true,["o+"] = true,["a-"] = true,["a+"] = true,["b-"] = true,["b+"] = true,["ab-"] = true,["ab+"] = true},
 }
 
-local tourniqet_bones = {
-	["ValveBiped.Bip01_Neck1"] = {
-		["ValveBiped.Bip01_Head1"] = true
-	},
-
-	["ValveBiped.Bip01_L_UpperArm"] = {
-		["ValveBiped.Bip01_L_Forearm"] = true,
-		["ValveBiped.Bip01_L_Hand"] = true
-	},
-	["ValveBiped.Bip01_L_Forearm"] = {
-		["ValveBiped.Bip01_L_Hand"] = true
-	},
-
-	["ValveBiped.Bip01_R_UpperArm"] = {
-		["ValveBiped.Bip01_R_Forearm"] = true,
-		["ValveBiped.Bip01_R_Hand"] = true
-	},
-	["ValveBiped.Bip01_R_Forearm"] = {
-		["ValveBiped.Bip01_R_Hand"] = true
-	},
-
-	["ValveBiped.Bip01_L_Thigh"] = {
-		["ValveBiped.Bip01_L_Calf"] = true,
-		["ValveBiped.Bip01_L_Foot"] = true
-	},
-	["ValveBiped.Bip01_L_Calf"] = {
-		["ValveBiped.Bip01_L_Foot"] = true
-	},
-
-	["ValveBiped.Bip01_R_Thigh"] = {
-		["ValveBiped.Bip01_R_Calf"] = true,
-		["ValveBiped.Bip01_R_Foot"] = true
-	},
-	["ValveBiped.Bip01_R_Calf"] = {
-		["ValveBiped.Bip01_R_Foot"] = true
-	},
-}
-
 module[1] = function(org)
 	org.blood = 5000
 	org.bleed = 0
@@ -72,7 +33,6 @@ module[1] = function(org)
 	org.arterialwounds = {}
 	org.wantToVomit = 0
 	org.vomitInThroat = nil
-	org.bloodChoke = 0
 
 	org.bloodtype = table.GetKeys(hg.organism.bloodtypes)[math.random(8)]
 	
@@ -140,7 +100,7 @@ module[2] = function(owner, org, mulTime)
 		org.o2[1] = math.max(org.o2[1] - mulTime * 5,0)
 	end
 
-	org.consciousness = math.min(org.consciousness, math.min(org.blood / 3000, 1) * math.Clamp(((org.temperature < 30 and org.temperature - 30 or 0) * 0.25 + 1), 0.25, 1))
+	org.consciousness = math.min(org.consciousness, math.max(org.blood / 3000, 1))
 
 	local beatsPerSecond = max(min(60 / math.max(org.pulse,2) / (org.bleed / 15), 7), 0.3)
 	time = CurTime()
@@ -151,30 +111,10 @@ module[2] = function(owner, org, mulTime)
 		local ent = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 		
 		for i, wound in pairs(org.wounds) do
-
-
 			local rand1 = math.Rand(4, 10) * 1
 			local rand2 = math.Rand(0.5, 1) * 1
 			local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.02
 			local coagulate = 2 * mulTime * rand2 * (adrenaline * 0.1 + 1) * 0.04-- / #org.wounds
-
-			if ent.bandaged_limbs and ent.bandaged_limbs[wound[4]] then
-				coagulate = coagulate * 3
-				bleed = bleed * 0.5
-			end
-
-			if ent.tourniquets then
-				for _, t in ipairs(ent.tourniquets) do
-					if t[3] == wound[4] then
-						coagulate = coagulate * 10
-						break
-					elseif tourniqet_bones[t[3]] and tourniqet_bones[t[3]][wound[4]] then
-						coagulate = coagulate * 10
-						break
-					end
-				end
-			end
-
 			bleedoutspeed = bleedoutspeed + bleed / rand1 * 3--we pray for the luck of it being in the center
 			coagulatespeed = coagulatespeed + coagulate / rand2 * 1
 			
@@ -199,8 +139,8 @@ module[2] = function(owner, org, mulTime)
 	end
 
 	if org.liver > 0.5 then
-		org.blood = math.max(org.blood - mulTime * 10 * org.pulse / 70 * org.liver,0)
-		bleedoutspeed = bleedoutspeed + mulTime * 10 * org.pulse / 70 * org.liver
+		//org.blood = math.max(org.blood - mulTime * 10 * org.pulse / 70 * org.liver,0)
+		//bleedoutspeed = bleedoutspeed + mulTime * 10 * org.pulse / 70 * org.liver
 	end
 
 	bleedoutspeed = bleedoutspeed / (beatsPerSecond + 2)
@@ -209,8 +149,6 @@ module[2] = function(owner, org, mulTime)
 	local next_arterypump = 1 / math.max(org.pulse, 10)
 	local ent = owner:IsPlayer() and IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 	for i, wound in pairs(org.arterialwounds) do
-
-
 		bleedoutspeed2 = bleedoutspeed2 + wound[1] * mulTime * 0.2 * math.max(org.pulse, 20) / 80
 
 		if wound[5] + next_arterypump * 2 < time then
@@ -218,8 +156,7 @@ module[2] = function(owner, org, mulTime)
 			wound[5] = time
 			org.blood = max(org.blood - wound[1] * mulTime * 4.5 * math.max(org.pulse, 20) / 80, 1)
 			if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
-					local dir = wound[6]
-					if not dir then dir = vector_origin end
+				local dir = wound[6]
 				local len = dir:Length()
 				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
 				dir = -dir:Forward() * len
@@ -230,9 +167,7 @@ module[2] = function(owner, org, mulTime)
 				table.remove(org.arterialwounds, i)
 				owner:SetNetVar("arterialwounds", org.arterialwounds)
 
-				if wound[7] then
-					org[wound[7]] = 0
-				end
+				org[wound[7]] = 0
 			end
 		end
 	end
@@ -246,43 +181,6 @@ module[2] = function(owner, org, mulTime)
 	org.internalBleedHeal = math.Approach(org.internalBleedHeal, 0, mulTime / 2)
 	
 	if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end
-
-	-- Choking on blood
-	local choke_increase = (org.internalBleed / 50) + (org.trachea * 0.1) + (((org.lungsL and org.lungsL[1] or 0) + (org.lungsR and org.lungsR[1] or 0)) * 0.05)
-	if choke_increase > 0 then
-		org.bloodChoke = math.min(org.bloodChoke + choke_increase * mulTime * 0.25, 1)
-	end
-
-	-- Natural decrease, and placeholder for treatments
-	local choke_decrease_rate = 0.01 -- very slow natural decrease
-	if org.cpr_active then choke_decrease_rate = choke_decrease_rate + 0.5 end
-	org.bloodChoke = math.max(org.bloodChoke - choke_decrease_rate * mulTime, 0)
-
-	-- Coughing up blood
-	if org.bloodChoke > 0.6 and (org.lastBloodCough or 0) < CurTime() then
-		hg.organism.CoughUpBlood(org)
-		org.lastBloodCough = CurTime() + math.Rand(5, 15)
-	end
-
-	-- Nosebleed/mouth bleed from internal bleeding/choking
-	if (org.bloodChoke > 0.3 or org.internalBleed > 15) and (org.lastNoseBleed or 0) < CurTime() then
-		org.bleed = org.bleed + 1
-		org.lastNoseBleed = CurTime() + math.Rand(10, 20)
-	end
-	
-	-- Ischemia: Low blood damages organs slowly
-	if org.blood < 3000 then
-		local ischemia_damage = (3000 - org.blood) / 3000 * mulTime * 0.05
-		if ischemia_damage > 0 then
-			org.brain = math.min(org.brain + ischemia_damage * 0.01, 1) -- too op grr
-			org.heart = math.min(org.heart + ischemia_damage * 0.05, 1)
-			org.liver = math.min(org.liver + ischemia_damage * 0.02, 1)
-			org.stomach = math.min(org.stomach + ischemia_damage * 0.02, 1)
-			org.intestines = math.min(org.intestines + ischemia_damage * 0.02, 1)
-			org.lungsL[1] = math.min(org.lungsL[1] + ischemia_damage * 0.02, 1)
-			org.lungsR[1] = math.min(org.lungsR[1] + ischemia_damage * 0.02, 1)
-		end
-	end
 	
 	if (org.internalBleed > 1 or org.pneumothorax > 0) and org.blood > 2000 and org.o2[1] > 0 then
 		org.wantToVomit = org.wantToVomit or 0
@@ -290,7 +188,7 @@ module[2] = function(owner, org, mulTime)
 		org.wantToVomit = org.wantToVomit + math.Rand(0, org.internalBleed / 1000 + org.pneumothorax / 200) * mulTime * 5
 		
 		if org.wantToVomit > 0.90 then
-			if org.isPly then owner:Notify(about_to_puke[math.random(#about_to_puke)], 15, "internalbleed_pre") end
+			//owner:Notify(about_to_puke[math.random(#about_to_puke)], 15, "internalbleed_pre")
 		end
 	end
 
@@ -326,8 +224,6 @@ module[2] = function(owner, org, mulTime)
 end
 
 util.AddNetworkString("bloodsquirt2")
---grrr
-
 
 function hg.organism.Vomit(owner, snd)
 	if !hg.IsValidPlayer(owner) then return end
@@ -389,88 +285,6 @@ function hg.organism.CoughBlood(org)
 	end
 end
 
-function hg.organism.CoughUpBlood(org)
-	local ply = org.owner
-	if not hg.IsValidPlayer(ply) then return end
-
-	hg.organism.Vomit(ply, "zcitysnd/real_sonar/"..(ThatPlyIsFemale(ply) and "female" or "male").."_cough"..math.random(4)..".mp3")
-
-	org.internalBleed = math.max(org.internalBleed - 5, 0)
-	org.bloodChoke = math.max(org.bloodChoke - 0.3, 0)
-end
-
 function hg.organism.BloodDroplet2(owner, org, wound, dir, artery)
 	hook.Run("HG_BloodParticleStartedDropping", owner, org, wound, dir, artery)
-end
-
-hg.TourniquetGuys = hg.TourniquetGuys or {}
-
-function hg.organism.ApplyTourniquet(ent, bone)
-	local org = ent.organism
-	if not org then return false end
-	ent.tourniquets = ent.tourniquets or {}
-
-	-- Check if already has tourniquet on this bone
-	for _, t in ipairs(ent.tourniquets) do
-		if t[3] == bone then return false end
-	end
-
-	local wound_info = {Vector(0,0,0), Angle(0,0,0), bone}
-	
-	ent.tourniquets[#ent.tourniquets + 1] = wound_info
-
-	-- Remove associated regular wounds
-	local bonewounds = {}
-	local target_bone_name = bone
-	
-	for i, tbl in pairs(org.wounds) do
-		if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
-		local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
-		
-		if bonename == target_bone_name or (tourniqet_bones[target_bone_name] and tourniqet_bones[target_bone_name][bonename]) then
-			table.insert(bonewounds, i)
-		end
-	end
-
-	table.sort(bonewounds, function(a, b) return a > b end)
-	
-	for _, idx in ipairs(bonewounds) do
-		if org.wounds[idx] then
-			org.wounds[idx][1] = 0 -- Stop bleed
-			table.remove(org.wounds, idx)
-		end
-	end
-	
-	-- Also handle arterial wounds?
-	local artwounds = {}
-	for i, tbl in pairs(org.arterialwounds) do
-		if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
-		local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
-		 if bonename == target_bone_name or (tourniqet_bones[target_bone_name] and tourniqet_bones[target_bone_name][bonename]) then
-			table.insert(artwounds, i)
-		end
-	end
-	table.sort(artwounds, function(a, b) return a > b end)
-	for _, idx in ipairs(artwounds) do
-		 if org.arterialwounds[idx] then
-			local wound = org.arterialwounds[idx]
-			org[wound[7]] = 0
-			if wound[7] == "arteria" then org.o2.regen = 0 end
-			table.remove(org.arterialwounds, idx)
-		 end
-	end
-	org.owner:SetNetVar("arterialwounds", org.arterialwounds)
-
-	org.owner:SetNetVar("wounds", org.wounds)
-	ent:SetNetVar("Tourniquets", ent.tourniquets)
-	if IsValid(ent.FakeRagdoll) then
-		ent.FakeRagdoll:SetNetVar("Tourniquets", ent.tourniquets)
-	end
-	
-	if not table.HasValue(hg.TourniquetGuys, ent) then
-		table.insert(hg.TourniquetGuys, ent)
-	end
-	
-	SetNetVar("TourniquetGuys", hg.TourniquetGuys)
-	return true
 end

@@ -56,7 +56,7 @@ net.Receive("brawl_start", function()
     flash = 1
     vignette = false
     lastMinutePlayed = false
-    chat.AddText(Color(255,200,120), "Get kills to unlock next weapon.")
+    chat.AddText(Color(255,200,120), "kill huys for good melee")
     surface.PlaySound("buttons/button15.wav")
 end)
 
@@ -144,7 +144,7 @@ function MODE:HUDPaint()
     end
     if CurTime() < graceEnd and graceEnd > 0 then
         local left = math.ceil(math.max(0, graceEnd - CurTime()))
-        draw.SimpleText("Prepare to Brawl — "..left.."s", "ZB_InterfaceMediumLarge", ScrW()*0.5, ScrH()*0.45, Color(220,220,220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText("prepare to goon — "..left.."s", "ZB_InterfaceMediumLarge", ScrW()*0.5, ScrH()*0.45, Color(220,220,220), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
     if currentStage and stageTotal and currentWeapon ~= nil then
         local w = ScrW()

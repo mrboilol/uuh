@@ -1,9 +1,15 @@
 
 local min, max, Round = math.min, math.max, math.Round
-local hg_organism_stamina_sprint_mul = CreateConVar("hg_organism_stamina_sprint_mul","1",{FCVAR_ARCHIVE,FCVAR_NOTIFY,FCVAR_NEVER_AS_STRING},"Multiply stamina drain when sprinting",0,10)
 --local Organism = hg.organism
 hg.organism.module.stamina = {}
 local module = hg.organism.module.stamina
+local function aprilFoolsEnabled()
+	local cvar = GetConVar("hg_aprilfools")
+	if cvar then
+		return cvar:GetBool()
+	end
+	return GetGlobalBool("hg_aprilfools", false)
+end
 module[1] = function(org)
 	org.adrenaline = 0
 	org.adrenalineAdd = 0
@@ -29,6 +35,12 @@ end
 
 module[2] = function(owner, org, timeValue)
 	local stamina = org.stamina
+	if aprilFoolsEnabled() then
+		stamina.sub = 0
+		stamina.subadd = 0
+		stamina[1] = stamina.max or stamina.range or stamina[1]
+		return
+	end
 	
 	local painfrommoving = (stamina.sub * (org.chest))//(stamina.sub * ((org.jaw == 1 and 1 or 0) + org.chest + (org.jawdislocation and 1 or 0)))
 	//org.painadd = org.painadd + painfrommoving * timeValue * 5
@@ -50,7 +62,7 @@ module[2] = function(owner, org, timeValue)
 	if owner:IsPlayer() then
 		local wep = owner:GetActiveWeapon()
 		local walk = owner:KeyDown(IN_FORWARD) or owner:KeyDown(IN_BACK) or owner:KeyDown(IN_MOVELEFT) or owner:KeyDown(IN_MOVERIGHT)
-		velLen = max(min(owner:GetVelocity():Length(), org.moveMaxSpeed), 0) / (owner:GetRunSpeed() / hg_organism_stamina_sprint_mul:GetFloat())-- / ((IsValid(wep) and wep ~= NULL and wep:GetClass() == "weapon_hands_sh" and owner:KeyDown(IN_WALK)) and 1.3 or 0.58))
+		velLen = max(min(owner:GetVelocity():Length(), org.moveMaxSpeed), 0) / (owner:GetRunSpeed() / 1.3)-- / ((IsValid(wep) and wep ~= NULL and wep:GetClass() == "weapon_hands_sh" and owner:KeyDown(IN_WALK)) and 1.3 or 0.58))
 		--print(velLen)
 		if (owner:OnGround() or owner:WaterLevel() >= 2) and walk and not owner:InVehicle() and owner:IsSprinting() and org.stamina[1] > 20 then
 			stamina.sub = (owner:WaterLevel() >= 2 and 2 or 1) * (velLen ^ 0.5)
@@ -79,11 +91,11 @@ module[2] = function(owner, org, timeValue)
 	stamina[1] = max(stamina[1] - stamina.sub * timeValue * 17, 0)
 	//org.o2[1] = org.o2[1] - min(stamina.sub * timeValue, org.o2.regen * timeValue)
 	
-	local old = stamina[1]
+	//local old = stamina[1]
 	stamina[1] = min(stamina[1] + stamina.regen * timeValue * 9 * 1.5 * math.max(org.stamina[1] / org.stamina.max, 0.2) ^ 0.5 * (org.adrenaline / 16 + 1) * (org.satiety/700 + 1) * ((owner:IsPlayer() and owner:Crouching() and velLen < 0.1) and 1.1 or 1) * (org.holdingbreath and 0 or 1) * (org.lungsfunction and 1 or 0), stamina.max)
 
-	 local painfrommoving = (stamina[1] < 150 and 1 or 0) * (stamina[1] - old) * (org.chest)
-	 org.painadd = org.painadd + painfrommoving * timeValue * 5
+	-- local painfrommoving = (stamina[1] < 150 and 1 or 0) * (stamina[1] - old) * (org.chest)
+	-- org.painadd = org.painadd + painfrommoving * timeValue * 5
 
 	if org.nextAdrenalineRegen and org.nextAdrenalineRegen < CurTime() then
 		org.adrenalineStorage = math.Approach(org.adrenalineStorage, 5, timeValue / 60 * (org.satiety * 0.01 + 1))
@@ -99,24 +111,11 @@ end
 function hg.organism.AddNaturalAdrenaline(org, fAmount)
 	if org.adrenalineStorage == 0 then return end
 	if fAmount < 0 then return end
-
-	if org.desensitized then fAmount = fAmount * 0.5 end
 	
 	local amt = math.min(org.adrenalineStorage, fAmount)
 	org.adrenaline = math.min(org.adrenaline + amt, 5)
 	org.adrenalineStorage = org.adrenalineStorage - amt
 	org.nextAdrenalineRegen = CurTime() + 30
-end
---melee 67
-function hg.organism.AddAttackAdrenaline(org, damage)
-	if not org then return end
-	
-	local gain = math.min(damage, 50) * 0.001 
-	
-	local naturalGain = gain * 0.8
-	org.adrenaline = math.min(org.adrenaline + naturalGain, 5)
-	local reserveGain = gain * 0.2
-	hg.organism.AddNaturalAdrenaline(org, reserveGain)
 end
 
 local entMeta = FindMetaTable("Entity")
@@ -134,6 +133,13 @@ hook.Add("FinishMove", "!homigrad-organism", function(ply, move)
 	local vel = move:GetFinalJumpVelocity()
 
 	if !ply.organism then return end
+	if aprilFoolsEnabled() then
+		local maxSpeed = 1200
+		move:SetMaxSpeed(maxSpeed)
+		move:SetMaxClientSpeed(maxSpeed)
+		ply:SetRunSpeed(maxSpeed)
+		ply:SetWalkSpeed(100)
+	end
 
 	if vel ~= vecZero then ply.organism.stamina[1] = max(ply.organism.stamina[1] - ply:GetJumpPower() / 10,0) end
 	ply.organism.moveMaxSpeed = move:GetMaxSpeed()

@@ -35,9 +35,9 @@ local sideMul = 5
 local eyeAngL = Angle(0, 0, 0)
 local IsValid = IsValid
 
-local hg_fov = ConVarExists("hg_fov") and GetConVar("hg_fov") or CreateClientConVar("hg_fov", "70", true, false, "Change first-person field of view", 75, 100)
-local hg_realismcam = ConVarExists("hg_realismcam") and GetConVar("hg_realismcam") or CreateClientConVar("hg_realismcam", "0", true, false, "Toggle realism first-person camera view", 0, 1)
-local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
+local hg_fov = ConVarExists("hg_fov") and GetConVar("hg_fov") or CreateClientConVar("hg_fov", "70", true, false, "changes fov to value", 75, 100)
+local hg_realismcam = ConVarExists("hg_realismcam") and GetConVar("hg_realismcam") or CreateClientConVar("hg_realismcam", "0", true, false, "realism camera", 0, 1)
+local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "gopro camera", 0, 1)
 
 local oldview = render.GetViewSetup()
 local breathing_amount = 0
@@ -192,11 +192,6 @@ function HGAddView(ply, origin, angles, velLen)
 			ply.MovementInertiaAddView.p = 0
 		end
 	end
-
-	local ply_override, origin_override, angles_override = hook.Run("HGAddView", ply, origin, angles)
-	if origin_override ~= nil then
-		origin, angles = origin_override, angles_override
-	end
 	
 	return origin, angles
 end
@@ -216,8 +211,8 @@ local CalcView
 local oldVechicleAng = Angle(0,0,0)
 local viewOverride
 
-local hg_thirdperson = ConVarExists("hg_thirdperson") and GetConVar("hg_thirdperson") or CreateConVar("hg_thirdperson", 0, FCVAR_REPLICATED, "Toggle third-person camera view", 0, 1)
-local hg_legacycam = ConVarExists("hg_legacycam") and GetConVar("hg_legacycam") or CreateConVar("hg_legacycam", 0, FCVAR_REPLICATED, "Toggle legacy first-person camera view if hg_thirdperson is enabled", 0, 1)
+local hg_thirdperson = ConVarExists("hg_thirdperson") and GetConVar("hg_thirdperson") or CreateConVar("hg_thirdperson", 0, FCVAR_REPLICATED, "ragdoll combat", 0, 1)
+local hg_legacycam = ConVarExists("hg_legacycam") and GetConVar("hg_legacycam") or CreateConVar("hg_legacycam", 0, FCVAR_REPLICATED, "ragdoll combat", 0, 1)
 local lerpasad = 0
 
 hook.Remove("CalcView", "wac_air_calcview")
@@ -225,7 +220,7 @@ hook.Remove("CreateMove", "wac_cl_seatswitch_centerview")
 //PrintTable(wac)
 
 local lerpaim = 1
-local hg_leancam_mul = ConVarExists("hg_leancam_mul") and GetConVar("hg_leancam_mul") or CreateClientConVar("hg_leancam_mul", "7", true, false, "Multiply first-person camera view leaning angle", -10, 10)
+local hg_leancam_mul = ConVarExists("hg_leancam_mul") and GetConVar("hg_leancam_mul") or CreateClientConVar("hg_leancam_mul", "7", true, false, "changes lean cam mul", -10, 10)
 zooming = false
 lerpfovadd2 = 0
 
@@ -244,8 +239,8 @@ end)
 surface.CreateFont(
 	"BODYCAMFONT",
 	{
-		font = "Bahnschrift",
-		size = ScreenScale(16),
+		font = "Arial",
+		size = 42,
 		italic = true,
 		weight = 1500
 	}
@@ -256,7 +251,7 @@ hook.Add("HUDPaint", "HUDPaint_DrawABox", function() -- этот код стар
 	if lply:Alive() and hg_gopro:GetBool() then
 		local specPly = lply
 		if not specPly:IsValid() then return end
-		local Text = "GoPro #" .. math.Round(util.SharedRandom(specPly:SteamID(),1000,9999,1),0)
+		local Text = "GoPro #" .. math.Round(util.SharedRandom(specPly:GetName(),1000,9999,specPly:EntIndex()),0)
 		draw.DrawText(Text, "BODYCAMFONT", ScrW() * 0.905 + 2, ScrH() * 0.035 + 2, Color(0, 0, 0), TEXT_ALIGN_CENTER)
 		draw.DrawText(Text, "BODYCAMFONT", ScrW() * 0.905, ScrH() * 0.035, Color(255, 255, 255), TEXT_ALIGN_CENTER)
 		draw.RoundedBox(0, ScrW() * 0.85, ScrH() * 0.085, 50, 28, Color(0, 173, 255))
@@ -273,18 +268,18 @@ end)
 
 function SpecCam(ply, vec, ang, fov, znear, zfar)
 	if !ply:Alive() then return end
-	--local hand = ply:GetAttachment(ply:LookupAttachment("anim_attachment_rh"))
+	local hand = ply:GetAttachment(ply:LookupAttachment("anim_attachment_rh"))
 	local eye = ply:GetAttachment(ply:LookupAttachment("eyes"))
-	--local org = eye.Pos
+	local org = eye.Pos
 	local ang1 = eye.Ang + Angle(5, 2, 0)
-	local org1 = eye.Pos + eye.Ang:Up() * 6 + eye.Ang:Forward() * -3 + eye.Ang:Right() * 6.5
+	local org1 = eye.Pos + eye.Ang:Up() * 6 + eye.Ang:Forward() * -1 + eye.Ang:Right() * 6.5
 
 	local view = {
 		origin = org1,
 		angles = ang1,
 		fov = 110,
 		drawviewer = true,
-		znear = 0.7
+		znear = 0.1
 	}
 
 	return view
@@ -293,7 +288,7 @@ end
 CalcView = function(ply, origin, angles, fov, znear, zfar)
 	local x, y = input.GetCursorPos()
 
-	if (vgui.CursorVisible() or (x == 0 and y == 0)) and !hg.GetCurrentCharacter(ply):IsRagdoll() then
+	if vgui.CursorVisible() or (x == 0 and y == 0) then
 		local ang = ply:EyeAngles()
 		ang[3] = 0
 		ply:SetEyeAngles(ang)
@@ -301,18 +296,6 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 
 	if g_VR and g_VR.active then return end
 	if GetViewEntity() ~= (ply or LocalPlayer()) then return end
-
-	local view = {
-		["origin"] = origin,
-		["angles"] = angles,
-		["fov"] = fov,
-		["znear"] = znear,
-		["zfar"] = zfar,
-		["drawviewer"] = false,
-	}
-
-	if drive.CalcView(ply, view) then return view end
-
 	local rlEnt = hg.GetCurrentCharacter(ply)
 	lerpfovadd = LerpFT(0.001, lerpfovadd, (ply:IsSprinting() and rlEnt == ply and rlEnt:GetVelocity():LengthSqr() > 1500 and 10 or 0) - ( ply.organism and (ply.organism and (((ply.organism.immobilization or 0) / 4) - (ply.organism.adrenaline or 0) * 5)) or 0) / 2 - (ply.suiciding and (ply:GetNetVar("suicide_time",CurTime()) < CurTime()) and (1 - math.max(ply:GetNetVar("suicide_time",CurTime()) + 8 - CurTime(),0) / 8) * 20 or 0))
 	lerpfovadd2 = LerpFT(0.1, lerpfovadd2, zooming and -25 or 0)
@@ -329,7 +312,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 		lean_lerp = 0
 	end
 
-	--angles.roll = (turned and 180 or 0) + lean_lerp * 10
+	angles.roll = (turned and 180 or 0) + lean_lerp * 10
 	
 	if IsValid(follow) then
 		return hg.CalcViewFake(ply, origin, angles, fov, znear, zfar)
@@ -341,6 +324,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	end
 
 	if not ply:Alive() and not follow then
+		
 		if lply:GetNWInt("viewmode",0) == 1 then
 			ply = lply:GetNWEntity("spect",NULL)
 			
@@ -514,7 +498,6 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 		vpang[3] = 0
 		view.angles:Add(-vpang)
 		view.angles[3] = view.angles[3] + GetViewPunchAngles4()[3]
-		hook_Run("PostHGCalcView", ply, view)
 		return view
 	end
 	
@@ -652,7 +635,7 @@ local fliprtmat = CreateMaterial(
     }
 )
 
-local invertCam = CreateClientConVar("hg_cheats","0",false,false,"Toggle uselezz cheats",0,1)
+local invertCam = CreateClientConVar("hg_cheats","0",false,false,"enable uselezz cheats",0,1)
 
 hook.Add("HG.InputMouseApply","ASdInvert",function(tbl)
 	if invertCam:GetBool() then
@@ -668,15 +651,15 @@ hook.Add( "CreateMove", "flipmove", function( cmd )
 	end
 end)
 
---local hg_norenderoverride = ConVarExists("hg_norenderoverride") and GetConVar("hg_norenderoverride") or CreateClientConVar("hg_norenderoverride", 0, true, false, "if you have lags you can try turning that on", 0, 1)
+local hg_norenderoverride = ConVarExists("hg_norenderoverride") and GetConVar("hg_norenderoverride") or CreateClientConVar("hg_norenderoverride", 0, true, false, "if you have lags you can try turning that on", 0, 1)
 local mapswithfog = { -- Надо от сервер сайда сделать...
-	--["gm_freespace_09_super_extended_night"] = 5500,
-	--["gm_white_forest_countryside"] = 6000,
-	--["gm_york_remaster"] = 9500,
-	--["gm_city_of_silence"] = 1500,
-	----["gm_construct"] = 8000,
-	--["gm_fork"] = 9500,
-	--["rp_zapolye_v2"] = 7500
+	["gm_freespace_09_super_extended_night"] = 5500,
+	["gm_white_forest_countryside"] = 6000,
+	["gm_york_remaster"] = 9500,
+	["gm_city_of_silence"] = 1500,
+	--["gm_construct"] = 8000,
+	["gm_fork"] = 9500,
+	["rp_zapolye_v2"] = 7500
 }
 --GlobalRenderOverideTickOFF = true
 local zfar = mapswithfog[game.GetMap()] or 0
@@ -739,13 +722,13 @@ local function renderscene(pos, angle, fov)
 end
 
 
---[[cvars.AddChangeCallback( "hg_norenderoverride", function(cvar, old, new)
+cvars.AddChangeCallback( "hg_norenderoverride", function(cvar, old, new)
 	if tonumber(new) == 0 then
 		hook.Add("RenderScene", "jopa", renderscene)
 	else
 		--hook.Remove("RenderScene", "jopa")
 	end
-end, "huynuck")]]
+end, "huynuck")
 
 hook.Add("RenderScene", "jopa", renderscene)
 

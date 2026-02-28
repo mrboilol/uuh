@@ -68,7 +68,6 @@ local list = {
 	"fear",
 	"assimilated",
 	"berserk",
-	"noradrenaline",
 	"fearadd",
 	{"blood", 5000}, 
 	{"bleed", 100, true}, 

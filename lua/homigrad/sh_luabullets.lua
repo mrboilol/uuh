@@ -332,14 +332,6 @@ end
 local function Impact(Weapon, iAmmoDamageType, bFirstTimePredicted, vSrc, tr, sImpactEffect, sRagdollImpactEffect)
 	if (not (Weapon and Weapon.DoImpactEffect and Weapon:DoImpactEffect(tr, iAmmoDamageType))) then
 		if (bFirstTimePredicted) then
-			if SERVER and math.random(1, 4) == 1 then
-				local sounds = hg.ImpactSounds[tr.MatType] or hg.ImpactSounds.Default
-				if sounds then
-					local snd = table.Random(sounds)
-					sound.Play(snd, tr.HitPos, 75, math.random(90, 110))
-				end
-			end
-
 			local data = EffectData()
 				data:SetOrigin(tr.HitPos)
 				data:SetStart(vSrc)
@@ -420,7 +412,7 @@ local function Damage(bDoDebugHit, bStartedWater, bEndNotWater, iFlags, iDamage,
 		// Damage specified by function parameter
 		local info = DamageInfo()
 			info:SetAttacker(IsValid(pAttacker) and pAttacker or game.GetWorld())
-			info:SetInflictor(IsValid(pInflictor) and pInflictor or info:GetAttacker())
+			info:SetInflictor(pInflictor)
 			info:SetDamage(iActualDamage)
 			info:SetDamageType(iAmmoDamageType)
 			info:SetDamagePosition(vHitPos)
@@ -430,7 +422,7 @@ local function Damage(bDoDebugHit, bStartedWater, bEndNotWater, iFlags, iDamage,
 		pEntity:DispatchTraceAttack(info, tr, vShotDir)
 		
 		if (fCallback) then
-			fCallback(info:GetAttacker(), tr, info, tInfo, Weapon)
+			fCallback(pAttacker, tr, info, tInfo, Weapon)
 		end
 		
 		if (bEndNotWater or bit.band(iFlags, FIRE_BULLETS_ALLOW_WATER_SURFACE_IMPACTS) ~= 0) then
@@ -493,114 +485,9 @@ local tDefaultAmmoTable = {
 	force = 0
 }
 
-local numbullets = 0 
+local numbullets = 0
 
 hg.vehicles = hg.vehicles or {}
-
-local armsbones = {
-	["ValveBiped.Bip01_L_Clavicle"] = true,
-	["ValveBiped.Bip01_L_Clavicle"] = true,
-	["ValveBiped.Bip01_L_UpperArm"] = true,
-	["ValveBiped.Bip01_R_UpperArm"] = true,
-	["ValveBiped.Bip01_L_Forearm"] = true,
-	["ValveBiped.Bip01_R_Forearm"] = true,
-	["ValveBiped.Bip01_L_Hand"] = true,
-	["ValveBiped.Bip01_R_Hand"] = true,
-}
-
-hg.ImpactSounds = {
-    [MAT_FLESH] = {
-        "bullet/ric_flesh1.ogg",
-        "bullet/ric_flesh2.ogg",
-        "bullet/ric_flesh3.ogg",
-        "bullet/ric_flesh4.ogg"
-    },
-    [MAT_BLOODYFLESH] = {
-        "bullet/ric_flesh1.ogg",
-        "bullet/ric_flesh2.ogg",
-        "bullet/ric_flesh3.ogg",
-        "bullet/ric_flesh4.ogg"
-    },
-    [MAT_CONCRETE] = {
-        "bullet/ric_stone1.ogg",
-        "bullet/ric_stone2.ogg",
-        "bullet/ric_stone3.ogg"
-    },
-    [MAT_TILE] = {
-        "bullet/ric_stone1.ogg",
-        "bullet/ric_stone2.ogg",
-        "bullet/ric_stone3.ogg"
-    },
-    [MAT_DIRT] = {
-        "bullet/ric_ground1.ogg",
-        "bullet/ric_ground2.ogg",
-        "bullet/ric_ground3.ogg",
-        "bullet/ric_ground4.ogg",
-        "bullet/ric_ground5.ogg"
-    },
-    [MAT_GRASS] = {
-        "bullet/ric_ground1.ogg",
-        "bullet/ric_ground2.ogg",
-        "bullet/ric_ground3.ogg",
-        "bullet/ric_ground4.ogg",
-        "bullet/ric_ground5.ogg"
-    },
-    [MAT_SAND] = {
-        "bullet/ric_ground1.ogg",
-        "bullet/ric_ground2.ogg",
-        "bullet/ric_ground3.ogg",
-        "bullet/ric_ground4.ogg",
-        "bullet/ric_ground5.ogg"
-    },
-    [MAT_METAL] = {
-        "bullet/ric_metal1.ogg",
-        "bullet/ric_metal2.ogg",
-        "bullet/ric_metal3.ogg",
-        "bullet/ric_metal4.ogg",
-        "bullet/ric_metal5.ogg"
-    },
-    [MAT_GRATE] = {
-        "bullet/ric_metal1.ogg",
-        "bullet/ric_metal2.ogg",
-        "bullet/ric_metal3.ogg",
-        "bullet/ric_metal4.ogg",
-        "bullet/ric_metal5.ogg"
-    },
-    [MAT_VENT] = {
-        "bullet/ric_metal1.ogg",
-        "bullet/ric_metal2.ogg",
-        "bullet/ric_metal3.ogg",
-        "bullet/ric_metal4.ogg",
-        "bullet/ric_metal5.ogg"
-    },
-    [MAT_COMPUTER] = {
-        "bullet/ric_metal1.ogg",
-        "bullet/ric_metal2.ogg",
-        "bullet/ric_metal3.ogg",
-        "bullet/ric_metal4.ogg",
-        "bullet/ric_metal5.ogg"
-    },
-    [MAT_WOOD] = {
-        "bullet/ric_wood1.ogg",
-        "bullet/ric_wood2.ogg",
-        "bullet/ric_wood3.ogg",
-        "bullet/ric_wood4.ogg"
-    }
-}
-hg.ImpactSounds.Default = {
-    "bullet/ric_ground1.ogg",
-    "bullet/ric_ground2.ogg",
-    "bullet/ric_ground3.ogg",
-    "bullet/ric_ground4.ogg",
-    "bullet/ric_ground5.ogg"
-}
-
-hg.RicochetSounds = {
-    "bullet/ricochet1.ogg",
-    "bullet/ricochet2.ogg",
-    "bullet/ricochet3.ogg",
-    "bullet/ricochet4.ogg"
-}
 
 function ENTITY:FireLuaBullets(tInfo)
     if (hook.Run("EntityFireBullets", self, tInfo) == false) then
@@ -826,7 +713,7 @@ function ENTITY:FireLuaBullets(tInfo)
 				local bonename = ent:GetBoneName(ent:TranslatePhysBoneToBone(tr.PhysicsBone))
 				local hitgroup = hg.bonetohitgroup[bonename]--( ent:IsPlayer() and tr.HitGroup or hg.bonetohitgroup[bonename])
 				
-				if !(armsbones[bonename] and hg.RagdollOwner(tr.Entity) == pInflictor:GetOwner()) and !IsValid(tr.Entity.OldRagdoll) and (tr.PhysicsBone != 0 or !tr.StartSolid) and (!hg.amputeetable[bonename] or !ent.organism[hg.amputeetable[bonename].."amputated"]) then break end
+				if (tr.PhysicsBone != 0 or !tr.StartSolid) and (!hg.amputeetable[bonename] or !ent.organism[hg.amputeetable[bonename].."amputated"]) then break end
 
 				tr = bHullTrace and iShot % 2 == 0 and
 					// Half of the shotgun pellets are hulls that make it easier to hit targets with the shotgun.

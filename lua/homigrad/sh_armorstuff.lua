@@ -2,9 +2,6 @@ hg.armor = {}
 
 local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 	if ply:GetNetVar("headcrab") then return end
-	if not ply:Alive() then return end
-	if ply.organism and ply.organism.otrub then return end
-
 	if not IsValid(ply.FirstPersonHelmetModel) then
 		ply.FirstPersonHelmetModel = ClientsideModel(strModel)
 		ply.FirstPersonHelmetModel:SetNoDraw(true)
@@ -43,8 +40,8 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 
 	local view = render.GetViewSetup()
 	cam.Start3D(view.origin,view.angles,view.fov + fFov,nil,nil,nil,nil,1,10)
-		--cam.IgnoreZ(true)
-		local viewpunching = GetViewPunchAngles() / 2
+		cam.IgnoreZ(true)
+		local viewpunching = GetViewPunchAngles()
 		local ang = view.angles + viewpunching
 		mdl:SetRenderOrigin(view.origin + ang:Forward() * vecAdjust.x + ang:Right() * vecAdjust.y + ang:Up() * vecAdjust.z)
 		mdl:SetRenderAngles(ang)
@@ -60,7 +57,7 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 			render.SetStencilFailOperation( STENCIL_KEEP )
 			render.SetStencilZFailOperation( STENCIL_KEEP )
 			render.ClearStencil()
-
+			
 			-- Enable stencils
 			render.SetStencilEnable( true )
 			-- Set everything up everything draws to the stencil buffer instead of the screen
@@ -76,7 +73,7 @@ local function DrawFirstPersonHelmet(ply, strModel, vecAdjust, fFov, setMat)
 			-- Let everything render normally again
 			render.SetStencilEnable( false )
 		render.SetColorModulation(1,1,1)
-		--cam.IgnoreZ(false)
+		cam.IgnoreZ(false)
 	cam.End3D()
 end
 
@@ -115,14 +112,12 @@ hg.armor.torso = {
 	["vest3"] = {
 		"torso",
 		"models/jworld_equipment/kevlar.mdl",
-		Vector(-9, 3.2, 0),
+		Vector(-42, 3.2, 0),
 		Angle(0, 90, 90),
 		protection = 9.8,
 		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/lightvest/lightvest.mdl",
-		material = {"models/lightvest/accs_diff_000_b_uni",
-		"models/lightvest/accs_diff_000_c_uni", "models/lightvest/accs_diff_000_c_uni",
-		"models/lightvest/accs_diff_000_d_uni", "sal/acc/armor01_4", "sal/acc/armor01_5"},
+		model = "models/sal/acc/armor01.mdl",
+		material = "sal/acc/armor01",
 		femPos = Vector(2.5, 0, 1),
 		scale = 0.88,
 		femscale = 0.8,
@@ -135,14 +130,12 @@ hg.armor.torso = {
 	["vest4"] = {
 		"torso",
 		"models/jworld_equipment/kevlar.mdl",
-		Vector(-9, 3.2, 0),
+		Vector(-42, 3.2, 0),
 		Angle(0, 90, 90),
 		protection = 13.5,
 		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/lightvest/lightvest.mdl",
-		material = {"models/lightvest/accs_diff_000_a_uni",
-		"models/lightvest/accs_diff_000_h_uni", "models/lightvest/accs_diff_000_f_uni",
-		"models/lightvest/accs_diff_000_e_uni", "sal/acc/armor01_3"},
+		model = "models/sal/acc/armor01.mdl",
+		material = "sal/acc/armor01_2",
 		femPos = Vector(2.5, 0, 1),
 		scale = 0.88,
 		femscale = 0.8,
@@ -216,182 +209,6 @@ hg.armor.torso = {
 		surfaceprop = 67,
 		mass = 8,
 		ScrappersSlot = "Armor"
-		},
-	["vest9"] = {
-		"torso",
-		"models/eft_props/gear/armor/cr/cr_arscpc.mdl",
-		Vector(-0.6, 3, 0),
-		Angle(0, 92, 90),
-		protection = 15.5, // бр 4
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/cr/cr_arscpc.mdl",
-		femPos = Vector(0, 0, 1.2),
-		scale = 0.93,
-		femscale = 0.77,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-	},
-	["vest10"] = {
-		"torso",
-		"models/eft_props/gear/armor/cr/cr_mmac.mdl",
-		Vector(-1, 2.9, 0),
-		Angle(0, 92, 90),
-		protection = 15.5, // бр 4
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/cr/cr_mmac.mdl",
-		femPos = Vector(-0.7, 0, 1.3),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-		},
-	["vest11"] = {
-		"torso",
-		"models/eft_props/gear/armor/cr/cr_osprey_defence.mdl",
-		Vector(-1.0, 2.7, 0),
-		Angle(0, 92, 90),
-		protection = 18.5, // бр 5
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/cr/cr_osprey_defence.mdl",
-		femPos = Vector(-0.7, 0, 1.2),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-	},
-	["vest12"] = {
-		"torso",
-		"models/eft_props/gear/armor/cr/cr_shellback_tactical_banshee.mdl",
-		Vector(-1.5, 2.8, 0),
-		Angle(0, 92, 90),
-		protection = 15.5, // бр 4
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/cr/cr_shellback_tactical_banshee.mdl",
-		femPos = Vector(0, 0, 0.9),
-		scale = 0.96,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-	},
-	["vest13"] = {
-		"torso",
-		"models/eft_props/gear/armor/ar_thor_intcar.mdl",
-		Vector(-1.3, 3, 0),
-		Angle(0, 92, 90),
-		protection = 20.5, // 6 бр
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/ar_thor_intcar.mdl",
-		femPos = Vector(-0.8, 0, 1.4),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-	},
-	["vest14"] = {
-		"torso",
-		"models/eft_props/gear/armor/cr/cr_bae_rbav_af.mdl",
-		Vector(-1.3, 3, 0),
-		Angle(0, 92, 90),
-		protection = 15.5, // бр 4
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/cr/cr_bae_rbav_af.mdl",
-		femPos = Vector(-0.8, 0, 1.4),
-		scale = 0.96,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-	},
-	["vest15"] = {
-		"torso",
-		"models/eft_props/gear/armor/cr/cr_ars_arma_18.mdl",
-		Vector(-1.3, 3, 0),
-		Angle(0, 92, 90),
-		protection = 15.5, // 4 бр
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/cr/cr_ars_arma_18.mdl",
-		femPos = Vector(-0.8, 0, 1.4),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-		},
-	["vest16"] = {
-		"torso",
-		"models/eft_props/gear/armor/ar_korundvm.mdl",
-		Vector(-1.3, 3, 0),
-		Angle(0, 92, 90),
-		protection = 18.5, // 5 бр
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/ar_korundvm.mdl",
-		femPos = Vector(-0.8, 0, 1.4),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-		},
-	["vest17"] = {
-		"torso",
-		"models/eft_props/gear/armor/ar_redut_m.mdl",
-		Vector(-1.3, 3, 0),
-		Angle(0, 92, 90),
-		protection = 18.5, // 5 бр
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/ar_redut_m.mdl",
-		femPos = Vector(-0.8, 0, 1.4),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-		},
-	["vest18"] = {
-		"torso",
-		"models/eft_props/gear/armor/cr/cr_precision_bigpipe.mdl",
-		Vector(-0.1, 3, 0),
-		Angle(0, 92, 90),
-		protection = 18.5, // 5 бр
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/cr/cr_precision_bigpipe.mdl",
-		femPos = Vector(-0.4, 0, 1.4),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
-	},
-	["vest19"] = {
-		"torso",
-		"models/eft_props/gear/armor/ar_iotv.mdl",
-		Vector(-1.3, 3, 0),
-		Angle(0, 92, 90),
-		protection = 20.5, // 5 бр
-		bone = "ValveBiped.Bip01_Spine2",
-		model = "models/eft_props/gear/armor/ar_iotv.mdl",
-		femPos = Vector(-0.8, 0, 1.4),
-		scale = 0.95,
-		femscale = 0.82,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 8,
-		ScrappersSlot = "Armor"
 	},
 	["gordon_armor"] = {
 		"torso",
@@ -453,16 +270,16 @@ hg.armor.torso = {
 	["ego_equalizer"] = {
 		"torso",
 		"models/monolithservers2/kerry/sswat_armor.mdl",
-		Vector(-8, 2.5, 0),
+		Vector(-9, 2.5, 0),
 		Angle(0, 92, 90),
 		protection = 0,
 		bone = "ValveBiped.Bip01_Spine2",
 		model = "models/monolithservers2/kerry/sswat_armor.mdl",
 		-- material = "models/shiny",
-		material = "models/lightvest/accs_diff_000_d_uni", -- "models/props_c17/paper01"
+		material = "models/props_c17/paper01",
 		femPos = Vector(0, 0, 0),
-		scale = 0.95,
-		femscale = 0.95,
+		scale = 1,
+		femscale = 1,
 		effect = "Impact",
 		surfaceprop = 67,
 		mass = 8,
@@ -471,11 +288,11 @@ hg.armor.torso = {
 	},
 }
 local vectors = {
-	[1] = Vector(-2,0,-1.5),
-	[2] = Vector(-4,0,0.2),
+	[1] = Vector(-4,0,-2),
+	[2] = Vector(-4,0,0),
 	[3] = Vector(-5,0,0),
 	[4] = Vector(-2,0,0),
-	[5] = Vector(-4.5,0,-2)
+	[5] = Vector(-5,0,-2.2)
 }
 hg.armor.head = {
 	["helmet1"] = {
@@ -483,7 +300,7 @@ hg.armor.head = {
 		"models/barney_helmet.mdl",
 		Vector(1, -2, 0),
 		Angle(180, 110, 90),
-		protection = 10,
+		protection = 9.5,
 		bone = "ValveBiped.Bip01_Head1",
 		model = "models/barney_helmet.mdl",
 		femPos = Vector(-1, 0, 0),
@@ -610,196 +427,6 @@ hg.armor.head = {
 		effect = "Impact",
 		surfaceprop = 67,
 		mass = 1.8,
-		ScrappersSlot = "Armor",
-	},
-	["helmet8"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_un.mdl",
-		Vector(2.2,-1, 0),
-		Angle(180, 100, 90),
-		protection = 8,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_un.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-		},
-	["helmet9"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_ops_core_fast_black.mdl",
-		Vector(2.5,-1, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_ops_core_fast_black.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-	},
-	["helmet10"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_hops_core_fast.mdl",
-		Vector(2.5,-1, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_hops_core_fast.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-	},
-	["helmet11"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_ops_core_fast_tan.mdl",
-		Vector(2.5,-1, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_ops_core_fast_tan.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-		},
-		
-	["helmet12"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_ulach_b.mdl",
-		Vector(2.9,-1, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_ulach_b.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-	},
-	["helmet13"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_ulach_c.mdl",
-		Vector(2.9,-1, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_ulach_c.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-		},
-	["helmet14"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_diamond_age_bastion.mdl",
-		Vector(2.55,-1.17, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_diamond_age_bastion.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-		},
-	["helmet15"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_galvion_applique.mdl",
-		Vector(2.4,-1, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_galvion_applique.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-		},
-	["helmet16"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_mich2001.mdl",
-		Vector(2.5,-1, 0),
-		Angle(180, 100, 90),
-		scale = 0.88,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_mich2001.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
-		ScrappersSlot = "Armor",
-	},
-	["helmet17"] = {
-		"head",
-		"models/eft_props/gear/helmets/helmet_msa_gallet.mdl",
-		Vector(2.6,-0.91, 0),
-		Angle(180, 100, 90),
-		scale = 0.90,
-		protection = 11,
-		bone = "ValveBiped.Bip01_Head1",
-		model = "models/eft_props/gear/helmets/helmet_msa_gallet.mdl",
-		femPos = Vector(-1, 0, 0.1),
-		--material = "sal/hanker",
-		norender = true,
-		viewmaterial = Material("sprites/mat_jack_hmcd_helmover"),
-		femscale = 0.92,
-		effect = "Impact",
-		surfaceprop = 67,
-		mass = 1,
 		ScrappersSlot = "Armor",
 	},
 	["gordon_helmet"] = {
@@ -1023,7 +650,7 @@ hg.armor.face = {
 	},
 	["mask3"] = {
 		"face", -- "face"
-		"models/props_silo/welding_helmet.mdl",
+		"models/props_c17/metalPot001a.mdl",
 		Vector(0, 0.3, 0),
 		Angle(-90, 180, 90),
 		protection = 7,
@@ -1039,9 +666,6 @@ hg.armor.face = {
 		mass = 2,
 		ScrappersSlot = "Armor",
 		voice_change = true,
-		PhysModel = "models/hunter/blocks/cube025x025x025.mdl",
-		PhysPos = Vector(1, 0, 5),
-		PhysAng = Angle(0, 90, 0),
 	},
 	["nightvision1"] = {
 		"face", -- "face"
@@ -1111,11 +735,8 @@ if CLIENT then
 		local pos = net.ReadVector()
 		local time = net.ReadFloat()
 		local size = net.ReadInt(20)
-        local color = net.ReadColor()
-        local mat = net.ReadString()
-        if mat == "" then mat = nil end
 		if not IsValid(lply) then return end
-		hg.AddFlash(hg.eye(lply), 1, pos, time, size, color, mat)
+		hg.AddFlash(hg.eye(lply), 1, pos, time, size)
 	end)
 end
 
@@ -1142,27 +763,6 @@ local armorNames = {
 	["ego_equalizer"] = "[HE] Equalizer",
 	["helmet6"] = "SWAT Balistic Helmet",
 	["gordon_helmet"] = "HEV Suit Helmet",
-	["vest9"] = "Ars Arma CPC Mod.2",
-	["vest10"] = "Eagle Industries MMAC",
-	["vest11"] = "Osprey MK4A (Protection)",
-	["vest12"] = "Shellback Tactical Banshee",
-	["vest13"] = "NFM THOR Integrated Carrier",
-	["vest14"] = "BAE Systems RBAV-AF",
-	["vest15"] = "Ars Arma A18 Skanda",
-	["vest16"] = "Korund-VM",
-	["vest17"] = "Redut-M",
-	["vest18"] = "Crye Precision CPC",
-	["vest19"] = "IOTV Gen4",
-	["helmet8"] = "UN Helmet",
-	["helmet9"] = "Ops-Core FAST MT (Black)",
-	["helmet10"] = "HighCom Striker ULACH",
-	["helmet11"] = "Ops-Core FAST MT (Tan)",
-	["helmet12"] = "HighCom Striker ULACH (Black)",
-	["helmet13"] = "HighCom Striker ULACH (Coyote)",
-	["helmet14"] = "Diamond Age Bastion",
-	["helmet15"] = "Galvion Caiman",
-	["helmet16"] = "MSA MICH 2001",
-	["helmet17"] = "MSA Gallet TC 800"
 }
 hg.armorNames = armorNames
 local armorIcons = {

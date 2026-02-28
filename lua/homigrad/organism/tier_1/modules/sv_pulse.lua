@@ -23,8 +23,8 @@ module[2] = function(owner, org, timeValue)
 	local o2 = org.o2
 	local o2 = halfValue2(o2[1], o2.range, o2.k)
 
-	if org.isPly and not org.otrub and (heart == 0) then org.owner:Notify("My torso- its paining...",true,"heart",6) end
-	if org.isPly and not org.otrub and org.heartstop then org.owner:Notify("",true,"heartstop",6) end
+	//if org.isPly and not org.otrub and (heart == 0) then org.owner:Notify("My torso hurts.",true,"heart",6) end
+	//if org.isPly and not org.otrub and org.heartstop then org.owner:Notify("",true,"heartstop",6) end
 
 	local stamina = org.stamina
 	
@@ -69,17 +69,13 @@ module[2] = function(owner, org, timeValue)
 	-- if no fear, in 3 minutes become slightly talkative, so would say random phrases to calm themselves in a current situation
 	local gainfear = hg.organism.should_gain_fear(org)
 	org.fearadd = math.Approach(org.fearadd, 0, gainfear and timeValue or timeValue / 4.9) -- 15 seconds to stop fearing something and start to calm down
-	org.fearadd = math.Approach(org.fearadd, 1, gainfear and (org.desensitized and timeValue / 10 or timeValue / 5) or 0)
+	org.fearadd = math.Approach(org.fearadd, 1, gainfear and timeValue / 5 or 0)
 	
 	local adrenK = max(1 + org.adrenaline, 1)
 	local adren = org.adrenaline
 
 	if org.pulse < 10 or org.brain >= 0.6 then org.heartstop = true end
 	if org.temperature < 28 or org.temperature > 42 then org.heartstop = true end
-
-	if org.temperature < 34 or org.temperature > 38 then
-		org.fear = math.max(org.fear, 0)
-	end
 
 	-- temperature
 	local needed_temp = math.min(math.max(37 * (org.pulse / 45), 35), 36.7)
@@ -107,7 +103,7 @@ module[2] = function(owner, org, timeValue)
 	if org.heartstop then
 		org.heartstoptime = org.heartstoptime or CurTime()
 		if org.isPly then
-			org.owner:Notify("I'm feeling dizzy...", true, "heartstop", 10)
+			//org.owner:Notify("I'm feeling dizzy...", true, "heartstop", 10)
 		end
 	else
 		if org.isPly then
@@ -116,8 +112,8 @@ module[2] = function(owner, org, timeValue)
 		org.heartstoptime = nil
 	end
 
-	if org.alive and org.heartstoptime and org.heartstoptime + 30 < CurTime() and (org.lastsoundtime or 0) < CurTime() and org.otrub then
-		org.owner:EmitSound("breathing/agonalbreathing_"..math.random(13)..".wav", 60)
+	if org.alive and org.heartstoptime and org.heartstoptime + 30 < CurTime() and (org.lastsoundtime or 0) < CurTime() and org.o2.regen > 0 and org.otrub then
+		org.owner:EmitSound("zcitysnd/real_sonar/"..(ThatPlyIsFemale(org.owner) and "female" or "male").."_wheeze"..math.random(5)..".mp3", 50)
 		--org.owner:EmitSound("breathing/agonalbreathing_"..math.random(13)..".wav", 50)
 		
 		org.lastsoundtime = CurTime() + math.random(25,35)

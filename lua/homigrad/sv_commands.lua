@@ -114,24 +114,17 @@ if SERVER then
     util.AddNetworkString("AnotherLightningEffect")
     util.AddNetworkString("PluvCommand")
 
-    COMMANDS.zc_god = {function(ply)
+    COMMANDS.god = {function(ply)
         if not ply.organism then return end
         
-        ply.organism.godmode = !ply.organism.godmode
-		ply:Notify(ply.organism.godmode and "now i'm immortal..." or "now i'm mortal")
-		return
-    end,1}
+        ply.organism.godmode = true
+    end,2}
 
-	COMMANDS.zc_cloak = {function(ply)
+    COMMANDS.ungod = {function(ply)
         if not ply.organism then return end
-		ply.cloak = !ply.cloak
-        ply:SetMaterial(ply.cloak and "NULL" or nil)
-		ply:DrawShadow(!ply.cloak)
-		ply:SetCollisionGroup(ply.cloak and COLLISION_GROUP_DEBRIS or COLLISION_GROUP_PLAYER)
-		ply:RemoveAllDecals()
-		ply:Notify(ply.cloak and "now i'm invisible..." or "now i'm visible")
-		return
-    end,1}
+        
+        ply.organism.godmode = nil
+    end,2}
 
     COMMANDS.punish = {function(ply, args)
         if #args < 1 then
@@ -213,48 +206,13 @@ if SERVER then
 
     end, 2, "ник игрока сообщение"}
 
-    COMMANDS.weather = {function(ply, args)
-        if not ply:IsAdmin() then return end
-        
-        local input = args[1]
-        
-        if not input then
-            local override = hg.TemperatureOverride
-            local map = hg.MapTemps[game.GetMap()] or 20
-            ply:ChatPrint("Current Override: " .. (override or "None"))
-            ply:ChatPrint("Map Default: " .. map .. "C")
-            ply:ChatPrint("Usage: !weather [number] or !weather reset")
-            return
+    concommand.Add("hg_dance", function(ply)
+        if not IsValid(ply) then return end
+        local duration = SoundDuration("bbq.wav")
+        if not duration or duration <= 0 then
+            duration = 3
         end
-
-        input = string.lower(input)
-
-        if input == "reset" or input == "normal" then
-            hg.TemperatureOverride = nil
-            ply:ChatPrint("Weather reset to map default.")
-        elseif tonumber(input) then
-            hg.TemperatureOverride = tonumber(input)
-            ply:ChatPrint("Weather set to " .. input .. "C")
-        else
-            ply:ChatPrint("Invalid input. Please use a number (e.g. 25, -10) or 'reset'.")
-        end
-    end, 1}
-
-	COMMANDS.setmodel = {function(ply, args)
-		if not ply:IsAdmin() then return end
-		local plya = #args > 1 and args[1] or ply:Name()
-		local mdl = #args > 1 and args[2] or args[1]
-		for i, ply2 in pairs(player.GetListByName(plya)) do
-			if ply2:Alive() then
-				local Appearance = ply2.CurAppearance or hg.Appearance.GetRandomAppearance()
-				Appearance.AColthes = ""
-				ply2:SetNetVar("Accessories", "")
-				ply2:SetModel(mdl)
-				ply2:SetSubMaterial()
-				ply2:SetPlayerColor(ply2:GetNWVector("PlayerColor", vector_origin))
-
-				ply:ChatPrint(ply2:Name().. "'s model set to " .. tostring(mdl))
-			end
-		end
-	end, 0}
+        ply:SetNWFloat("hg_dance_until", CurTime() + duration)
+        ply:EmitSound("bbq.wav", 100, 100, 1, CHAN_AUTO)
+    end)
 end

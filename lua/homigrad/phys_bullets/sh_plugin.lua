@@ -143,8 +143,8 @@ PLUGIN.Bullet_StandartMask = MASK_SHOT
 			local spread_x = bullet.Spread[1] * 45
 			local spread_y = bullet.Spread[2] * 45
 			
-			ang:RotateAroundAxis(vec_up, math.Rand(-spread_x, spread_x))
-			ang:RotateAroundAxis(vec_right, math.Rand(-spread_y, spread_y))
+			ang:RotateAroundAxis(vec_up, math.random(-spread_x, spread_x))
+			ang:RotateAroundAxis(vec_right, math.random(-spread_y, spread_y))
 			
 			bullet.Vel = ang:Forward() * len
 		end
@@ -739,14 +739,9 @@ PLUGIN.Bullet_StandartMask = MASK_SHOT
 			len = math.min(len, len_before)
 			
 			if(SERVER)then
-				if math.random(1, 3) == 1 then
-					local snd = table.Random(hg.RicochetSounds or {"bullet/ricochet1.ogg", "bullet/ricochet2.ogg"})
-					sound.Play(snd, trace.HitPos, 75, math.random(90, 110))
-				else
-					local rnd = math.random(12)
-					if rnd == 8 then rnd = 9 end
-					sound.Play("arc9_eft_shared/ricochet/ricochet" .. rnd .. ".ogg", trace.HitPos, 75, math.random(90, 110))
-				end
+				local rnd = math.random(12)
+				if rnd == 8 then rnd = 9 end
+				sound.Play("arc9_eft_shared/ricochet/ricochet" .. rnd .. ".ogg", trace.HitPos, 75, math.random(90, 110))
 				--sound.Play("snd_jack_hmcd_ricochet_" .. math.random(1, 2) .. ".wav", trace.HitPos, 75, math.random(90, 110))
 				--sound.Play("weapons/arccw/ricochet0" .. math.random(1, 5) .. "_quiet.wav", trace.HitPos, 75, math.random(90, 110))
 			end

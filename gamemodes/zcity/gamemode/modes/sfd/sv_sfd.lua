@@ -8,7 +8,7 @@ MODE.randomSpawns = true
 MODE.noBoxes = true
 
 MODE.GuiltDisabled = true
-MODE.ForBigMaps = false
+MODE.ForBigMaps = true
 MODE.Chance = 0.01
 
 local radius = nil

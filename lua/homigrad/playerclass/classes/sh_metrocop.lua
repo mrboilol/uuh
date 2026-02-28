@@ -77,10 +77,6 @@ local rebels = {
 function CLASS.Off(self)
     if CLIENT then return end
 
-	if eightbit and eightbit.EnableEffect and self.UserID then
-		eightbit.EnableEffect(self:UserID(), 0)
-	end
-
     for k,v in ipairs(ents.FindByClass("npc_*")) do
         if table.HasValue(combines,v:GetClass()) then
             v:AddEntityRelationship( self, D_HT, 99 )
@@ -92,12 +88,10 @@ function CLASS.Off(self)
 	self:SetNWString("PlayerRole", nil)
     self.organism.CantCheckPulse = nil
     self.leader = nil
-	hook.Remove("OnEntityCreated", "relation_shipdo"..self:EntIndex())
 end
 
 
 CLASS.NoFreeze = true
-CLASS.CanEmitRNDSound = false
 
 local function giveSubClassLoadout(ply, subclass)
     local config = combine_subclasses[subclass] or combine_subclasses["default"]
@@ -129,11 +123,6 @@ end
 
 function CLASS.On(self, data)
     if CLIENT then return end
-
-	if eightbit and eightbit.EnableEffect and self.UserID then
-		eightbit.EnableEffect(self:UserID(), eightbit.EFF_PROOT) --!! placeholder
-	end
-
     ApplyAppearance(self,nil,nil,nil,true)
     local Appearance = self.CurAppearance or hg.Appearance.GetRandomAppearance()
     Appearance.AAttachments = ""

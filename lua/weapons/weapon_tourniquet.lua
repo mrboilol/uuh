@@ -43,7 +43,6 @@ SWEP.modeNames = {
 
 function SWEP:InitializeAdd()
 	self:SetHold(self.HoldType)
-
 	self.modeValues = {
 		[1] = 1,
 	}
@@ -68,20 +67,7 @@ function SWEP:Animation()
 end
 
 
-function SWEP:OwnerChanged()
-	local owner = self:GetOwner()
-	if IsValid(owner) and owner:IsNPC() then
-		self:NPCHeal(owner, 0.25, "snd_jack_hmcd_bandage.wav")
-	end
-end
-
-SWEP.UseMinigame = true
-
-function SWEP:DoHeal(ent, mode, bone)
-	if ent:IsNPC() then
-		self:NPCHeal(ent, 0.25, "snd_jack_hmcd_bandage.wav")
-	end
-
+function SWEP:Heal(ent, mode, bone)
 	local org = ent.organism
 	if not org then return end
 	if self:Tourniquet(ent, bone) then self.modeValues[1] = 0 self:GetOwner():SelectWeapon("weapon_hands_sh") self:Remove() end

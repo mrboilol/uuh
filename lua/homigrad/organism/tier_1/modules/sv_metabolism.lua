@@ -1,5 +1,4 @@
 --
-local hg_hungersystem = CreateConVar("hg_hungersystem", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "Enables/disabled hunger system", 0, 1)
 local max, min, Round, Lerp, halfValue2 = math.max, math.min, math.Round, Lerp, util.halfValue2
 --local Organism = hg.organism
 hg.organism.module.metabolism = {}
@@ -12,7 +11,7 @@ end
 
 local colorRed = Color(125,25,25)
 module[2] = function(owner, org, timeValue)
-    if org.satiety <= 0 and hg_hungersystem:GetBool() then 
+    if org.satiety <= 0 and engine.ActiveGamemode() == "sandbox" then 
         org.hungry = min(max(org.hungry + timeValue * 0.01, 0),100)
         //if org.isPly and not org.otrub and org.hungry > 25 and org.hungry < 45 then org.owner:Notify(table.Random(pharse),60,"hungry",6) end
         org.hungryDmgCd = org.hungryDmgCd or 0
@@ -50,23 +49,6 @@ module[2] = function(owner, org, timeValue)
 
     org.satiety = min(max(org.satiety - timeValue * 0.5, 0), 100)
     org.blood = min(org.blood + timeValue * (org.satiety/10) , 5000)
-    
-    local regenMul = org.desensitized and 0.7 or 1
-    org.regeneratehp = (org.regeneratehp or 0) + timeValue * (org.satiety/100) * regenMul
-    if org.regeneratehp >= 1 then
-        owner:SetHealth(min(owner:Health() + 1, 100))
-        org.regeneratehp = org.regeneratehp - 1
-    end
--- ion wanna
-    --[[if org.satiety > 75 then
-        local healAmount = timeValue / 960
-        
-        org.liver = math.Approach(org.liver, 0, healAmount)
-        org.heart = math.Approach(org.heart, 0, healAmount)
-        org.stomach = math.Approach(org.stomach, 0, healAmount)
-        org.intestines = math.Approach(org.intestines, 0, healAmount)
-        org.lungsR[1] = math.Approach(org.lungsR[1], 0, healAmount)
-        org.lungsL[1] = math.Approach(org.lungsL[1], 0, healAmount)
-        org.trachea = math.Approach(org.trachea, 0, healAmount)
-    end]]
+    org.regeneratehp = (!((org.regeneratehp or 0) >= 1) and min( (org.regeneratehp or 0) + timeValue * (org.satiety/100), 1)) or 0
+    owner:SetHealth(min(owner:Health() + org.regeneratehp,100))
 end

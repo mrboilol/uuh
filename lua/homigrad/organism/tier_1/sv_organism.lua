@@ -3,14 +3,6 @@ hg.organism.module = hg.organism.module or {}
 local module = hg.organism.module
 hg.organism.lastindex = hg.organism.lastindex or 1000000
 hook.Add("Org Clear", "Main", function(org)
-	org.desensitized = false
-	if IsValid(org.owner) and org.owner:IsPlayer() then
-		local trauma = tonumber(org.owner:GetPData("hg_trauma", 0))
-		if trauma >= 50 then -- Threshold for desensitized
-			org.desensitized = true
-		end
-	end
-
 	org.alive = true
 	org.otrub = false
 	org.entindex = IsValid(org.owner) and org.owner:EntIndex() or hg.organism.lastindex + 1
@@ -29,21 +21,11 @@ hook.Add("Org Clear", "Main", function(org)
 	org.spine1 = 0
 	org.spine2 = 0
 	org.spine3 = 0
-	org.spinal_cord1 = 0
-	org.spinal_cord2 = 0
-	org.spinal_cord3 = 0
 	org.chest = 0
 	org.pelvis = 0
 	org.skull = 0
 	org.stomach = 0
 	org.intestines = 0
-	org.eyeL = 0
-	org.eyeR = 0
-	org.nose = 0
-	org.trachea = 0
-	org.aorta = 0
-	org.subclavian_artery_l = 0
-	org.subclavian_artery_r = 0
 
 	org.thiamine = 0
 
@@ -56,23 +38,6 @@ hook.Add("Org Clear", "Main", function(org)
 	org.rarmdislocation = false
 	org.larmdislocation = false
 	org.jawdislocation = false
-    
-    -- oopsies
-    org.lleggruesome = false
-    org.rleggruesome = false
-    org.rarmgruesome = false
-    org.larmgruesome = false
-    
-    org.lleggruesome_dislocation = false
-    org.rleggruesome_dislocation = false
-    org.rarmgruesome_dislocation = false
-    org.larmgruesome_dislocation = false
-
-	org.lleg_perm_dmg = 0
-	org.rleg_perm_dmg = 0
-	org.larm_perm_dmg = 0
-	org.rarm_perm_dmg = 0
-	org.jaw_perm_dmg = 0
 
 	org.llegamputated = false
 	org.rlegamputated = false
@@ -108,7 +73,6 @@ hook.Add("Org Clear", "Main", function(org)
 
 	org.assimilated = 0
 	org.berserk = 0
-	org.noradrenaline = 0
 
 	if IsValid(org.owner) then
 		if org.owner:IsPlayer() and org.owner:Alive() then
@@ -130,122 +94,14 @@ end)
 
 hook.Add("Should Fake Up", "organism", function(ply)
 	local org = ply.organism
-	if org.otrub or org.fake or org.spine1 >= hg.organism.fake_spine1 or org.spine2 >= hg.organism.fake_spine2 or org.spine3 >= hg.organism.fake_spine3 or (org.lleg == 1 and org.rleg == 1) and org.berserk <= 0.3 or (org.blood < 2900) or org.consciousness <= 0.4 then
-		return false
-	end
+	if org.otrub or org.fake or org.spine1 >= hg.organism.fake_spine1 or org.spine2 >= hg.organism.fake_spine2 or org.spine3 >= hg.organism.fake_spine3 or (org.lleg == 1 and org.rleg == 1) or (org.blood < 2900) or org.consciousness <= 0.4 then return false end
 end)
 
 util.AddNetworkString("organism_send")
 util.AddNetworkString("organism_sendply")
-util.AddNetworkString("hg_dislocation_minigame_pain")
-util.AddNetworkString("hg_dislocation_minigame_success")
-util.AddNetworkString("hg_head_trauma_saturation")
-util.AddNetworkString("hg_bandage_minigame_success")
-util.AddNetworkString("hg_bandage_minigame_fail")
-
-hook.Add("PlayerDeath", "ClearOtrub", function(ply)
-	if not ply or not ply:IsPlayer() or not ply.organism then return end
-	ply.organism.otrub = nil
-end)
-
-net.Receive("hg_dislocation_minigame_pain", function(len, ply)
-    if not IsValid(ply) or not ply:Alive() then return end
-    
-    local target = net.ReadEntity()
-    local painAmount = net.ReadFloat()
-    
-    local patient = ply
-    -- If fixing someone else
-    if IsValid(target) and target:IsPlayer() and target != ply then
-        patient = target
-    end
-
-    local org = patient.organism
-    if not org then return end
-    
-    -- Apply pain and fear proportional to the amount sent
-    org.painadd = org.painadd + (painAmount * 50)
-    org.fearadd = org.fearadd + (painAmount * 0.5)
-    patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
-end)
-
-
-net.Receive("hg_dislocation_minigame_success", function(len, ply)
-    if not IsValid(ply) or not ply:Alive() then return end
-
-    local wep = ply:GetActiveWeapon()
-    if IsValid(wep) and wep:GetClass() == "style_bandages" then
-        wep:DoHeal(ply, wep.minigame_ent, wep.minigame_mode, wep.minigame_bone)
-        return
-    end
-    
-    local target = net.ReadEntity()
-    local patient = ply
-    
-    -- If fixing someone else
-    if IsValid(target) and target:IsPlayer() and target != ply then
-        patient = target
-        -- Verify distance
-        if ply:GetPos():Distance(patient:GetPos()) > 200 then return end
-    end
-
-    local org = patient.organism
-    if not org then return end
-    
-    local limbType = net.ReadInt(4)
-    local failures = net.ReadInt(16)
-    
-    local key
-    if limbType == 1 then
-        key = "lleg"
-    elseif limbType == 2 then
-        key = "rleg"
-    elseif limbType == 3 then
-        key = "larm"
-    elseif limbType == 4 then
-        key = "rarm"
-    elseif limbType == 5 then
-        key = "jaw"
-    elseif limbType == 6 then
-        key = "spine"
-    end
-    
-    if not key then return end
-      
-     local rag = hg.GetCurrentCharacter(patient)
-     if not IsValid(rag) then return end
-
-    if key == "spine" then
-        if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
-            org.spine1dislocation = false
-            org.spine2dislocation = false
-            org.spine3dislocation = false
-            hg.organism.restoreSpineConstraints(rag)
-            ply:EmitSound("physics/flesh/flesh_impact_bullet" .. math.random(1, 5) .. ".wav", 60, 100, 1, CHAN_AUTO)
-        end
-    else
-        hg.organism.fixlimb(org, key, ply)
-    end
-end)
-
-net.Receive("hg_bandage_minigame_fail", function(len, ply)
-    if not IsValid(ply) or not ply:Alive() then return end
-    
-    local target = net.ReadEntity()
-    local patient = IsValid(target) and target or ply
-
-    local org = patient.organism
-    if not org then return end
-    
-    org.painadd = org.painadd + 2
-    org.fearadd = org.fearadd + 0.05
-    patient:EmitSound("physics/body/body_medium_impact_hard1.wav", 60, 100, 1, CHAN_AUTO)
-end)
-
-
 local CurTime = CurTime
 local nullTbl = {}
-local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"Toggle developer mode (enables damage traces)",0,1)
+local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"enable developer mode (enables damage traces)",0,1)
 local function send_organism(org, ply)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
@@ -297,7 +153,6 @@ local function send_organism(org, ply)
 	sendtable.consciousness = org.consciousness
 	sendtable.assimilated = org.assimilated
 	sendtable.berserk = org.berserk
-	sendtable.noradrenaline = org.noradrenaline
 	sendtable.LodgedEntities = org.LodgedEntities
 	sendtable.CantCheckPulse = org.CantCheckPulse
 
@@ -305,7 +160,6 @@ local function send_organism(org, ply)
 	sendtable.incapacitated = org.incapacitated
 
 	sendtable.superfighter = org.superfighter
-	sendtable.desensitized = org.desensitized
 
 	net.Start("organism_send")
 	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
@@ -357,8 +211,6 @@ local function send_bareinfo(org)
 	sendtable.berserkActive2 = org.berserkActive2
 	sendtable.CantCheckPulse = org.CantCheckPulse
 	sendtable.berserkActive2 = org.berserkActive2
-	sendtable.noradrenalineActive = org.noradrenalineActive
-	sendtable.desensitized = org.desensitized
 
 	local rf = RecipientFilter()
 	--rf:AddAllPlayers()
@@ -386,20 +238,8 @@ function META:IsBerserk()
 	return org.berserkActive2 or false
 end
 
-function META:IsStimulated()
-	if !IsValid(self) then return false end
-	if self:IsPlayer() and not self:Alive() then return false end
-
-	local org = self.organism
-	return org.noradrenalineActive or false
-end
-
 local META2 = FindMetaTable("Entity")
 function META2:IsBerserk()
-	return false
-end
-
-function META2:IsStimulated()
 	return false
 end
 
@@ -458,10 +298,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	local isPly = owner:IsPlayer()
 
 	org.isPly = isPly
-
-	if org.disemboweled then
-		org.stamina[1] = 0
-	end
 
 	if isPly or org.fakePlayer then
 		if not org.fakePlayer then
@@ -529,7 +365,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	end
 
 	org.berserk = math.Approach(org.berserk, 0, timeValue / 60)
-	org.noradrenaline = math.Approach(org.noradrenaline, 0, timeValue / 45)
 
 	if org.berserk > 0 and !org.berserkActive then
 		org.berserkActive = true
@@ -545,13 +380,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		owner.BerserkKills = nil
 	end
 
-	if org.noradrenaline > 0 and !org.noradrenalineActive then
-		org.noradrenalineActive = true
-	elseif org.noradrenaline <= 0 then
-		org.noradrenalineActive = false
-	end
-
-	if (org.llegamputated or org.rlegamputated) and org.berserk <= 0.3 then
+	if org.llegamputated or org.rlegamputated then
 		org.needfake = true
 	end
 
@@ -562,7 +391,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		end
 	end
 
-	if isPly then
+	--[[if isPly then
 		local aimed = false
 
 		local entities = ents.FindInCone(owner:EyePos(), owner:GetAimVector(), 128, math.cos(math.rad(90)))
@@ -583,14 +412,12 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 			owner.aimed_at = owner.aimed_at or 0
 			owner.aimed_at = math.Approach(owner.aimed_at, 0, timeValue / 5)
 		end
-	end
+	end--]]
 	--bullshit
---shutup n.........
+
 	if org.otrub then
 		org.uncon_timer = org.uncon_timer or 0
 		org.uncon_timer = org.uncon_timer + timeValue
-
-
 	else
 		org.uncon_timer = 0
 	end
@@ -600,32 +427,15 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
 
-hook.Add("HG_OnWakeOtrub", "SaturationFlashOnWake", function(owner)
-    local org = owner.organism
-    if org and org.saturationFlashOnWake then
-        net.Start("hg_head_trauma_saturation")
-        net.WriteFloat(org.saturationFlashIntensity or 0.5)
-        net.Send(owner)
-        org.saturationFlashOnWake = false
-        org.saturationFlashIntensity = nil
-    end
-end)
-
-	org.canmove = not org.otrub and (org.spinal_cord1 or 0) < 1 and (org.spinal_cord2 or 0) < 1
-	org.canmovehead = not org.otrub and (org.spinal_cord3 or 0) < 1
+	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
+	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
 	
 	if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
 	if (org.blood < 2700) then org.needfake = true end
 
-	-- Neck break and death logic
-	if (org.spine3 >= 1 or (org.spinal_cord3 or 0) >= 1) and not org.neckBroken then
-		hg.BreakNeck(org.owner)
-		org.neckBroken = true
-	end
-
 	local just_went_uncon = not org.otrub and org.needotrub
 
-	if org.posturing then -- the decerebrate one
+	if org.posturing then //-- the decerebrate one
 		local ent = hg.GetCurrentCharacter(org.owner)
 
 		local rleg = ent:GetPhysicsObjectNum(ent:TranslateBoneToPhysBone(ent:LookupBone("ValveBiped.Bip01_R_Foot")))
@@ -642,128 +452,21 @@ end)
 		end
 	end
 
-	org.thiamine = math.Approach(org.thiamine, 0, timeValue / 240)
+	if org.brain < 0.4 then
+		local naturalHeal = org.thiamine > 0 and timeValue / 480 or timeValue / 1800
+		-- full heal in ~30 minutes (really fast tho) -- Ну не идет столько раунд даже в каких-нибудь скраперсах ну какой даун это придумал
+		-- 8 minutes with thiamine -- ДАЖЕ СТОЛЬКО НЕ ВСЕГДА ДЛИТСЯ
 
-	if org.thiamine > 0 then
-		local naturalHeal = timeValue / 480
-		
+		org.thiamine = math.Approach(org.thiamine, 0, timeValue / 240)
+		-- you'd need to give 1 thiamine each 4 minutes
+
 		if org.liver < 1 then org.liver = math.Approach(org.liver, 0, naturalHeal) end
 		if org.heart < 1 then org.heart = math.Approach(org.heart, 0, naturalHeal) end
 		if org.stomach < 1 then org.stomach = math.Approach(org.stomach, 0, naturalHeal) end
 		if org.intestines < 1 then org.intestines = math.Approach(org.intestines, 0, naturalHeal) end
 		if org.lungsR[1] < 1 then org.lungsR[1] = math.Approach(org.lungsR[1], 0, naturalHeal) end
 		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
-		if org.trachea < 1 then org.trachea = math.Approach(org.trachea, 0, naturalHeal) end
-		if org.eyeL < 1 then org.eyeL = math.Approach(org.eyeL, 0, naturalHeal) end
-		if org.eyeR < 1 then org.eyeR = math.Approach(org.eyeR, 0, naturalHeal) end
-		if org.nose < 1 then org.nose = math.Approach(org.nose, 0, naturalHeal) end
-
-
-		-- Heal bone damage
-		local boneHeal = naturalHeal / 2
-		local spineHeal = naturalHeal / 8 -- Spines heal 4x slower than other bones
-		if org.lleg > (org.lleg_perm_dmg or 0) then org.lleg = math.Approach(org.lleg, org.lleg_perm_dmg or 0, boneHeal) end
-		if org.rleg > (org.rleg_perm_dmg or 0) then org.rleg = math.Approach(org.rleg, org.rleg_perm_dmg or 0, boneHeal) end
-		if org.larm > (org.larm_perm_dmg or 0) then org.larm = math.Approach(org.larm, org.larm_perm_dmg or 0, boneHeal) end
-		if org.rarm > (org.rarm_perm_dmg or 0) then org.rarm = math.Approach(org.rarm, org.rarm_perm_dmg or 0, boneHeal) end
-		if org.jaw > (org.jaw_perm_dmg or 0) then org.jaw = math.Approach(org.jaw, (org.jaw_perm_dmg or 0), boneHeal) end
-		if org.spine1 > 0 then
-			local old_val = org.spine1
-			org.spine1 = math.Approach(org.spine1, 0, spineHeal)
-			if old_val > 0 and org.spine1 == 0 then
-				local rag = hg.GetCurrentCharacter(org.owner)
-				if IsValid(rag) then
-					hg.organism.restoreSpineConstraints(rag)
-				end
-			end
-		end
-		if org.spine2 > 0 then
-			local old_val = org.spine2
-			org.spine2 = math.Approach(org.spine2, 0, spineHeal)
-			if old_val > 0 and org.spine2 == 0 then
-				local rag = hg.GetCurrentCharacter(org.owner)
-				if IsValid(rag) then
-					hg.organism.restoreSpineConstraints(rag)
-				end
-			end
-		end
-		if org.spine3 > 0 then
-			local old_val = org.spine3
-			org.spine3 = math.Approach(org.spine3, 0, spineHeal)
-			if old_val > 0 and org.spine3 == 0 then
-				local rag = hg.GetCurrentCharacter(org.owner)
-				if IsValid(rag) then
-					hg.organism.restoreNeckConstraints(rag)
-				end
-			end
-		end
-		if org.chest > 0 then org.chest = math.Approach(org.chest, 0, boneHeal) end
-		if org.pelvis > 0 then org.pelvis = math.Approach(org.pelvis, 0, boneHeal) end
-		if org.skull > 0 then org.skull = math.Approach(org.skull, 0, boneHeal) end
-
-		local permHeal = naturalHeal / 20 -- Slower healing for permanent damage
-		for _, key in ipairs({"lleg", "rleg", "larm", "rarm"}) do
-			local permDmgKey = key .. "_perm_dmg"
-			if org[permDmgKey] and org[permDmgKey] > 0 then
-				org[permDmgKey] = math.Approach(org[permDmgKey], 0, permHeal)
-				
-				if org[permDmgKey] == 0 then
-					org[key .. "gruesome"] = false
-					org[key .. "gruesome_dislocation"] = false
-					if org.isPly and hg.CreateNotification then
-						--hg.CreateNotification(org.owner, "Your gruesome wound seems to have stabilized.", 5)
-					end
-				end
-			end
-		end
-		if org.rleg_perm_dmg > 0 then org.rleg_perm_dmg = math.Approach(org.rleg_perm_dmg, 0, permHeal) end
-		if org.larm_perm_dmg > 0 then org.larm_perm_dmg = math.Approach(org.larm_perm_dmg, 0, permHeal) end
-		if org.rarm_perm_dmg > 0 then org.rarm_perm_dmg = math.Approach(org.rarm_perm_dmg, 0, permHeal) end
-
-		-- Heal gruesome breaks very slowly
-		local gruesomeHealChance = naturalHeal / 20
-		for _, limb in ipairs({"lleg", "rleg", "larm", "rarm"}) do
-			if org[limb.."gruesome"] and math.random() < gruesomeHealChance then
-				org[limb.."gruesome"] = nil
-				org[limb] = 0.95 -- Set bone health to almost broken
-				if org.isPly then
-					--hg.CreateNotification(org.owner, "Your gruesome break seems to have set, but it is still broken.", 5, colred)
-				end
-			end
-		end
-		
-		if org.thiamine > 0.8 then
-			naturalHeal = naturalHeal * 2
-			
-			if org.brain < 1 then org.brain = math.Approach(org.brain, 0, naturalHeal) end
-		end
-	elseif org.brain < 0.4 then
-		local naturalHeal = timeValue / 1800
-		
-		if org.liver < 1 then org.liver = math.Approach(org.liver, 0, naturalHeal) end
-		if org.heart < 1 then org.heart = math.Approach(org.heart, 0, naturalHeal) end
-		if org.stomach < 1 then org.stomach = math.Approach(org.stomach, 0, naturalHeal) end
-		if org.intestines < 1 then org.intestines = math.Approach(org.intestines, 0, naturalHeal) end
-		if org.lungsR[1] < 1 then org.lungsR[1] = math.Approach(org.lungsR[1], 0, naturalHeal) end
-		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
-		if org.trachea < 1 then org.trachea = math.Approach(org.trachea, 0, naturalHeal) end
 	end
-
-    local critical_organs = 0
-	if org.liver >= 1 then critical_organs = critical_organs + 1 end
-	if org.heart >= 1 then critical_organs = critical_organs + 1 end
-	--if org.stomach >= 1 then critical_organs = critical_organs + 1 end
-	--if org.intestines >= 1 then critical_organs = critical_organs + 1 end
-	if org.lungsR[1] >= 1 then critical_organs = critical_organs + 1 end
-	if org.lungsL[1] >= 1 then critical_organs = critical_organs + 1 end
-    if org.trachea >= 1 then critical_organs = critical_organs + 1 end
-
-    local is_critical = (org.blood < 1500) or (critical_organs >= 3)
-    
-    if is_critical then
-        org.brain = math.min(org.brain + timeValue / 60, 1)
-        --org.shock = org.shock + timeValue * 5
-    end
 
 	if org.otrub and isPly and org.owner:Alive() then
 		//org.owner:ScreenFade(SCREENFADE.PURGE, color_black, 0.5, 0)
@@ -857,10 +560,10 @@ hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 
 	local regen = timeValue / 120 * org.berserk
 
-	org.lleg = math.max(org.lleg - regen, org.lleg_perm_dmg or 0)
-	org.rleg = math.max(org.rleg - regen, org.rleg_perm_dmg or 0)
-	org.larm = math.max(org.larm - regen, org.larm_perm_dmg or 0)
-	org.rarm = math.max(org.rarm - regen, org.rarm_perm_dmg or 0)
+	org.lleg = math.max(org.lleg - regen, 0)
+	org.rleg = math.max(org.rleg - regen, 0)
+	org.rarm = math.max(org.rarm - regen, 0)
+	org.larm = math.max(org.larm - regen, 0)
 	org.chest = math.max(org.chest - regen, 0)
 	org.pelvis = math.max(org.pelvis - regen, 0)
 	org.spine1 = math.max(org.spine1 - regen, 0)
@@ -877,9 +580,6 @@ hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 	org.lungsR[2] = math.max(org.lungsR[2] - regen, 0)
 	org.lungsL[2] = math.max(org.lungsL[2] - regen, 0)
 	org.brain = math.max(org.brain - regen, 0)
-	org.eyeL = math.max(org.eyeL - regen, 0)
-	org.eyeR = math.max(org.eyeR - regen, 0)
-	org.nose = math.max(org.nose - regen, 0)
 
 	org.hungry = 0
 
@@ -887,47 +587,13 @@ hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 	org.painadd = math.Approach(org.painadd, 0, timeValue * 10)
 	org.avgpain = math.Approach(org.avgpain, 0, timeValue * 10)
 	org.shock = math.Approach(org.shock, 0, timeValue * 10)
-	org.immobilization = math.Approach(org.immobilization, 0, timeValue * 10)
+	org.immobilization = math.Approach(org.shock, 0, timeValue * 10)
 	org.disorientation = math.Approach(org.disorientation, 0, timeValue * 10)
 
 	org.lungsfunction = true
 	org.heartstop = false
 
 	owner:SetRunSpeed(math.min(500, 400 + (25 * org.berserk)))
-end)
-
-hook.Add("Org Think", "regenerationnoradrenaline", function(owner, org, timeValue)
-	if not owner:IsPlayer() or not owner:Alive() then return end
-	if org.noradrenaline <= 0 then return end
-	
-	local regen = timeValue / 60 * org.noradrenaline
-
-	org.lungsR[1] = math.max(org.lungsR[1] - regen, 0)
-	org.lungsL[1] = math.max(org.lungsL[1] - regen, 0)
-	org.lungsR[2] = math.max(org.lungsR[2] - regen, 0)
-	org.lungsL[2] = math.max(org.lungsL[2] - regen, 0)
-
-	org.hungry = 0
-
-	org.pain = math.Approach(org.pain, 0, regen * 10)
-	org.painadd = math.Approach(org.painadd, 0, regen * 10)
-	org.avgpain = math.Approach(org.avgpain, 0, regen * 10)
-	org.shock = math.Approach(org.shock, 0, regen * 10)
-	org.immobilization = math.Approach(org.immobilization, 0, regen * 10)
-	org.disorientation = math.Approach(org.disorientation, 0, regen * 10)
-	org.adrenaline = math.Approach(org.adrenaline, 5, regen * 100)
-	org.analgesia = math.Approach(org.analgesia, 1, regen * 10)
-
-	if org.noradrenaline > 2 then
-		org.brain = math.Approach(org.brain, 0.3, timeValue / 60)
-	end
-
-	org.pulse = math.Approach(org.pulse, 70, regen * 10)
-	org.heartbeat = math.Approach(org.heartbeat, 220, regen * 10)
-	--org.stamina.regen = math.Approach(org.stamina.regen, 1.2, regen * 10)
-
-	org.lungsfunction = true
-	org.heartstop = false
 end)
 
 concommand.Add("hg_organism_setvalue", function(ply, cmd, args)
@@ -982,26 +648,6 @@ end)
 
 hook.Add("PlayerDeath","next-respawn-full",function(ply)
 	ply.fullsend = true
-	
-	local trauma = tonumber(ply:GetPData("hg_trauma", 0))
-	ply:SetPData("hg_trauma", trauma + 1)
-end)
-
-concommand.Add("hg_trauma_set", function(ply, cmd, args)
-	if not ply:IsAdmin() then return end
-	local target = args[1] and player.GetListByName(args[1])[1] or ply
-	local amount = tonumber(args[2])
-	if not IsValid(target) or not amount then return end
-	target:SetPData("hg_trauma", amount)
-	ply:ChatPrint("Set trauma for " .. target:Nick() .. " to " .. amount)
-end)
-
-concommand.Add("hg_trauma_get", function(ply, cmd, args)
-	if not ply:IsAdmin() then return end
-	local target = args[1] and player.GetListByName(args[1])[1] or ply
-	if not IsValid(target) then return end
-	local trauma = target:GetPData("hg_trauma", 0)
-	ply:ChatPrint("Trauma for " .. target:Nick() .. ": " .. trauma)
 end)
 
 hook.Add("HG_OnWakeOtrub", "afterOtrub", function( owner )
@@ -1051,54 +697,12 @@ local finally_fixed = {
 }
 
 local function fixlimb(org, key, fixer)
-	if key == "jaw" and org.jawdisfigured then
-		org.jawdislocation = true
-		org.jaw = 0
-		org.jaw_perm_dmg = 0.1
-		return
-	end
-
-    if string.sub(key, 1, 5) == "spine" then
-        if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
-            org[key.."_dislocations"] = math.max(0, (org[key.."_dislocations"] or 0) - 1)
-            org.painadd = org.painadd + 90
-            org.fearadd = org.fearadd + 0.2
-
-            org.owner:EmitSound("physics/body/body_medium_impact_hard"..math.random(1,4)..".wav", 75, 100, 1, CHAN_VOICE)
-
-            if fixer == org.owner and (fixer.tries or 0) > 3 and math.random(3) == 1 then
-                fixer:Notify(finally_fixed[math.random(#finally_fixed)], 1, "dislocations_unlucky", 1, nil, Color(255, 255, 255, 255))
-            end
-
-            fixer.tries = 0
-        else
-            fixer.tries = (fixer.tries or 0) + 1
-            org.painadd = org.painadd + 180
-
-            org.fearadd = org.fearadd + 0.4
-
-            org.owner:EmitSound("physics/body/body_medium_impact_soft"..math.random(7)..".wav", 65)
-            
-            if fixer.Profession != "doctor" and math.random(5) == 1 then
-                local dmgInfo = DamageInfo()
-                dmgInfo:SetDamage(50)
-                dmgInfo:SetDamageType(DMG_CLUB)
-                hg.organism.input_list[key.."down"](org.owner.organism, 1, 6, dmgInfo, 0, vector_up)
-            end
-
-            if fixer == org.owner and fixer.tries > 3 and math.random(3) == 1 then
-                fixer:Notify(unlucky_dislocations[math.random(#unlucky_dislocations)], 1, "dislocations_unlucky", 1, nil, Color(255, 255, 255, 255))
-            end
-        end
-        return
-    end
-
 	if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
 		org[key.."dislocation"] = false
 		org.painadd = org.painadd + 5 * math.random(1, 3)
 		org.fearadd = org.fearadd + 0.1
 
-		org.owner:EmitSound("physics/body/body_medium_impact_hard"..math.random(1,4)..".wav", 75, 100, 1, CHAN_VOICE)
+		org.owner:EmitSound("physics/flesh/flesh_impact_hard6.wav", 65)
 
 		if fixer == org.owner and (fixer.tries or 0) > 3 and math.random(3) == 1 then
 			fixer:Notify(finally_fixed[math.random(#finally_fixed)], 1, "dislocations_unlucky", 1, nil, Color(255, 255, 255, 255))
@@ -1158,14 +762,6 @@ concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	elseif math.Round(tonumber(args[1])) == 3 then
 		if org.jawdislocation then
 			fixlimb(org, "jaw", fixer)
-		end
-	elseif math.Round(tonumber(args[1])) == 4 then
-		if org.spine1_dislocations and org.spine1_dislocations > 0 then
-			fixlimb(org, "spine1", fixer)
-		elseif org.spine2_dislocations and org.spine2_dislocations > 0 then
-			fixlimb(org, "spine2", fixer)
-		elseif org.spine3_dislocations and org.spine3_dislocations > 0 then
-			fixlimb(org, "spine3", fixer)
 		end
 	end
 end)

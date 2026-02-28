@@ -1,7 +1,7 @@
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
 	if not sun then return end
-	if not sun.obstruction == 0 or sun.obstruction == 0 or !sun.direction then return end
+	if not sun.obstruction == 0 or sun.obstruction == 0 then return end
 	local sunpos = EyePos() + sun.direction * 1024 * 4
 	local scrpos = sunpos:ToScreen()
 	local dot = (sun.direction:Dot(EyeVector()) - 0.8) * 5
@@ -69,7 +69,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 		addtiveLayer["brightness"] = Lerp(weight, 0, layer["brightness"] or 0)
 		--end
 	end
-
+	
 	//DrawBloom(addtiveLayer.bloom_darken, addtiveLayer.bloom_mul, addtiveLayer.bloom_sizex, addtiveLayer.bloom_sizey, addtiveLayer.bloom_passes, addtiveLayer.bloom_colormul, addtiveLayer.bloom_colorr, addtiveLayer.bloom_colorg, addtiveLayer.bloom_colorb)
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
@@ -184,7 +184,7 @@ local haloents = {
 	["weapon_hg_f1_tpik"] = true
 }
 
-hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсветкой всего в радиусе
+--[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсветкой всего в радиусе
 	local pickuphalo = {}
 	 
 	local lpos = lply:GetPos()
@@ -198,9 +198,9 @@ hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с под
 		end
 	end
 	halo.Add( pickuphalo, color_red, 1, 1, 1 )
-end )
+end )]]
 
-hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсвечиванием только когда смотришь
+--[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсвечиванием только когда смотришь
 	local pickuphalo = {}
 	 
 	local tr = hg.eyeTrace(lply,72)
@@ -215,7 +215,7 @@ hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с под
 		color_red.g = Lerp(FrameTime()*2,color_red.g,0)
 	end
 	halo.Add( pickuphalo, color_red, 1, 1, 1 )
-end )
+end )]]
 
 -- funny :)
 
@@ -229,6 +229,7 @@ local assimilationMat = Material("effects/shaders/zb_assimilation")
 local coldMat = Material("effects/shaders/zb_colda")
 local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
+local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 
 local PainLerp = 0
 local O2Lerp = 0
@@ -247,42 +248,101 @@ local lobotomy_mats = {
 	[7] = Material("overlays/tallflash2.png"),
 	[8] = Material("overlays/tallflash3.png")
 }
-local LEFT_EYE_GONE_OVERLAY = Material("overlays/lefteyegone.png")
-local RIGHT_EYE_GONE_OVERLAY = Material("overlays/righteyegone.png")
 
-hook.Add("RenderScreenspaceEffects", "HG_DrawEyeLossOverlay", function()
-	local ply = LocalPlayer()
-	if not IsValid(ply) or not ply:Alive() then return end
-	
-	local org = ply.organism
-	if not org then return end
-	
-	local leftEyeGone = (org.eyeL or 0) >= 1
-    local rightEyeGone = (org.eyeR or 0) >= 1
+local pvpModes = {
+	tdm = true,
+	gwars = true,
+	hl2dm = true,
+	dm = true,
+	tdm_cstrike = true,
+	smo = true,
+	sfd = true,
+	scugarena = true,
+	bart_vs_homer = true
+}
 
-    if leftEyeGone and rightEyeGone then
-        surface.SetDrawColor(255, 255, 255, 255)
-        surface.SetMaterial(LEFT_EYE_GONE_OVERLAY)
-        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-        surface.SetMaterial(RIGHT_EYE_GONE_OVERLAY)
-        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+local teamPvpModes = {
+	tdm = true,
+	gwars = true,
+	hl2dm = true,
+	tdm_cstrike = true,
+	smo = true
+}
 
-        local vignette = Material("effects/vignette")
-        surface.SetMaterial(vignette)
-        surface.SetDrawColor(0, 0, 0, 255)
-        vignette:SetFloat("$vignette_radius", 0.2)
-        vignette:SetFloat("$vignette_softness", 0.2)
-        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-    elseif leftEyeGone then
-        surface.SetDrawColor(255, 255, 255, 255)
-        surface.SetMaterial(LEFT_EYE_GONE_OVERLAY)
-        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-    elseif rightEyeGone then
-        surface.SetDrawColor(255, 255, 255, 255)
-        surface.SetMaterial(RIGHT_EYE_GONE_OVERLAY)
-        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-    end
+local function getDeadBodyOwner(ply)
+	if not IsValid(ply) then return nil end
+	local tr = hg.eyeTrace(ply, 160)
+	if not tr or not IsValid(tr.Entity) then return nil end
+	local ent = tr.Entity
+	if ent:IsPlayer() then
+		return not ent:Alive() and ent or nil
+	end
+	if ent:IsRagdoll() then
+		local owner = hg.RagdollOwner(ent) or ent:GetNWEntity("ply") or ent.ply
+		if IsValid(owner) and owner:IsPlayer() then
+			return not owner:Alive() and owner or nil
+		end
+		return nil
+	end
+	return nil
+end
+
+local function isDeadBodyAllowed(ply, owner)
+	if not IsValid(ply) then return false end
+	if ply.isTraitor then return false end
+	local mode = CurrentRound()
+	local modeName = mode and (mode.Type or mode.name) or nil
+	if modeName and pvpModes[modeName] then
+		if not teamPvpModes[modeName] then return false end
+		if not IsValid(owner) or not owner:IsPlayer() then return false end
+		return owner:Team() == ply:Team() and ply:Team() != TEAM_SPECTATOR
+	end
+	return true
+end
+
+local function isSuicideIntent(ply)
+	if not IsValid(ply) then return false end
+	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon() or nil
+	local wepCanSuicide = IsValid(wep) and wep.CanSuicide
+	local weaponSuicide = wepCanSuicide and (wep.SuicideStart or wep.cutthroat)
+	local suicideNet = ply:GetNWBool("suiciding", false)
+	local suiciding = ply.suiciding or suicideNet
+	if ply:GetNWFloat("willsuicide", 0) > 0 then return true end
+	if weaponSuicide then return true end
+	if suiciding and (wepCanSuicide or hg.CanSuicide(ply)) then return true end
+	return false
+end
+
+local tunnelWaveFade = 0
+local tunnelWaveBase = 0.9
+local deadBodyHoldUntil = 0
+local deadBodyHoldSeconds = 1.2
+hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
+	if not IsValid(lply) or not lply:Alive() then return end
+	local deadOwner = getDeadBodyOwner(lply)
+	local mode = CurrentRound()
+	local modeName = mode and (mode.Type or mode.name) or nil
+	if lply.isTraitor or (modeName and pvpModes[modeName] and not teamPvpModes[modeName]) then
+		deadBodyHoldUntil = 0
+	else
+		if deadOwner then
+			if isDeadBodyAllowed(lply, deadOwner) then
+				deadBodyHoldUntil = CurTime() + deadBodyHoldSeconds
+			else
+				deadBodyHoldUntil = 0
+			end
+		end
+	end
+	local deadActive = deadBodyHoldUntil > CurTime()
+	local active = deadActive or isSuicideIntent(lply)
+	tunnelWaveFade = LerpFT(0.08, tunnelWaveFade, active and 1 or 0)
+	if tunnelWaveFade < 0.01 then return end
+	render.UpdateScreenEffectTexture()
+	tunnelWaveMat:SetFloat("$c1_w", tunnelWaveBase * tunnelWaveFade)
+	render.SetMaterial(tunnelWaveMat)
+	render.DrawScreenQuad()
 end)
+
 local function stopthings()
 	PainLerp = 0
 	O2Lerp = 0
@@ -354,118 +414,6 @@ local stations = {
 
 local choosera = 1
 local tempolerp = 0
---might have already done this but oh well
-if CLIENT then
-    net.Receive("headtrauma_flash", function()
-        -- from head hit: draw a quick directional flash
-        local pos = net.ReadVector()
-        local time = net.ReadFloat()
-        local size = net.ReadInt(20)
-        local lply = LocalPlayer()
-        if not IsValid(lply) then return end
-        hg.AddFlash(lply:EyePos(), 1, pos, time, size)
-    end)
-
-    hg.flashes = {}
-    
-    function hg.AddFlash(eyepos, dot, pos, time, size)
-        time = time or 20
-        size = size or 1000 -- pixels
-        size = size / math.max(pos:Distance(eyepos) / 64, 0.01) * (dot ^ 2)
-        local taint = math.max(200 - size, 0) / 200 * time * 0.9
-
-        local scr = pos:ToScreen()
-        if not scr.visible then
-            scr.x = ScrW() * 0.5
-            scr.y = ScrH() * 0.5
-        else
-            scr.x = math.Clamp(scr.x, 0, ScrW())
-            scr.y = math.Clamp(scr.y, 0, ScrH())
-        end
-
-        table.insert(hg.flashes, {
-            x = scr.x,
-            y = scr.y,
-            time = CurTime() + time - taint,
-            lentime = time,
-            size = size
-        })
-    end
-
-    local flash
-    local mat = Material("sprites/orangeflare1_gmod")
-    local mat2 = Material("sprites/glow04_noz")
-
-    amtflashed = 0
-    amtflashed2 = 0
-
-    hook.Add("PlayerDeath","huyhuyhuy",function(ply)
-        if ply == LocalPlayer() then
-            hg.flashes = {}
-            amtflashed = 0
-            amtflashed2 = 0
-        end
-    end)
-
-    hook.Add("PreCleanupMap", "noflashesforyounigge", function()
-        hg.flashes = {}
-        amtflashed = 0
-        amtflashed2 = 0
-    end)
-
-    hook.Add("RenderScreenspaceEffects","flasheseffect",function()
-        local lply = LocalPlayer()
-        if not IsValid(lply) or not lply:IsPlayer() then return end
-        if !lply:Alive() then
-            if !next(hg.flashes) then
-                hg.flashes = {}
-            end
-            amtflashed = 0
-            amtflashed2 = 0
-        end
-        if (#hg.flashes <= 0) and (amtflashed2 <= 0) then return end
-        amtflashed = 0
-        for i = #hg.flashes, 1, -1 do
-            local f = hg.flashes[i]
-            if (f.time or 0) < CurTime() then
-                table.remove(hg.flashes, i)
-            else
-                local animpos = (f.time - CurTime()) / f.lentime
-                local size = f.size
-                f.animpos = animpos
-                amtflashed = amtflashed + animpos * size / 5000
-            end
-        end
-        
-        amtflashed = amtflashed + amtflashed2
-        amtflashed2 = math.min(math.Approach(amtflashed2, 0, FrameTime() / 20),2)
-        
-        amtflashed = math.max(amtflashed - math.ease.InOutCubic(math.max(0, math.sin(CurTime() * 1) - 0.6) / 0.4),0)
-
-        local tab = {}
-        tab["$pp_colour_brightness"] = 0 - math.max(amtflashed - 0.1,0)
-        DrawColorModify(tab)
-
-        for i = 1, #hg.flashes do
-            flash = hg.flashes[i]
-            
-            local animpos = flash.animpos
-            local size = flash.size
-
-            local huy = (1 - animpos) * -100
-            surface.SetMaterial(mat)
-            surface.SetDrawColor(255,255,255,animpos * 255 + math.Rand(-10,10) * animpos)
-            surface.DrawTexturedRectRotated(flash.x, flash.y, size * animpos, size * animpos, huy)
-        end
-        
-        surface.SetMaterial(mat2)
-        surface.SetDrawColor(255,255,255,amtflashed * 255)
-        surface.DrawTexturedRect(0,0,ScrW(),ScrH())
-
-        tab["$pp_colour_brightness"] = 0
-        DrawColorModify(tab)
-    end)
-end
 hook.Add("Post Post Processing", "ItHurts", function()
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	
@@ -519,65 +467,12 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	local pain = org.pain or 0
 	pain = math.max(pain - 15, 0)
 	local shock = (org.shock or 0) * 1 + (1 - org.consciousness) * 40
-	shockLerp = LerpFT(0.01, shockLerp or 0, shock + (lply.suiciding and math.max(0, org.heartbeat - 90) or 0))
+	shockLerp = LerpFT(0.01, shockLerp or 0, shock)
 	consciousnessLerp = LerpFT(org.consciousness < (consciousnessLerp or 1) and 1 or 0.01, consciousnessLerp or 1, org.consciousness)
 	-- local immobilization = org.immobilization
 	PainLerp = LerpFT(0.05, PainLerp, math.max(pain * (org.otrub and 0.2 or 1), 0))
 	assimilatedLerp = LerpFT(0.01, assimilatedLerp, (org.assimilated or 0))
 
-	    local stamina = org.stamina and org.stamina[1] or 100
-    if stamina < 30 and !org.otrub then
-        if !IsValid(TiredStation) then
-            sound.PlayFile("sound/tired.ogg", "noblock noplay", function(station)
-                if IsValid(station) then
-                    station:SetVolume(0)
-                    station:Play()
-                    TiredStation = station
-                    station:EnableLooping(true)
-                end
-            end)
-        else
-            if TiredStation:GetState() != GMOD_CHANNEL_PLAYING then
-                TiredStation:Play()
-            end
-        end
-        if IsValid(TiredStation) then
-            local targetVol = math.Clamp((30 - stamina) / 30, 0, 0.4)
-            if (PainLerp > 20) or (o2 < 20) then targetVol = targetVol * 0.2 end
-            TiredStation:SetVolume(targetVol)
-        end
-    else
-        if IsValid(TiredStation) then
-            TiredStation:Stop()
-            TiredStation = nil
-        end
-    end
-
-    if org.consciousness < 0.4 and !org.otrub then
-        if !IsValid(SleepyStation) then
-            sound.PlayFile("sound/sleepy.ogg", "noblock noplay", function(station)
-                if IsValid(station) then
-                    station:SetVolume(0)
-                    station:Play()
-                    SleepyStation = station
-                    station:EnableLooping(true)
-                end
-            end)
-        else
-            if SleepyStation:GetState() != GMOD_CHANNEL_PLAYING then
-                SleepyStation:Play()
-            end
-        end
-        if IsValid(SleepyStation) then
-            local targetVol = math.Clamp((0.4 - org.consciousness) * 2.5, 0, 0.5)
-            SleepyStation:SetVolume(targetVol)
-        end
-    else
-        if IsValid(SleepyStation) then
-            SleepyStation:Stop()
-            SleepyStation = nil
-        end
-    end
 	if assimilatedLerp > 0.001 then
 		render.UpdateScreenEffectTexture()
 
@@ -777,8 +672,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		show_image_time = 0
 		lobotomy_index = 0
 	end
-	hook.Run("Post Post Pre Post Processing")
-
+	
 	if O2Lerp > 1 then
 		render.UpdateScreenEffectTexture()
 		
@@ -855,263 +749,76 @@ hook.Add("Player Spawn", "ItDoesntNow", function(ply)
 
 	stopthings()
 end)
-net.Receive("hg_play_client_sound", function()
-	local soundPath = net.ReadString()
-	surface.PlaySound(soundPath)
-end)
 
-local headTraumaFlashes = {}
 
-net.Receive("headtrauma_flash", function()
-	local pos = net.ReadVector()
-	local duration = net.ReadFloat()
-	local size = net.ReadInt(20)
-	
-	table.insert(headTraumaFlashes, {
-		pos = pos,
-		duration = duration,
-		size = size,
-		startTime = CurTime()
+local fatman = {
+	nextCheck = 0,
+	activeUntil = 0,
+	startedAt = 0,
+	duration = 0,
+	regular = CreateMaterial("hg_fatman_regular", "UnlitGeneric", {
+		["$basetexture"] = "custom/REGULARfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	}),
+	shocked = CreateMaterial("hg_fatman_shocked", "UnlitGeneric", {
+		["$basetexture"] = "custom/SHOCKEDfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
+	}),
+	dead = CreateMaterial("hg_fatman_dead", "UnlitGeneric", {
+		["$basetexture"] = "custom/DEADfatman",
+		["$vertexcolor"] = "1",
+		["$vertexalpha"] = "1"
 	})
-end)
-
-net.Receive("AddFlash", function()
-	local pos = net.ReadVector()
-	local duration = net.ReadFloat()
-	local size = net.ReadInt(20)
-	local color = net.ReadColor()
-	local texture = net.ReadString()
-
-	table.insert(headTraumaFlashes, {
-		pos = pos,
-		duration = duration,
-		size = size,
-		startTime = CurTime(),
-		color = color,
-		mat = Material(texture)
-	})
-end)
-
-local flashMat = Material("sprites/light_glow02_add")
-
-hook.Add("PostDrawTranslucentRenderables", "HG_DrawHeadTraumaFlashes", function()
-	if #headTraumaFlashes == 0 then return end
-	
-	local curTime = CurTime()
-	local toRemove = {}
-	
-	for i, flash in ipairs(headTraumaFlashes) do
-		local elapsed = curTime - flash.startTime
-		if elapsed >= flash.duration then
-			table.insert(toRemove, i)
-		else
-			local alpha = 1 - (elapsed / flash.duration)
-			local size = flash.size * alpha
-			local col = flash.color or Color(255, 255, 255)
-			local color = Color(col.r, col.g, col.b, 255 * alpha)
-			
-			render.SetMaterial(flash.mat or flashMat)
-			render.DrawSprite(flash.pos, size, size, color)
-		end
-	end
-	
-	for i = #toRemove, 1, -1 do
-		table.remove(headTraumaFlashes, toRemove[i])
-	end
-end)
-
-local damageFlashLerp = 0
-if CLIENT then
-    net.Receive("hg_damage_flash", function()
-        local dmg = net.ReadFloat()
-        damageFlashLerp = math.min(damageFlashLerp + math.Clamp(dmg / 20, 0.2, 0.5), 0.8)
-    end)
-end
-
-local traumaSaturation = 0
-net.Receive("hg_head_trauma_saturation", function()
-    local intensity = net.ReadFloat()
-    traumaSaturation = math.min(traumaSaturation + intensity, 2.0)
-end)
-
-local concussionSaturation = 0
-net.Receive("hg_saturation_flash", function()
-    local intensity = net.ReadFloat()
-    concussionSaturation = math.min(concussionSaturation + intensity, 1.5)
-    surface.PlaySound("ambient/explosions/explode_1.wav")
-end)
-
-hook.Add("RenderScreenspaceEffects", "HG_ConcussionSaturation", function()
-    if concussionSaturation > 0 then
-        if not LocalPlayer():Alive() then concussionSaturation = 0 return end
-        local data = {}
-        data["$pp_colour_addr"] = 0.5 * concussionSaturation
-        data["$pp_colour_addg"] = -0.1 * concussionSaturation
-        data["$pp_colour_addb"] = -0.1 * concussionSaturation
-        data["$pp_colour_brightness"] = -0.05 * concussionSaturation
-        data["$pp_colour_contrast"] = 1 + 0.2 * concussionSaturation
-        data["$pp_colour_colour"] = 1 + 0.2 * concussionSaturation
-        data["$pp_colour_mulr"] = 0
-        data["$pp_colour_mulg"] = 0
-        data["$pp_colour_mulb"] = 0
-        DrawColorModify(data)
-
-        concussionSaturation = math.Approach(concussionSaturation, 0, FrameTime() * 0.75)
-    end
-end)
-
-local tab = {
-	[ "$pp_colour_addr" ] = 0,
-	[ "$pp_colour_addg" ] = 0,
-	[ "$pp_colour_addb" ] = 0,
-	[ "$pp_colour_brightness" ] = 0,
-	[ "$pp_colour_contrast" ] = 1,
-	[ "$pp_colour_colour" ] = 1,
-	[ "$pp_colour_mulr" ] = 0,
-	[ "$pp_colour_mulg" ] = 0,
-	[ "$pp_colour_mulb" ] = 0
 }
 
-hook.Add("RenderScreenspaceEffects", "HG_DamageFlash", function()
-    if damageFlashLerp > 0.01 then
-        damageFlashLerp = math.Approach(damageFlashLerp, 0, FrameTime() * 4)
-        surface.SetDrawColor(255, 0, 0, damageFlashLerp * 255)
-        surface.DrawRect(0, 0, ScrW(), ScrH())
-    end
-    
-    if traumaSaturation > 0.01 then
-        			if not LocalPlayer():Alive() then traumaSaturation = 0 end
-		traumaSaturation = math.Approach(traumaSaturation, 0, FrameTime() * 8)
-        
-        tab[ "$pp_colour_colour" ] = 1 + traumaSaturation * 8
-        tab[ "$pp_colour_contrast" ] = 1 + traumaSaturation * 0.8
-        
-        DrawColorModify(tab)
-        
-        tab[ "$pp_colour_colour" ] = 1
-        tab[ "$pp_colour_contrast" ] = 1
-        
-        render.UpdateScreenEffectTexture()
-        render.UpdateFullScreenDepthTexture()
-        
-        grainMat:SetFloat("$c0_x", CurTime()) -- time
-        grainMat:SetFloat("$c0_y", 0.5) -- gate
-        grainMat:SetFloat("$c0_z", traumaSaturation * 3) -- Pixelize
-        grainMat:SetFloat("$c1_x", traumaSaturation * 3) -- lerp
-        grainMat:SetFloat("$c1_y", 10) -- vignette intensity
-        grainMat:SetFloat("$c1_z", traumaSaturation) -- BlurIntensity
-        grainMat:SetFloat("$c2_x", 0) -- r
-        grainMat:SetFloat("$c2_y", 0) -- g
-        grainMat:SetFloat("$c2_z", 0) -- b
-        grainMat:SetFloat("$c3_x", 0) -- ImageIntensity
-    
-        render.SetMaterial(grainMat)
-        render.DrawScreenQuad()
-    end
+hook.Add("Think", "hg-aprilfools-fatman", function()
+	if not GetGlobalBool("hg_aprilfools", false) then return end
+	local now = CurTime()
+	if now < fatman.nextCheck then return end
+	fatman.nextCheck = now + 5
+	if now < fatman.activeUntil then return end
+	if math.random() <= 0.2 then
+		local duration = SoundDuration("fatman.wav")
+		if not duration or duration <= 0 then
+			duration = 3
+		end
+		fatman.duration = duration
+		fatman.startedAt = now
+		fatman.activeUntil = now + duration
+		surface.PlaySound("fatman.wav")
+	end
 end)
 
-local hg_fear_effect = CreateClientConVar("hg_fear_effect", "1", true, false, "Enable fear/pain pixelization effect")
+hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
+	local now = CurTime()
+	if now >= fatman.activeUntil or fatman.startedAt <= 0 then return end
+	local elapsed = now - fatman.startedAt
+	local mat
+	if elapsed < 1 then
+		mat = fatman.regular
+	elseif elapsed < 2 then
+		mat = fatman.shocked
+	else
+		mat = fatman.dead
+	end
+	if not mat then return end
+	local scrW, scrH = ScrW(), ScrH()
+	local maxW = scrW * 0.6
+	local maxH = scrH * 0.8
+	local targetW = maxH * (9 / 16)
+	local targetH = maxH
+	if targetW > maxW then
+		targetW = maxW
+		targetH = maxW * (16 / 9)
+	end
+	local x = (scrW - targetW) * 0.5
+	local y = (scrH - targetH) * 0.5
+	render.SetLightingMode(1)
+	surface.SetMaterial(mat)
+	surface.SetDrawColor(255, 255, 255, 255)
+	surface.DrawTexturedRect(x, y, targetW, targetH)
+	render.SetLightingMode(0)
+end)
 
-local fearPixelIntensity = 0 
-local waterLerp = 0 
- 
- -- Material Definitions 
- local matVignette = Material("effects/shaders/zb_vignette") 
- local matGrain2 = Material("effects/shaders/zb_grain2") 
- local matAssim = Material("effects/shaders/zb_assimilation") 
- 
- 
- hook.Add("Post Post Processing", "FearPixelizeEnhanced", function() 
-    if not hg_fear_effect:GetBool() then return end
-    
-    local lply = LocalPlayer()
-    if not IsValid(lply) then return end
-    
-	if !grainMat or grainMat:IsError() then return end 
-
-
-	local spect = lply:GetNWEntity("spect") 
-	local ply = lply:Alive() and lply or (IsValid(spect) and spect) 
-	
-	if !IsValid(ply) or !ply.organism then 
-		fearPixelIntensity = 0 
-		waterLerp = 0 
-		return 
-	end 
-	
-	local org = ply.organism 
-	local shock = org.shock or 0 
-	local pain = PainLerp or 0 
-	local o2 = (org.o2 and org.o2[1]) or 30 
-	local passed = org.otrub or false 
-	
-	local submerged = (ply:WaterLevel() >= 2) 
-	local lerpFunc = LerpFT or function(t, cur, target) return Lerp(t, cur, target) end 
-	
-	waterLerp = lerpFunc(0.05, waterLerp, submerged and 1 or 0) 
-	
-	local lowBreath = math.Clamp((25 - o2) / 25, 0, 1) 
-	local targetIntensity = math.Clamp((shock / 40) + (pain / 500) + (lowBreath * 0.8), 0, 1) 
-
-
-	targetIntensity = math.max(targetIntensity, waterLerp * 0.4) 
-
-
-	if passed then 
-		fearPixelIntensity = 1 
-	else 
-		fearPixelIntensity = lerpFunc(0.01, fearPixelIntensity, targetIntensity) 
-	end 
-	
-	if fearPixelIntensity > 0.01 then 
-		render.UpdateScreenEffectTexture() 
-		
-		-- Enhanced Vignette (Stronger presence) 
-		if matVignette and !matVignette:IsError() then 
-			render.SetMaterial(matVignette) 
-			-- Doubled the intensity scale for a "heavy" vignette look 
-			matVignette:SetFloat("$alpha", math.Clamp(fearPixelIntensity * 2, 0, 1)) 
-			render.DrawScreenQuad() 
-		end 
-
-
-		-- Assimilation Shader 
-		if matAssim and !matAssim:IsError() then 
-			render.SetMaterial(matAssim) 
-			matAssim:SetFloat("$time", CurTime()) 
-			matAssim:SetFloat("$abundance", fearPixelIntensity) 
-			render.DrawScreenQuad() 
-		end 
-
-
-		-- Grain2 Effect 
-		if matGrain2 and !matGrain2:IsError() then 
-			render.SetMaterial(matGrain2) 
-			matGrain2:SetFloat("$alpha", fearPixelIntensity * 0.6) 
-			render.DrawScreenQuad() 
-		end 
-
-
-		if waterLerp > 0.01 then 
-			DrawToyTown(6 * fearPixelIntensity * waterLerp, 4 * fearPixelIntensity * waterLerp * ScrH()) 
-		end 
-
-
-		grainMat:SetFloat("$c0_x", CurTime()) 
-		grainMat:SetFloat("$c0_y", 1) 
-		grainMat:SetFloat("$c0_z", fearPixelIntensity * 1) 
-		grainMat:SetFloat("$c1_x", fearPixelIntensity * 0.6) 
-		grainMat:SetFloat("$c1_y", fearPixelIntensity * 0) 
-		
-		local distortion = Lerp(waterLerp, fearPixelIntensity * 2, fearPixelIntensity * -4) 
-		grainMat:SetFloat("$c1_z", distortion) 
-
-
-		grainMat:SetVector("$c2", Vector(1, 1, 1)) 
-		grainMat:SetFloat("$c3_x", fearPixelIntensity * 0.2) 
-
-
-		render.SetMaterial(grainMat) 
-		render.DrawScreenQuad() 
-	end 
-end) 
