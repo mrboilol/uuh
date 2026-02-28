@@ -166,9 +166,17 @@ local function callbackBullet(self, tr, dmg, force, bullet)
 	elseif ApproachAngle < MaxRicAngle * 0.7 then --previosly 0.2, made 1 for fun
 		--if CLIENT then return end
 		-- ping whiiiizzzz
-		local rnd = math.random(12)
-		if rnd == 8 then rnd = 9 end
-		sound.Play("arc9_eft_shared/ricochet/ricochet" .. rnd .. ".ogg", hitPos, 75, math.random(90, 110))
+		if math.random(2) == 1 then -- 50% chance for custom ricochet sound
+			local customRicSounds = {
+				"bullet/ricochet1.ogg", "bullet/ricochet2.ogg", "bullet/ricochet3.ogg", "bullet/ricochet4.ogg"
+			}
+			local rndSound = customRicSounds[math.random(#customRicSounds)]
+			sound.Play(rndSound, hitPos, 75, math.random(90, 110))
+		else
+			local rnd = math.random(12)
+			if rnd == 8 then rnd = 9 end
+			sound.Play("arc9_eft_shared/ricochet/ricochet" .. rnd .. ".ogg", hitPos, 75, math.random(90, 110))
+		end
 		--sound.Play("snd_jack_hmcd_ricochet_" .. math.random(1, 2) .. ".wav", hitPos, 75, math.random(90, 110))
 		--sound.Play("weapons/arccw/ricochet0" .. math.random(1, 5) .. "_quiet.wav", hitPos, 75, math.random(90, 110))
 		util.Decal("ManhackCut", tr.HitPos + tr.HitNormal, tr.HitPos - tr.HitNormal)
@@ -224,6 +232,29 @@ local function callbackBullet(self, tr, dmg, force, bullet)
 		effectdata1:SetFlags(2)
 		effectdata1:SetMagnitude(4)
 		util.Effect("eff_bulletdrop", effectdata1)
+	else
+		if CLIENT then return end
+		local matType = tr.MatType
+		local impactSounds = {
+			[MAT_FLESH] = {"bullet/ric_flesh1.ogg", "bullet/ric_flesh2.ogg", "bullet/ric_flesh3.ogg", "bullet/ric_flesh4.ogg"},
+			[MAT_ALIENFLESH] = {"bullet/ric_flesh1.ogg", "bullet/ric_flesh2.ogg", "bullet/ric_flesh3.ogg", "bullet/ric_flesh4.ogg"},
+			[MAT_DIRT] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
+			[MAT_SAND] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
+			[MAT_CONCRETE] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
+			[MAT_TILE] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
+			[MAT_METAL] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
+			[MAT_VENT] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
+			[MAT_GRATE] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
+			[MAT_COMPUTER] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
+			[MAT_WOOD] = {"bullet/ric_wood1.ogg", "bullet/ric_wood2.ogg", "bullet/ric_wood3.ogg", "bullet/ric_wood4.ogg"},
+			[MAT_FOLIAGE] = {"bullet/ric_wood1.ogg", "bullet/ric_wood2.ogg", "bullet/ric_wood3.ogg", "bullet/ric_wood4.ogg"},
+			[MAT_GLASS] = {"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"},
+			[MAT_PLASTIC] = {"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"},
+			[MAT_SLOSH] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"} -- Fallback
+		}
+		local sounds = impactSounds[matType] or {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg"}
+		local rndImpactSound = sounds[math.random(#sounds)]
+		sound.Play(rndImpactSound, hitPos, 75, math.random(90, 110))
 	end
 end
 

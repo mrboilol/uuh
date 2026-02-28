@@ -185,7 +185,7 @@ local haloents = {
 	["weapon_hg_f1_tpik"] = true
 }
 
---[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсветкой всего в радиусе
+hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсветкой всего в радиусе
 	local pickuphalo = {}
 	 
 	local lpos = lply:GetPos()
@@ -199,9 +199,9 @@ local haloents = {
 		end
 	end
 	halo.Add( pickuphalo, color_red, 1, 1, 1 )
-end )]]
+end )
 
---[[hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсвечиванием только когда смотришь
+hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с подсвечиванием только когда смотришь
 	local pickuphalo = {}
 	 
 	local tr = hg.eyeTrace(lply,72)
@@ -216,7 +216,7 @@ end )]]
 		color_red.g = Lerp(FrameTime()*2,color_red.g,0)
 	end
 	halo.Add( pickuphalo, color_red, 1, 1, 1 )
-end )]]
+end )
 
 -- funny :)
 
@@ -291,7 +291,7 @@ end
 local function isDeadBodyAllowed(ply, owner)
 	if not IsValid(ply) then return false end
 	if ply.isTraitor then return false end
-	local mode = CurrentRound()
+	local mode = GAMEMODE and GAMEMODE.CurrentRound and GAMEMODE:CurrentRound()
 	local modeName = mode and (mode.Type or mode.name) or nil
 	if modeName and pvpModes[modeName] then
 		if not teamPvpModes[modeName] then return false end
