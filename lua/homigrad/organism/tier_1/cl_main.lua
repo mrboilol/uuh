@@ -347,14 +347,11 @@ hook.Add("Post Post Pre Post Processing", "ShowScreens", function()
 	end
 end)
 
-local hurtoverlay = Material("zcity/neurotrauma/damageOverlay.png")
 local blindoverlay = Material("zcity/neurotrauma/blindoverlay.png")
-local addtime = CurTime()
 
 local hg_potatopc
 local old = false
 local tinnitusSoundFactor
-local lerpblood = 0
 local hg_gopro = ConVarExists("hg_gopro") and GetConVar("hg_gopro") or CreateClientConVar("hg_gopro", "0", true, false, "Toggle GoPro-like first-person camera view", 0, 1)
 hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
@@ -452,6 +449,8 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 		disorientation = disorientation + 100
 	end
 
+	disorientation = disorientation + amtflashed * 5
+
 	local amount = 1 - math.Clamp(lowpulse + disorientation / 4 + k2 * 2,0,1)
 
 	disorientationLerp = LerpFT(disorientation > disorientationLerp and 1 or 0.01, disorientationLerp, math.max(lply.suiciding and 1.5 or 0, disorientation))
@@ -478,26 +477,7 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 		end
 	end
 
-	if (org.consciousness < 0.7) then
-		lerpblood = LerpFT(0.01, lerpblood or 0, math.Clamp((0.7 - org.consciousness) * 5, 0, 1) * 255)
-		local lowblood = (3600 - blood) / 600
 
-		addtime = addtime + FrameTime() / 6
-		local amt = (math.cos(addtime) + math.sin(addtime * 3) + math.sin(addtime * 2)) / 90
-		local amt2 = (math.sin(addtime) + math.cos(addtime * 5) + math.sin(addtime * 6)) / 90
-		local mat = Matrix({
-			{1 - amt, amt, 0, -amt2 / 2},
-			{amt2, 1 - amt2, 0, -amt / 2},
-			{0, 0, 1, 0},
-			{0, 0, 0, 1},
-		})
-		hurtoverlay:SetMatrix("$basetexturetransform", mat)
-		surface.SetMaterial(hurtoverlay)
-		surface.SetDrawColor(0, 0, 0, lerpblood)
-		surface.DrawTexturedRect(-ScrW() * 2.0, -ScrH() * 2.0, ScrW() * 5, ScrH() * 5)
-		//ViewPunch(Angle(-amt * 1, amt2 * 1,0))
-		//ViewPunch2(Angle(-amt * 1, amt2 * 1,0))
-	end
 	//pain = math.abs(math.cos(CurTime())) * 40
 	if (pain > 0) or (hurt > 0) or (immobilization > 0) or (brain > 0) then
 		local k = ((hurt + immobilization / 15) / 2)
@@ -605,9 +585,10 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	
 	if IsValid(ent) and ent.Blinking and lply:Alive() then
 		surface.SetDrawColor(0,0,0,255)
-		if amtflashed and amtflashed > 0.1 then
-			surface.DrawRect(-1,-1,ScrW()+1,ent.Blinking * ScrH())
-			surface.DrawRect(-1,ScrH() + 1,ScrW()+1,-ent.Blinking * ScrH())
+		if amtflashed and amtflashed > 0.1 and amtflashed < 0.8 and ent.Blinking > 0.1 then
+			surface.DrawRect(-1, -1,ScrW() + 1,ScrH() + 1)
+			//surface.DrawRect(-1,-1,ScrW()+1,ent.Blinking * ScrH())
+			//surface.DrawRect(-1,ScrH() + 1,ScrW()+1,-ent.Blinking * ScrH())
 		end
 	end
 end)
@@ -956,14 +937,6 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 end)
 
 local grub = Model("models/grub_nugget_small.mdl")
---ValveBiped.Bip01_R_Hand
---ValveBiped.Bip01_R_Forearm
---ValveBiped.Bip01_R_Foot
---ValveBiped.Bip01_R_Thigh
---ValveBiped.Bip01_R_Calf
---ValveBiped.Bip01_R_Shoulder
---ValveBiped.Bip01_R_Elbow
-
 local vecalmostzero = Vector(0.01, 0.01, 0.01)
 
 local modelPlacements = {
@@ -1041,7 +1014,6 @@ function hg.GoreCalc(ent, ply)
 		if !IsValid(headboom_mdl) then
 			headboom_mdl = ClientsideModel(grub)
 			headboom_mdl:SetNoDraw(true)
-			--headboom_mdl:SetModel("models/grub_nugget_small.mdl")
 			headboom_mdl:SetSubMaterial(0, "models/flesh")
 			headboom_mdl:SetModelScale(0.8)
 		end

@@ -45,9 +45,10 @@ SWEP.FallSnd = "snd_jack_hmcd_pillsbounce.wav"
 
 SWEP.showstats = false
 
-local hg_healanims = ConVarExists("hg_font") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle heal/food animations", 0, 1)
+local hg_healanims = ConVarExists("hg_font") and GetConVar("hg_healanims") or CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE + FCVAR_ARCHIVE, "Toggle heal/food animations", 0, 1)
 
 function SWEP:Think()
+	self:SetBodyGroups("111")
 	if not self:GetOwner():KeyDown(IN_ATTACK) and hg_healanims:GetBool() then
 		self:SetHolding(math.max(self:GetHolding() - 4, 0))
 	end
@@ -87,8 +88,6 @@ if SERVER then
 
 			if self:GetHolding() < 100 then return end
 		end
-
-		self:SetBodygroup(1, 1)
 
         local entOwner = IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
         entOwner:EmitSound("snd_jack_hmcd_pillsuse.wav", 60, math.random(95, 105))

@@ -952,10 +952,13 @@ function hg.DoTPIK(ply, ent)
         ent.dirtymatrixrh = nil
     end*/
 
-    ply.lerp_lh = math.Approach(ply.lerp_lh or 0, lhik2 and 1 or 0, FrameTime() * 6.0 * game.GetTimeScale())//LerpFT(0.1, ply.lerp_lh or 1, lhik2 and 1 or 0)
-    ply.lerp_rh = math.Approach(ply.lerp_rh or 0, rhik2 and 1 or 0, FrameTime() * 6.0 * game.GetTimeScale())//LerpFT(0.1, ply.lerp_rh or 1, rhik2 and 1 or 0)
+    ply.lerp_lh = math.Approach(ply.lerp_lh or 0, lhik2 and 1 or 0, FrameTime() * 2.0 * game.GetTimeScale())//LerpFT(0.1, ply.lerp_lh or 1, lhik2 and 1 or 0)
+    ply.lerp_rh = math.Approach(ply.lerp_rh or 0, rhik2 and 1 or 0, FrameTime() * 2.0 * game.GetTimeScale())//LerpFT(0.1, ply.lerp_rh or 1, rhik2 and 1 or 0)
 
-    //if ply.lerp_rh == 0 and ply.lerp_lh == 0 then return end
+    local lerp_lh = math.ease.InOutSine(ply.lerp_lh)
+    local lerp_rh = math.ease.InOutSine(ply.lerp_rh)
+
+    //if lerp_rh == 0 and lerp_lh == 0 then return end
 
     local limblength = ply:BoneLength(ply_l_forearm_index) - 0
 
@@ -990,7 +993,7 @@ function hg.DoTPIK(ply, ent)
     local up = spineang:Up()
     local spinetan = -math.deg(math.atan2(up.x, up.y)) + 180
     
-    if ply.lerp_rh != 0 then
+    if lerp_rh != 0 then
         local old = ply.segmentsr[2] and ((ply.segmentsr[2].Pos - ply.segmentsr[1].Pos):GetNormalized() * 2) or vector_origin
 
         local eyeang = -(-eyeang)
@@ -1037,7 +1040,7 @@ function hg.DoTPIK(ply, ent)
             ply.segmentsr[3] = ply.segmentsr[3] or {Pos = hand, Len = limblength}
             ply.segmentsr[3].Pos = LerpVector(ply.leftClicking, ply.segmentsr[3].Pos + (-vector_up * 0.8 + eyeang:Forward() * 0.4 + ent:GetVelocity() / 400) * 0.5, hand)
         else
-            ply.segmentsr[3] = {Pos = Lerp(1 - ply.lerp_rh, ply.last_rh and ply.last_rh:GetTranslation() or ply.segmentsr[3].Pos, ply_r_hand_matrix_old and ply_r_hand_matrix_old:GetTranslation() or hand), Len = 12}
+            ply.segmentsr[3] = {Pos = Lerp(1 - lerp_rh, ply.last_rh and ply.last_rh:GetTranslation() or ply.segmentsr[3].Pos, ply_r_hand_matrix_old and ply_r_hand_matrix_old:GetTranslation() or hand), Len = 12}
         end
 
         local segments = ply.segmentsr
@@ -1057,15 +1060,20 @@ function hg.DoTPIK(ply, ent)
 
         ply.segmentsr = segments
 
+        local new = -(-segments[3].Pos)
+
+        --segments[3].Pos:Add(ply_r_hand_matrix:GetAngles():Right() * -1)
+        //segments[3].Pos:Add(ply_r_hand_matrix:GetAngles():Forward() * 2)
+
         if ply_r_hand_matrix_old then
-            //ply.segmentsr[1].Pos = Lerp(1 - ply.lerp_rh, ply.segmentsr[1].Pos, ply_r_upperarm_matrix:GetTranslation())
-            //ply.segmentsr[2].Pos = Lerp(1 - ply.lerp_rh, ply.segmentsr[2].Pos, ply_r_forearm_matrix:GetTranslation())
-            //ply.segmentsr[3].Pos = Lerp(1 - ply.lerp_rh, ply.last_rh and ply.last_rh:GetTranslation() or ply.segmentsr[3].Pos, ply_r_hand_matrix_old:GetTranslation())
+            //ply.segmentsr[1].Pos = Lerp(1 - lerp_rh, ply.segmentsr[1].Pos, ply_r_upperarm_matrix:GetTranslation())
+            //ply.segmentsr[2].Pos = Lerp(1 - lerp_rh, ply.segmentsr[2].Pos, ply_r_forearm_matrix:GetTranslation())
+            //ply.segmentsr[3].Pos = Lerp(1 - lerp_rh, ply.last_rh and ply.last_rh:GetTranslation() or ply.segmentsr[3].Pos, ply_r_hand_matrix_old:GetTranslation())
         end
 
         ply_r_upperarm_matrix:SetTranslation(segments[1].Pos)
         ply_r_forearm_matrix:SetTranslation(segments[2].Pos)
-        ply_r_hand_matrix:SetTranslation(segments[3].Pos)
+        ply_r_hand_matrix:SetTranslation(new)
 
 
         local diff = (segments[2].Pos - segments[1].Pos):GetNormalized()
@@ -1098,10 +1106,10 @@ function hg.DoTPIK(ply, ent)
         --local ang = Angle(angle2, angle3, 0)
         --ang:RotateAroundAxis(ang:Forward(), -180)
         --ang:RotateAroundAxis(ang:Forward(), -angle3 + torsoright)
-        local q = Quaternion()--:SetAngle(eyeang)
+        local q = Quaternion()--:SetAngle(anga)
         q = q * Quaternion():SetAngleAxis(angrr.y, Vector(0, 0, 1))
         q = q * Quaternion():SetAngleAxis(angrr.p, Vector(0, 1, 0))
-        q = q * Quaternion():SetAngleAxis(-120 + eyeang.r - angrr.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, Vector(1, 0, 0))
+        q = q * Quaternion():SetAngleAxis(-180 + eyeang.r - angrr.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, Vector(1, 0, 0))
         --q:SetAngleAxis(-angle2 + 180, Vector(0, 1, 0))
         --q:SetAngleAxis(180, Vector(1, 0, 0))
         local ang = q:Angle()
@@ -1127,19 +1135,20 @@ function hg.DoTPIK(ply, ent)
         local wrst = ent:LookupBone("ValveBiped.Bip01_R_Wrist")
         local wmat = wrst and ent:GetBoneMatrix(wrst)
         if wrst and wmat then
+            ang:RotateAroundAxis(ang:Forward(), 45)
             wmat:SetAngles(ang)
             ent:SetBoneMatrix(wrst, wmat)
         end
 
-        --[[local wrst = ent:LookupBone("ValveBiped.Bip01_R_Ulna")
+        local wrst = ent:LookupBone("ValveBiped.Bip01_R_Ulna")
         local wmat = wrst and ent:GetBoneMatrix(wrst)
         if wrst and wmat then
             wmat:SetAngles(ang)
             ent:SetBoneMatrix(wrst, wmat)
-        end--]]
+        end
     end
     
-    if ply.lerp_lh != 0 then
+    if lerp_lh != 0 then
         local old = ply.segmentsl[2] and ((ply.segmentsl[2].Pos - ply.segmentsl[1].Pos):GetNormalized() * 2) or vector_origin
         local eyeang = -(-eyeang)
         eyeang.p = math.NormalizeAngle(eyeang.p) * 0.5
@@ -1197,7 +1206,7 @@ function hg.DoTPIK(ply, ent)
             ply.segmentsl[3] = ply.segmentsl[3] or {Pos = hand, Len = limblength}
             ply.segmentsl[3].Pos = LerpVector(!(ishgweapon(self) and self:IsPistolHoldType()) and 0.05 or 0.01, ply.segmentsl[3].Pos + (-vector_up * 0.6 + eyeang:Forward() * 0.4 + ((ishgweapon(self) and !self:IsPistolHoldType()) and eyeang:Right() * 0.7 or vector_origin) + ent:GetVelocity() / 400) * 0.5, hand)
         else
-            ply.segmentsl[3] = {Pos = Lerp(1 - ply.lerp_lh, ply.last_lh and ply.last_lh:GetTranslation() or ply.segmentsl[3].Pos, ply_l_hand_matrix_old and ply_l_hand_matrix_old:GetTranslation() or hand), Len = 12}
+            ply.segmentsl[3] = {Pos = Lerp(1 - lerp_lh, ply.last_lh and ply.last_lh:GetTranslation() or ply.segmentsl[3].Pos, ply_l_hand_matrix_old and ply_l_hand_matrix_old:GetTranslation() or hand), Len = 12}
         end
 
         local segments = ply.segmentsl
@@ -1217,16 +1226,21 @@ function hg.DoTPIK(ply, ent)
         end
         
         ply.segmentsl = segments
+
+        local new = -(-segments[3].Pos)
         
+        --segments[3].Pos:Add(ply_l_hand_matrix:GetAngles():Right() * -1)
+        //segments[3].Pos:Add(ply_l_hand_matrix:GetAngles():Forward() * 2)
+
         if ply_l_hand_matrix_old then
-            //ply.segmentsl[1].Pos = Lerp(1 - ply.lerp_lh, ply.segmentsl[1].Pos, ply_l_upperarm_matrix:GetTranslation())
-            //ply.segmentsl[2].Pos = Lerp(1 - ply.lerp_lh, ply.segmentsl[2].Pos, ply_l_forearm_matrix:GetTranslation())
-            //ply.segmentsl[3].Pos = Lerp(1 - ply.lerp_lh, ply.last_lh and ply.last_lh:GetTranslation() or ply.segmentsl[3].Pos, ply_l_hand_matrix_old:GetTranslation())
+            //ply.segmentsl[1].Pos = Lerp(1 - lerp_lh, ply.segmentsl[1].Pos, ply_l_upperarm_matrix:GetTranslation())
+            //ply.segmentsl[2].Pos = Lerp(1 - lerp_lh, ply.segmentsl[2].Pos, ply_l_forearm_matrix:GetTranslation())
+            //ply.segmentsl[3].Pos = Lerp(1 - lerp_lh, ply.last_lh and ply.last_lh:GetTranslation() or ply.segmentsl[3].Pos, ply_l_hand_matrix_old:GetTranslation())
         end
 
         ply_l_upperarm_matrix:SetTranslation(segments[1].Pos)
         ply_l_forearm_matrix:SetTranslation(segments[2].Pos)
-        ply_l_hand_matrix:SetTranslation(segments[3].Pos)
+        ply_l_hand_matrix:SetTranslation(new)
 
         local diff = (segments[2].Pos - segments[1].Pos):GetNormalized()
         local angrr = diff:Angle()
@@ -1261,11 +1275,12 @@ function hg.DoTPIK(ply, ent)
         local q = Quaternion()--:SetAngle(eyeang)
         q = q * Quaternion():SetAngleAxis(angrr.y, Vector(0, 0, 1))
         q = q * Quaternion():SetAngleAxis(angrr.p, Vector(0, 1, 0))
-        q = q * Quaternion():SetAngleAxis(-60 + eyeang.r - angrr.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, Vector(1, 0, 0))
+        q = q * Quaternion():SetAngleAxis(-135 - math.abs(angrr.p) + eyeang.r - angrr.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, Vector(1, 0, 0))
         --q:SetAngleAxis(-angle2 + 180, Vector(0, 1, 0))
         --q:SetAngleAxis(180, Vector(1, 0, 0))
         local ang = q:Angle()
-        
+        //ang:RotateAroundAxis(ang:Forward(), -45)
+
         ply_l_forearm_matrix:SetAngles(ang)
 
         if ply.organism and ply.organism.larm and ply.organism.larm > 0.99 and ishgweapon(self) and !self.reload and ishgweapon(self) then
@@ -1294,16 +1309,17 @@ function hg.DoTPIK(ply, ent)
         local wrst = ent:LookupBone("ValveBiped.Bip01_L_Wrist")
         local wmat = wrst and ent:GetBoneMatrix(wrst)
         if wrst and wmat then
+            ang:RotateAroundAxis(ang:Forward(), 45)
             wmat:SetAngles(ang)
             ent:SetBoneMatrix(wrst, wmat)
         end
 
-        --[[local wrst = ent:LookupBone("ValveBiped.Bip01_L_Ulna")
+        local wrst = ent:LookupBone("ValveBiped.Bip01_L_Ulna")
         local wmat = wrst and ent:GetBoneMatrix(wrst)
         if wrst and wmat then
            wmat:SetAngles(ang)
            ent:SetBoneMatrix(wrst, wmat)
-        end--]]
+        end
         /*if ply_l_ulna_index and ply_l_wrist_index then
             ply_l_ulna_matrix = ent:GetBoneMatrix(ply_l_ulna_index)
 

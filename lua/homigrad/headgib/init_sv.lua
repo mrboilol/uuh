@@ -51,9 +51,8 @@ local function PhysCallback( ent, data )
 	util.Decal("Blood", data.HitPos - data.HitNormal * 1, data.HitPos + data.HitNormal * 1, ent)
 end
 
-local grub, mat = Model("models/grub_nugget_small.mdl"), "models/flesh"
+local grub, mat, gamemod = Model("models/grub_nugget_small.mdl"), "models/flesh", engine.ActiveGamemode()
 function SpawnMeatGore(mainent, pos, count, force)
-	--models/grub_nugget_small.mdl
 	force = force or Vector(0,0,0)
 	for i = 1, (count or math.random(8, 10)) do
 		local ent = ents_Create("prop_physics")
@@ -65,10 +64,17 @@ function SpawnMeatGore(mainent, pos, count, force)
 		ent:SetAngles(AngleRand(-180,180))
 		ent:Activate()
 		ent:Spawn()
+
 		local phys = ent:GetPhysicsObject()
 		if IsValid(phys) then
 			phys:SetVelocity(mainent:GetVelocity() + VectorRand(-65,65) + force / 10)
 			phys:AddAngleVelocity(VectorRand(-65,65))
+		end
+
+		if zb.CROUND and zb.CROUND ~= "hmcd" or gamemod == "sandbox" then
+			ent:DrawShadow(false)
+			ent:SetModelScale(0, 120)
+			SafeRemoveEntityDelayed(ent, 120)
 		end
 
 		ent:AddCallback( "PhysicsCollide", PhysCallback )

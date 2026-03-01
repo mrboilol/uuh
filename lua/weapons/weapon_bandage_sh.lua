@@ -38,7 +38,7 @@ SWEP.WorkWithFake = true
 SWEP.offsetVec = Vector(4, -3.5, 0)
 SWEP.offsetAng = Angle(90, 90, 0)
 
-local hg_healanims = CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle heal/food animations", 0, 1)
+local hg_healanims = CreateConVar("hg_healanims", 0, FCVAR_SERVER_CAN_EXECUTE + FCVAR_ARCHIVE, "Toggle heal/food animations", 0, 1)
 
 modelshuy = modelshuy or {}
 
@@ -60,6 +60,10 @@ function SWEP:DrawWorldModel2(nodraw)
 	local owner = self:GetOwner()
 	owner = hg.GetCurrentCharacter(owner)
 	if not IsValid(WorldModel) then return end
+
+	for i = 1, #self:GetBodyGroups() do
+		WorldModel:SetBodygroup(i, self:GetBodygroup(i))
+	end
 
 	if self.ModelScale then
 		WorldModel:SetModelScale(self.ModelScale or 1)
@@ -394,16 +398,19 @@ local function PhysCallback(ent, data)
 	ent:EmitSound(Sound(ent.FallSnd))
 end
 
-local ents_Create, gamemod, clr_garbage = ents.Create, engine.ActiveGamemode(), Color(170, 170, 170)
+local ents_Create, gamemod, clr_garbage = ents.Create, engine.ActiveGamemode(), Color(200, 200, 200)
 function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_custom)
 	if CLIENT then return end
 
 	local owner = self:GetOwner()
 	local boneid
-	if owner:IsPlayer() then
-		boneid = owner:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated)) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
-	else
-		boneid = owner:LookupBone("ValveBiped.Bip01_R_Hand") or 1
+	if IsValid(owner) then
+		if owner:IsPlayer() then
+			local chr = hg.GetCurrentCharacter(owner)
+			boneid = chr:LookupBone(((owner.organism and owner.organism.rarmamputated) or (owner.zmanipstart ~= nil and owner.zmanipseq == "interact" and not owner.organism.larmamputated)) and "ValveBiped.Bip01_L_Hand" or "ValveBiped.Bip01_R_Hand")
+		else
+			boneid = owner:LookupBone("ValveBiped.Bip01_R_Hand") or 1
+		end
 	end
 
 	if not boneid then return end
@@ -444,7 +451,9 @@ function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_
 	ent:AddCallback("PhysicsCollide", PhysCallback)
 
 	if zb.CROUND and zb.CROUND ~= "hmcd" or gamemod == "sandbox" then
-		SafeRemoveEntityDelayed(ent, 30)
+		ent:DrawShadow(false)
+		ent:SetModelScale(0, 60)
+		SafeRemoveEntityDelayed(ent, 60)
 	end
 end
 

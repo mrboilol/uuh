@@ -2719,7 +2719,7 @@ duplicator.Allow( "homigrad_base" )
 			amtflashed2 = 0
 		end)
 
-		hook.Add("Post Post Processing","flasheseffect",function()
+		hook.Add("Post Post Pre Post Processing","flasheseffect",function()
 			if !lply:Alive() then
 				if !next(hg.flashes) then
 					hg.flashes = {}
@@ -2746,10 +2746,12 @@ duplicator.Allow( "homigrad_base" )
 			amtflashed = amtflashed + amtflashed2
 			amtflashed2 = math.min(math.Approach(amtflashed2, 0, FrameTime() / 20),2)
 			
-			amtflashed = math.max(amtflashed - math.ease.InOutCubic(math.max(0, math.sin(CurTime() * 1) - 0.6) / 0.4),0)
+			if amtflashed < 0.8 then
+				tab["$pp_colour_brightness"] = 0 - math.max(amtflashed - 0.1,0)
+				DrawColorModify(tab)
+			end
 
-			tab["$pp_colour_brightness"] = 0 - math.max(amtflashed - 0.1,0)
-			DrawColorModify(tab)
+			//amtflashed = math.max(amtflashed - math.ease.InOutCubic(math.max(0, math.sin(CurTime() * 1) - 0.6) / 0.4),0)
 
 			for i = 1, #hg.flashes do
 				flash = hg.flashes[i]
@@ -2759,7 +2761,7 @@ duplicator.Allow( "homigrad_base" )
 
 				local huy = (1 - animpos) * -100
 				surface.SetMaterial(mat)
-				surface.SetDrawColor(255,255,255,animpos * 255 + math.Rand(-10,10) * animpos)
+				surface.SetDrawColor(255, 255, 255, (animpos * 255 + math.Rand(-10,10) * animpos) * (0.5 / #hg.flashes) * (amtflashed < 0.8 and 1.5 or 1))
 				surface.DrawTexturedRect(flash.x - size / 2 + huy, flash.y - size / 2 + huy, size, size)
 				surface.SetMaterial(mat2)
 				surface.DrawTexturedRect(flash.x - size / 2 + huy, flash.y - size / 2 + huy, size, size)
