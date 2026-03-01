@@ -26,6 +26,10 @@ hook.Add("Org Clear", "Main", function(org)
 	org.skull = 0
 	org.stomach = 0
 	org.intestines = 0
+	org.righteye = 0
+	org.lefteye = 0
+	org.righteyedestroyed = false
+	org.lefteyedestroyed = false
 
 	org.thiamine = 0
 
@@ -121,6 +125,8 @@ local function send_organism(org, ply)
 	sendtable.rleg = org.rleg
 	sendtable.rarm = org.rarm
 	sendtable.larm = org.larm
+	sendtable.righteye = org.righteye
+	sendtable.lefteye = org.lefteye
 	sendtable.pelvis = org.pelvis
 	sendtable.disorientation = org.disorientation
 	sendtable.brain = org.brain
@@ -151,6 +157,8 @@ local function send_organism(org, ply)
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
 	sendtable.larmamputated = org.larmamputated
+	sendtable.righteyedestroyed = org.righteyedestroyed
+	sendtable.lefteyedestroyed = org.lefteyedestroyed
 	sendtable.headamputated = org.headamputated
 	sendtable.lungsfunction = org.lungsfunction
 	sendtable.consciousness = org.consciousness
@@ -201,6 +209,8 @@ local function send_bareinfo(org)
 	sendtable.rleg = org.rleg
 	sendtable.rarm = org.rarm
 	sendtable.larm = org.larm
+	sendtable.righteye = org.righteye
+	sendtable.lefteye = org.lefteye
 	sendtable.llegdislocation = org.llegdislocation
 	sendtable.rlegdislocation = org.rlegdislocation
 	sendtable.rarmdislocation = org.rarmdislocation
@@ -210,6 +220,8 @@ local function send_bareinfo(org)
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
 	sendtable.larmamputated = org.larmamputated
+	sendtable.righteyedestroyed = org.righteyedestroyed
+	sendtable.lefteyedestroyed = org.lefteyedestroyed
 	sendtable.headamputated = org.headamputated
 	sendtable.LodgedEntities = org.LodgedEntities
 	sendtable.berserkActive2 = org.berserkActive2
@@ -483,6 +495,13 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.thiamine = math.Approach(org.thiamine, 0, timeValue / 240)
 		-- you'd need to give 1 thiamine each 4 minutes
 
+		if org.righteye < 1 and not org.righteyedestroyed then org.righteye = math.Approach(org.righteye, 0, naturalHeal) end
+		if org.lefteye < 1 and not org.lefteyedestroyed then org.lefteye = math.Approach(org.lefteye, 0, naturalHeal) end
+		if org.thiamine > 0 then
+			if org.righteyedestroyed then org.righteyedestroyed = false; org.righteye = 1 end
+			if org.lefteyedestroyed then org.lefteyedestroyed = false; org.lefteye = 1 end
+		end
+
 		if org.liver < 1 then org.liver = math.Approach(org.liver, 0, naturalHeal) end
 		if org.heart < 1 then org.heart = math.Approach(org.heart, 0, naturalHeal) end
 		if org.stomach < 1 then org.stomach = math.Approach(org.stomach, 0, naturalHeal) end
@@ -587,6 +606,8 @@ hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 	org.rleg = math.max(org.rleg - regen, 0)
 	org.rarm = math.max(org.rarm - regen, 0)
 	org.larm = math.max(org.larm - regen, 0)
+	org.righteye = math.max(org.righteye - regen, 0)
+	org.lefteye = math.max(org.lefteye - regen, 0)
 	org.chest = math.max(org.chest - regen, 0)
 	org.pelvis = math.max(org.pelvis - regen, 0)
 	org.spine1 = math.max(org.spine1 - regen, 0)
@@ -850,5 +871,25 @@ hook.Add("OnEntityWaterLevelChanged", "ClearBlood", function(ent, old, new)
 	if new >= 2 then
 		if ent:IsOnFire() then ent:Extinguish() end
 		ent:RemoveAllDecals()
+	end
+end)
+
+concommand.Add("hg_heal_eye", function(ply, cmd, args)
+	local target = ply:GetEyeTrace().Entity
+	if not IsValid(target) or not target:IsPlayer() or not target.organism then return end
+
+	local org = target:GetOrganism()
+	local eye = args[1]
+
+	if eye == "left" then
+		if org.lefteye > 0 and not org.lefteyedestroyed then
+			org.lefteye = 0
+			ply:ChatPrint("You healed the left eye.")
+		end
+	elseif eye == "right" then
+		if org.righteye > 0 and not org.righteyedestroyed then
+			org.righteye = 0
+			ply:ChatPrint("You healed the right eye.")
+		end
 	end
 end)

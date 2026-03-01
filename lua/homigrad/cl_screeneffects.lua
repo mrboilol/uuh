@@ -232,16 +232,12 @@ local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 
-local head_trauma_alpha = 0
 local show_image_time = 0
 local lobotomy_index = 0
 
 net.Receive("hg_HeadTrauma", function()
-    head_trauma_alpha = 255
-    if math.random(1, 20) == 1 then
-        show_image_time = 150 * math.Rand(0.5, 1.5)
-        lobotomy_index = math.random(#lobotomy_mats)
-    end
+    show_image_time = 5
+    lobotomy_index = math.random(#lobotomy_mats)
     
     sound.PlayFile("sound/headhit.mp3", "noplay", function(station)
         if IsValid(station) then
@@ -879,12 +875,6 @@ hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
 end)
 
 hook.Add("HUDPaint", "hg_head_trauma_flash", function()
-    if head_trauma_alpha > 0 then
-        surface.SetDrawColor(255, 255, 255, head_trauma_alpha)
-        surface.DrawRect(0, 0, ScrW(), ScrH())
-        head_trauma_alpha = math.max(0, head_trauma_alpha - FrameTime() * 500)
-    end
-
     if show_image_time > 0 then
         show_image_time = show_image_time - 1
         if lobotomy_index and lobotomy_mats[lobotomy_index] then

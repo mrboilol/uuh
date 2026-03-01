@@ -69,6 +69,12 @@ local dislocated_leg = {
 	"THE ANKLE'S TWISTED- BUT THE KNEE'S THE REAL PROBLEM!",
 }
 
+    local destroyed_eye = {
+	"I CANT SEE OUT OF MY EYE!",
+	"MY EYE- MY EYE IS GONE!",
+	"My eye- Im bleeding out of my eye...",
+}
+
 local function PlayBoneDamageSound(owner)
     if math.random(1, 5) == 1 then -- 20% chance
         if math.random(1, 2) == 1 then

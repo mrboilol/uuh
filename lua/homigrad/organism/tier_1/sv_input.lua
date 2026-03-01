@@ -5,6 +5,7 @@ hg.organism.fake_spine2 = 1
 hg.organism.fake_spine3 = 0.5
 hg.organism.fake_legs = 1
 hg.organism.input_list = hg.organism.input_list or {}
+include("homigrad/organism/tier_1/modules_input/sv_eyes.lua")
 
 local hook_Run = hook.Run
 local input_list = hg.organism.input_list
@@ -240,6 +241,23 @@ function hg.organism.AddWound(ent,tr,bone,dmgInfo,dmgPos,dmgBlood,inputHole, out
 			end
 			
 			table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
+
+util.AddNetworkString("hg_head_trauma_effect")
+
+hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
+    if hitgroup == HITGROUP_HEAD then
+        net.Start("hg_head_trauma_effect")
+        net.Send(ply)
+--hacks
+        if math.random(1, 20) == 1 then
+            local eyeToDamage = math.random(1, 2) == 1 and "lefteye" or "righteye"
+            local org = ply:GetOrganism()
+            if org[eyeToDamage] < 1 then
+                input_list[eyeToDamage](org, 0, 1, dmgInfo)
+            end
+        end
+    end
+end)
 
 			if #org.wounds <= 30 then
 				local wounds = org.wounds
