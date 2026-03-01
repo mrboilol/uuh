@@ -126,6 +126,7 @@ AddItemToBUY( "Epipen", "Weapon", "weapon_adrenaline", 800, "Medical", {} )
 AddItemToBUY( "Bloodbag", "Weapon", "weapon_bloodbag", 400, "Medical", {} )
 AddItemToBUY( "Mannitol", "Weapon", "weapon_mannitol", 300, "Medical", {} )
 AddItemToBUY( "Naloxone", "Weapon", "weapon_naloxone", 100, "Medical", {} )
+AddItemToBUY( "Tranexamic Acid", "Weapon", "weapon_tranexamic_acid", 500, "Medical", {} )
 AddItemToBUY( "Decompression needle", "Weapon", "weapon_needle", 50, "Medical", {} )
 AddItemToBUY( "Beta-Blocker", "Weapon", "weapon_betablock", 250, "Medical", {} )
 

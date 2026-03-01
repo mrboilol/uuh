@@ -1,4 +1,4 @@
-﻿AddCSLuaFile()
+AddCSLuaFile()
 --
 local surface_hardness = {
 	[MAT_METAL] = 1,
@@ -166,7 +166,7 @@ local function callbackBullet(self, tr, dmg, force, bullet)
 	elseif ApproachAngle < MaxRicAngle * 0.7 then --previosly 0.2, made 1 for fun
 		--if CLIENT then return end
 		-- ping whiiiizzzz
-		if math.random(2) == 1 then -- 50% chance for custom ricochet sound
+		if math.random(5) == 1 then -- 20% chance for custom ricochet sound
 			local customRicSounds = {
 				"bullet/ricochet1.ogg", "bullet/ricochet2.ogg", "bullet/ricochet3.ogg", "bullet/ricochet4.ogg"
 			}

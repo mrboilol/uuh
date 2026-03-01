@@ -245,3 +245,25 @@ input_list.trachea = function(org, bone, dmg, dmgInfo)
 
 	return result
 end
+
+input_list.lefteye = function(org, bone, dmg, dmgInfo)
+    local oldDmg = org.lefteye or 0
+    org.lefteye = math.min((org.lefteye or 0) + dmg, 1)
+    if oldDmg < 1 and org.lefteye >= 1 then
+        org.owner:EmitSound("eyegone.mp3")
+    end
+    hg.AddHarmToAttacker(dmgInfo, (org.lefteye - oldDmg) * 5, "Left eye damage harm")
+    org.painadd = org.painadd + dmg * 5
+    return 0
+end
+
+input_list.righteye = function(org, bone, dmg, dmgInfo)
+    local oldDmg = org.righteye or 0
+    org.righteye = math.min((org.righteye or 0) + dmg, 1)
+    if oldDmg < 1 and org.righteye >= 1 then
+        org.owner:EmitSound("eyegone.mp3")
+    end
+    hg.AddHarmToAttacker(dmgInfo, (org.righteye - oldDmg) * 5, "Right eye damage harm")
+    org.painadd = org.painadd + dmg * 5
+    return 0
+end

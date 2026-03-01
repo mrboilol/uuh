@@ -69,6 +69,18 @@ local dislocated_leg = {
 	"THE ANKLE'S TWISTED- BUT THE KNEE'S THE REAL PROBLEM!",
 }
 
+local function PlayBoneDamageSound(owner)
+    if math.random(1, 5) == 1 then -- 20% chance
+        if math.random(1, 2) == 1 then
+            owner:EmitSound("disloc-" .. math.random(1, 2) .. ".ogg", 75, 100, 1, CHAN_AUTO)
+        else
+            owner:EmitSound("owfuck" .. math.random(1, 4) .. ".ogg", 75, 100, 1, CHAN_AUTO)
+        end
+    else
+        owner:EmitSound("bones/bone" .. math.random(8) .. ".mp3", 75, 100, 1, CHAN_AUTO)
+    end
+end
+
 local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 	local oldDmg = org[key]
 	local dmg = dmg * 4
@@ -103,7 +115,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil) end
 
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
-		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+		PlayBoneDamageSound(org.owner)
 		//broken
 	else
 		//org[key] = 0.5
@@ -117,7 +129,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_leg[math.random(#dislocated_leg)], 1, "dislocated"..key, 1, nil, nil) end
 
 		timer.Simple(0, function() hg.LightStunPlayer(org.owner,2) end)
-		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+		PlayBoneDamageSound(org.owner)
 		//dislocated
 	end
 
@@ -159,7 +171,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil) end
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
-		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+		PlayBoneDamageSound(org.owner)
 		//broken
 	else
 		org[key.."dislocation"] = true
@@ -172,7 +184,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_arm[math.random(#dislocated_arm)], 1, "dislocated"..key, 1, nil, nil) end
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
-		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+		PlayBoneDamageSound(org.owner)
 		//dislocated
 	end
 

@@ -47,6 +47,22 @@ male["ValveBiped.Bip01_Head1"] = {
 		Vector(1.6, 2.1, 1.7),
 		Color(255, 0, 255)
 	},
+    {
+        "lefteye",
+        nil,
+        Vector(4.5, -2.5, 1.5),
+        Angle(0, 0, 0),
+        Vector(1, 1, 1),
+        Color(255, 255, 255)
+    },
+    {
+        "righteye",
+        nil,
+        Vector(4.5, -2.5, -1.5),
+        Angle(0, 0, 0),
+        Vector(1, 1, 1),
+        Color(255, 255, 255)
+    },
 }
 
 local spine = 0.25
@@ -300,6 +316,22 @@ female["ValveBiped.Bip01_Head1"] = {
 		Vector(1.6, 2.1, 1.7),
 		Color(255, 0, 255)
 	},
+    {
+        "lefteye",
+        nil,
+        Vector(4.5, -2.5, 1.5),
+        Angle(0, 0, 0),
+        Vector(1, 1, 1),
+        Color(255, 255, 255)
+    },
+    {
+        "righteye",
+        nil,
+        Vector(4.5, -2.5, -1.5),
+        Angle(0, 0, 0),
+        Vector(1, 1, 1),
+        Color(255, 255, 255)
+    },
 }
 
 female["ValveBiped.Bip01_Neck1"] = {

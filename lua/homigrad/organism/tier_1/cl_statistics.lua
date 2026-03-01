@@ -1,4 +1,6 @@
 net.Receive("organism_send", function()
+local tiredSound
+local sleepySound
 	local org = net.ReadTable()
 	local force = net.ReadBool()
 	local spectatov_ne_trogaem = net.ReadBool()
@@ -264,9 +266,42 @@ local weight = 200
 local developer = GetConVar("developer")
 local hg_stats = GetConVar("hg_stats") or CreateClientConVar("hg_stats", 1, true, false, "show stats", 0, 1)
 hook.Add("HUDPaint", "homigrad-organism-debug", function()
+	local lply = LocalPlayer()
+	if not IsValid(lply) then return end
 	
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	local organism = lply:Alive() and lply.organism or (viewmode == 1 and IsValid(spect) and spect.organism) or {}
+	
+	if organism and organism.stamina and organism.stamina[1] then
+		if organism.stamina[1] < 20 then
+			if not tiredSound then
+				tiredSound = CreateSound(lply, "tired.ogg")
+			end
+			if tiredSound and not tiredSound:IsPlaying() then
+				tiredSound:Play()
+				tiredSound:FadeIn(1)
+			end
+		else
+			if tiredSound and tiredSound:IsPlaying() then
+				tiredSound:FadeOut(1)
+			end
+		end
+	end
+
+	if organism and organism.consciousness then
+		if organism.consciousness < 0.5 then
+			if not sleepySound then
+				sleepySound = CreateSound(lply, "sleepy.ogg")
+			end
+			if sleepySound and not sleepySound:IsPlaying() then
+				sleepySound:Play()
+			end
+		else
+			if sleepySound and sleepySound:IsPlaying() then
+				sleepySound:Stop()
+			end
+		end
+	end
 	local new_organism = lply:Alive() and lply.new_organism or (viewmode == 1 and IsValid(spect) and spect.new_organism) or {}
 	
 	--LerpVariables(FrameTime(),organism,new_organism)

@@ -39,7 +39,7 @@ module[2] = function(owner, org, timeValue)
 	org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
 
 	if org.shock > org.shock_turn * 1.5 * analgesiaMul * painkillerMul then
-		--org.needfake = true
+		org.needfake = true
 	end
 
 	org.pain_turn = org.otrub and adrenalineMul * 80 or adrenalineMul * 90
@@ -118,12 +118,17 @@ module[2] = function(owner, org, timeValue)
 		org.analgesiaAdd = Approach(org.analgesiaAdd, 0, timeValue / 15)
 	end
 
+	if org.analgesia > 0.85 then
+		local brain_damage = (org.analgesia - 0.85) * timeValue * 0.005
+		org.brain = math.min(org.brain + brain_damage, 1)
+	end
+
 	org.naloxone = Approach(org.naloxone, org.naloxoneadd > 0 and 4 or 0, org.naloxoneadd > 0 and timeValue / 30 or timeValue / 60)
 	org.naloxoneadd = Approach(org.naloxoneadd, 0, timeValue / 15)
 	
-	--if owner.suiciding and org.adrenaline < 1.5 then
-	--	org.adrenalineAdd = Approach(org.adrenalineAdd, 4, timeValue / 5)
-	--end
+	if owner.suiciding and org.adrenaline < 1.5 then
+		org.adrenalineAdd = Approach(org.adrenalineAdd, 4, timeValue / 5)
+	end
 
 	if org.adrenalineAdd > 0 then
 		org.adrenaline = Approach(org.adrenaline, 4, timeValue / 5)
@@ -149,8 +154,8 @@ module[2] = function(owner, org, timeValue)
 		org.larm = max(org.larm - timeValue / 240, 0)
 	end
 
-	if org.pain > 100 then
-		--org.needfake = true
+	if org.pain > 120 then
+		org.needfake = true
 	end
 
 	//local tempo = math.Clamp(5 - (org.temperature - 31), 0, 15)

@@ -787,6 +787,29 @@ local function fixlimb(org, key, fixer)
 	end
 end
 
+hook.Add("Org Think", "my fucking liver hurts", function(owner, org, timeValue)
+    if not org.alive or org.hearstop then return end
+
+    local bleedChance = 0.05
+    local bleedAmount = 0
+
+    if org.liver and org.liver > 0.1 and math.random() < bleedChance then
+        bleedAmount = bleedAmount + org.liver * 0.1
+    end
+
+    if org.stomach and org.stomach > 0.1 and math.random() < bleedChance then
+        bleedAmount = bleedAmount + org.stomach * 0.1
+    end
+
+    if org.intestines and org.intestines > 0.1 and math.random() < bleedChance then
+        bleedAmount = bleedAmount + org.intestines * 0.1
+    end
+
+    if bleedAmount > 0 then
+        org.internalBleed = (org.internalBleed or 0) + bleedAmount
+    end
+end)
+
 concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	local fixer = ply
 

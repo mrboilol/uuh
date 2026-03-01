@@ -421,9 +421,14 @@ hook.Add("Player Think", "homigrad-dropholstered", function(ply)
 end)
 
 util.AddNetworkString( "DoPlayerFlinch" )
+util.AddNetworkString("hg_HeadTrauma")
 
-hook.Add( "ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp)
+hook.Add( "ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
 	if ply:IsPlayer() then
+        if grp == HITGROUP_HEAD then
+            net.Start("hg_HeadTrauma")
+            net.Send(ply)
+        end
 		--could maybe return end,
 		--but would that override other Scale hooks? -- no.
 		local group = nil

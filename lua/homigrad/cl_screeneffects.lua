@@ -232,6 +232,24 @@ local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 
+local head_trauma_alpha = 0
+local show_image_time = 0
+local lobotomy_index = 0
+
+net.Receive("hg_HeadTrauma", function()
+    head_trauma_alpha = 255
+    if math.random(1, 20) == 1 then
+        show_image_time = 150 * math.Rand(0.5, 1.5)
+        lobotomy_index = math.random(#lobotomy_mats)
+    end
+    
+    sound.PlayFile("sound/headhit.mp3", "noplay", function(station)
+        if IsValid(station) then
+            station:Play()
+        end
+    end)
+end)
+
 local PainLerp = 0
 local O2Lerp = 0
 local assimilatedLerp = 0
@@ -345,6 +363,21 @@ hook.Add("Post Post Processing", "TunnelwaveDeadOrSuicide", function()
 	render.DrawScreenQuad()
 end)
 
+local use_agony = false
+local o2_sounds = {
+    "sound/zbattle/conscioustypebeat.ogg",
+    "sound/despair.ogg",
+    "sound/dying.ogg"
+}
+local o2_sound_choice = o2_sounds[1]
+
+hook.Add("PlayerSpawn", "reset_agony_chance", function(ply)
+    if ply == LocalPlayer() then
+        use_agony = math.random(1, 5) == 1
+        o2_sound_choice = o2_sounds[math.random(#o2_sounds)]
+    end
+end)
+
 local function stopthings()
 	PainLerp = 0
 	O2Lerp = 0
@@ -430,8 +463,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	if not organism.brain then stopthings() return end
 	local org = organism
 	
-	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
-		sound.PlayFile("sound/zbattle/pain_beat.ogg", "noblock noplay", function(station)
+	if not IsValid(PainStation) or PainStation:GetState() ~= GMOD_CHANNEL_PLAYING then
+		local sound_to_play = use_agony and "sound/agony.ogg" or "sound/zbattle/pain_beat.ogg"
+		sound.PlayFile(sound_to_play, "noblock noplay", function(station)
 			if IsValid(station) then
 				station:SetVolume(0)
 				station:Play()
@@ -556,15 +590,20 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 	end
 
-	if (PainLerp > 0.001 or shockLerp > 5) or org.otrub then
+	local blindness_intensity = 0
+    if org and (org.lefteye or 0) >= 1 and (org.righteye or 0) >= 1 then
+        blindness_intensity = 20
+    end
+
+	if (PainLerp > 0.001 or shockLerp > 5) or org.otrub or blindness_intensity > 0 then
 		local strobe = math.ease.InOutSine(math.abs(math.cos(CurTime() * 2))) * PainLerp / 2
 		pain = PainLerp + strobe
 		shock = shockLerp
 		render.UpdateScreenEffectTexture()
 
 		vignetteMat:SetFloat("$c2_x", CurTime() + 10000) //Time
-		vignetteMat:SetFloat("$c0_z", org.otrub and 5 or (pain / 40 + math.max(shock - 5, 0) / 3)) //ColorIntensity
-		vignetteMat:SetFloat("$c1_y", org.otrub and 10 or (pain / 40 + math.max(shock - 5, 0) / 3)) //Vignette
+		vignetteMat:SetFloat("$c0_z", (org.otrub and 5 or (pain / 40 + math.max(shock - 5, 0) / 3)) + blindness_intensity) //ColorIntensity
+		vignetteMat:SetFloat("$c1_y", (org.otrub and 10 or (pain / 40 + math.max(shock - 5, 0) / 3)) + blindness_intensity) //Vignette
 
 		render.SetMaterial(vignetteMat)
 		render.DrawScreenQuad()
@@ -706,7 +745,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		
 		if o2 > 50 and !org.otrub then
 			if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
-				sound.PlayFile("sound/zbattle/conscioustypebeat.ogg", "noblock noplay", function(station)
+				sound.PlayFile(o2_sound_choice, "noblock noplay", function(station)
 					if IsValid(station) then
 						station:SetVolume(0)
 						station:Play()
@@ -837,5 +876,23 @@ hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
 	surface.SetDrawColor(255, 255, 255, 255)
 	surface.DrawTexturedRect(x, y, targetW, targetH)
 	render.SetLightingMode(0)
+end)
+
+hook.Add("HUDPaint", "hg_head_trauma_flash", function()
+    if head_trauma_alpha > 0 then
+        surface.SetDrawColor(255, 255, 255, head_trauma_alpha)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+        head_trauma_alpha = math.max(0, head_trauma_alpha - FrameTime() * 500)
+    end
+
+    if show_image_time > 0 then
+        show_image_time = show_image_time - 1
+        if lobotomy_index and lobotomy_mats[lobotomy_index] then
+            surface.SetDrawColor(255,255,255,255)
+            surface.SetMaterial(lobotomy_mats[lobotomy_index])
+            local rand = 5
+            surface.DrawTexturedRect(-math.random(rand), -math.random(rand), ScrW() + math.random(rand), ScrH() + math.random(rand))
+        end
+    end
 end)
 
