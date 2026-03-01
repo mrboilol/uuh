@@ -289,7 +289,7 @@ hook.Add("HUDPaint", "homigrad-organism-debug", function()
 	end
 
 	if organism and organism.consciousness then
-		if organism.consciousness < 0.5 then
+		if organism.consciousness < 0.8 then
 			if not sleepySound then
 				sleepySound = CreateSound(lply, "sleepy.ogg")
 			end

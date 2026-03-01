@@ -72,7 +72,7 @@ local dislocated_leg = {
 local function PlayBoneDamageSound(owner)
     if math.random(1, 5) == 1 then -- 20% chance
         if math.random(1, 2) == 1 then
-            owner:EmitSound("disloc-" .. math.random(1, 2) .. ".ogg", 75, 100, 1, CHAN_AUTO)
+            owner:EmitSound("disloc" .. math.random(1, 2) .. ".ogg", 75, 100, 1, CHAN_AUTO)
         else
             owner:EmitSound("owfuck" .. math.random(1, 4) .. ".ogg", 75, 100, 1, CHAN_AUTO)
         end
