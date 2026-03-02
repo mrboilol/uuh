@@ -116,10 +116,10 @@ hook.Add("Think", "stanleytumbler", function()
         end
 
         if org.noradrenaline and org.noradrenaline > 0 then
-            tripChance = tripChance * 0.25
+            tripChance = tripChance * 0.1
         end
         if org.berserk and org.berserk > 0 then
-            tripChance = tripChance * 0.25
+            tripChance = tripChance * 0.1
         end
         if org.adrenaline and org.adrenaline > 0 then
             tripChance = tripChance * 0.75

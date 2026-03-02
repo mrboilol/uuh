@@ -38,7 +38,7 @@ module[2] = function(owner, org, timeValue)
 
 	org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
 
-	if org.shock > org.shock_turn * 1.5 * analgesiaMul * painkillerMul then
+	if org.shock > org.shock_turn * 2.5 * analgesiaMul * painkillerMul then
 		org.needfake = true
 	end
 
@@ -114,10 +114,18 @@ module[2] = function(owner, org, timeValue)
 	org.analgesia =  Approach(org.analgesia, 0, timeValue / 240 * (org.naloxone * 25 + 1))
 
 	if org.analgesia > 0 then
-		local impairment = org.analgesia * 0.05 * timeValue
-		org.consciousness = math.max(org.consciousness - impairment, 0)
-		if org.o2 and org.o2[1] then
-			org.o2[1] = math.max(org.o2[1] - impairment * 5, 0)
+		if org.analgesia >= 0.8 then
+			local impairment = org.analgesia * 0.2 * timeValue -- Increased impairment
+			org.consciousness = math.Approach(org.consciousness, 0.25, impairment)
+			if org.o2 and org.o2[1] then
+				org.o2[1] = math.max(org.o2[1] - impairment * 10, 0) -- Increased o2 reduction
+			end
+		else
+			local impairment = org.analgesia * 0.05 * timeValue
+			org.consciousness = math.max(org.consciousness - impairment, 0)
+			if org.o2 and org.o2[1] then
+				org.o2[1] = math.max(org.o2[1] - impairment * 5, 0)
+			end
 		end
 	end
 	
@@ -126,8 +134,8 @@ module[2] = function(owner, org, timeValue)
 		org.analgesiaAdd = Approach(org.analgesiaAdd, 0, timeValue / 15)
 	end
 
-	if org.analgesia > 0.85 then
-		local brain_damage = (org.analgesia - 0.85) * timeValue * 0.005
+	if org.analgesia > 0.8 then
+		local brain_damage = (org.analgesia - 0.8) * timeValue * 0.005
 		org.brain = math.min(org.brain + brain_damage, 1)
 	end
 

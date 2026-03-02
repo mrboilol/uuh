@@ -290,7 +290,7 @@ hook.Add("HUDPaint", "homigrad-organism-debug", function()
 			end
 		else
 			if tiredSound and tiredSound:IsPlaying() then
-				tiredSound:FadeOut(1)
+				tiredSound:FadeOut(3)
 			end
 		end
 	end
@@ -302,10 +302,11 @@ hook.Add("HUDPaint", "homigrad-organism-debug", function()
 			end
 			if sleepySound and not sleepySound:IsPlaying() then
 				sleepySound:Play()
+				sleepySound:FadeIn(1)
 			end
 		else
 			if sleepySound and sleepySound:IsPlaying() then
-				sleepySound:Stop()
+				sleepySound:FadeOut(3)
 			end
 		end
 	end

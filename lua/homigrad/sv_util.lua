@@ -423,39 +423,59 @@ end)
 util.AddNetworkString( "DoPlayerFlinch" )
 util.AddNetworkString("hg_HeadTrauma")
 
-hook.Add( "ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
-	if ply:IsPlayer() then
+hook.Add("ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
+    if ply:IsPlayer() then
+        local org = ply.organism
+        if not org then return end
+
+        local damage = dmginfo:GetDamage()
+        local will_bleed = (org.bleed or 0) > 0
+        local took_bone_damage = (org.just_damaged_bone or false)
+
+        local should_flash = false
         if grp == HITGROUP_HEAD then
+            should_flash = true
+        elseif (grp == HITGROUP_CHEST or grp == HITGROUP_STOMACH) and damage > 40 then
+            if math.random(1, 100) < 30 then
+                should_flash = true
+            end
+        elseif will_bleed or took_bone_damage then
+             if math.random(1, 100) < 20 then -- 20% chance for other damage types
+                should_flash = true
+            end
+        end
+
+        if should_flash then
             net.Start("hg_HeadTrauma")
+            net.WriteVector(dmginfo:GetDamagePosition())
             net.Send(ply)
         end
-		--could maybe return end,
-		--but would that override other Scale hooks? -- no.
-		local group = nil
-		local hitpos = {}
-		hitpos = {
-			[HITGROUP_HEAD] = ACT_FLINCH_HEAD, --1
-			[HITGROUP_CHEST] = ACT_FLINCH_STOMACH, --2
-			[HITGROUP_STOMACH] = ACT_FLINCH_STOMACH, --3
-			[HITGROUP_LEFTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_l")), --4
-			[HITGROUP_RIGHTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_r")), --5
-			[HITGROUP_LEFTLEG] = ply:GetSequenceActivity(ply:LookupSequence("flinch_01")), --6
-			[HITGROUP_RIGHTLEG] =  ply:GetSequenceActivity(ply:LookupSequence("flinch_02")) --7
-		}
-		if hitpos[grp] == nil then
-			group = ACT_FLINCH_PHYSICS
-		elseif hitpos[grp] then
-			group = hitpos[grp]
-		else
-			group = ACT_FLINCH_PHYSICS
-		end
 
-		net.Start( "DoPlayerFlinch" )
-			net.WriteInt( group, 32 )
-			net.WriteEntity( ply )
-		net.Broadcast()
-	end
-end )
+        -- Flinch logic...
+        local group = nil
+        local hitpos = {
+            [HITGROUP_HEAD] = ACT_FLINCH_HEAD,
+            [HITGROUP_CHEST] = ACT_FLINCH_STOMACH,
+            [HITGROUP_STOMACH] = ACT_FLINCH_STOMACH,
+            [HITGROUP_LEFTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_l")),
+            [HITGROUP_RIGHTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_r")),
+            [HITGROUP_LEFTLEG] = ply:GetSequenceActivity(ply:LookupSequence("flinch_01")),
+            [HITGROUP_RIGHTLEG] = ply:GetSequenceActivity(ply:LookupSequence("flinch_02"))
+        }
+        if hitpos[grp] == nil then
+            group = ACT_FLINCH_PHYSICS
+        elseif hitpos[grp] then
+            group = hitpos[grp]
+        else
+            group = ACT_FLINCH_PHYSICS
+        end
+
+        net.Start("DoPlayerFlinch")
+        net.WriteInt(group, 32)
+        net.WriteEntity(ply)
+        net.Broadcast()
+    end
+end)
 
 
 util.AddNetworkString("add_supression")
