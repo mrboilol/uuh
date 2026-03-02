@@ -312,9 +312,14 @@ function SWEP:CanUse()
 	return not (self.reload or self.deploy or (owner:IsPlayer() and (self:IsSprinting() or (owner.organism and owner.organism.otrub))))
 end
 
+local hg_aimtoshoot = ConVarExists("hg_aimtoshoot") and GetConVar("hg_aimtoshoot") or CreateConVar("hg_aimtoshoot", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Toggle DarkRP-like shooting system (aim to shoot)", 0, 1)
 function SWEP:IsSprinting()
 	local ply = self:GetOwner()
-	return not ply:IsNPC() and self:KeyDown(IN_SPEED) --[[and not (self:KeyDown(IN_ATTACK2) and not self:KeyDown(IN_WALK))]] and ply:GetVelocity():LengthSqr() > 170 * 170 and not IsValid(ply.FakeRagdoll)
+	if hg_aimtoshoot:GetBool() then
+		return not ply:IsNPC() and (self:KeyDown(IN_SPEED) and ply:GetVelocity():LengthSqr() > 28900) or not self:KeyDown(IN_ATTACK2) and not IsValid(ply.FakeRagdoll)
+	else
+		return not ply:IsNPC() and self:KeyDown(IN_SPEED) --[[and not (self:KeyDown(IN_ATTACK2) and not self:KeyDown(IN_WALK))]] and ply:GetVelocity():LengthSqr() > 28900 and not IsValid(ply.FakeRagdoll)
+	end
 end
 
 function SWEP:IsLocal()
