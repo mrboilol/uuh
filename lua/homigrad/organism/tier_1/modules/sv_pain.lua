@@ -112,6 +112,14 @@ module[2] = function(owner, org, timeValue)
 	end
 	
 	org.analgesia =  Approach(org.analgesia, 0, timeValue / 240 * (org.naloxone * 25 + 1))
+
+	if org.analgesia > 0 then
+		local impairment = org.analgesia * 0.05 * timeValue
+		org.consciousness = math.max(org.consciousness - impairment, 0)
+		if org.o2 and org.o2[1] then
+			org.o2[1] = math.max(org.o2[1] - impairment * 5, 0)
+		end
+	end
 	
 	if org.analgesiaAdd > 0 then
 		org.analgesia =  Approach(org.analgesia, 4, timeValue / 15)

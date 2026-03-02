@@ -4,7 +4,7 @@ local function damageEye(org, bone, dmg, dmgInfo, key)
 	if org[key .. "destroyed"] then return 0 end
 
 	local oldDmg = org[key]
-	org[key] = math.min(org[key] + dmg, 1)
+	org[key] = math.min(org[key] + dmg * 2, 1)
 
 	if org[key] >= 1 then
 		org[key .. "destroyed"] = true

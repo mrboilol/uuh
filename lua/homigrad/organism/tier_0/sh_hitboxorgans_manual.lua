@@ -63,6 +63,14 @@ male["ValveBiped.Bip01_Head1"] = {
         Vector(1, 1, 1),
         Color(255, 255, 255)
     },
+    {
+        "nose",
+        nil,
+        Vector(3.5, -3.5, 0),
+        Angle(0, 0, 0),
+        Vector(1, 1, 1),
+        Color(255, 0, 0)
+    },
 }
 
 local spine = 0.25
@@ -332,6 +340,14 @@ female["ValveBiped.Bip01_Head1"] = {
         Vector(1, 1, 1),
         Color(255, 255, 255)
     },
+    {
+        "nose",
+        nil,
+        Vector(3.5, -3.5, 0),
+        Angle(0, 0, 0),
+        Vector(1, 1, 1),
+        Color(255, 0, 0)
+    },
 }
 
 female["ValveBiped.Bip01_Neck1"] = {
@@ -418,6 +434,7 @@ hg.organism.translationTbl = {
 	["rarmdown"] = "Right forearm",
 	["rarmup"] = "Right upperarm",
 	["rarmartery"] = "Right arm artery",
+    ["nose"] = "Nose",
 }
 
 --[[local gordon = {}
@@ -452,7 +469,7 @@ table.insert(male["ValveBiped.Bip01_R_Calf"], 1, {"gordon_armor", 1, Vector(4, -
 combine["ValveBiped.Bip01_Spine1"] = table.Copy(male["ValveBiped.Bip01_Spine1"])
 combine["ValveBiped.Bip01_Head1"] = table.Copy(male["ValveBiped.Bip01_Head1"])
 combine["ValveBiped.Bip01_Neck1"] = table.Copy(male["ValveBiped.Bip01_Neck1"])
-combine["ValveBiped.Bip01_Spine2"] = table.Copy(male["ValveBiped.Bip01_Spine2"])
+combine["ValveBiped.Bip01_Spine2"] = table.Copy(.Bip01_Spine2"])
 combine["ValveBiped.Bip01_Pelvis"] = table.Copy(male["ValveBiped.Bip01_Pelvis"])
 combine["ValveBiped.Bip01_L_UpperArm"] = table.Copy(male["ValveBiped.Bip01_L_UpperArm"])
 combine["ValveBiped.Bip01_R_UpperArm"] = table.Copy(male["ValveBiped.Bip01_R_UpperArm"])

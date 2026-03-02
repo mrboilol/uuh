@@ -6,6 +6,7 @@ hg.organism.fake_spine3 = 0.5
 hg.organism.fake_legs = 1
 hg.organism.input_list = hg.organism.input_list or {}
 include("homigrad/organism/tier_1/modules_input/sv_eyes.lua")
+include("homigrad/organism/tier_1/modules_input/sv_nose.lua")
 
 local vecZero, angZero = Vector(), Angle()
 local hook_Run = hook.Run

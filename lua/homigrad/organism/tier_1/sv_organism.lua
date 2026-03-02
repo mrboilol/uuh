@@ -30,6 +30,7 @@ hook.Add("Org Clear", "Main", function(org)
 	org.lefteye = 0
 	org.righteyedestroyed = false
 	org.lefteyedestroyed = false
+	org.nose = 0
 
 	org.thiamine = 0
 
@@ -129,6 +130,7 @@ local function send_organism(org, ply)
 	sendtable.larm = org.larm
 	sendtable.righteye = org.righteye
 	sendtable.lefteye = org.lefteye
+	sendtable.nose = org.nose
 	sendtable.pelvis = org.pelvis
 	sendtable.disorientation = org.disorientation
 	sendtable.brain = org.brain
