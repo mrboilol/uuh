@@ -1,4 +1,5 @@
 util.AddNetworkString("HGNotificate")
+util.AddNetworkString("hg_RedTrauma")
 util.AddNetworkString("HGNotificateBerserk")
 
 --local hg_old_notificate = ConVarExists("hg_old_notificate") and GetConVar("hg_old_notificate") or CreateConVar("hg_old_notificate",0,FCVAR_SERVER_CAN_EXECUTE,"enable old notifications (chatprints)",0,1)

@@ -248,10 +248,29 @@ local show_image_time = 0
 local lobotomy_index = 0
 local HEAD_TRAUMA_DURATION = 1.5
 
+local show_red_trauma_time = 0
+local RED_TRAUMA_DURATION = 0.5
+
+net.Receive("hg_RedTrauma", function()
+    show_red_trauma_time = RED_TRAUMA_DURATION
+end)
+
 net.Receive("hg_HeadTrauma", function()
     show_image_time = HEAD_TRAUMA_DURATION
     lobotomy_index = math.random(#lobotomy_mats)
     surface.PlaySound("headhit.mp3")
+end)
+
+hook.Add("HUDPaint", "hg_red_trauma_flash", function()
+    if show_red_trauma_time > 0 then
+        show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
+
+        local flash_alpha = math.Clamp(1 - ((RED_TRAUMA_DURATION - show_red_trauma_time) / 0.2), 0, 1) * 150
+        if flash_alpha > 0 then
+            surface.SetDrawColor(255, 0, 0, flash_alpha)
+            surface.DrawRect(0, 0, ScrW(), ScrH())
+        end
+    end
 end)
 
 local PainLerp = 0
@@ -362,12 +381,14 @@ local o2_sounds = {
     "sound/despair.ogg",
     "sound/dying.ogg"
 }
-local o2_sound_choice = o2_sounds[1]
+local pain_sounds = {
+    "sound/zbattle/pain_beat.ogg",
+    "sound/agony.mp3",
+}
 
 hook.Add("PlayerSpawn", "reset_agony_chance", function(ply)
     if ply == LocalPlayer() then
         use_agony = math.random(1, 5) == 1
-        o2_sound_choice = o2_sounds[math.random(#o2_sounds)]
     end
 end)
 
@@ -494,9 +515,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 
 	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
-		sound.PlayFile("sound/zbattle/pain_beat.ogg", "noblock noplay", function(station)
+		local pain_sound_choice = pain_sounds[math.random(#pain_sounds)]
+		sound.PlayFile(pain_sound_choice, "noblock noplay", function(station)
 			if IsValid(station) then
 				station:SetVolume(0)
+				station:SetPlaybackRate(math.Rand(0.8, 1.2))
 				station:Play()
 				station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
 				PainStation = station
@@ -774,9 +797,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		
 		if o2 > 50 and !org.otrub then
 			if !IsValid(NoiseStation2) or NoiseStation2:GetState() != GMOD_CHANNEL_PLAYING then
+				local o2_sound_choice = o2_sounds[math.random(#o2_sounds)]
 				sound.PlayFile(o2_sound_choice, "noblock noplay", function(station)
 					if IsValid(station) then
 						station:SetVolume(0)
+						station:SetPlaybackRate(math.Rand(0.8, 1.2))
 						station:Play()
 						station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
 						NoiseStation2 = station

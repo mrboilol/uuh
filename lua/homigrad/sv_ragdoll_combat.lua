@@ -24,7 +24,7 @@ local function apply_dislocation(owner, limb, limb_name)
     elseif limb == "larm" then owner.organism.larmdislocation = true
     elseif limb == "rarm" then owner.organism.rarmdislocation = true
     end
-    owner:Notify("Your " .. limb_name .. " was dislocated from the impact!", 1, limb .. "_dislocated", 5)
+    --owner:Notify("Your " .. limb_name .. " was dislocated from the impact!", 1, limb .. "_dislocated", 5)
 end
 
 local function RagdollBodyDamage()

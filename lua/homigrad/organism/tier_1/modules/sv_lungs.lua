@@ -8,9 +8,9 @@ module[1] = function(org)
 		0
 	}
 
-	org.lungsR = {0, 0}
+	org.lungsR = {0, 0} 
 	org.trachea = 0
-	org.pneumothorax = 0
+	org.pneumothorax = 0 -- NIGGE RNIGGER NIG GER NI
 	org.needle = 0
 	org.nextCough = nil
 	org.o2 = {

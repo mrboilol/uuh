@@ -162,11 +162,33 @@ local sounds = {
 }
 
 local ents_Create = ents.Create
+local arm_amputation_messages = {
+    "MY ARM- I CANT FEEL MY ARM!",
+    "HOLY SHIT MY ARM- MY ARM IS FUCKING GONE",
+    "MAKE IT STOP- MAKE IT STOP!",
+}
+
+local leg_amputation_messages = {
+    "JESUS CHRIST MY LEG- I JUST LOST MY LEG!",
+    "MY LEG, I CANT FEEL MY LEG!",
+    "FUUCK, ILL NEVER BE ABLE TO STAND RIGHT AGAIN!",
+}
+
 function hg.organism.AmputateLimb(org, limb)
 	if org[limb.."amputated"] == nil then return end
 
 	local bone = limbs[limb]
 	if !IsValid(org.owner) then return end
+
+    if string.find(limb, "arm") then
+        org.owner:Notify(arm_amputation_messages[math.random(#arm_amputation_messages)], 1, "amputation_arm", 5, nil, Color(255, 0, 0))
+    elseif string.find(limb, "leg") then
+        org.owner:Notify(leg_amputation_messages[math.random(#leg_amputation_messages)], 1, "amputation_leg", 5, nil, Color(255, 0, 0))
+    end
+
+    net.Start("hg_RedTrauma")
+    net.Send(org.owner)
+
 	local len = org.owner:BoneLength(org.owner:LookupBone(bone))
 	local vec = Vector(len, 0, 0)
 	local ang = Angle()
@@ -249,6 +271,7 @@ function hg.organism.AddWound(ent,tr,bone,dmgInfo,dmgPos,dmgBlood,inputHole, out
 			table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
 
 util.AddNetworkString("hg_head_trauma_effect")
+util.AddNetworkString("hg_RedTrauma")
 
 hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
     if hitgroup == HITGROUP_HEAD then
@@ -263,6 +286,8 @@ hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgrou
             end
         end
     end
+	net.Start("hg_RedTrauma")
+	net.Send(ply)
 end)
 
 			if #org.wounds <= 30 then

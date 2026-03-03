@@ -97,6 +97,13 @@ local fear_phrases = {
 	"I never thought it would be like this.",
 	"I should've listened to my instincts.",
 	"Breathe. Just breathe.",
+	"Is this the part where I die..?",
+	"Im so afraid of what happens next.",
+	"I dont want to die.",
+	"There is so much things I haven't done yet.",
+	"It can't be real.",
+	"No no no no no...",
+	"Why is this happening to me...",
 	"Cold hands. Steady hands.",
 }
 local schizo_monologue = {
@@ -180,6 +187,11 @@ local near_death_positive = {
 	"Pain is just a signal. Ignore it.",
 	"If this is it... at least it's gonna be quick.",
 	"I've survived worse. Probably.",
+	"Need help, Need help...",
+	"I cant die like this. Not yet.",
+	"This isnt it. This cant be it.",
+	"Just.. dont throw up.",
+	"Keep breathing, just keep breathing...",
 	"This isn't how I pictured it.",
 }
 
@@ -225,6 +237,11 @@ local after_unconscious = {
 	"Ohh-fuck... my head is aching...",
 	"Oh it's gonna be hard to get up right now... but I have to...",
 	"I don't recognize this place at all... or do I?",
+	"I just had the craziest dream ever...",
+	"Ugh that was bad... I think im going to puke.",
+	"I thought I died for a second...",
+	"That was so, SO BAD.",
+	"Fuck- I forgot what i was doing...",
 	"I don't want to experience this EVER AGAIN",
 }
 
