@@ -700,15 +700,15 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 	if org and org.pulse and org.o2 and org.o2[1] then
 		local pulse = org.heartbeat
 		ent.pulsethink = ent.pulsethink or 0
-		local speed = math.Clamp(org.heartbeat / 60, 1, 4) * (0.4 / math.max(org.o2.curregen, 0.3)) * 0.5 * (org.o2[1] < 8 and 0 or 1)
-		ent.pulsethink = ent.pulsethink + (org.heartbeat > 1 and 1 or 0) * (org.holdingbreath and 0 or 1) * FrameTime() * 4 * (speed) * (org.lungsfunction and 1 or 0)
-
+		local speed = math.Clamp(org.heartbeat / 60, 1, 4) * 0.5 * (org.o2[1] < 8 and 0 or 1)
+		ent.pulsethink = ent.pulsethink + (org.heartbeat > 1 and 1 or 0) * (org.holdingbreath and 0 or 1) * FrameTime() * 5.6 * (speed) * (org.lungsfunction and 1 or 0) * ((org.alive and !ent.headexploded) and 1 or 0)
+		
 		local torso = ent:LookupBone("ValveBiped.Bip01_Spine2")
 		--local chest = ent:LookupBone("ValveBiped.Bip01_Spine1")
 		
 		if torso then
-			if ent:GetPos():Distance(lply:GetPos()) > 450 then return end
-			local sin = (math.sin(ent.pulsethink) + 1) * 0.5 * ((org.alive and !ent.headexploded) and 1 or 0)
+			if ent:GetPos():DistToSqr(lply:GetPos()) > 450 * 450 then return end
+			local sin = (math.sin(ent.pulsethink) + 1) * 0.5
 			local amt = 0.05 * sin * math.max(org.pulse / 70, 0.5)
 			
 			local size = 1 + amt
@@ -717,16 +717,19 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 			vecTorso[3] = size
 			
 			ent:ManipulateBoneScale(torso, vecTorso)
+			//ent:ManipulateBoneAngles(torso, Angle(0, amt, 0))
 
 			vecTorso[1] = 0
 			vecTorso[2] = amt * 2
 			vecTorso[3] = 0
 			
 			if sin < 0.1 and org.analgesia <= 1.5 and not org.breathed then
+				org.lastbreathed = CurTime()
 				org.breathed = true
 				local heartbeat = org.heartbeat or 0
 				local muffed
-				local pitch = math.Clamp(heartbeat / 200 * 100, 90, 120) * math.Clamp((org.stamina and org.stamina[1] and (1 + (1 - org.stamina[1] / 180) * 0.2) or 1), 1, 1.2)
+				local pitch = math.Clamp(heartbeat / 200 * 100, 100, 100) * math.Clamp((org.stamina and org.stamina[1] and (1 + (1 - org.stamina[1] / org.stamina.max) * 0.2) or 1), 1, 1.2)
+				local vol = math.Remap(heartbeat, 70, 300, 0, 0.25) + (org.stamina and org.stamina[1] and 1 - org.stamina[1] / org.stamina.max or 0)
 
 				if ent.armors then
 					muffed = ent.armors["face"] == "mask2" or ent.PlayerClassName == "Combine"
@@ -741,7 +744,22 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 					pitchadd = pitchAddClasses[ply.PlayerClassName]
 				end
 
-				ent:EmitSound("snds_jack_hmcd_breathing/" .. (ThatPlyIsFemale(ent) and "f" or "m") .. math.random(4) .. ".wav", min(heartbeat * 1.0 / ( muffed and 2.5 or 4), 45), pitch + pitchadd, 0.5 * (((org.stamina and org.stamina[1] and org.stamina[1] < 160)) and 1 or org.heartbeat > 140 and 0.25 or 0.05), CHAN_AUTO, 0, muffed and 16 or 0)
+				if vol > 1.5 and ply == lply then
+					local amta = (vol - 1.5)
+					local ang1 = Angle(amta * -0.5, 0, 0)
+					local ang2 = Angle(amta * 5, 0, 0)
+
+					--[[ViewPunch4(ang1)
+					--ViewPunch(ang1)
+
+					timer.Simple(speed, function()
+						ViewPunch4(-ang1)
+						--ViewPunch(-ang2)
+					end)--]]
+
+				end
+
+				ent:EmitSound("snds_jack_hmcd_breathing/" .. (ThatPlyIsFemale(ent) and "f" or "m") .. math.random(4) .. ".wav", min(heartbeat * 1.0 / ( muffed and 2.5 or 4), 45), pitch + pitchadd + math.Rand(-2, 2), vol, CHAN_AUTO, 0, muffed and 16 or 0)
 			elseif org.breathed and sin >= 0.1 then
 				org.breathed = false
 			end
@@ -793,9 +811,8 @@ hook.Add("Player-Ragdoll think", "organism-think-client-blood", function(ply, en
 		end
 	end
 
-	--why?
-
-	if org.pulse and (ent.pulse_breathe.lastbreathe or 0) < CurTime() and org.o2 and org.o2[1] and (org.heartbeat > 80 or (org.o2[1] < 15 and ent:WaterLevel() == 3)) and org.lungsfunction and not org.holdingbreath and org.timeValue then
+	--why? because
+	if org.pulse and (ent.pulse_breathe.lastbreathe or 0) < CurTime() and org.lastbreathed and org.lastbreathed + 5 < CurTime() then
 		local heartbeat = org.heartbeat or 0
 		ent.pulse_breathe.lastbreathe = CurTime() + (1 / math.Clamp(org.heartbeat + (org.o2[1] - 30) * 1, 1, 120)) * 90 + ( org.o2[1] < 20 and 5 or 0)
 		

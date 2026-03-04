@@ -1816,12 +1816,13 @@ function SWEP:GetAdditionalValues()
 	
 	local pranktime = CurTime() / 2
 	local vellen = (ply:InVehicle()) and 0 or hg.GetCurrentCharacter(ply):GetVelocity():Length()
-	self.walkinglerp = Lerp(hg.lerpFrameTime(0.001,dtime), self.walkinglerp or 0, vellen)
+	self.walkinglerp = math.Round(vellen)
+	
 	self.huytime = self.huytime or 0
 	local walk = math.Clamp(self.walkinglerp / 100, 0, 1)
 	
-	self.huytime = self.huytime + walk * dtime * 6.6 * (ply:OnGround() and 1 or 0.1)
-
+	self.huytime = CurTime() * 6.6--self.huytime + walk * dtime * 6.6 * (ply:OnGround() and 1 or 0.1)
+	
 	--ply.oldposture = ply.posture
 	if self:IsSprinting() then
 		--ply.posture = 1
