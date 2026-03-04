@@ -47,7 +47,7 @@ module[2] = function(owner, org, timeValue)
 	local heartbeat = org.pulse < 70 and 70 + (70 - org.pulse) * 4 or org.pulse
 
 	local runnin_or_exhausted = org.analgesia < 1 and (org.stamina.sub > 0 or org.stamina[1] < (org.stamina.max * 0.66))
-	org.heartbeat = math.Approach(org.heartbeat, math.max(heartbeat - 10, runnin_or_exhausted and (org.stamina[1] < (org.stamina.max * 0.33) and 200 or 140) or 60), !runnin_or_exhausted and timeValue * 1 or timeValue * 5)
+	org.heartbeat = math.Approach(org.heartbeat, math.max(heartbeat - 10, runnin_or_exhausted and ((1 - org.stamina[1] / (org.stamina.max)) * 60 + 140) or 60), !runnin_or_exhausted and timeValue * 1 or timeValue * 15)
 	
 	heartbeat = heartbeat + (owner.suiciding and 50 or 0)
 	heartbeat = heartbeat + 40 * math.max(0, org.fear)
@@ -60,6 +60,10 @@ module[2] = function(owner, org, timeValue)
 
 	org.heartbeat = math.Approach(org.heartbeat, heartbeat, heartbeat > org.heartbeat and timeValue * 5 or timeValue * 2)
 	
+	if org.heartbeat > 300 then -- fibrillation into cardiac arrest
+		org.heartstop = true
+	end
+
 	if org.heartstop then
 		org.heartbeat = 0
 	end

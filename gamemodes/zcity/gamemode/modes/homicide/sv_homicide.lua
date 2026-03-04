@@ -1375,6 +1375,14 @@ function MODE:EndRound()
 				hook.Run("ZB_TraitorWinOrNot", traitor, winner)
 			else
 				PrintMessage(HUD_PRINTTALK, self.Types[self.Type].Messages[winner]..(winner == 0 and (" killed.") or ""))
+				for _, traitor in ipairs(traitors) do
+					net.Start("hmcd_announce_traitor_lose")
+						net.WriteEntity(traitor)
+						net.WriteBool(traitor:Alive())
+					net.Broadcast()
+
+					hook.Run("ZB_TraitorWinOrNot", traitor, winner)
+				end
 			end
 		end
 	end
