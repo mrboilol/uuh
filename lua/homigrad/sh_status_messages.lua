@@ -22,6 +22,12 @@ local audible_pain = {
     "DEATH WOULD BE MERCY NOW...",
     "Just one moment without the pain..",
 	"I WISH I HAD SOME PAINKILLERS NOW. FUCK.",
+	"Stop stop stop stop STOP STOP...",
+	"Its paining SO BAD, SO BAD...",
+	"THIS HURTS SO MUCH, I THINK IM GOING TO PASS OUT.",
+	"Some drugs would be nice, REAL NICE...",
+	"Just kill me... please...",
+	"FUUUUUUUUCK!",
 }
 
 local sharp_pain = {
@@ -67,6 +73,7 @@ local random_phrase = {
 	"What if this quiet lasts forever?",
 	"Why isn't anything happening?",
 	"I feel, oddly happy for some reason.",
+	"Remember when you broke your foot?",
 }
 
 local fear_hurt_ironic = {
@@ -80,6 +87,7 @@ local fear_hurt_ironic = {
 
 local fear_phrases = {
 	"It's not that bad... right?",
+	"Im not okay.",
 	"I don't want to die like this.",
 	"Is this really how it ends?",
 	"This isn't good.",
@@ -192,7 +200,10 @@ local near_death_positive = {
 	"This isnt it. This cant be it.",
 	"Just.. dont throw up.",
 	"Keep breathing, just keep breathing...",
+	"Theres still people waiting for you at home.",
 	"This isn't how I pictured it.",
+	"This isn't how I pictured it.",
+	"Make it stop make it stop...",
 }
 
 local broken_limb = {
@@ -203,6 +214,11 @@ local broken_limb = {
 	"I dont think it should bend here.",
 	"Oh fuck. It is snapped.",
 	"I dont see any open fracture, but I feel like I broke something",
+	"I dont see any open fracture, but I feel like I broke something",
+	"I dont see any open fracture, but I feel like I broke something",
+	"I dont see any open fracture, but I feel like I broke something",
+	"I dont see any open fracture, but I feel like I broke something",
+	"I dont see any open fracture, but I feel like I broke something",
 }
 
 local dislocated_limb = {
@@ -210,6 +226,10 @@ local dislocated_limb = {
 	"I have to get this bone back in.",
 	"No, I have to move it back in place.",
 	"It just hurts so much there. I might need a check up.",
+	"My limb is out of place.",
+	"My limb is out of place.",
+	"My limb is out of place.",
+	"My limb is out of place.",
 	"My limb is out of place.",
 }
 

@@ -165,7 +165,7 @@ local ents_Create = ents.Create
 local arm_amputation_messages = {
     "MY ARM- I CANT FEEL MY ARM!",
     "HOLY SHIT MY ARM- MY ARM IS FUCKING GONE",
-    "MAKE IT STOP- MAKE IT STOP!",
+    "MY ARM- MY ARM HURTS SO MUCH",
 }
 
 local leg_amputation_messages = {
