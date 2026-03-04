@@ -380,12 +380,14 @@ hg.ConVars = hg.ConVars or {}
 		function hg.CalculateConsciousnessMul()
 			local consciousness = 1
 
-			if lply.organism and lply.organism.consciousness then
-				consciousness = consciousness * lply.organism.consciousness
-				consciousness = consciousness * math.Clamp(lply.organism.blood / 4000, 0.5, 1)
-				consciousness = consciousness * math.Clamp(lply.organism.o2[1] / 20, 0.5, 1)
-				--consciousness = consciousness * (lply.organism.larmamputated and 0.8 or 1) * (lply.organism.rarmamputated and 0.8 or 1)
-				consciousness = consciousness * (1 - lply.organism.disorientation / 10)
+			local org = lply.organism
+			if org and org.consciousness then
+				consciousness = consciousness * org.consciousness
+				consciousness = consciousness * math.Clamp(org.blood / 4000, 0.5, 1)
+				consciousness = consciousness * math.Clamp(org.o2[1] / 20, 0.5, 1)
+				--consciousness = consciousness * (org.larmamputated and 0.8 or 1) * (org.rarmamputated and 0.8 or 1)
+				consciousness = consciousness * (1 - org.disorientation / 10)
+				//consciousness = consciousness * math.min(1, org.stamina[1] / (org.stamina.max * 0.3))
 			end
 
 			return math.Clamp(((consciousness - 1) * 3 + 1), 0.4, 1)

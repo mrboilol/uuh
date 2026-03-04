@@ -103,30 +103,37 @@ function HGAddView(ply, origin, angles, velLen)
 		local wep = ply:GetActiveWeapon()
 		local inSight = IsValid(wep) and wep.IsZoom and wep:IsZoom()
 
-		breathing_amount = breathing_amount + math.max((math.Clamp(pulse, 0, 80) / 120 / 30 + velLen / 100 - (30 - o2) / 3000), 0)
+		--breathing_amount = breathing_amount + math.max((math.Clamp(pulse, 0, 80) / 120 / 30 + velLen / 100 - (30 - o2) / 3000), 0)
+		local breathing_amount = math.sin((ply.pulsethink or 0) + 0.8) * (math.max(((org.heartbeat or 0) / 120 - 1) * 0.05, 0) + math.Clamp((org.stamina and org.stamina[1] and (1 - math.min(1, org.stamina[1] / (org.stamina.max * 0.75))) or 1), 0, 0.5))
 		--walk_amount = walk_amount + velLen / 100
 
 		--[[camera_position_addition[1] = 0
 		camera_position_addition[2] = 0
 		camera_position_addition[3] = 0]]
 		
-		--camera_position_addition[1] = (math.cos(breathing_amount)) * math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5)
-		--camera_position_addition[2] = (math.cos(breathing_amount))* math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5)
-		//camera_position_addition[3] = (math.sin(breathing_amount)) * math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5) * 0.5 * (org.lungsfunction and 1 or 0) * math.max(2 - analgesia, 0) * 0.5
-		
-		--origin:Add(camera_position_addition)
+		camera_position_addition[1] = 0
+		camera_position_addition[2] = 0
+		camera_position_addition[3] = (math.sin(breathing_amount)) * 0.5
+
+		local anga2 = ply:GetBoneMatrix(ply:LookupBone("ValveBiped.Bip01_Spine")):GetAngles()---(-angles)
+		anga2:RotateAroundAxis(anga2:Right(), 90)
+		--anga2[1] = 0
+		camera_position_addition:Rotate(anga2)
+
+		origin:Add(camera_position_addition)
 
 		local ang = AngleRand(-0.1, 0.1) * math.Rand(0, math.min(adrenaline, 1)) / 1
-		ang[1] = ang[1] + (math.sin(breathing_amount)) * math.Clamp((math.max(pulse / 80,1) - 1) / 2,0,0.5) / 5 * (org.lungsfunction and 1 or 0) * math.max(2 - analgesia, 0) * 0.5
+		ang[1] = ang[1] + breathing_amount
 		ang[3] = 0
 
-		lerped_ang = LerpFT(0.2, lerped_ang, ang * (inSight and 1 or 1) * math.max(org.recoilmul or 1,0.1))
-		local tmpmul = math.max(36.6 - temp, 0)
-		ang[1] = math.Rand(-tmpmul, tmpmul) / 155
-		ang[2] = math.Rand(-tmpmul, tmpmul) / 155
-		ang[3] = math.Rand(-adrenaline, adrenaline) / 15
+		lerped_ang = LerpFT(0.2, lerped_ang, ang * (inSight and 1 or 1) * math.max(org.recoilmul or 1, 0.1))
+		--local tmpmul = math.max(36.6 - temp, 0)
+		--ang[1] = math.Rand(-tmpmul, tmpmul) / 155
+		--ang[2] = math.Rand(-tmpmul, tmpmul) / 155
+		--ang[3] = math.Rand(-adrenaline, adrenaline) / 15
 		--angles:Add(ang)
-		//ply:SetEyeAngles(ply:EyeAngles() + lerped_ang / 2)
+		//ViewPunch2(ang * -0.05)
+		--ply:SetEyeAngles(ply:EyeAngles() + lerped_ang * 0.1)
 		//angles:Add(ang)
 		//ViewPunch2(lerped_ang * 0.1)
 
