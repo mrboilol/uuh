@@ -1,8 +1,8 @@
+local tiredSound, sleepySound
+
 hg.organism_ents = hg.organism_ents or {}
 
 net.Receive("organism_send", function()
-local tiredSound
-local sleepySound
 	local org = net.ReadTable()
 	local force = net.ReadBool()
 	local spectatov_ne_trogaem = net.ReadBool()
@@ -281,15 +281,15 @@ hook.Add("HUDPaint", "homigrad-organism-debug", function()
 	
 	if organism and organism.stamina and organism.stamina[1] then
 		if organism.stamina[1] < 20 then
-			if not tiredSound then
+			if not IsValid(tiredSound) then
 				tiredSound = CreateSound(lply, "tired.ogg")
 			end
-			if tiredSound and not tiredSound:IsPlaying() then
+			if IsValid(tiredSound) and not tiredSound:IsPlaying() then
 				tiredSound:Play()
 				tiredSound:FadeIn(1)
 			end
 		else
-			if tiredSound and tiredSound:IsPlaying() then
+			if IsValid(tiredSound) and tiredSound:IsPlaying() then
 				tiredSound:FadeOut(3)
 			end
 		end
@@ -297,15 +297,15 @@ hook.Add("HUDPaint", "homigrad-organism-debug", function()
 
 	if organism and organism.consciousness then
 		if organism.consciousness < 0.8 then
-			if not sleepySound then
+			if not IsValid(sleepySound) then
 				sleepySound = CreateSound(lply, "sleepy.ogg")
 			end
-			if sleepySound and not sleepySound:IsPlaying() then
+			if IsValid(sleepySound) and not sleepySound:IsPlaying() then
 				sleepySound:Play()
 				sleepySound:FadeIn(1)
 			end
 		else
-			if sleepySound and sleepySound:IsPlaying() then
+			if IsValid(sleepySound) and sleepySound:IsPlaying() then
 				sleepySound:FadeOut(3)
 			end
 		end

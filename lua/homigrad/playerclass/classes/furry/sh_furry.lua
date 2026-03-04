@@ -957,7 +957,9 @@ if CLIENT then
     local chaseVolume = 0
     local nextChaseCheck = 0
     local lastChaseTime = 0
-    hook.Add("Think","FurryChaseSound",function()
+
+	-- THIS SHIT IS SO ASS
+ --[[hook.Add("Think","FurryChaseSound",function()
         local ply = LocalPlayer()
         if not IsValid(ply) then return end
         local now = CurTime()
@@ -996,4 +998,4 @@ if CLIENT then
             chaseSound = nil
         end
     end)
-end
+end]]
