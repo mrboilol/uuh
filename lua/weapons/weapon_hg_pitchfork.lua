@@ -1,10 +1,20 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Pitchfork"
 SWEP.Instructions = "A Traditional pitchfork used for farming."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
+
+SWEP.SuicidePos = Vector(20, 1, -27)
+SWEP.SuicideAng = Angle(-90, -180, 90)
+SWEP.SuicideCutVec = Vector(3, -6, 0)
+SWEP.SuicideCutAng = Angle(10, 0, 0)
+SWEP.SuicideTime = 0.5
+SWEP.SuicideSound = "weapons/knife/knife_hit1.wav"
+SWEP.CanSuicide = true
+SWEP.SuicideNoLH = true
+SWEP.SuicidePunchAng = Angle(5, -15, 0)
 
 SWEP.WorldModel = "models/weapons/tfa_l4d_mw2019/melee/w_pitchfork.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_fubar.mdl"

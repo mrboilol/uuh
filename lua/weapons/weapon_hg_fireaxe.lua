@@ -5,6 +5,17 @@ SWEP.Instructions = "An axe is an implement that has been used for millennia to 
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
+
+SWEP.SuicidePos = Vector(20, 1, -27)
+SWEP.SuicideAng = Angle(-90, -180, 90)
+SWEP.SuicideCutVec = Vector(3, -6, 0)
+SWEP.SuicideCutAng = Angle(10, 0, 0)
+SWEP.SuicideTime = 0.5
+SWEP.SuicideSound = "weapons/knife/knife_hit1.wav"
+SWEP.CanSuicide = true
+SWEP.SuicideNoLH = true
+SWEP.SuicidePunchAng = Angle(5, -15, 0)
+
 SWEP.WorldModel = "models/weapons/tfa_nmrih/w_me_axe_fire.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_bat_metal.mdl"
 SWEP.WorldModelExchange = "models/weapons/tfa_nmrih/w_me_axe_fire.mdl"

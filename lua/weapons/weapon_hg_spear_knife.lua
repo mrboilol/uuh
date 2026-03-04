@@ -1,10 +1,20 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Modified spear"
 SWEP.Instructions = "A spear is an effective weapon to attack at a distance.\n\nLMB to attack.\nRMB to block.\nRMB + LMB to throw."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
+
+SWEP.SuicidePos = Vector(20, 1, -27)
+SWEP.SuicideAng = Angle(-90, -180, 90)
+SWEP.SuicideCutVec = Vector(3, -6, 0)
+SWEP.SuicideCutAng = Angle(10, 0, 0)
+SWEP.SuicideTime = 0.5
+SWEP.SuicideSound = "weapons/knife/knife_hit1.wav"
+SWEP.CanSuicide = true
+SWEP.SuicideNoLH = true
+SWEP.SuicidePunchAng = Angle(5, -15, 0)
 
 SWEP.WorldModel = "models/distac/spear_wood_knife.mdl"
 SWEP.WorldModelReal = "models/weapons/tfa_nmrih/v_me_fubar.mdl"

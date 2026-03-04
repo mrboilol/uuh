@@ -6,6 +6,16 @@ SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
+SWEP.SuicidePos = Vector(20, 1, -27)
+SWEP.SuicideAng = Angle(-90, -180, 90)
+SWEP.SuicideCutVec = Vector(3, -6, 0)
+SWEP.SuicideCutAng = Angle(10, 0, 0)
+SWEP.SuicideTime = 0.5
+SWEP.SuicideSound = "weapons/knife/knife_hit1.wav"
+SWEP.CanSuicide = true
+SWEP.SuicideNoLH = true
+SWEP.SuicidePunchAng = Angle(5, -15, 0)
+
 SWEP.WorldModel = "models/props_junk/drill.mdl"
 SWEP.WorldModelReal = "models/zac/c_kitchenknife.mdl"
 SWEP.WorldModelExchange = "models/props_junk/drill.mdl"

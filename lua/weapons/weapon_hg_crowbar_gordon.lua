@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Crowbar"
 SWEP.Instructions = "'I think you dropped this back in Black Mesa!'"
@@ -16,7 +16,7 @@ SWEP.SuicideCutVec = Vector(1, 5, 1)
 SWEP.SuicideCutAng = Angle(10, 0, 0)
 SWEP.SuicideTime = 0.5
 SWEP.SuicideSound = "player/flesh/flesh_bullet_impact_03.wav"
-SWEP.CanSuicide = false
+SWEP.CanSuicide = true
 SWEP.SuicideNoLH = false
 SWEP.SuicideHoldType = "slam"
 
