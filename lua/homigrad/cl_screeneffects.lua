@@ -680,7 +680,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 					["$pp_colour_colour"] = 0
 				}
 				DrawColorModify(tab)
-				DrawSobel()
+				DrawSobel(1)
 
 				vignetteMat:SetFloat("$c0_z", 10) --ColorIntensity
 				vignetteMat:SetFloat("$c1_y", 10) --Vignette

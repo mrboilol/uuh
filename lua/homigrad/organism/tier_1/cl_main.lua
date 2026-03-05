@@ -120,15 +120,13 @@ end)
 
 hook.Add("HG_OnOtrub", "adsadsadhuy!!", function(ply)	
 	if ply == LocalPlayer() then
-		lply:SetDSP(17)
-		plyCommand(lply,"soundfade 100 99999")
+		lply:SetDSP(45)
 	end
 end)
 
 hook.Add("Player_Death", "adsadsadhuy!!", function(ply)	
 	if ply == LocalPlayer() then
-		lply:SetDSP(17)
-		plyCommand(lply,"soundfade 100 99999")
+		lply:SetDSP(45)
 	end
 end)
 
@@ -421,8 +419,7 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 			lply:SetDSP(normaldsp)
 			plyCommand(lply,"soundfade "..tinnitusSoundFactor2.." 25")
 		elseif lply:Alive() then
-			lply:SetDSP(17)
-			plyCommand(lply,"soundfade 100 25")
+			lply:SetDSP(45)
 		end
 	else
 		plyCommand(lply,"soundfade "..tinnitusSoundFactor2.." 25")
