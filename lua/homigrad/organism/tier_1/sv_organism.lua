@@ -118,6 +118,7 @@ local function send_organism(org, ply)
 
 	sendtable.alive = org.alive
 	sendtable.otrub = org.otrub
+	sendtable.uncon_timer = org.uncon_timer
 	sendtable.owner = org.owner
 	sendtable.stamina = org.stamina
 	sendtable.immobilization = org.immobilization

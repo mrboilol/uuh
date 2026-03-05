@@ -379,9 +379,9 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 end
 
 local ribs = {
-	"Fuck, I think I broke a rib...",
+	"Fuck, I think I broke a rib",
 	"I can feel something poking my lungs.",
-	"Something is floating in my chest...",
+	"Something just broke inside my chest...",
 	"My chest isnt supposed to cave inwards...",
 }
 
