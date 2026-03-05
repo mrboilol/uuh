@@ -520,7 +520,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		sound.PlayFile(pain_sound_choice, "noblock noplay", function(station)
 			if IsValid(station) then
 				station:SetVolume(0)
-				station:SetPlaybackRate(math.Rand(0.8, 1.2))
+				station:SetPlaybackRate(math.Rand(0.75, 1.1))
 				station:Play()
 				station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
 				PainStation = station
@@ -851,7 +851,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				sound.PlayFile(o2_sound_choice, "noblock noplay", function(station)
 					if IsValid(station) then
 						station:SetVolume(0)
-						station:SetPlaybackRate(math.Rand(0.8, 1.2))
+						station:SetPlaybackRate(math.Rand(0.75, 1.1))
 						station:Play()
 						station:SetTime(math.min(brain / 0.5 * station:GetLength()), 87)
 						NoiseStation2 = station
