@@ -1,16 +1,16 @@
 
 -- Constants
 -- Constants
-local DAMAGE_THRESHOLD = 500
-local DAMAGE_THRESHOLD_HANDS = 350
+local DAMAGE_THRESHOLD = 400
+local DAMAGE_THRESHOLD_HANDS = 250
 local HIGH_VELOCITY_THRESHOLD = 1000
 
 -- Damage multipliers
 local MULTIPLIERS = {
-    head = 0.06,
-    legs = 0.05,
-    arms = 0.04,
-    hands = 0.03
+    head = 0.08,
+    legs = 0.07,
+    arms = 0.06,
+    hands = 0.05
 }
 
 -- Dislocation chances
@@ -54,6 +54,8 @@ local function RagdollBodyDamage()
                     local threshold = (part.type == "hands") and DAMAGE_THRESHOLD_HANDS or DAMAGE_THRESHOLD
 
                     if speed > threshold then
+                        print("Ragdoll combat damage triggered for", owner:Nick(), "- part:", part.type, "- speed:", speed)
+
                         local pos = phys:GetPos()
                         local tr = util.TraceLine({
                             start = pos,

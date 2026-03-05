@@ -93,7 +93,7 @@ if SERVER then
 		org.needle = 1
 
 		if org.trachea and org.trachea > 0 then
-			org.trachea = 0.6
+			org.trachea = org.trachea * 0.6
 		end
 
 		if !(org.lungsR[2] == 1 or org.lungsL[2] == 1) then

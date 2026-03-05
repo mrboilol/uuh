@@ -4,9 +4,11 @@ local function damageEye(org, bone, dmg, dmgInfo, key)
 	if org[key .. "destroyed"] then return 0 end
 
 	local oldDmg = org[key]
-	org[key] = math.min(org[key] + dmg * 2, 1)
+	org[key] = math.min(org[key] + dmg * 5, 1)
 
 	if org[key] >= 1 then
+		print(key, "broken for", org.owner:Nick())
+
 		org[key .. "destroyed"] = true
 		if org.isPly then org.owner:Notify(destroyed_eye[math.random(#destroyed_eye)], 1, "destroyed"..key, 1, nil, nil) end
 	end

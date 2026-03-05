@@ -675,51 +675,47 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		if org.otrub then
 			if hg_new_otrub_effect:GetBool() then
 				local tab = {
-					["$pp_colour_brightness"] = -0.8,
-					["$pp_colour_contrast"] = 1,
+					["$pp_colour_brightness"] = -1,
+					["$pp_colour_contrast"] = 1.5,
 					["$pp_colour_colour"] = 0
 				}
 				DrawColorModify(tab)
+				DrawSobel()
 
 				vignetteMat:SetFloat("$c0_z", 10) --ColorIntensity
 				vignetteMat:SetFloat("$c1_y", 10) --Vignette
 				render.SetMaterial(vignetteMat)
 				render.DrawScreenQuad()
 
-				local uncon_time = org.uncon_timer or 0
-				local fill_duration = 5 -- seconds to fill the circle
-				local fill_progress = math.Clamp(uncon_time / fill_duration, 0, 1)
-
+				local fill_progress = math.Clamp(shockLerp / 100, 0, 1)
 				local centerX, centerY = ScrW() / 2, ScrH() / 2
 				local radius = 100
-				
-				surface.SetDrawColor(255, 255, 255, 150)
-				if fill_progress < 1 then
-					local points = {}
-					table.insert(points, {x = centerX, y = centerY})
-					for i = 0, 360 * fill_progress do
-						local rad = math.rad(i - 90)
-						table.insert(points, {x = centerX + math.cos(rad) * radius, y = centerY + math.sin(rad) * radius})
-					end
-					surface.DrawPoly(points)
+				local thickness = 4
+				local roughness = 64
+				local text_to_draw
+				local text_color = Color(255, 255, 255, 255)
+				local circle_color = Color(255, 255, 255, 200)
+
+				if org.critical then
+					text_to_draw = "..!"
+					text_color = Color(255, 0, 0, 255)
+					circle_color = Color(255, 0, 0, 200)
+				elseif org.incapacitated then
+					local dots = "."
+					local dot_anim = math.floor(CurTime() * 2) % 3
+					if dot_anim == 1 then dots = ".." elseif dot_anim == 2 then dots = "..." end
+					text_to_draw = dots
+					text_color = Color(255, 0, 0, 255)
+					circle_color = Color(255, 0, 0, 200)
 				else
-					local circle_points = {}
-					for i = 0, 360 do
-						local rad = math.rad(i)
-						table.insert(circle_points, { x = centerX + math.cos(rad) * radius, y = centerY + math.sin(rad) * radius })
-					end
-					surface.DrawPoly(circle_points)
+					local dots = "."
+					local dot_anim = math.floor(CurTime() * 2) % 3
+					if dot_anim == 1 then dots = ".." elseif dot_anim == 2 then dots = "..." end
+					text_to_draw = dots
 				end
 
-				local dots = "."
-				local dot_anim = math.floor(CurTime() * 2) % 3
-				if dot_anim == 1 then
-					dots = ".."
-				elseif dot_anim == 2 then
-					dots = "..."
-				end
-
-				draw.SimpleText(dots, "DermaLarge", centerX, centerY, Color(255,255,255,255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+				draw.Arc(centerX, centerY, radius, thickness, -90, -90 + (360 * fill_progress), roughness, circle_color)
+				draw.SimpleText(text_to_draw, "DermaLarge", centerX, centerY, text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			else
 				DrawMotionBlur(0.1, 1., 0.01)
 				lply:ScreenFade( SCREENFADE.IN, Color(0,0,0), 2, 0.5 )

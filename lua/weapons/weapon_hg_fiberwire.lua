@@ -471,9 +471,7 @@ function SWEP:CustomThink()
         local org = ragPly.organism
         local dt = FrameTime()
         -- light, continuous choke effects
-        if org.o2 and org.o2[1] then
-            org.o2[1] = math.max(org.o2[1] - 6 * dt, 0)
-        end
+        org.choking = true
         if org.stamina and org.stamina.subadd ~= nil then
             org.stamina.subadd = org.stamina.subadd + 6 * dt
         end

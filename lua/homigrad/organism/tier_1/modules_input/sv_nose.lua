@@ -1,7 +1,9 @@
 local input_list = hg.organism.input_list
 
 local function damageNose(org, bone, dmg, dmgInfo, key)
-	if org[key] >= 1 then return 0 end
+	if org[key] >= 1 then
+		print("Nose broken for", org.owner:Nick())
+ return 0 end
 
 	local oldDmg = org[key]
 	org[key] = math.min(org[key] + dmg, 1)

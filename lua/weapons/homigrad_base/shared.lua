@@ -2488,7 +2488,7 @@ hook.Add("HG.InputMouseApply", "restrictMouseMovement", function(tbl)
     local wep = lply:GetActiveWeapon()
 
     if ishgweapon(wep) then
-        if wep:IsResting() then
+        if wep.IsResting and wep:IsResting() then
 			local posa, anga = wep:GetBipodPosAng()
 
             local restrict_pitch1 = 15
