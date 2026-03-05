@@ -704,13 +704,14 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		ent.bloodamt2 = ent.bloodamt2 or 0
 		ent.bloodamt2 = ent.bloodamt2 + 1
 
-		timer.Simple(0,function()
-			timer.Create("Blood_burst_input"..ent:EntIndex(),0.02,1,function()
+		timer.Simple(0, function()
+			timer.Create("Blood_burst_input"..ent:EntIndex(), 0.02, 1, function()
+				if not IsValid(ent) then return end
 				net.Start("hg_bloodimpact")
 				net.WriteVector(inputHole[1])
 				net.WriteVector(dir / 2)
 				net.WriteFloat(dmg)
-				net.WriteInt(ent.bloodamt2,8)
+				net.WriteInt(ent.bloodamt2, 8)
 				net.Broadcast()
 				ent.bloodamt2 = 0
 			end)
@@ -1114,13 +1115,13 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 
 	-- EFFECT
-	if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_SLASH) then
+	if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
 		if dmgBlood > 1 and #inputHole > 0 then
 			net.Start("hg_bloodimpact")
 			net.WriteVector(dmgPos)
-			net.WriteVector(dirCool/15)
-			net.WriteFloat(dmg/10)
-			net.WriteInt(1,8)
+			net.WriteVector(dirCool / 15)
+			net.WriteFloat(dmg / 10)
+			net.WriteInt(1, 8)
 			net.Broadcast()
 
 			--[[if (hitgroup ~= HITGROUP_HEAD) then

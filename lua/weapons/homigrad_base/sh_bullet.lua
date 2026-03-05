@@ -301,7 +301,6 @@ local function gasInertia(pos, force, dir, self, tr)
 	end
 end
 
-local powderMat, powderClr, world = Material("decals/burn01a"), Color(255, 255, 255, 150), game.GetWorld()
 local allowedMats = {
 	[MAT_CONCRETE] = true,
 	[MAT_METAL] = true

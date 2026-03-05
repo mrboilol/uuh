@@ -1545,8 +1545,8 @@ end
 
 local vec1 = Vector(0, 2, 0)
 local vec2 = Vector(0, -2, 0)
-local ang1 = Angle(-0,25,0)
-local ang2 = Angle(-0,-25,180)
+local ang1 = Angle(-30,5,70)
+local ang2 = Angle(-30,-5,110)
 
 function hg.DragHands(ply,self)
     if not IsValid(ply) then return end
@@ -1612,6 +1612,13 @@ function hg.DragHands(ply,self)
         --hg.bone_apply_matrix(ply, ply_spine_index, ply_spine_matrix)
 
         local amputee = ply.organism and ply.organism.larmamputated
+
+		local eyeMul = math.Clamp(-(ply:EyeAngles()[1] / 20), 0.1, 1.5)
+		--[[local eyeMul2 = math.Clamp((ply:EyeAngles()[1] / 20), -1, 1)
+		local eyeMul3 = -math.Clamp((ply:EyeAngles()[1] / 20), 1, 2.3)]]
+
+		ang1 = Angle(-30 * eyeMul,5,70 --[[* eyeMul2]])
+		ang2 = Angle(-30 * eyeMul,-5,120 --[[* eyeMul3]])
 
         if twohands or amputee then
 
