@@ -1314,7 +1314,7 @@ function SWEP:CoreStep()
 					end
 				end
 
-				owner.organism.stamina.subadd = owner.organism.stamina.subadd + 6 * self.weight
+				owner.organism.stamina.subadd = owner.organism.stamina.subadd + 3 * self.weight
 
 				owner:LagCompensation(false)
 			//end)
@@ -2074,7 +2074,7 @@ function SWEP:SetHandPos(noset)
 	if not rhmat or not lhmat then return end
 
 	local atk = hg.KeyDown(ply, IN_ATTACK)
-	self.anglefinger[2] = LerpFT(atk and 1 or 0.1, self.anglefinger[2], self:CanUse() and atk and 30 or 0)
+	self.anglefinger[2] = LerpFT(atk and 1 or 0.1, self.anglefinger[2], self:CanUse() and !(self:KeyDown(IN_USE) and !IsValid(ply.FakeRagdoll)) and atk and 30 or 0)
 	self.anglefinger[1] = self.anglefinger[2] * 0.3
 	if !should then
 		local vec1, ang1 = -(-self.handPos), -(-self.handAng)
@@ -2338,9 +2338,9 @@ function SWEP:PlayAnim(anim, data, cycling, callback, reverse, sendtoclient)
         self.callback = callback
     end
 
-	if self.AnimsEvents and self.AnimsEvents[self.seq] then
+	if self.AnimsEvents and (self.AnimsEvents[anim] or self.AnimsEvents[self.seq]) then
 		local Time = time
-		for k,v in pairs(self.AnimsEvents[self.seq]) do
+		for k,v in pairs(self.AnimsEvents[anim] or self.AnimsEvents[self.seq]) do
 			self.VM_TimerEvents = self.VM_TimerEvents or {}
 
 			local TimerName = "VM_Events_ZC-Base" .. self:EntIndex() .. self.seq .. k
