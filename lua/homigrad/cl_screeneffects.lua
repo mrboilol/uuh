@@ -60,7 +60,7 @@ postprs.addtiveLayer = {
 postprs.layers = postprs.layers or {}
 damage_blur_time = 0
 
-local layers = {}postprs.layers
+local layers = postprs.layers
 local layers_name = {}
 function postprs.LayerAdd(name, tab)
 	tab.weight = 0
