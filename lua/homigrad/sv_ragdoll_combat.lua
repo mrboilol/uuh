@@ -1,9 +1,9 @@
 
 -- Constants
 -- Constants
-local DAMAGE_THRESHOLD = 400
-local DAMAGE_THRESHOLD_HANDS = 250
-local HIGH_VELOCITY_THRESHOLD = 1000
+local DAMAGE_THRESHOLD = 95
+local DAMAGE_THRESHOLD_HANDS = 70
+local HIGH_VELOCITY_THRESHOLD = 175
 
 -- Damage multipliers
 local MULTIPLIERS = {

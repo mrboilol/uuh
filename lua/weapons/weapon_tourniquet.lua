@@ -97,3 +97,4 @@ function SWEP:Heal(ent, mode)
 	if not org then return end
 	if self:Tourniquet(ent, bone) then self.modeValues[1] = 0 self:GetOwner():SelectWeapon("weapon_hands_sh") self:Remove() end
 end
+

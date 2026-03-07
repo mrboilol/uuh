@@ -275,24 +275,43 @@ local HEAD_TRAUMA_DURATION = 1.5
 local show_red_trauma_time = 0
 local RED_TRAUMA_DURATION = 0.5
 
-net.Receive("hg_RedTrauma", function()
-    show_red_trauma_time = RED_TRAUMA_DURATION
-end)
-
 net.Receive("hg_HeadTrauma", function()
     show_image_time = HEAD_TRAUMA_DURATION
     lobotomy_index = math.random(#lobotomy_mats)
     surface.PlaySound("headhit.mp3")
 end)
 
-hook.Add("HUDPaint", "hg_red_trauma_flash", function()
-    if show_red_trauma_time > 0 then
-        show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
+hook.Add("HUDPaint", "hg_damage_flash", function()
+    if show_image_time > 0 then -- head trauma
+        show_image_time = math.max(show_image_time - FrameTime(), 0)
+        local duration = HEAD_TRAUMA_DURATION
+        local timer = show_image_time
 
-        local flash_alpha = math.Clamp(1 - ((RED_TRAUMA_DURATION - show_red_trauma_time) / 0.2), 0, 1) * 150
+        -- Red flash for head trauma
+        local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.2), 0, 1) * 150
         if flash_alpha > 0 then
-            surface.SetDrawColor(255, 0, 0, flash_alpha)
+            surface.SetDrawColor(255, 0, 0, flash_alpha) -- RED
             surface.DrawRect(0, 0, ScrW(), ScrH())
+        end
+
+        -- Lobotomy mat with fadeout
+        if lobotomy_index > 0 and lobotomy_mats[lobotomy_index] then
+            local fade_alpha = math.Clamp(timer / duration, 0, 1) * 255
+            surface.SetDrawColor(255, 255, 255, fade_alpha)
+            surface.SetMaterial(lobotomy_mats[lobotomy_index])
+            surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+        end
+    elseif show_red_trauma_time > 0 then -- normal damage
+        show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
+        local duration = RED_TRAUMA_DURATION
+        local timer = show_red_trauma_time
+        
+        -- Lobotomy mat with fadeout for normal damage
+        if lobotomy_index > 0 and lobotomy_mats[lobotomy_index] then
+            local fade_alpha = math.Clamp(timer / duration, 0, 1) * 255
+            surface.SetDrawColor(255, 255, 255, fade_alpha)
+            surface.SetMaterial(lobotomy_mats[lobotomy_index])
+            surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
         end
     end
 end)
@@ -618,6 +637,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	PainLerp = LerpFT(0.05, PainLerp, math.max(pain * (org.otrub and 0.2 or 1), 0))
 	assimilatedLerp = LerpFT(0.01, assimilatedLerp, (org.assimilated or 0))
 
+	if PainLerp > 0.1 then
+        local blur_intensity = math.Clamp(PainLerp / 100, 0, 0.8)
+        DrawMotionBlur(0, blur_intensity, 0.01)
+    end
+
 	if assimilatedLerp > 0.001 then
 		render.UpdateScreenEffectTexture()
 
@@ -765,7 +789,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		
 		//if pain > 10 then
 			if IsValid(PainStation) then
-				PainStation:SetVolume(math.Clamp(math.Remap(pain, 0, 120, 0, 2), 0, 2))
+				local vol = math.Clamp(math.Remap(pain, 0, 120, 0, 2), 0, 2)
+			PainStation:SetVolume(org.otrub and vol * 0.2 or vol)
 			end
 		//else
 		//	if IsValid(PainStation) then
@@ -829,7 +854,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 
 		if IsValid(Tinnitus) then
-			Tinnitus:SetVolume(math.min(math.max(lply.tinnitus - CurTime(), 0) / 10, 1))
+			Tinnitus:SetVolume(org.otrub and 0 or math.min(math.max(lply.tinnitus - CurTime(), 0) / 10, 1))
 		end
 	else
 		if IsValid(Tinnitus) then
@@ -920,7 +945,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			end
 
 			if IsValid(NoiseStation) then
-				NoiseStation:SetVolume(math.Clamp((o2 - 30) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 1))
+				NoiseStation:SetVolume(math.Clamp((o2 - 30) / 100 + (brain > 0.3 and (brain - 0.3) * 5 or 0), 0, 0.2))
 			end
 		else
 			if IsValid(NoiseStation) then
@@ -1060,24 +1085,5 @@ hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
 	render.SetLightingMode(0)
 end)
 
-hook.Add("HUDPaint", "hg_head_trauma_flash", function()
-    if show_image_time > 0 then
-        show_image_time = math.max(show_image_time - FrameTime(), 0)
 
-        -- Fast, subtle white flash
-        local flash_alpha = math.Clamp(1 - ((HEAD_TRAUMA_DURATION - show_image_time) / 0.2), 0, 1) * 100
-        if flash_alpha > 0 then
-            surface.SetDrawColor(255, 255, 255, flash_alpha)
-            surface.DrawRect(0, 0, ScrW(), ScrH())
-        end
-
-        -- Lobotomy mat with fadeout
-        if lobotomy_index > 0 and lobotomy_mats[lobotomy_index] then
-            local fade_alpha = math.Clamp(show_image_time / HEAD_TRAUMA_DURATION, 0, 1) * 255
-            surface.SetDrawColor(255, 255, 255, fade_alpha)
-            surface.SetMaterial(lobotomy_mats[lobotomy_index])
-            surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-        end
-    end
-end)
 

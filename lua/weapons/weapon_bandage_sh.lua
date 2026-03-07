@@ -187,8 +187,14 @@ function SWEP:Think()
 end
 SWEP.net_cooldown2 = 0
 function SWEP:PrimaryAttack()
-	if SERVER then--and not self.modeValuesdef[self.mode][2] then
+    if GetConVar("use_homigrad_hud"):GetBool() then
+        if CLIENT then
+            RunConsoleCommand("homigrad_show_hud")
+        end
+        return
+    end
 
+	if SERVER then
 		self.healbuddy = self:GetOwner()
 		local done = self:Heal(self.healbuddy, self.mode)
 		

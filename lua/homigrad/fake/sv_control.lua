@@ -853,7 +853,7 @@ hook.Add("Think", "Fake", function()
 
 				local force = angles2:Forward()
 				force:Normalize()
-				force = force * 115 * ragdoll.dtime / 0.015 * ragdoll.power
+				force = force * 100 * ragdoll.dtime / 0.015 * ragdoll.power
 
 				if org.lleg >= 1 or org.rleg >= 1 then
 					org.painadd = org.painadd + ragdoll.dtime * 2 * (org.lleg + org.rleg)

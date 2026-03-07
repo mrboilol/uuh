@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.PrintName = "Combat Knife"
 SWEP.Instructions = "A military grade combat knife designed to neutralize the enemy during combat operations and special operations."
 SWEP.Category = "Weapons - Melee"
@@ -756,6 +756,9 @@ end
 function SWEP:MultiplyDMG(owner, ent, vellen, mul)
     mul = mul * 1 / math.Clamp((180 - owner.organism.stamina[1]) / 90,1,1.3)
     mul = mul * math.Clamp(vellen / 250, 0.9, 1.25)
+    if SERVER then
+        mul = mul * (1 + (self.swingSpeed or 0) * 0.1) -- Swing speed multiplier
+    end
     mul = mul * (ent ~= owner and 0.75 or 1)
     mul = mul * (owner.MeleeDamageMul or 1)
 
@@ -1320,7 +1323,20 @@ SWEP.SwingAng = -90
 SWEP.SwingAng2 = 0
 
 function SWEP:PrimaryAttack()
-    if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
+    if not IsFirstTimePredicted() then return end
+    if CLIENT then
+        local owner = self:GetOwner()
+        if not IsValid(owner) then return end
+        local currentAngle = owner:EyeAngles()
+        local angleDiff = currentAngle - (self.lastAngle or currentAngle)
+        local swingSpeed = math.abs(angleDiff.y) + math.abs(angleDiff.p)
+        self.lastAngle = currentAngle
+
+        net.Start("melee_swing_speed")
+        net.WriteFloat(swingSpeed)
+        net.SendToServer()
+    end
+
     local ply = self:GetOwner()
 
     if self.cutthroat and self.cutthroat + 1 > CurTime() then return end
@@ -1422,6 +1438,20 @@ function SWEP:CanBlock()
 end
 
 function SWEP:SecondaryAttack(override)
+    if not IsFirstTimePredicted() then return end
+    if CLIENT then
+        local owner = self:GetOwner()
+        if not IsValid(owner) then return end
+        local currentAngle = owner:EyeAngles()
+        local angleDiff = currentAngle - (self.lastAngle or currentAngle)
+        local swingSpeed = math.abs(angleDiff.y) + math.abs(angleDiff.p)
+        self.lastAngle = currentAngle
+
+        net.Start("melee_swing_speed")
+        net.WriteFloat(swingSpeed)
+        net.SendToServer()
+    end
+
     local ply = self:GetOwner()
     if ply.organism and ply.organism.larmamputated and self.TwoHanded then return end
 
@@ -1484,6 +1514,10 @@ function SWEP:Initialize()
     self.animtime = 0
     self.animspeed = 1
     self.reverseanim = false
+    if CLIENT then
+        self.lastAngle = Angle(0,0,0)
+    end
+    self.swingSpeed = 0
     self:PlayAnim("idle",10,true)
 
 	if CLIENT then
@@ -1564,6 +1598,13 @@ SWEP.tries = 10
 
 if SERVER then
     util.AddNetworkString("melee_attack")
+    util.AddNetworkString("melee_swing_speed")
+    net.Receive("melee_swing_speed", function(len, ply)
+        local wep = ply:GetActiveWeapon()
+        if IsValid(wep) and wep.ismelee then
+            wep.swingSpeed = net.ReadFloat()
+        end
+    end)
 elseif CLIENT then
     net.Receive("melee_attack",function()
         local tbl = net.ReadTable()

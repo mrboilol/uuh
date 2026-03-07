@@ -134,11 +134,13 @@ module[2] = function(owner, org, timeValue)
 			local brain_damage = (org.analgesia - 0.75) * timeValue * 0.005
 			org.brain = math.min(org.brain + brain_damage, 1)
 		elseif org.analgesia >= 0.75 then
-			local impairment = (org.analgesia - 0.75) * 0.05 * timeValue
+			local impairment = (org.analgesia - 0.75) * 0.1 * timeValue
 			org.consciousness = math.max(org.consciousness - impairment, 0)
 			if org.o2 and org.o2[1] then
-				org.o2[1] = math.max(org.o2[1] - impairment * 5, 0)
+				org.o2[1] = math.max(org.o2[1] - impairment * 10, 0)
 			end
+            local brain_damage = (org.analgesia - 0.75) * timeValue * 0.005
+			org.brain = math.min(org.brain + brain_damage, 1)
 		end
 	end
 	

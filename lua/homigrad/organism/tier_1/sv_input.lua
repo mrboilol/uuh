@@ -270,12 +270,12 @@ function hg.organism.AddWound(ent, tr, bone, dmgInfo, dmgPos, dmgBlood, inputHol
 			
 			table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
 
-util.AddNetworkString("hg_head_trauma_effect")
+util.AddNetworkString("hg_HeadTrauma")
 util.AddNetworkString("hg_RedTrauma")
 
 hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
     if hitgroup == HITGROUP_HEAD then
-        net.Start("hg_head_trauma_effect")
+        net.Start("hg_HeadTrauma")
         net.Send(ply)
 --hacks
         if math.random(1, 20) == 1 then
