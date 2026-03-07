@@ -857,11 +857,21 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
     return trace
 end
 
+local bluntDecals, bluntDecalsRand = {}, 1
+for i = 1, 4 do
+	local mat = "decals/zcity/blunt_impact" .. i
+	table.insert(bluntDecals, mat)
+	game.AddDecal("Impact.BluntAdd" .. i, mat)
+
+	list.Add("PaintMaterials", "Impact.BluntAdd" .. i)
+	bluntDecalsRand = i
+end
+
 function SWEP:PlayEffects(trace, attacktype)
     local owner = self:GetOwner()
     
     if self:IsEntSoft(trace.Entity) then
-        owner:EmitSound(attacktype and self.Attack2HitFlesh or self.AttackHitFlesh,50)
+        owner:EmitSound(attacktype and self.Attack2HitFlesh or self.AttackHitFlesh, 50)
 
         if self.DamageType == DMG_SLASH then
             util.Decal( "Blood", trace.HitPos + trace.HitNormal * 15, trace.HitPos - trace.HitNormal * 15, owner )
@@ -870,7 +880,11 @@ function SWEP:PlayEffects(trace, attacktype)
     elseif not self.AttackHitPlayed then
         self.AttackHitPlayed = true
 
-        owner:EmitSound(self.AttackHit,50)
+        owner:EmitSound(self.AttackHit, 50)
+
+		if self.weight >= 1.5 and self.DamageType ~= DMG_SLASH and tr.MatType ~= MAT_GLASS then
+			util.Decal("Impact.BluntAdd" .. math.random(bluntDecalsRand), trace.HitPos + trace.HitNormal, trace.HitPos - trace.HitNormal, owner)
+		end
     end
 end
 
