@@ -272,26 +272,37 @@ function hg.organism.AddWound(ent, tr, bone, dmgInfo, dmgPos, dmgBlood, inputHol
 
 util.AddNetworkString("hg_HeadTrauma")
 util.AddNetworkString("hg_RedTrauma")
+util.AddNetworkString("hg_SmallHeadHit")
 
 hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
     local dir = dmgInfo:GetDamageForce():GetNormalized()
+    local org = ply:GetOrganism()
+    if not org then return end
 
     if hitgroup == HITGROUP_HEAD then
-        net.Start("hg_HeadTrauma")
-        net.WriteVector(dir)
-        net.Send(ply)
---hacks
+        local damage = dmgInfo:GetDamage()
+        if damage > 10 then -- Concussion
+            org.concussion_severity = (org.concussion_severity or 0) + damage / 2
+            net.Start("hg_HeadTrauma")
+            net.WriteVector(dir)
+            net.Send(ply)
+        else -- Small head hit
+            net.Start("hg_SmallHeadHit")
+            net.WriteVector(dir)
+            net.Send(ply)
+        end
+
+        --hacks
         if math.random(1, 20) == 1 then
             local eyeToDamage = math.random(1, 2) == 1 and "lefteye" or "righteye"
-            local org = ply:GetOrganism()
             if org[eyeToDamage] < 1 then
                 input_list[eyeToDamage](org, 0, 1, dmgInfo)
             end
         end
     end
-	net.Start("hg_RedTrauma")
+    net.Start("hg_RedTrauma")
     net.WriteVector(dir)
-	net.Send(ply)
+    net.Send(ply)
 end)
 
 			if #org.wounds <= 30 then

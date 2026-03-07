@@ -100,6 +100,9 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	//DrawBloom(addtiveLayer.bloom_darken, addtiveLayer.bloom_mul, addtiveLayer.bloom_sizex, addtiveLayer.bloom_sizey, addtiveLayer.bloom_passes, addtiveLayer.bloom_colormul, addtiveLayer.bloom_colorr, addtiveLayer.bloom_colorg, addtiveLayer.bloom_colorb)
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
+    if damage_blur_time > 0 then
+        DrawToyTown(damage_blur_time * 4, ScrH())
+    end
 	//DrawToyTown(addtiveLayer.toytown, addtiveLayer.toytown_h * ScrH())
 	tab["$pp_colour_brightness"] = addtiveLayer.brightness
 	DrawColorModify(tab)
@@ -277,13 +280,13 @@ local lobotomy_dir = Vector(0,0,0)
 local HEAD_TRAUMA_DURATION = 1.5
 
 local show_red_trauma_time = 0
-local RED_TRAUMA_DURATION = 0.5
+local RED_TRAUMA_DURATION = 1.5
 
 local damage_blur_time = 0
 
 net.Receive("hg_RedTrauma", function()
-    damage_blur_time = 0.2
-    show_red_trauma_time = RED_TRAUMA_DURATION
+    damage_blur_time = math.min(damage_blur_time + 0.5, 1.5)
+    show_red_trauma_time = math.min(show_red_trauma_time + RED_TRAUMA_DURATION, RED_TRAUMA_DURATION * 3)
     lobotomy_index = math.random(#lobotomy_mats)
     lobotomy_dir = net.ReadVector()
 end)
@@ -291,12 +294,17 @@ end)
 net.Receive("hg_HeadTrauma", function()
     show_image_time = HEAD_TRAUMA_DURATION
     lobotomy_index = math.random(#lobotomy_mats)
-    surface.PlaySound("sound/concussion"..math.random(4)..".mp3")
+    surface.PlaySound("concussion"..math.random(4)..".mp3")
 	concussion_effect_time = 2
     lobotomy_dir = net.ReadVector()
 end)
 
+net.Receive("hg_SmallHeadHit", function()
+    surface.PlaySound("headhit.mp3")
+end)
+
 hook.Add("HUDPaint", "hg_damage_flash", function()
+    damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.5, 0)
     if show_image_time > 0 then -- head trauma
         show_image_time = math.max(show_image_time - FrameTime(), 0)
         local duration = HEAD_TRAUMA_DURATION
@@ -312,7 +320,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         -- Red flash for head trauma
         local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.2), 0, 1) * 150
         if flash_alpha > 0 then
-            surface.SetDrawColor(255, 0, 0, flash_alpha) -- RED
+            surface.SetDrawColor(255, 255, 255, flash_alpha) -- WHITE
             surface.DrawRect(0, 0, ScrW(), ScrH())
         end
 
@@ -325,6 +333,9 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
             surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
         end
+		if show_image_time == 0 then
+			lobotomy_index = 0
+		end
     elseif show_red_trauma_time > 0 then -- normal damage
         show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
         local duration = RED_TRAUMA_DURATION
@@ -584,22 +595,22 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 	end
 
-	local conc_sev = org.concussion_severity or 0
+    local conc_sev = org.concussion_severity or 0
     if conc_sev > 0 then
-		local severity_multiplier = math.Clamp(conc_sev / 10, 0, 1)
-        show_image_time = HEAD_TRAUMA_DURATION
+        local severity_multiplier = math.Clamp(conc_sev / 10, 0, 1)
+        show_image_time = HEAD_TRAUMA_DURATION * (1 + severity_multiplier * 2) -- Longer effect for more severe concussions
         lobotomy_index = math.random(#lobotomy_mats)
         DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
-		if severity_multiplier > 0.7 then
-			lply:SetDSP(1)
-		elseif severity_multiplier > 0.3 then
-			lply:SetDSP(35)
-		else
-			lply:SetDSP(17)
-		end
+        if severity_multiplier > 0.7 then
+            lply:SetDSP(1) -- More intense DSP
+        elseif severity_multiplier > 0.3 then
+            lply:SetDSP(35)
+        else
+            lply:SetDSP(17)
+        end
         local curTime = CurTime()
-        local wobble = math.sin(curTime * (10 + 5 * severity_multiplier)) * (0.5 * severity_multiplier)
-        ViewPunch(Angle(wobble, wobble, wobble))
+        local wobble = math.sin(curTime * (10 + 15 * severity_multiplier)) * (0.5 * severity_multiplier) -- More intense wobble
+        ViewPunch(Angle(wobble * 2, wobble, wobble * 0.5))
     end
 
 	if (org.consciousness < 0.7) then

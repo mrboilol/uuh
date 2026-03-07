@@ -435,6 +435,16 @@ hook.Add("ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
         local should_flash = false
         if grp == HITGROUP_HEAD then
             should_flash = true
+            if damage > 5 and damage < 25 and math.random(1, 100) <= 15 then
+                local random_organ = math.random(1, 3)
+                if random_organ == 1 then
+                    hg.organism.input_list.lefteye(org, nil, damage / 5, dmginfo)
+                elseif random_organ == 2 then
+                    hg.organism.input_list.righteye(org, nil, damage / 5, dmginfo)
+                else
+                    hg.organism.input_list.nose(org, nil, damage / 5, dmginfo)
+                end
+            end
         elseif (grp == HITGROUP_CHEST or grp == HITGROUP_STOMACH) and damage > 40 then
             if math.random(1, 100) < 30 then
                 should_flash = true

@@ -138,12 +138,12 @@ local function getlocalshit(ent, bone, dmgInfo, dir, hit)
 end
 
 local arterySize = {
-	["arteria"] = 14,
-	["rarmartery"] = 6,
-	["larmartery"] = 6,
-	["rlegartery"] = 9,
-	["llegartery"] = 9,
-	["spineartery"] = 10,
+	["arteria"] = 18,
+	["rarmartery"] = 8,
+	["larmartery"] = 8,
+	["rlegartery"] = 12,
+	["llegartery"] = 12,
+	["spineartery"] = 13,
 }
 
 local arteryMessages ={
