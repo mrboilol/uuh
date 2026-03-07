@@ -20,6 +20,7 @@ SWEP.CanSuicide = true
 SWEP.SuicideNoLH = true
 
 SWEP.BreakBoneMul = 0.1
+SWEP.weight = 0.5
 
 SWEP.AnimTime1 = 1.0
 SWEP.AttackTime = 0.2

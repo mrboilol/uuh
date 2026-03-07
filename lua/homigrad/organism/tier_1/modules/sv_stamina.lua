@@ -27,6 +27,7 @@ module[1] = function(org)
 	org.moveMaxSpeed = IsValid(owner) and owner:IsPlayer() and owner:GetMaxSpeed() or 250
 end
 
+local hg_infstamina = CreateConVar("hg_infstamina", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY, "Toggle infinite stamina (excausts only from other organism effects, not from running/attacking)", 0, 1)
 module[2] = function(owner, org, timeValue)
 	local stamina = org.stamina
 	
@@ -98,6 +99,11 @@ module[2] = function(owner, org, timeValue)
 	-- 		org.owner:Notify("Breathing is painful. Something is wrong with my ribs.", 60, "painfromribs", 0, nil, Color(255, 210, 210))
 	-- 	end
 	-- end
+
+	if hg_infstamina:GetBool() then
+		stamina.sub = 0
+		stamina[1] = stamina.max
+	end
 end
 
 function hg.organism.AddNaturalAdrenaline(org, fAmount)
