@@ -689,6 +689,14 @@ hg.ConVars = hg.ConVars or {}
 
 	DEFAULT_JUMP_POWER = 200
 
+	local music_packs = {
+		"mirrors_edge",
+		"swat4",
+		--"hl_coop",
+		"splinter_cell",
+	}
+	local hg_sandboxmusic = ConVarExists("hg_sandboxmusic") and GetConVar("hg_sandboxmusic") or CreateConVar("hg_sandboxmusic", 0, FCVAR_REPLICATED + FCVAR_ARCHIVE, "Toggle dynamic music in sandbox gamemode", 0, 1)
+	local gamemod = engine.ActiveGamemode()
 	hook.Add("player_spawn", "homigrad-spawn3", function(data)
 		local ply = Player(data.userid)
 		if not IsValid(ply) then return end
@@ -719,6 +727,17 @@ hg.ConVars = hg.ConVars or {}
 			ply:SetDuckSpeed(0.4)
 			ply:SetUnDuckSpeed(0.4)
 			ply:AddEFlags(EFL_NO_DAMAGE_FORCES)
+
+			if CLIENT and not ply:IsLocal() and gamemod == "sandbox" then
+				if hg.DynaMusic then
+					if hg_sandboxmusic:GetBool() then
+						hg.DynaMusic:Stop()
+						hg.DynaMusic:Start(music_packs[math.random(#music_packs)])
+					else
+						hg.DynaMusic:Stop()
+					end
+				end
+			end
 		end)
 
 		if SERVER then
