@@ -9,6 +9,29 @@ local function DrawSunEffect()
 	DrawSunbeams(0.1, 0.15 * dot * sun.obstruction, 0.1, scrpos.x / ScrW(), scrpos.y / ScrH())
 end
 
+local function DrawArc(centerX, centerY, radius, thickness, start_angle, end_angle, segments, color)
+    local poly = {}
+    segments = math.max(2, segments or 0)
+    
+    for i = 0, segments do
+        local angle = start_angle + (i / segments) * (end_angle - start_angle)
+        local rad = math.rad(angle)
+        local x = centerX + radius * math.cos(rad)
+        local y = centerY + radius * math.sin(rad)
+        table.insert(poly, {x=x, y=y})
+    end
+
+    for i = segments, 0, -1 do
+        local angle = start_angle + (i / segments) * (end_angle - start_angle)
+        local rad = math.rad(angle)
+        local x = centerX + (radius - thickness) * math.cos(rad)
+        local y = centerY + (radius - thickness) * math.sin(rad)
+        table.insert(poly, {x=x, y=y})
+    end
+    surface.SetDrawColor(color)
+    surface.DrawPoly(poly)
+end
+
 hg.postprocess = hg.postprocess or {}
 local postprs = hg.postprocess
 postprs.addtiveLayer = {
@@ -494,6 +517,24 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 	end
 
+	local conc_sev = org.concussion_severity or 0
+    if conc_sev > 0 then
+		local severity_multiplier = math.Clamp(conc_sev / 10, 0, 1)
+        show_image_time = HEAD_TRAUMA_DURATION
+        lobotomy_index = math.random(#lobotomy_mats)
+        DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
+		if severity_multiplier > 0.7 then
+			lply:SetDSP(1)
+		elseif severity_multiplier > 0.3 then
+			lply:SetDSP(35)
+		else
+			lply:SetDSP(17)
+		end
+        local curTime = CurTime()
+        local wobble = math.sin(curTime * (10 + 5 * severity_multiplier)) * (0.5 * severity_multiplier)
+        ViewPunch(Angle(wobble, wobble, wobble))
+    end
+
 	if (org.consciousness < 0.7) then
 		lerpblood = LerpFT(0.01, lerpblood or 0, math.Clamp((0.7 - org.consciousness) * 5, 0, 1) * 255)
 		local lowblood = (3600 - (org.blood or 5000)) / 600
@@ -675,12 +716,12 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		if org.otrub then
 			if hg_new_otrub_effect:GetBool() then
 				local tab = {
-					["$pp_colour_brightness"] = -1,
-					["$pp_colour_contrast"] = 1.5,
+					["$pp_colour_brightness"] = -0.9,
+					["$pp_colour_contrast"] = 1.2,
 					["$pp_colour_colour"] = 0
 				}
 				DrawColorModify(tab)
-				DrawSobel(1)
+				--DrawSobel(1)
 
 				vignetteMat:SetFloat("$c0_z", 10) --ColorIntensity
 				vignetteMat:SetFloat("$c1_y", 10) --Vignette
@@ -714,7 +755,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 					text_to_draw = dots
 				end
 
-				draw.Arc(centerX, centerY, radius, thickness, -90, -90 + (360 * fill_progress), roughness, circle_color)
+				DrawArc(centerX, centerY, radius, thickness, -90, -90 + (360 * fill_progress), roughness, circle_color)
 				draw.SimpleText(text_to_draw, "DermaLarge", centerX, centerY, text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 			else
 				DrawMotionBlur(0.1, 1., 0.01)

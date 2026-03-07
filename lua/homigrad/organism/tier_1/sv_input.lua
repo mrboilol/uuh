@@ -1523,6 +1523,9 @@ local function velocityDamage(ent, data)
 			if dmg * 10 > 0.5 and !hadhelmet then
 				org.otrub = true
 				org.shock = org.shock + 10
+			elseif dmg * 5 > 0.5 and !hadhelmet then
+				org.concussion_severity = (org.concussion_severity or 0) + dmg * 5
+				org.shock = org.shock + 40
 			end
 
 			if neck_not_broken and org.spine3 >= 0.8 then

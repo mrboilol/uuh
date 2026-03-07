@@ -48,6 +48,11 @@ module[2] = function(owner, org, timeValue)
 	
 	if !org.lasthit or org.lasthit + 1.5 < CurTime() then org.shock = max(org.shock - timeValue * 4 * (org.otrub and 1 or 0.5), 0) end
 	org.immobilization = max(org.immobilization - timeValue * 2 * adrenalineMul, 0)
+	if org.concussion_severity and org.concussion_severity > 0 then
+		org.concussion_severity = math.max(org.concussion_severity - timeValue * 0.5, 0)
+		local consciousness_reduction = org.concussion_severity * 0.1 * timeValue
+        org.consciousness = math.max(org.consciousness - consciousness_reduction, 0)
+	end
 
 	local shouldPainAdd = not (org.otrub or org.spine2 >= hg.organism.fake_spine2 or org.spine3 >= hg.organism.fake_spine3)
 	
