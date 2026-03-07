@@ -58,7 +58,9 @@ postprs.addtiveLayer = {
 }
 
 postprs.layers = postprs.layers or {}
-local layers = postprs.layers
+damage_blur_time = 0
+
+local layers = {}postprs.layers
 local layers_name = {}
 function postprs.LayerAdd(name, tab)
 	tab.weight = 0
@@ -281,8 +283,6 @@ local HEAD_TRAUMA_DURATION = 1.5
 
 local show_red_trauma_time = 0
 local RED_TRAUMA_DURATION = 1.5
-
-local damage_blur_time = 0
 
 net.Receive("hg_RedTrauma", function()
     damage_blur_time = math.min(damage_blur_time + 0.5, 1.5)
