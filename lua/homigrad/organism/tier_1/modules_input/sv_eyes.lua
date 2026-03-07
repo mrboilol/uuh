@@ -4,7 +4,7 @@ local function damageEye(org, bone, dmg, dmgInfo, key)
 	if org[key .. "destroyed"] then return 0 end
 
 	local oldDmg = org[key]
-	org[key] = math.min(org[key] + dmg * 5, 1)
+	org[key] = math.min(org[key] + dmg * 10, 1)
 
 	if org[key] >= 1 then
 		print(key, "broken for", org.owner:Nick())
@@ -13,12 +13,10 @@ local function damageEye(org, bone, dmg, dmgInfo, key)
 		if org.isPly then org.owner:Notify(destroyed_eye[math.random(#destroyed_eye)], 1, "destroyed"..key, 1, nil, nil) end
 	end
 
-	hg.AddHarmToAttacker(dmgInfo, (org[key] - oldDmg) * 5, "Eye damage harm")
+	hg.AddHarmToAttacker(dmgInfo, (org[key] - oldDmg) * 10, "Eye damage harm")
 	
-	org.shock = org.shock + dmg * 10
-	org.painadd = org.painadd + dmg * 20
-
-	dmgInfo:ScaleDamage(0.1)
+	org.shock = org.shock + dmg * 20
+	org.painadd = org.painadd + dmg * 40
 
 	return 0
 end

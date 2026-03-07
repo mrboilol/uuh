@@ -50,25 +50,25 @@ male["ValveBiped.Bip01_Head1"] = {
     {
         "lefteye",
         nil,
-        Vector(4.5, -2.5, 1.5),
+        Vector(4, -2.5, 1.5),
         Angle(0, 0, 0),
-        Vector(1, 1, 1),
+        Vector(2, 2, 2),
         Color(255, 255, 255)
     },
     {
         "righteye",
         nil,
-        Vector(4.5, -2.5, -1.5),
+        Vector(4, -2.5, -1.5),
         Angle(0, 0, 0),
-        Vector(1, 1, 1),
+        Vector(2, 2, 2),
         Color(255, 255, 255)
     },
     {
         "nose",
         nil,
-        Vector(3.5, -3.5, 0),
+        Vector(3, -3.5, 0),
         Angle(0, 0, 0),
-        Vector(1, 1, 1),
+        Vector(2, 2, 2),
         Color(255, 0, 0)
     },
 }

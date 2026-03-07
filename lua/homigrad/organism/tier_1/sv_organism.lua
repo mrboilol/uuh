@@ -519,6 +519,11 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
 	end
 
+	if org.otrub and GetConVar("homigrad_new_otrub"):GetBool() then
+		owner:SetNetVar("flashed", 0)
+		owner:SetNetVar("blindness", 0)
+	end
+
 	if org.otrub and isPly and org.owner:Alive() then
 		//org.owner:ScreenFade(SCREENFADE.PURGE, color_black, 0.5, 0)
 		//org.owner:ConCommand("soundfade 100 99999")
