@@ -274,8 +274,11 @@ util.AddNetworkString("hg_HeadTrauma")
 util.AddNetworkString("hg_RedTrauma")
 
 hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
+    local dir = dmgInfo:GetDamageForce():GetNormalized()
+
     if hitgroup == HITGROUP_HEAD then
         net.Start("hg_HeadTrauma")
+        net.WriteVector(dir)
         net.Send(ply)
 --hacks
         if math.random(1, 20) == 1 then
@@ -287,6 +290,7 @@ hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgrou
         end
     end
 	net.Start("hg_RedTrauma")
+    net.WriteVector(dir)
 	net.Send(ply)
 end)
 

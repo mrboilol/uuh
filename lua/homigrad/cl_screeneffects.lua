@@ -1,3 +1,6 @@
+
+local concussion_effect_time = 0
+local concussion_dsp_set = false
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
 	if not sun then return end
@@ -78,7 +81,7 @@ local tab = {
 	["$pp_colour_colour"] = 1
 }
 
-local hg_new_otrub_effect = CreateClientConVar("hg_new_otrub_effect", "1", true, false)
+
 --local potatopc = GetConVar("hg_potatopc") or CreateClientConVar("hg_potatopc", "0", true, false, "enable this if you are noob", 0, 1)
 local hook_Run = hook.Run
 hook.Add("RenderScreenspaceEffects", "homigrad", function()
@@ -270,15 +273,27 @@ local lobotomy_mats = {
 
 local show_image_time = 0
 local lobotomy_index = 0
+local lobotomy_dir = Vector(0,0,0)
 local HEAD_TRAUMA_DURATION = 1.5
 
 local show_red_trauma_time = 0
 local RED_TRAUMA_DURATION = 0.5
 
+local damage_blur_time = 0
+
+net.Receive("hg_RedTrauma", function()
+    damage_blur_time = 0.2
+    show_red_trauma_time = RED_TRAUMA_DURATION
+    lobotomy_index = math.random(#lobotomy_mats)
+    lobotomy_dir = net.ReadVector()
+end)
+
 net.Receive("hg_HeadTrauma", function()
     show_image_time = HEAD_TRAUMA_DURATION
     lobotomy_index = math.random(#lobotomy_mats)
-    surface.PlaySound("headhit.mp3")
+    surface.PlaySound("sound/concussion"..math.random(4)..".mp3")
+	concussion_effect_time = 2
+    lobotomy_dir = net.ReadVector()
 end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
@@ -286,6 +301,13 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         show_image_time = math.max(show_image_time - FrameTime(), 0)
         local duration = HEAD_TRAUMA_DURATION
         local timer = show_image_time
+
+        -- White flash
+        local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.1), 0, 1) * 200
+        if flash_alpha > 0 then
+            surface.SetDrawColor(255, 255, 255, flash_alpha)
+            surface.DrawRect(0, 0, ScrW(), ScrH())
+        end
 
         -- Red flash for head trauma
         local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.2), 0, 1) * 150
@@ -299,7 +321,9 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
             local fade_alpha = math.Clamp(timer / duration, 0, 1) * 255
             surface.SetDrawColor(255, 255, 255, fade_alpha)
             surface.SetMaterial(lobotomy_mats[lobotomy_index])
-            surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+			local x = ScrW()/2 + lobotomy_dir.x * ScrW()/2
+			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
+            surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
         end
     elseif show_red_trauma_time > 0 then -- normal damage
         show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
@@ -311,7 +335,9 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
             local fade_alpha = math.Clamp(timer / duration, 0, 1) * 255
             surface.SetDrawColor(255, 255, 255, fade_alpha)
             surface.SetMaterial(lobotomy_mats[lobotomy_index])
-            surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+			local x = ScrW()/2 + lobotomy_dir.x * ScrW()/2
+			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
+            surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
         end
     end
 end)
@@ -510,6 +536,10 @@ local lerpblood = 0
 local addtime = CurTime()
 local hurtoverlay = Material("zcity/neurotrauma/damageOverlay.png", "smooth")
 hook.Add("Post Post Processing", "ItHurts", function()
+	if damage_blur_time > 0 then
+		damage_blur_time = math.max(damage_blur_time - FrameTime(), 0)
+		DrawMotionBlur(0.2, 0.8, 0.05)
+	end
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	
 	if IsValid(PainStation) then
@@ -523,6 +553,24 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	if not organism.brain then stopthings() return end
 	local org = organism
 	
+	if concussion_effect_time > 0 then
+		if not concussion_dsp_set then
+			lply:SetDSP(35)
+			concussion_dsp_set = true
+		end
+		concussion_effect_time = math.max(concussion_effect_time - FrameTime(), 0)
+		local severity_multiplier = 0.5
+		DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
+		local curTime = CurTime()
+		local wobble = math.sin(curTime * (10 + 5 * severity_multiplier)) * (0.5 * severity_multiplier)
+		ViewPunch(Angle(wobble, wobble, wobble))
+	else
+		if concussion_dsp_set then
+			lply:SetDSP(0)
+			concussion_dsp_set = false
+		end
+	end
+
 	if org.blindness or amtflashed >= 0.8 then
 		local blindness = ((org.blindness and math.Round(org.blindness) == 0) or amtflashed >= 0.8) and 0 or (org.blindness)
 		render.UpdateScreenEffectTexture()
@@ -738,59 +786,14 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		render.DrawScreenQuad()
 
 		if org.otrub then
-			if hg_new_otrub_effect:GetBool() then
-				local tab = {
-					["$pp_colour_brightness"] = -0.9,
-					["$pp_colour_contrast"] = 1.2,
-					["$pp_colour_colour"] = 0
-				}
-				DrawColorModify(tab)
-				--DrawSobel(1)
-
-				vignetteMat:SetFloat("$c0_z", 10) --ColorIntensity
-				vignetteMat:SetFloat("$c1_y", 10) --Vignette
-				render.SetMaterial(vignetteMat)
-				render.DrawScreenQuad()
-
-				local fill_progress = math.Clamp(shockLerp / 100, 0, 1)
-				local centerX, centerY = ScrW() / 2, ScrH() / 2
-				local radius = 100
-				local thickness = 4
-				local roughness = 64
-				local text_to_draw
-				local text_color = Color(255, 255, 255, 255)
-				local circle_color = Color(255, 255, 255, 200)
-
-				if org.critical then
-					text_to_draw = "..!"
-					text_color = Color(255, 0, 0, 255)
-					circle_color = Color(255, 0, 0, 200)
-				elseif org.incapacitated then
-					local dots = "."
-					local dot_anim = math.floor(CurTime() * 2) % 3
-					if dot_anim == 1 then dots = ".." elseif dot_anim == 2 then dots = "..." end
-					text_to_draw = dots
-					text_color = Color(255, 0, 0, 255)
-					circle_color = Color(255, 0, 0, 200)
-				else
-					local dots = "."
-					local dot_anim = math.floor(CurTime() * 2) % 3
-					if dot_anim == 1 then dots = ".." elseif dot_anim == 2 then dots = "..." end
-					text_to_draw = dots
-				end
-
-				DrawArc(centerX, centerY, radius, thickness, -90, -90 + (360 * fill_progress), roughness, circle_color)
-				draw.SimpleText(text_to_draw, "DermaLarge", centerX, centerY, text_color, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-			else
 				DrawMotionBlur(0.1, 1., 0.01)
 				lply:ScreenFade( SCREENFADE.IN, Color(0,0,0), 2, 0.5 )
-			end
 		end
 		
 		//if pain > 10 then
 			if IsValid(PainStation) then
 				local vol = math.Clamp(math.Remap(pain, 0, 120, 0, 2), 0, 2)
-			PainStation:SetVolume(org.otrub and vol * 0.2 or vol)
+				--PainStation:SetVolume(org.otrub and vol * 0.2 or vol)
 			end
 		//else
 		//	if IsValid(PainStation) then
@@ -1084,6 +1087,3 @@ hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
 	surface.DrawTexturedRect(x, y, targetW, targetH)
 	render.SetLightingMode(0)
 end)
-
-
-

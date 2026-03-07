@@ -50,10 +50,10 @@ hook.Add("Think", "homigrad_otrub_handler", function()
         otrub_effect_start_time = CurTime() + 0.7
         
         RunConsoleCommand("stopsound")
-        RunConsoleCommand("dsp_room", "27")
+        --RunConsoleCommand("dsp_room", "27")
         
     elseif not org.otrub and was_otrub then
-        RunConsoleCommand("dsp_room", "0")
+        --RunConsoleCommand("dsp_room", "0")
     end
     
     was_otrub = org.otrub
