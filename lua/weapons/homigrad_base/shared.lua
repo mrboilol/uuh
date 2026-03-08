@@ -297,7 +297,7 @@ function SWEP:IsZoom()
 	return self:CanUse() and
 		(!hg_aimtoshoot:GetBool() or self:GetNWBool("aiming")) and
 		(self:GetButtstockAttack() - CurTime() < -1) and 
-		(self:GetOwner():IsPlayer() and self:KeyDown(IN_ATTACK2) and not self:KeyDown(IN_SPEED)) and
+		(self:GetOwner():IsPlayer() and self:KeyDown(IN_ATTACK2) and not self:IsSprinting()) and
 		!(self:IsSprinting() and !IsValid(owner.FakeRagdoll)) and
 		((IsValid(owner.FakeRagdoll) and (self:KeyDown(IN_USE) or hg.RagdollCombatInUse(owner))) or
 		(owner:IsOnGround() or owner:InVehicle())) and 
@@ -320,7 +320,7 @@ function SWEP:IsSprinting()
 	if hg_aimtoshoot:GetBool() then
 		return not ply:IsNPC() and (self:KeyDown(IN_SPEED) and ply:GetVelocity():LengthSqr() > 28900) or not self:KeyDown(IN_ATTACK2) and not IsValid(ply.FakeRagdoll)
 	else
-		return not ply:IsNPC() and self:KeyDown(IN_SPEED) --[[and not (self:KeyDown(IN_ATTACK2) and not self:KeyDown(IN_WALK))]] and ply:GetVelocity():LengthSqr() > 28900 and not IsValid(ply.FakeRagdoll)
+		return not ply:IsNPC() and self:KeyDown(IN_SPEED) and ply:GetVelocity():LengthSqr() > 28900 and not IsValid(ply.FakeRagdoll)
 	end
 end
 
@@ -2063,7 +2063,7 @@ function SWEP:SetHandPos(noset)
 	end
 	
 	if (ent ~= ply and ent ~= ply.OldRagdoll and !hg.RagdollCombatInUse(ply)) then
-		self.lhandik = self.lhandik and !(hg.KeyDown(ply, IN_FORWARD + IN_BACK) and !self.reload and !ply:InVehicle())
+		self.lhandik = self.lhandik and !((hg.KeyDown(ply, IN_FORWARD + IN_BACK) or ent:GetManipulateBoneAngles(ent:LookupBone("ValveBiped.Bip01_L_Finger11"))[2] < 0) and !self.reload and !ply:InVehicle())
 	end
 
 	--ply:SetIK(false)
@@ -2554,8 +2554,22 @@ hook.Add("HG_MovementCalc_2", "moveWithWeapon", function(mul, ply, cmd, mv)
                 return
 			end
 
-            mv:SetSideSpeed((wep.ownerpos2 - ply:GetPos() + (restpos - wep:GetNWVector("EntPos"))):Dot(ply:EyeAngles():Right()) * 10)
-            mv:SetForwardSpeed((wep.ownerpos2 - ply:GetPos() + (restpos - wep:GetNWVector("EntPos"))):Dot(ply:EyeAngles():Forward()) * 10)
+            --cmd:SetSideMove((wep.ownerpos2 - ply:GetPos() + (restpos - wep:GetNWVector("EntPos"))):Dot(ply:EyeAngles():Right()) * 10)
+            --cmd:SetForwardMove((wep.ownerpos2 - ply:GetPos() + (restpos - wep:GetNWVector("EntPos"))):Dot(ply:EyeAngles():Forward()) * 10)
+			
+			local right = (wep.ownerpos2 - ply:GetPos() + (restpos - wep:GetNWVector("EntPos"))):Dot(ply:EyeAngles():Right())
+			right = right - math.Clamp(right, -0, 0)
+			right = right * (IsValid(ply.FakeRagdoll) and 0 or 1)
+			local forward = (wep.ownerpos2 - ply:GetPos() + (restpos - wep:GetNWVector("EntPos"))):Dot(ply:EyeAngles():Forward())
+			forward = forward - math.Clamp(forward, -10, (IsValid(ply.FakeRagdoll) and 0 or 10)) - 0
+			local veca = ply:EyeAngles():Right() * right * 1
+				+ ply:EyeAngles():Forward() * forward * 1
+			
+			if !IsValid(ply.FakeRagdoll) then
+				ply:SetVelocity(veca)
+			else
+				wep:SetNWVector("RestPos", wep:GetNWVector("RestPos") - veca * 0.1)
+			end
 			
 			if restpos[3] < ply:EyePos()[3] - 40 then
 				--mv:AddKey(IN_DUCK)
