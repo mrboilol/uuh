@@ -287,7 +287,7 @@ hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgrou
             net.Start("hg_HeadTrauma")
             net.WriteVector(dir)
             net.Send(ply)
-        else -- Small head hit
+        elseif damage <= 1.5 then -- Small head hit
             net.Start("hg_SmallHeadHit")
             net.WriteVector(dir)
             net.Send(ply)
