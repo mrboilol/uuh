@@ -169,7 +169,7 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 	end
 
 	if lply:InVehicle() then
-		angle.roll = math.Clamp(angle.roll, -15, 15)
+		angle.roll = 0
 	end
 	
 	tbl.override_angle = true
