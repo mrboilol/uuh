@@ -275,7 +275,7 @@ util.AddNetworkString("hg_RedTrauma")
 util.AddNetworkString("hg_SmallHeadHit")
 
 hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
-	if not IsValid(ply) then return end
+	if not IsValid(ply) or not ply:IsPlayer() or not ply.organism then return end
 	local dir = dmgInfo:GetDamageForce():GetNormalized()
 	local org = ply:GetOrganism()
 	if not org then return end
@@ -283,11 +283,13 @@ hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgrou
     if hitgroup == HITGROUP_HEAD then
         local damage = dmgInfo:GetDamage()
         if damage > 10 then -- Concussion
+            print("DEBUG: Concussion event triggered for player " .. ply:Nick() .. " with damage " .. damage)
             org.concussion_severity = (org.concussion_severity or 0) + damage / 2
             net.Start("hg_HeadTrauma")
             net.WriteVector(dir)
             net.Send(ply)
         elseif damage <= 1.5 then -- Small head hit
+            print("DEBUG: Small head hit event triggered for player " .. ply:Nick() .. " with damage " .. damage)
             net.Start("hg_SmallHeadHit")
             net.WriteVector(dir)
             net.Send(ply)
@@ -302,6 +304,7 @@ hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgrou
         end
     end
     net.Start("hg_RedTrauma")
+    print("DEBUG: Red trauma event triggered for player " .. ply:Nick())
     net.WriteVector(dir)
     net.Send(ply)
 end)
@@ -1094,6 +1097,37 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 			org.dmgstack[hitgroup][1] = nil
 			org.dmgstack[hitgroup][2] = nil
+
+concommand.Add("dbg_headtrauma", function(ply, cmd, args)
+    if not ply:IsAdmin() then return end
+
+    local effect = args[1]
+    if not effect then
+        print("Usage: dbg_headtrauma <small|concussion|red>")
+        return
+    end
+
+    local dir = Vector(0, 0, 0)
+
+    if effect == "small" then
+        print("DEBUG: Manually triggering small head hit for " .. ply:Nick())
+        net.Start("hg_SmallHeadHit")
+        net.WriteVector(dir)
+        net.Send(ply)
+    elseif effect == "concussion" then
+        print("DEBUG: Manually triggering concussion for " .. ply:Nick())
+        net.Start("hg_HeadTrauma")
+        net.WriteVector(dir)
+        net.Send(ply)
+    elseif effect == "red" then
+        print("DEBUG: Manually triggering red trauma for " .. ply:Nick())
+        net.Start("hg_RedTrauma")
+        net.WriteVector(dir)
+        net.Send(ply)
+    else
+        print("Invalid effect type. Use 'small', 'concussion', or 'red'.")
+    end
+end)
 
 			org.owner.fullsend = true
 			hg.send_bareinfo(org)

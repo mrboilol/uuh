@@ -48,6 +48,50 @@ hook.Add("ScalePlayerDamage", "remove-effects", function(ent, hitgroup, dmgInfo)
 	end
 end)
 
+net.Receive("hg_HeadTrauma", function()
+    local dir = net.ReadVector()
+    local lply = LocalPlayer()
+
+    if not IsValid(lply) then return end
+
+    lply:ViewPunch(Angle(dir.z * 5, dir.x * 5, 0))
+
+    lply.tinnitus = CurTime() + 1
+
+    if lply.organism then
+        lply.organism.disorientation = 20
+    end
+
+    local tab = {
+        -- sharpen
+        [ "$pp_colour_addr" ] = 0,
+        [ "$pp_colour_addg" ] = 0,
+        [ "$pp_colour_addb" ] = 0,
+        [ "$pp_colour_brightness" ] = -0.1,
+        [ "$pp_colour_contrast" ] = 2,
+        [ "$pp_colour_colour" ] = 0.1,
+        [ "$pp_colour_mulr" ] = 0,
+        [ "$pp_colour_mulg" ] = 0,
+        [ "$pp_colour_mulb" ] = 0
+    }
+
+    DrawColorModify(tab)
+
+    timer.Simple(0.1, function()
+        if not IsValid(lply) then return end
+        lply:SetDSP(0)
+    end)
+end)
+
+net.Receive("hg_SmallHeadHit", function()
+    local dir = net.ReadVector()
+    local lply = LocalPlayer()
+
+    if not IsValid(lply) then return end
+
+    lply:ViewPunch(Angle(dir.z, dir.x, 0))
+end)
+
 local min = math.min
 local pain_mat = Material("sprites/mat_jack_hmcd_narrow")
 
