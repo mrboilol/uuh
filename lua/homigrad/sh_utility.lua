@@ -628,6 +628,7 @@ hg.ConVars = hg.ConVars or {}
 		local PLAYER = FindMetaTable("Player")
 
 		util.AddNetworkString("ViewPunch")
+		util.AddNetworkString("hg_DamageIndicator")
 
 		function PLAYER:ViewPunch(ang)
 			net.Start("ViewPunch")
