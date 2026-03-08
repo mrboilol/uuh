@@ -173,7 +173,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_arm[math.random(#broke_arm)], 1, "broke"..key, 1, nil, nil) end
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
-		PlayBoneDamageSound(org.owner)
+		PlayInjurySound(org.owner, "break")
 		//broken
 	else
 		org[key.."dislocation"] = true
@@ -186,7 +186,7 @@ local function arms(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(dislocated_arm[math.random(#dislocated_arm)], 1, "dislocated"..key, 1, nil, nil) end
 
 		--timer.Simple(0, function() hg.LightStunPlayer(org.owner,1) end)
-		PlayBoneDamageSound(org.owner)
+		PlayInjurySound(org.owner, "dislocation")
 		//dislocated
 	end
 

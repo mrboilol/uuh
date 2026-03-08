@@ -275,9 +275,10 @@ util.AddNetworkString("hg_RedTrauma")
 util.AddNetworkString("hg_SmallHeadHit")
 
 hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
-    local dir = dmgInfo:GetDamageForce():GetNormalized()
-    local org = ply:GetOrganism()
-    if not org then return end
+	if not IsValid(ply) then return end
+	local dir = dmgInfo:GetDamageForce():GetNormalized()
+	local org = ply:GetOrganism()
+	if not org then return end
 
     if hitgroup == HITGROUP_HEAD then
         local damage = dmgInfo:GetDamage()

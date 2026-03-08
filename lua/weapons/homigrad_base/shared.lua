@@ -182,7 +182,7 @@ function SWEP:Initialize()
 end
 
 function SWEP:PhysicsCollide(ent, data)
-	if !self.CantFireFromCollision and (!self.lastshotfromhit or (self.lastshotfromhit + 0.5 < CurTime())) and data.Speed > 250 and math.random(45) == 1 then
+	if !self.CantFireFromCollision and (!self.lastshotfromhit or (self.lastshotfromhit + 0.5 < CurTime())) and data.Speed > 250 and math.random(15) == 1 then
 		self:PrimaryAttack()
 		self.lastshotfromhit = CurTime()
 	end
