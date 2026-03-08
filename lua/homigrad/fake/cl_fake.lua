@@ -14,9 +14,18 @@ local deathLocalAng = Angle(0, 0, 0)
 
 local angle
 
+local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera") or CreateConVar("hg_coolcamera", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Cool camera movement", 0, 5)
+
+realangle = Angle()
+realanglelerp = Angle()
+
 hook.Add("InputMouseApply", "fakeCameraAngles", function(cmd, x, y, angle)
 	local tbl = {}
 	
+	if hg_coolcamera:GetBool() then
+		angle = realangle
+	end
+
 	tbl.cmd = cmd
 	tbl.x = x
 	tbl.y = y
@@ -38,7 +47,14 @@ hook.Add("InputMouseApply", "fakeCameraAngles", function(cmd, x, y, angle)
 		angle.yaw = angle.yaw - x / 50
 	end
 
-	cmd:SetViewAngles(angle)
+	if hg_coolcamera:GetBool() then
+		realangle = angle
+		realanglelerp = LerpAngleFT(0.03 * (hg_coolcamera:GetFloat() or 1), realanglelerp, realangle)
+		cmd:SetViewAngles(realanglelerp + GetViewPunchAngles2() * 1 + GetViewPunchAngles() * 1 + GetViewPunchAngles3() * 1 + GetViewPunchAngles4() * 1)
+	else
+		cmd:SetViewAngles(angle)
+	end
+
 	lply.fakeangles = angle
 
 	return true
@@ -72,6 +88,11 @@ hook.Add("HG.InputMouseApply", "fakeCameraAngles2", function(tbl)
 	end
 
 	ViewPunch4(Angle(y / 50 / 16, -x / 50 / 16, -x / 50 / 1) * 0.1)
+	
+	if hg_coolcamera:GetBool() then
+		realangle.roll = angle.roll
+		angle = realangle
+	end
 
 	if !IsValid(lply) or !lply:Alive() then return end
 
@@ -212,6 +233,9 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	if not IsValid(follow) then return end
 	if not follow:LookupBone("ValveBiped.Bip01_Head1") then return end
 	
+	local vpang = GetViewPunchAngles2() + GetViewPunchAngles3()
+	vpang[3] = 0
+
 	view.fov = GetConVar("hg_fov"):GetInt()
 	firstPerson = GetViewEntity() == lply
 	
@@ -266,6 +290,11 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	angEye = angdeath
 
 	view.angles = angEye
+	
+	if hg_coolcamera:GetBool() then
+		view.angles = realangle + GetViewPunchAngles() * 0.2 + vpang
+		view.angles[3] = view.angles[3] - GetViewPunchAngles4()[3]
+	end
 
 	if ply:Alive() then
 		deathLocalAng:Set(view.angles)
@@ -313,8 +342,7 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	
 	view.angles:Add(ply:GetViewPunchAngles())
 	//view.origin, view.angles = HGAddView(lply, view.origin, view.angles, 0)
-	local vpang = GetViewPunchAngles2() + GetViewPunchAngles3()
-	vpang[3] = 0
+	
 	view.angles:Add(-vpang)
 	view.angles[3] = view.angles[3] + GetViewPunchAngles4()[3]
 	view.angles:RotateAroundAxis(view.angles:Up(),-LookX)
@@ -331,9 +359,11 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	//view.angles = angles
 
 	view = hook.Run("Camera", ply, view.origin, view.angles, view, vector_origin) or view
+	
+
 
 	local wep = ply:GetActiveWeapon()
-
+	
 	k = Lerp(0.1, k, ply:KeyDown(IN_JUMP) and 1 or 0)
 	--[[if wep.GetMuzzleAtt then
 		wep:WorldModel_Transform()
@@ -345,7 +375,9 @@ CalcView = function(ply, origin, angles, fov, znear, zfar)
 	if hg_gopro:GetBool() then
 		return SpecCam(follow, origin, angles, fov, znear, zfar)
 	end
+
 	hook.Run("PostHGCalcView", ply, view)
+
 	return view
 end
 

@@ -287,12 +287,15 @@ function SWEP:OnRemove()
 	end
 end
 
+local hg_aimtoshoot = ConVarExists("hg_aimtoshoot") and GetConVar("hg_aimtoshoot") or CreateConVar("hg_aimtoshoot", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Toggle DarkRP-like shooting system (aim to shoot)", 0, 1)
+
 local owner
 local CurTime = CurTime
 function SWEP:IsZoom()
 	local owner = self:GetOwner()
 	--print( (owner.armors and (hg.armor.head[owner.armors["head"]] and not hg.armor.head[owner.armors["head"]].cantsight)))
 	return self:CanUse() and
+		(!hg_aimtoshoot:GetBool() or self:GetNWBool("aiming")) and
 		(self:GetButtstockAttack() - CurTime() < -1) and 
 		(self:GetOwner():IsPlayer() and self:KeyDown(IN_ATTACK2) and not self:KeyDown(IN_SPEED)) and
 		!(self:IsSprinting() and !IsValid(owner.FakeRagdoll)) and
@@ -312,7 +315,6 @@ function SWEP:CanUse()
 	return not (self.reload or self.deploy or (owner:IsPlayer() and (self:IsSprinting() or (owner.organism and owner.organism.otrub))))
 end
 
-local hg_aimtoshoot = ConVarExists("hg_aimtoshoot") and GetConVar("hg_aimtoshoot") or CreateConVar("hg_aimtoshoot", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Toggle DarkRP-like shooting system (aim to shoot)", 0, 1)
 function SWEP:IsSprinting()
 	local ply = self:GetOwner()
 	if hg_aimtoshoot:GetBool() then
@@ -333,6 +335,7 @@ end
 local hg_quietshots = GetConVar("hg_quietshots") or CreateClientConVar("hg_quietshots", "0", true, false, "Toggle quieter gun sounds", 0, 1)
 local hg_gunshotvolume = GetConVar("hg_gunshotvolume") or CreateClientConVar("hg_gunshotvolume", "1", true, false, "Modify volume of gun sounds", 0, 1)
 local hg_oldsights = CreateConVar("hg_oldsights", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY, FCVAR_REPLICATED}, "Disable camera wobble when aiming")
+local hg_coolcamera = ConVarExists("hg_coolcamera") and GetConVar("hg_coolcamera") or CreateConVar("hg_coolcamera", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED, "Cool camera movement", 0, 5)
 
 if CLIENT then
 	EmitSound = hg.EmitSound
@@ -1321,6 +1324,19 @@ function SWEP:CoreStep()
 		end
 	end
 
+	if !self:KeyDown(IN_ATTACK2) then
+		self:SetNWBool("aiming", false)
+	end
+
+	if self:KeyDown(IN_SPEED) then
+		if !self.aiminghuuuy then
+			self.aiminghuuuy = true
+			self:SetNWBool("aiming", !self:GetNWBool("aiming"))
+		end
+	else
+		self.aiminghuuuy = nil
+	end
+
 	if self:IsClient() then self:Step_Spray(time, dtime) end
 	if self:IsClient() then self:Step_SprayVel(dtime) end
 	self.dtimethink = SysTime()
@@ -1902,7 +1918,7 @@ function SWEP:GetAdditionalValues()
 			//dot = dot < -0.5 and dot + 0.5 or 0
 			//dot = dot * 3
 
-			self.AdditionalPos2[1] = self.AdditionalPos2[1] + dot * -4
+			self.AdditionalPos2[1] = self.AdditionalPos2[1] + dot * -2
 		end
 	end
 
