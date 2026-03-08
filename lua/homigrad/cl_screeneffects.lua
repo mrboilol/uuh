@@ -284,6 +284,10 @@ local HEAD_TRAUMA_DURATION = 1.5
 local show_red_trauma_time = 0
 local RED_TRAUMA_DURATION = 1.5
 
+local damage_indicator_dir = Vector(0,0,0)
+local damage_indicator_time = 0
+local DAMAGE_INDICATOR_DURATION = 2 -- seconds
+
 net.Receive("hg_RedTrauma", function()
     damage_blur_time = math.min(damage_blur_time + 0.5, 1.5)
     show_red_trauma_time = math.min(show_red_trauma_time + RED_TRAUMA_DURATION, RED_TRAUMA_DURATION * 3)
@@ -301,6 +305,17 @@ end)
 
 net.Receive("hg_SmallHeadHit", function()
     surface.PlaySound("headhit.mp3")
+end)
+
+net.Receive("hg_DamageIndicator", function()
+    damage_indicator_dir = net.ReadVector()
+    damage_indicator_time = DAMAGE_INDICATOR_DURATION
+end)
+
+net.Receive("hg_MeleeHeadViewpunch", function()
+    local dir = net.ReadVector()
+    local punch = Angle(dir.y * 10, dir.x * -10, 0)
+    ViewPunch(punch)
 end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
@@ -349,6 +364,38 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 			local x = ScrW()/2 + lobotomy_dir.x * ScrW()/2
 			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
             surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
+        end
+    end
+
+    if damage_indicator_time > 0 then
+        damage_indicator_time = math.max(damage_indicator_time - FrameTime(), 0)
+
+        local ply = LocalPlayer()
+        if not IsValid(ply) then return end
+
+        local ang_to_damage = (damage_indicator_dir * -1):Angle()
+        local ply_ang = ply:EyeAngles()
+        local yaw_diff = math.AngleDifference(ply_ang.y, ang_to_damage.y)
+
+        if math.abs(yaw_diff) > 45 then
+            local w, h = ScrW(), ScrH()
+            
+            local radius_x = w/2 - 150
+            local radius_y = h/2 - 150
+            
+            local x = w/2 + radius_x * math.sin(math.rad(yaw_diff))
+            local y = h/2 - radius_y * math.cos(math.rad(yaw_diff))
+
+            local mat = lobotomy_mats[5]
+            if mat then
+                local alpha = math.min(damage_indicator_time / DAMAGE_INDICATOR_DURATION, 0.75) * 255
+                surface.SetDrawColor(255, 255, 255, alpha)
+                surface.SetMaterial(mat)
+
+                local size = 128
+                local rotation = yaw_diff
+                surface.DrawTexturedRectRotated(x, y, size, size, rotation)
+            end
         end
     end
 end)

@@ -273,11 +273,13 @@ function hg.organism.AddWound(ent, tr, bone, dmgInfo, dmgPos, dmgBlood, inputHol
 util.AddNetworkString("hg_HeadTrauma")
 util.AddNetworkString("hg_RedTrauma")
 util.AddNetworkString("hg_SmallHeadHit")
+util.AddNetworkString("hg_DamageIndicator")
+util.AddNetworkString("hg_MeleeHeadViewpunch")
 
 hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
-	if not IsValid(ply) or not ply:IsPlayer() or not ply.organism then return end
+	if not IsValid(ply) then return end
 	local dir = dmgInfo:GetDamageForce():GetNormalized()
-	local org = ply:GetOrganism()
+	local org = ply.organism
 	if not org then return end
 
     if hitgroup == HITGROUP_HEAD then
@@ -288,7 +290,7 @@ hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgrou
             net.Start("hg_HeadTrauma")
             net.WriteVector(dir)
             net.Send(ply)
-        elseif damage <= 1.5 then -- Small head hit
+        else
             print("DEBUG: Small head hit event triggered for player " .. ply:Nick() .. " with damage " .. damage)
             net.Start("hg_SmallHeadHit")
             net.WriteVector(dir)
@@ -644,6 +646,13 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 	dir:Set(dmgInfo:GetDamageForce())
 	dir:Normalize()
+
+	if IsValid(org.owner) and org.owner:IsPlayer() then
+		net.Start("hg_DamageIndicator")
+		net.WriteVector(dir)
+		net.Send(org.owner)
+	end
+
 	dir:Mul(pen)
 	--print(bullet.Penetration, pen, bullet ~= nil)
 	--print(dmgInfo:GetDamageType() == DMG_BULLET)
@@ -675,6 +684,18 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	if ply or org.fakePlayer then
 		hook_Run("PreHomigradDamage", org.fakePlayer and ent or ply, dmgInfo, hitgroup, ent, attacker.harm, hitBoxs, inputHole)
 	end
+
+	if dmgInfo:IsDamageType(DMG_CLUB) and hitgroup == HITGROUP_HEAD and dmgInfo:GetDamage() > 20 then
+		local damage = dmgInfo:GetDamage()
+		org.spine3 = math.min(org.spine3 + (damage - 20) / 150, 1)
+
+		if IsValid(org.owner) and org.owner:IsPlayer() then
+			net.Start("hg_MeleeHeadViewpunch")
+			net.WriteVector(dmgInfo:GetDamageForce():GetNormalized())
+			net.Send(org.owner)
+		end
+	end
+
 	
 	local dmg_before = dmgInfo:GetDamage()
 
