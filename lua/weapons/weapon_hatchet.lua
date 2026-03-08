@@ -33,7 +33,7 @@ SWEP.bloodID = 3
 SWEP.HoldPos = Vector(-12,0,0)
 SWEP.HoldAng = Angle(0,0,0)
 
-SWEP.AttackTime = 0.35
+SWEP.AttackTime = 0.38
 SWEP.AnimTime1 = 1.5
 SWEP.WaitTime1 = 1
 SWEP.AttackLen1 = 45
