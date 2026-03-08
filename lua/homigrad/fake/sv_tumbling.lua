@@ -131,20 +131,45 @@ hook.Add("Think", "stanleytumbler", function()
             if math.random() < tripChance then
                 hg.Fake(ply)
                 --mcity reference?
+                local breakChance = 0.05
                 local dislocationChance = 0.2
-                if math.random() < dislocationChance then
+
+                if math.random() < breakChance then
+                    -- Limb break
+                    ply:EmitSound("owfuck"..math.random(1, 4)..".ogg")
+                    org.painadd = (org.painadd or 0) + 70 -- More pain for a break
+
                     if tripType == "wall" then
-                        if trHighHit then 
+                        if trHighHit then
+                            org.jaw = 1 -- Break jaw
+                        else
+                            if math.random(1, 2) == 1 then
+                                org.rleg = 1 -- Break right leg
+                            else
+                                org.lleg = 1 -- Break left leg
+                            end
+                        end
+                    elseif tripType == "ragdoll" then
+                        if math.random(1, 2) == 1 then
+                            org.rarm = 1 -- Break right arm
+                        else
+                            org.larm = 1 -- Break left arm
+                        end
+                    end
+                elseif math.random() < dislocationChance then
+                    -- Limb dislocation
+                    ply:EmitSound("disloc"..math.random(1, 2)..".wav")
+                    org.painadd = (org.painadd or 0) + 35
+
+                    if tripType == "wall" then
+                        if trHighHit then
                             org.jawdislocation = true
-                            org.painadd = (org.painadd or 0) + 35
-                        else 
+                        else
                             if math.random(1, 2) == 1 then
                                 org.rlegdislocation = true
                             else
                                 org.llegdislocation = true
                             end
-                            org.painadd = (org.painadd or 0) + 35
-                            ply:EmitSound("bones/bone"..math.random(8)..".mp3")
                         end
                     elseif tripType == "ragdoll" then
                         if math.random(1, 2) == 1 then
@@ -152,8 +177,6 @@ hook.Add("Think", "stanleytumbler", function()
                         else
                             org.larmdislocation = true
                         end
-                        org.painadd = (org.painadd or 0) + 35
-                        ply:EmitSound("bones/bone"..math.random(8)..".mp3")
                     end
                 end
                 

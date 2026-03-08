@@ -804,7 +804,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//if pain > 10 then
 			if IsValid(PainStation) then
 				local vol = math.Clamp(math.Remap(pain, 0, 120, 0, 2), 0, 2)
-				--PainStation:SetVolume(org.otrub and vol * 0.2 or vol)
+				PainStation:SetVolume(org.otrub and vol * 0.2 or vol)
 			end
 		//else
 		//	if IsValid(PainStation) then

@@ -1725,7 +1725,15 @@ hook.Add("Player Getup", "huyhhgss", function(ply)
 				--print(attacker.Guilt)
 			end
 			timer.Simple(0, function()
-				hg.LightStunPlayer(ply,math.min(force / needed,4)) 
+				hg.LightStunPlayer(ply,math.min(force / needed,4))
+                if data.HitGroup == HITGROUP_HEAD then
+                    local dmgInfo = DamageInfo()
+                    dmgInfo:SetDamage(force / 100)
+                    dmgInfo:SetAttacker(ply)
+                    dmgInfo:SetInflictor(ply)
+                    dmgInfo:SetDamageType(DMG_CRUSH)
+                    ply:TakeDamageInfo(dmgInfo)
+                end 
 			end)
 		end
 	end)
