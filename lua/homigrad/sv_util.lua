@@ -489,6 +489,7 @@ end)
 
 
 util.AddNetworkString("add_supression")
+util.AddNetworkString("hg_play_client_sound_file")
 
 local function IsLookingAt(ply, targetVec)
 	if !IsValid(ply) or !ply:IsPlayer() then return true end

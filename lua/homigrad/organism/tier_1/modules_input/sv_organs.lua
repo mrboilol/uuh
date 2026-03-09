@@ -157,14 +157,13 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
         if IsValid(targetPlayer) and targetPlayer:IsPlayer() then
             local brainDelta = org.brain - oldDmg
             if brainDelta > 0.01 then -- Only if there is some damage
-                if brainDelta <= 0.025 then
-                    -- Minor brain damage: Concussion
+                if brainDelta <= 0.1 then
+                    hg.organism.headTraumaFlash(targetPlayer, dmgInfo, nil, oldDmg, org.brain)
+                else
+                    -- Major brain damage: Concussion
                     if hg.organism.ApplyConcussion then
                         hg.organism.ApplyConcussion(org, brainDelta, targetPlayer)
                     end
-                else
-                    -- Major brain damage: Flash
-                    hg.organism.headTraumaFlash(targetPlayer, dmgInfo, nil, oldDmg, org.brain)
                 end
             end
         end

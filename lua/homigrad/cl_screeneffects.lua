@@ -621,19 +621,19 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//ViewPunch2(Angle(-amt * 1, amt2 * 1,0))
 	end
 
-	if !IsValid(PainStation) or PainStation:GetState() != GMOD_CHANNEL_PLAYING then
-		local pain_sound_choice = pain_sounds[math.random(#pain_sounds)]
-		sound.PlayFile(pain_sound_choice, "noblock noplay", function(station)
-			if IsValid(station) then
-				station:SetVolume(0)
-				station:SetPlaybackRate(math.Rand(0.75, 1.1))
-				station:Play()
-				station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
-				PainStation = station
-				station:EnableLooping(true)
-			end
-		end)
-	end
+	local pain_sound_choice = pain_sounds[math.random(#pain_sounds)]
+		if not IsValid(PainStation) or PainStation:GetState() ~= GMOD_CHANNEL_PLAYING then
+			sound.PlayFile(pain_sound_choice, "noblock noplay", function(station)
+				if IsValid(station) then
+					station:SetVolume(0)
+					station:SetPlaybackRate(math.Rand(0.75, 1.1))
+					station:Play()
+					station:SetTime(math.min(math.Rand(0, station:GetLength()), 139))
+					PainStation = station
+					station:EnableLooping(true)
+				end
+			end)
+		end
 
 	local LerpFT = LerpFT or Lerp
 
@@ -833,8 +833,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		
 		//if pain > 10 then
 			if IsValid(PainStation) then
-				local vol = math.Clamp(math.Remap(pain, 0, 120, 0, 2), 0, 2)
-				PainStation:SetVolume(org.otrub and vol * 0.2 or vol)
+				local target_vol = math.Clamp(math.Remap(pain, 0, 120, 0, 2), 0, 2)
+				local current_vol = PainStation:GetVolume()
+				PainStation:SetVolume(Lerp(FrameTime() * 5, current_vol, target_vol))
+				local rate = org.otrub and 1 or math.Rand(0.75, 1.1)
+				PainStation:SetPlaybackRate(rate)
 			end
 		//else
 		//	if IsValid(PainStation) then
@@ -875,7 +878,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 
 		if IsValid(BrainTraumaStation) then
-			BrainTraumaStation:SetVolume(math.Clamp(!org.otrub and brain * 2 or 0, 0, 1))
+			BrainTraumaStation:SetVolume(math.Clamp(!org.otrub and brain * 2 or 0.05, 0, 1))
 		end
 	else
 		if IsValid(BrainTraumaStation) then
@@ -898,7 +901,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 
 		if IsValid(Tinnitus) then
-			Tinnitus:SetVolume(org.otrub and 0 or math.min(math.max(lply.tinnitus - CurTime(), 0) / 10, 1))
+			Tinnitus:SetVolume(org.otrub and 0.05 or math.min(math.max(lply.tinnitus - CurTime(), 0) / 10, 1))
 		end
 	else
 		if IsValid(Tinnitus) then
