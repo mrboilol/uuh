@@ -1546,7 +1546,7 @@ local function velocityDamage(ent, data)
 			org.internalBleed = org.internalBleed + (dmg * 2.5) 
 		end
 
-		org.owner:AddNaturalAdrenaline( math.min( dmg * 0.5, 4) )
+		org.owner:AddNaturalAdrenaline( math.min( dmg * 0.5, 2) )
 
 		if hitgroup == HITGROUP_HEAD then
 			local hadhelmet = org.owner.armors and org.owner.armors["head"] != nil

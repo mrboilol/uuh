@@ -918,6 +918,14 @@ players : 1 humans, 0 bots (20 max)
 			local bool = net.ReadBool()
 			AddTinnitus(time,bool)
 		end)
+
+		net.Receive("send_custom_tinnitus", function()
+			local sound = net.ReadString()
+			local lply = LocalPlayer()
+			if IsValid(lply) then
+				lply:EmitSound(sound)
+			end
+		end)
 	end
 --//
 

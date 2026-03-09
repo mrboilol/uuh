@@ -1843,6 +1843,14 @@ hook.Add("OnEntityCreated", "FunnySimfphys", function(ent)
 end)
 
 util.AddNetworkString("send_tinnitus")
+util.AddNetworkString("send_custom_tinnitus")
+
+function plymeta:PlayCustomTinnitus(sound)
+	net.Start("send_custom_tinnitus")
+	net.WriteString(sound)
+	net.Send(self)
+end
+
 function plymeta:AddTinnitus(time,needSound)
 	needSound = needSound or false
 
