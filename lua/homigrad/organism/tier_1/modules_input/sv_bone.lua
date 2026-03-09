@@ -489,11 +489,12 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
     local oldDmg = org.skull
     local isBullet = dmgInfo:IsDamageType(DMG_BULLET) or dmgInfo:IsDamageType(DMG_BUCKSHOT)
     local isSlash = dmgInfo:IsDamageType(DMG_SLASH)
+    local brain_damage_multiplier = 1
 
     if isBullet then
         dmg = dmg * 1.5 -- More damage for bullets
-        if math.random(100) <= 25 then -- 25% chance of instant death
-            if SERVER and IsValid(org.owner) then org.owner:Kill() end
+        if math.random(100) <= 15 then
+            brain_damage_multiplier = 5 -- 5x brain damage
         end
     end
 
@@ -527,11 +528,16 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
     end
 
 	local oldBrain = org.brain
-	org.brain = math.min(org.brain + (math.random(10) == 1 and dmg * 0.05 or 0), 1)
+	local brain_damage_to_add = 0
+	if math.random(10) == 1 then
+		brain_damage_to_add = brain_damage_to_add + (dmg * 0.05)
+	end
 	
 	if (org.skull - oldDmg) > 0.6 then
-		org.brain = math.min(org.brain + 0.1, 1)
+		brain_damage_to_add = brain_damage_to_add + 0.1
 	end
+
+	org.brain = math.min(org.brain + (brain_damage_to_add * brain_damage_multiplier), 1)
 
 	if org.brain >= 0.01 and math.random(3) == 1 and (rnd or (org.skull - oldDmg) > 0.6) then
 		--hg.applyFencingToPlayer(org.owner, org)
