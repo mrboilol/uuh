@@ -28,7 +28,7 @@ input_list.heart = function(org, bone, dmg, dmgInfo)
 	org.internalBleed = org.internalBleed + (org.heart - oldDmg) * 10
 
 	local staminaLoss = dmg * 3.0
-	org.stamina = math.max(org.stamina - staminaLoss, 0)
+	org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
 
 	return result
 end
@@ -58,7 +58,7 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 	
 	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
 		local staminaLoss = dmg * 1.5
-		org.stamina = math.max(org.stamina - staminaLoss, 0)
+		org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
 	end
 
 	dmgInfo:ScaleDamage(0.8)
@@ -77,7 +77,7 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 
 	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
 		local staminaLoss = dmg * 1.5
-		org.stamina = math.max(org.stamina - staminaLoss, 0)
+		org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
 	end
 
 	return result
@@ -94,7 +94,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 
 	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
 		local staminaLoss = dmg * 1.5
-		org.stamina = math.max(org.stamina - staminaLoss, 0)
+		org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
 	end
 
 	return result
@@ -157,7 +157,7 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
         if IsValid(targetPlayer) and targetPlayer:IsPlayer() then
             local brainDelta = org.brain - oldDmg
             if brainDelta > 0.01 then -- Only if there is some damage
-                if brainDelta <= 0.3 then
+                if brainDelta <= 0.025 then
                     -- Minor brain damage: Concussion
                     if hg.organism.ApplyConcussion then
                         hg.organism.ApplyConcussion(org, brainDelta, targetPlayer)
@@ -253,7 +253,7 @@ input_list.lungsL = function(org, bone, dmg, dmgInfo)
 	org.internalBleed = org.internalBleed + (org.lungsL[1] - oldval) * 2
 	
 	local staminaLoss = dmg * 2.0
-	org.stamina = math.max(org.stamina - staminaLoss, 0)
+	org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
 
 	dmgInfo:ScaleDamage(0.8)
 
@@ -271,7 +271,7 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 	org.internalBleed = org.internalBleed + (org.lungsR[1] - oldval) * 2
 
 	local staminaLoss = dmg * 2.0
-	org.stamina = math.max(org.stamina - staminaLoss, 0)
+	org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
 
 	dmgInfo:ScaleDamage(0.8)
 

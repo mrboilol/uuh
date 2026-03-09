@@ -493,7 +493,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
     if isBullet then
         dmg = dmg * 1.5 -- More damage for bullets
         if math.random(100) <= 25 then -- 25% chance of instant death
-            if SERVER then org.owner:Kill() end
+            if SERVER and IsValid(org.owner) then org.owner:Kill() end
         end
     end
 
@@ -587,7 +587,6 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
                     local flashSize = math.Clamp(1600 + skullDelta * 2000, 1600, 4000)
                     
                     -- play local head-hit tinnitus for victim only
-                    targetPlayer:PlayCustomTinnitus("headhit.mp3")
 
                     net.Start("headtrauma_flash")
                         net.WriteVector(worldPos)

@@ -90,8 +90,6 @@ if SERVER then
         local intensity = math.Clamp(speed / 800, 0, 1)
         local flashTime = 0.3 + intensity * 0.5
         local flashSize = 1200 + intensity * 2000
-
-        owner:PlayCustomTinnitus("headhit.mp3")
         net.Start("headtrauma_flash")
             net.WriteVector(data.HitPos)
             net.WriteFloat(flashTime)

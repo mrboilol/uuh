@@ -300,6 +300,8 @@ local DAMAGE_INDICATOR_DURATION = 2 -- seconds
 
 
 net.Receive("headtrauma_flash", function()
+    print("Head-trauma flash received")
+    surface.PlaySound("headhit.mp3")
     local pos = net.ReadVector()
     local time = net.ReadFloat()
     local size = net.ReadInt(20)

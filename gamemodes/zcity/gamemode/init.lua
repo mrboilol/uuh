@@ -9,6 +9,8 @@ include("shared.lua")
 AddCSLuaFile("loader.lua")
 include("loader.lua")
 
+util.AddNetworkString("hg_play_client_sound")
+
 local PLAYER = FindMetaTable("Player")
 function PLAYER:CanSpawn()
 	return ( CurrentRound and CurrentRound() and CurrentRound().CanSpawn and CurrentRound():CanSpawn(self)) or (zb.ROUND_STATE == 0)
