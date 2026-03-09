@@ -54,7 +54,7 @@ function MODE:HUDPaint()
         if roleName then
             draw.SimpleText("You are " .. roleName, "ZB_HomicideMediumLarge", sw * 0.5, sh * 0.5, Color(255, 217, 15, 255 * fade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
         end
-        draw.SimpleText("KILL HOMER OR BART FUCKING LOSESERRRRR", "ZB_HomicideMedium", sw * 0.5, sh * 0.9, Color(255, 255, 255, 255 * fade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+        draw.SimpleText("kill john lennon", "ZB_HomicideMedium", sw * 0.5, sh * 0.9, Color(255, 255, 255, 255 * fade), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     end
 
     if roundEndTime > 0 then

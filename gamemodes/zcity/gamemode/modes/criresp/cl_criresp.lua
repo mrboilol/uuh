@@ -18,14 +18,14 @@ end)
 
 local teams = {
 	[0] = {
-		objective = "Negotiations failed, eliminate the threat. 10-4",
-		name = "a SWAT Operator",
+		objective = "kill israeli",
+		name = "MOSSAD Agent",
 		color1 = Color(68, 10, 255),
 		color2 = Color(68, 10, 255)
 	},
 	[1] = {
-		objective = "This is my fucking house, bitches, I can do what I want.",
-		name = "a Suspect",
+		objective = "this is such a fun activity",
+		name = "israeli kid",
 		color1 = Color(228, 49, 49),
 		color2 = Color(228, 49, 49)
 	},

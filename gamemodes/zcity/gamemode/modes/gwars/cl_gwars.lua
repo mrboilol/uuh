@@ -35,14 +35,14 @@ end)
 
 local teams = {
 	[0] = {
-		objective = "Kill all groove mazafakas",
-		name = "a Bloodz Member",
+		objective = "kill crippled ez ez",
+		name = "diddyblud",
 		color1 = Color(180, 0, 0),
 		color2 = Color(180, 0, 0)
 	},
 	[1] = {
-		objective = "Kill all bloodz mazafakas",
-		name = "a Groove Member",
+		objective = "kill diddybludz",
+		name = "cripple",
 		color1 = Color(0, 180, 0),
 		color2 = Color(0, 180, 0)
 	},

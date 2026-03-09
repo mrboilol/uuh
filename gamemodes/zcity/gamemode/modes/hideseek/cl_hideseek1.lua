@@ -63,20 +63,20 @@ end)
 
 local teams = {
     [0] = {
-        objective = "boi how you get this XD",
+        objective = "how",
         name = "SWAT Agent",
         color1 = Color(68, 10, 255),
         color2 = Color(68, 10, 255)
     },
     [1] = {
-        objective = "Some people have bad intentions. Hide from the Seekers, they'll arrive shortly.",
+        objective = "HOLY FUCKING SHIT",
         name = "Hider",
         color1 = Color(0, 190, 190),
         color2 = Color(0, 190, 190)
     },
     [2] = {
-        objective = "Can't turn back now, kill all the hiders.",
-        name = "Seeker",
+        objective = "Kill everyone.",
+        name = "MOSSAD Agent",
         color1 = Color(255, 0, 0),
         color2 = Color(228, 49, 49)
     },

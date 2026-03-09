@@ -653,7 +653,6 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 							net.WriteInt(baseFlashSize, 20)
 						net.Send(tp)
 						-- local tinnitus ping
-						tp:PlayCustomTinnitus("headhit.mp3")
 						tp.HeadDisorientFlashCooldown = CurTime() + 0.2
 					end
 				end

@@ -147,7 +147,7 @@ MODE.TypeObjectives = {}
 MODE.TypeObjectives.soe = {
 	traitor = {
 		objective = "You're geared up with items, poisons, explosives and weapons hidden in your pockets. Murder everyone here.",
-		name = "a Traitor",
+		name = "MOSSAD Agent",
 		color1 = Color(190,0,0),
 		color2 = Color(190,0,0)
 	},
@@ -169,7 +169,7 @@ MODE.TypeObjectives.soe = {
 MODE.TypeObjectives.standard = {
 	traitor = {
 		objective = "You're geared up with items, poisons, explosives and weapons hidden in your pockets. Murder everyone here.",
-		name = "a Murderer",
+		name = "MOSSAD Agent",
 		color1 = Color(190,0,0),
 		color2 = Color(190,0,0)
 	},
@@ -191,7 +191,7 @@ MODE.TypeObjectives.standard = {
 MODE.TypeObjectives.wildwest = {
 	traitor = {
 		objective = "This town ain't that big for all of us.",
-		name = "The Killer",
+		name = "MOSSAD Agent?",
 		color1 = Color(190,0,0),
 		color2 = Color(190,0,0)
 	},
@@ -214,7 +214,7 @@ MODE.TypeObjectives.wildwest = {
 MODE.TypeObjectives.gunfreezone = {
 	traitor = {
 		objective = "You're geared up with items, poisons, explosives and weapons hidden in your pockets. Murder everyone here.",
-		name = "a Murderer",
+		name = "MOSSAD Agent",
 		color1 = Color(190,0,0),
 		color2 = Color(190,0,0)
 	},
@@ -235,7 +235,7 @@ MODE.TypeObjectives.gunfreezone = {
 MODE.TypeObjectives.suicidelunatic = {
 	traitor = {
 		objective = "My brother insha'Allah, don't let him down.",
-		name = "a Shahid",
+		name = "Super MOSSAD Agent",
 		color1 = Color(190,0,0),
 		color2 = Color(190,0,0)
 	},
@@ -257,7 +257,7 @@ MODE.TypeObjectives.suicidelunatic = {
 MODE.TypeObjectives.supermario = {
 	traitor = {
 		objective = "You're the evil Mario! Jump around and take down everyone.",
-		name = "Traitor Mario",
+		name = "MOSSAD Mario",
 		color1 = Color(190,0,0),
 		color2 = Color(190,0,0)
 	},
