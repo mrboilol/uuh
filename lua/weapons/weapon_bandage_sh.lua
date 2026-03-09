@@ -410,6 +410,8 @@ function SWEP:SpawnGarbage(mdl_custom, skin_custom, snd_custom, clr_custom, bgs_
 	if CLIENT then return end
 
 	local owner = self:GetOwner()
+	if not IsValid(owner) then return end
+
 	local boneid
 	if IsValid(owner) then
 		if owner:IsPlayer() then

@@ -48,9 +48,9 @@ local math_random, math_Rand = math.random, math.Rand
 		["npc_citizen"] = {"Refugee", Vector(255, 155, 0) / 255}
 	}
 
-	local hg_organismnpcs = CreateConVar("hg_organismnpcs", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "NPCs will have organism system like the players", 0, 1)
+	local hg_noorganismnpcs = CreateConVar("hg_noorganismnpcs", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "NPCs will NOT have organism system like the players", 0, 1)
 	hook.Add("OnEntityCreated", "npcorg", function(ent)
-		if !hg_organismnpcs:GetBool() then return end
+		if hg_noorganismnpcs:GetBool() then return end
 		if not IsValid(ent) then return end
 
 		local class = ent:GetClass()
@@ -348,7 +348,7 @@ local math_random, math_Rand = math.random, math.Rand
 --\\ Fall damage for NPCs
 	local vecforce = Vector(5000, 5000, -30000)
 	hook.Add("Think", "NPCFallDamageTracker", function()
-		if not hg_organismnpcs:GetBool() then return end
+		if hg_noorganismnpcs:GetBool() then return end
 		for _, npc in ipairs(ents.GetAll()) do
 			if not IsValid(npc) then continue end
 			if not npc:IsNPC() or not lootNPCs[npc:GetClass()] then continue end
