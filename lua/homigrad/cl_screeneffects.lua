@@ -265,6 +265,10 @@ local heatMat = Material("effects/shaders/zb_heat")
 local blindMat = Material("effects/shaders/zb_blind")
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
 
+-- eye loss overlays (use same material draw style)
+local LEFT_EYE_GONE_OVERLAY = Material("overlays/lefteyegone.png")
+local RIGHT_EYE_GONE_OVERLAY = Material("overlays/righteyegone.png")
+
 local lobotomy_mats = {
 	[1] = Material("overlays/photopsiaoverlay1.png"),
 	[2] = Material("overlays/photopsiaoverlay2.png"),
@@ -284,16 +288,16 @@ local HEAD_TRAUMA_DURATION = 1.5
 local show_red_trauma_time = 0
 local RED_TRAUMA_DURATION = 1.5
 
+-- sway state for eye overlays
+local lastViewAngles = Angle(0, 0, 0)
+local eyeOffsetX, eyeOffsetY = 0, 0
+local lastUpdate = 0
+local swayInterval = 0.016 -- ~60 fps
+
 local damage_indicator_dir = Vector(0,0,0)
 local damage_indicator_time = 0
 local DAMAGE_INDICATOR_DURATION = 2 -- seconds
 
-net.Receive("hg_RedTrauma", function()
-    damage_blur_time = math.min(damage_blur_time + 0.5, 1.5)
-    show_red_trauma_time = math.min(show_red_trauma_time + RED_TRAUMA_DURATION, RED_TRAUMA_DURATION * 3)
-    lobotomy_index = math.random(#lobotomy_mats)
-    lobotomy_dir = net.ReadVector()
-end)
 
 net.Receive("headtrauma_flash", function()
     local pos = net.ReadVector()
@@ -305,8 +309,8 @@ net.Receive("headtrauma_flash", function()
 end)
 
 net.Receive("hg_DamageIndicator", function()
-    damage_indicator_dir = net.ReadVector()
-    damage_indicator_time = DAMAGE_INDICATOR_DURATION
+    --[[damage_indicator_dir = net.ReadVector()
+    damage_indicator_time = DAMAGE_INDICATOR_DURATION]]
 end)
 
 net.Receive("hg_MeleeHeadViewpunch", function()
@@ -317,47 +321,7 @@ end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
     damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.3, 0)
-    if show_image_time > 0 then -- head trauma
-        show_image_time = math.max(show_image_time - FrameTime(), 0)
-        local duration = HEAD_TRAUMA_DURATION
-        local timer = show_image_time
-
-        DrawMotionBlur(0.4, 0.6, 0.02)
-
-        local color_modify = {
-            ["$pp_colour_brightness"] = 0,
-            ["$pp_colour_contrast"] = 1,
-            ["$pp_colour_colour"] = 0.5,
-        }
-        DrawColorModify(color_modify)
-
-        -- White flash
-        local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.1), 0, 1) * 200
-        if flash_alpha > 0 then
-            surface.SetDrawColor(255, 255, 255, flash_alpha)
-            surface.DrawRect(0, 0, ScrW(), ScrH())
-        end
-
-        -- Red flash for head trauma
-        local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.2), 0, 1) * 150
-        if flash_alpha > 0 then
-            surface.SetDrawColor(255, 0, 0, flash_alpha) -- RED
-            surface.DrawRect(0, 0, ScrW(), ScrH())
-        end
-
-        -- Lobotomy mat with fadeout
-        if lobotomy_index > 0 and lobotomy_mats[lobotomy_index] then
-            local fade_alpha = math.Clamp(timer / duration, 0, 1) * 255
-            surface.SetDrawColor(255, 255, 255, fade_alpha)
-            surface.SetMaterial(lobotomy_mats[lobotomy_index])
-			local x = ScrW()/2 + lobotomy_dir.x * ScrW()/2
-			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
-            surface.DrawTexturedRectRotated(x, y, ScrW(), ScrH(), math.random(-5, 5))
-        end
-		if show_image_time == 0 then
-			lobotomy_index = 0
-		end
-    elseif show_red_trauma_time > 0 then -- normal damage
+    if show_red_trauma_time > 0 then -- normal damage
         show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
         local duration = RED_TRAUMA_DURATION
         local timer = show_red_trauma_time
@@ -370,33 +334,6 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 			local x = ScrW()/2 + lobotomy_dir.x * ScrW()/2
 			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
             surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
-        end
-    end
-
-    if damage_indicator_time > 0 then
-        damage_indicator_time = math.max(damage_indicator_time - FrameTime(), 0)
-
-        local ply = LocalPlayer()
-        if not IsValid(ply) then return end
-
-        local ang_to_damage = (damage_indicator_dir * -1):Angle()
-        local ply_ang = ply:EyeAngles()
-        local yaw_diff = math.AngleDifference(ply_ang.y, ang_to_damage.y)
-        local pitch_diff = math.AngleDifference(ply_ang.p, ang_to_damage.p)
-
-        local w, h = ScrW(), ScrH()
-
-        local mat = lobotomy_mats[1]
-        if mat then
-            local alpha = math.min(damage_indicator_time / DAMAGE_INDICATOR_DURATION, 0.75) * 255
-            surface.SetDrawColor(255, 255, 255, alpha)
-            surface.SetMaterial(mat)
-
-            local size = 256
-            local x = w/2 + math.sin(math.rad(yaw_diff)) * (w/4)
-            local y = h/2 - math.sin(math.rad(pitch_diff)) * (h/4)
-
-            surface.DrawTexturedRect(x - size/2, y - size/2, size, size)
         end
     end
 end)
@@ -817,16 +754,49 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 	local blindness_intensity = 0
 	if org then
-		if (org.lefteye or 0) >= 1 then
-			surface.SetDrawColor(0, 0, 0, 255)
-			surface.DrawRect(0, 0, ScrW() / 2, ScrH())
-		end
-		if (org.righteye or 0) >= 1 then
-			surface.SetDrawColor(0, 0, 0, 255)
-			surface.DrawRect(ScrW() / 2, 0, ScrW() / 2, ScrH())
-		end
-		if (org.lefteye or 0) >= 1 and (org.righteye or 0) >= 1 then
-			blindness_intensity = 20
+		local leftGone = (org.lefteye or 0) >= 1
+		local rightGone = (org.righteye or 0) >= 1
+
+		if leftGone or rightGone then
+			-- update sway
+			local ct = CurTime()
+			if ct - lastUpdate > swayInterval then
+				lastUpdate = ct
+				local ang = lply:EyeAngles()
+				local diffP = math.NormalizeAngle(ang.p - lastViewAngles.p)
+				local diffY = math.NormalizeAngle(ang.y - lastViewAngles.y)
+				local sway = 15
+				local targetX = math.Clamp(diffY * sway, -30, 30)
+				local targetY = math.Clamp(-diffP * sway, -20, 20)
+				eyeOffsetX = Lerp(FrameTime() * 8, eyeOffsetX, targetX) * 0.95
+				eyeOffsetY = Lerp(FrameTime() * 8, eyeOffsetY, targetY) * 0.95
+				lastViewAngles = ang
+			end
+
+			-- slight shaking
+			local shakeX = math.random(-4, 4)
+			local shakeY = math.random(-3, 3)
+
+			-- scale 15% bigger and center
+			local w, h = ScrW() * 1.15, ScrH() * 1.15
+			local left = -(w - ScrW()) / 2 + eyeOffsetX + shakeX
+			local top = -(h - ScrH()) / 2 + eyeOffsetY + shakeY
+
+			if leftGone and rightGone then
+				surface.SetDrawColor(0, 0, 0, 255)
+				surface.DrawRect(0, 0, ScrW(), ScrH())
+				blindness_intensity = 20
+			else
+				surface.SetDrawColor(255, 255, 255, 255)
+				if leftGone then
+					surface.SetMaterial(LEFT_EYE_GONE_OVERLAY)
+					surface.DrawTexturedRect(left, top, w, h)
+				end
+				if rightGone then
+					surface.SetMaterial(RIGHT_EYE_GONE_OVERLAY)
+					surface.DrawTexturedRect(left, top, w, h)
+				end
+			end
 		end
 	end
 
@@ -1156,3 +1126,4 @@ hook.Add("HUDPaint", "hg-aprilfools-fatman", function()
 	surface.DrawTexturedRect(x, y, targetW, targetH)
 	render.SetLightingMode(0)
 end)
+ 

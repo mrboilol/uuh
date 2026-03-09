@@ -27,6 +27,9 @@ input_list.heart = function(org, bone, dmg, dmgInfo)
 	org.shock = org.shock + dmg * 20
 	org.internalBleed = org.internalBleed + (org.heart - oldDmg) * 10
 
+	local staminaLoss = dmg * 3.0
+	org.stamina = math.max(org.stamina - staminaLoss, 0)
+
 	return result
 end
 
@@ -53,6 +56,11 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 
 	org.internalBleed = org.internalBleed + harmed * 4
 	
+	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
+		local staminaLoss = dmg * 1.5
+		org.stamina = math.max(org.stamina - staminaLoss, 0)
+	end
+
 	dmgInfo:ScaleDamage(0.8)
 
 	return 0
@@ -66,6 +74,12 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.stomach - oldDmg) * 2, "Stomach damage harm")
 	
 	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 2
+
+	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
+		local staminaLoss = dmg * 1.5
+		org.stamina = math.max(org.stamina - staminaLoss, 0)
+	end
+
 	return result
 end
 
@@ -77,6 +91,12 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
 
 	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 2
+
+	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
+		local staminaLoss = dmg * 1.5
+		org.stamina = math.max(org.stamina - staminaLoss, 0)
+	end
+
 	return result
 end
 
@@ -114,11 +134,34 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 		end)
 	end
 
-	org.consciousness = math.Approach(org.consciousness, 0, dmg * 3)
-	
-	org.disorientation = org.disorientation + dmg * 1
 	org.shock = org.shock + dmg * 3
 	org.painadd = org.painadd + dmg * 10
+
+	if org.isPly then
+		local targetPlayer = org.owner
+		if IsValid(org.owner.FakeRagdoll) then
+			local ragdoll = org.owner.FakeRagdoll
+			if IsValid(ragdoll.ply) then
+				targetPlayer = ragdoll.ply
+			end
+		end
+
+        if IsValid(targetPlayer) and targetPlayer:IsPlayer() then
+            local brainDelta = org.brain - oldDmg
+            if brainDelta > 0.01 then -- Only if there is some damage
+                if brainDelta <= 0.3 then
+                    -- Minor brain damage: Concussion
+                    if hg.organism.ApplyConcussion then
+                        hg.organism.ApplyConcussion(org, brainDelta, targetPlayer)
+                    end
+                else
+                    -- Major brain damage: Flash
+                    hg.organism.headTraumaFlash(targetPlayer, dmgInfo, nil, oldDmg, org.brain)
+                end
+            end
+        end
+	end
+
 	return result
 end
 
@@ -201,6 +244,9 @@ input_list.lungsL = function(org, bone, dmg, dmgInfo)
 
 	org.internalBleed = org.internalBleed + (org.lungsL[1] - oldval) * 2
 	
+	local staminaLoss = dmg * 2.0
+	org.stamina = math.max(org.stamina - staminaLoss, 0)
+
 	dmgInfo:ScaleDamage(0.8)
 
 	return 0//isCrush(dmgInfo) and 1 or prot
@@ -215,6 +261,9 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsR[2] = math.min(org.lungsR[2] + dmg * 1, 1) end
 
 	org.internalBleed = org.internalBleed + (org.lungsR[1] - oldval) * 2
+
+	local staminaLoss = dmg * 2.0
+	org.stamina = math.max(org.stamina - staminaLoss, 0)
 
 	dmgInfo:ScaleDamage(0.8)
 
@@ -241,26 +290,52 @@ end
 
 input_list.lefteye = function(org, bone, dmg, dmgInfo)
     local oldDmg = org.lefteye or 0
-    org.lefteye = math.min((org.lefteye or 0) + dmg * 5.5, 1) -- Eyes are fragile
-    if oldDmg < 1 and org.lefteye >= 1 then
-        org.owner:EmitSound("eyegone.mp3")
-        org.internalBleed = org.internalBleed + 5
-        org.painadd = org.painadd + 40
+    local result = damageOrgan(org, dmg * 1.5, dmgInfo, "lefteye") -- eyes are more fragile now
+
+    hg.AddHarmToAttacker(dmgInfo, math.max((org.lefteye or 0) - oldDmg, 0) * 6, "Left eye damage harm")
+
+    -- strong pain and shock response
+    org.painadd = org.painadd + dmg * 35
+    org.shock = org.shock + dmg * 10
+    org.disorientation = org.disorientation + dmg * 2
+
+    -- bleed from any damaging hit type
+    org.bleed = org.bleed + dmg * 0.8
+
+    -- eye popped: play short-range cue
+    if oldDmg < 1 and (org.lefteye or 0) >= 1 then
+        if IsValid(org.owner) then
+            net.Start("hg_play_client_sound")
+            net.WriteString("eyegone.mp3")
+            net.Send(org.owner)
+        end
     end
-    hg.AddHarmToAttacker(dmgInfo, (org.lefteye - oldDmg) * 5, "Left eye damage harm")
-    org.painadd = org.painadd + dmg * 20
-    return 0
+
+    return result
 end
 
 input_list.righteye = function(org, bone, dmg, dmgInfo)
     local oldDmg = org.righteye or 0
-    org.righteye = math.min((org.righteye or 0) + dmg * 5, 1) -- Eyes are fragile
-    if oldDmg < 1 and org.righteye >= 1 then
-        org.owner:EmitSound("eyegone.mp3")
-        org.internalBleed = org.internalBleed + 5
-        org.painadd = org.painadd + 40
+    local result = damageOrgan(org, dmg * 1.5, dmgInfo, "righteye") -- eyes are more fragile now
+
+    hg.AddHarmToAttacker(dmgInfo, math.max((org.righteye or 0) - oldDmg, 0) * 6, "Right eye damage harm")
+
+    org.painadd = org.painadd + dmg * 35
+    org.shock = org.shock + dmg * 10
+    org.disorientation = org.disorientation + dmg * 2
+
+    -- bleed from any damaging hit type
+    org.bleed = org.bleed + dmg * 0.8
+
+
+    -- eye popped: play short-range cue
+    if oldDmg < 1 and (org.righteye or 0) >= 1 then
+        if IsValid(org.owner) then
+            net.Start("hg_play_client_sound")
+            net.WriteString("eyegone.mp3")
+            net.Send(org.owner)
+        end
     end
-    hg.AddHarmToAttacker(dmgInfo, (org.righteye - oldDmg) * 5, "Right eye damage harm")
-    org.painadd = org.painadd + dmg * 20
-    return 0
+
+    return result
 end

@@ -69,3 +69,33 @@ concommand.Add("force_fake", function(ply, cmd, args)
 		hg.FakeUp(ply)
 	end
 end)
+if SERVER then
+    hook.Add("RagdollCollide", "HeadBumpFlash", function(ragdoll, data)
+        if not IsValid(ragdoll) then return end
+
+        local boneName = ragdoll:GetPhysicsObjectBoneName(data.PhysObject)
+        if boneName ~= "ValveBiped.Bip01_Head1" then return end
+
+        local owner = hg.RagdollOwner and hg.RagdollOwner(ragdoll) or ragdoll.owner
+        if not (IsValid(owner) and owner:IsPlayer()) then return end
+
+        local speed = data.Speed
+        if speed < 150 then return end
+
+        -- Cooldown to prevent spam
+        ragdoll.HeadFlashCooldown = ragdoll.HeadFlashCooldown or 0
+        if ragdoll.HeadFlashCooldown > CurTime() then return end
+        ragdoll.HeadFlashCooldown = CurTime() + 0.5
+
+        local intensity = math.Clamp(speed / 800, 0, 1)
+        local flashTime = 0.3 + intensity * 0.5
+        local flashSize = 1200 + intensity * 2000
+
+        owner:PlayCustomTinnitus("headhit.mp3")
+        net.Start("headtrauma_flash")
+            net.WriteVector(data.HitPos)
+            net.WriteFloat(flashTime)
+            net.WriteInt(flashSize, 20)
+        net.Send(owner)
+    end)
+end
