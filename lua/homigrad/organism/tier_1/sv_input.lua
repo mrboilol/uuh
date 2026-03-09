@@ -270,46 +270,12 @@ function hg.organism.AddWound(ent, tr, bone, dmgInfo, dmgPos, dmgBlood, inputHol
 			
 			table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
 
-util.AddNetworkString("hg_HeadTrauma")
+util.AddNetworkString("headtrauma_flash")
 util.AddNetworkString("hg_RedTrauma")
-util.AddNetworkString("hg_SmallHeadHit")
 util.AddNetworkString("hg_DamageIndicator")
 util.AddNetworkString("hg_MeleeHeadViewpunch")
 
-hook.Add("PreHomigradDamage", "HeadTraumaEffect", function(ply, dmgInfo, hitgroup)
-	if not IsValid(ply) then return end
-	local dir = dmgInfo:GetDamageForce():GetNormalized()
-	local org = ply.organism
-	if not org then return end
 
-    if hitgroup == HITGROUP_HEAD then
-        local damage = dmgInfo:GetDamage()
-        if damage > 10 then -- Concussion
-            print("DEBUG: Concussion event triggered for player " .. ply:Nick() .. " with damage " .. damage)
-            org.concussion_severity = (org.concussion_severity or 0) + damage / 2
-            net.Start("hg_HeadTrauma")
-            net.WriteVector(dir)
-            net.Send(ply)
-        else
-            print("DEBUG: Small head hit event triggered for player " .. ply:Nick() .. " with damage " .. damage)
-            net.Start("hg_SmallHeadHit")
-            net.WriteVector(dir)
-            net.Send(ply)
-        end
-
-        --hacks
-        if math.random(1, 20) == 1 then
-            local eyeToDamage = math.random(1, 2) == 1 and "lefteye" or "righteye"
-            if org[eyeToDamage] < 1 then
-                input_list[eyeToDamage](org, 0, 1, dmgInfo)
-            end
-        end
-    end
-    net.Start("hg_RedTrauma")
-    print("DEBUG: Red trauma event triggered for player " .. ply:Nick())
-    net.WriteVector(dir)
-    net.Send(ply)
-end)
 
 			if #org.wounds <= 30 then
 				local wounds = org.wounds

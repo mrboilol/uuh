@@ -957,7 +957,15 @@ players : 1 humans, 0 bots (20 max)
 		size = size or 1000--pixels
 		size = size / math.max(pos:Distance(eyepos) / 64,0.01) * (dot^2)
 		local taint = math.max(200 - size,0) / 200 * time * 0.9
-		local scr = pos:ToScreen()
+        local scr = pos:ToScreen()
+        -- if off-screen, clamp or fall back to center
+        if not scr.visible then
+            scr.x = ScrW() * 0.5
+            scr.y = ScrH() * 0.5
+        else
+            scr.x = math.Clamp(scr.x, 0, ScrW())
+            scr.y = math.Clamp(scr.y, 0, ScrH())
+        end
 
 		table.insert(hg.flashes,{x = scr.x, y = scr.y, time = CurTime() + time - taint, lentime = time, size = size})
 	end

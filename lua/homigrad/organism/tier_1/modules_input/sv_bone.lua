@@ -323,11 +323,48 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	local rnd = math.random(10) == 1 or dmgInfo:IsDamageType(DMG_CRUSH)
 	org.consciousness = math.Approach(org.consciousness, 0, rnd and dmg * 2 or 0)
 
-	org.brain = math.min(org.brain + (rnd and dmg * 0.05 or 0), 1)
+	local old_brain = org.brain
+    org.brain = math.min(org.brain + (rnd and dmg * 0.05 or 0), 1)
 
-	if (org.skull - oldDmg) > 0.6 then
-		org.brain = math.min(org.brain + 0.1, 1)
-	end
+    if (org.skull - oldDmg) > 0.6 then
+        org.brain = math.min(org.brain + 0.1, 1)
+    end
+
+    if org.isPly then
+        local brainDelta = math.max(org.brain - old_brain, 0)
+        if dmg < 0.35 or brainDelta <= 0.15 then return result, vecrand end
+
+        local targetPlayer = org.owner
+        if IsValid(targetPlayer) and targetPlayer:IsPlayer() then
+            local flashTime = math.Clamp(0.25 + brainDelta * 0.8, 0.25, 1.0)
+            local eyePos = targetPlayer:EyePos()
+            local ang = targetPlayer:EyeAngles()
+            local incomingPos = dmgInfo:GetDamagePosition()
+            local incDir = (incomingPos - eyePos):GetNormalized()
+            local dotRight = ang:Right():Dot(incDir)
+            local offset = ang:Right() * (dotRight * 160)
+            local worldPos = eyePos + offset + ang:Forward() * 16
+            local flashSize = math.Clamp(1400 + brainDelta * 1600, 1200, 3000)
+
+            targetPlayer.HeadDisorientFlashCooldown = targetPlayer.HeadDisorientFlashCooldown or 0
+            if targetPlayer.HeadDisorientFlashCooldown < CurTime() then
+                net.Start("headtrauma_flash")
+                net.WriteVector(worldPos)
+                net.WriteFloat(flashTime)
+                net.WriteInt(flashSize, 20)
+                net.Send(targetPlayer)
+                targetPlayer.HeadDisorientFlashCooldown = CurTime() + 0.8
+            end
+
+            if brainDelta > 0.5 then
+                local idx = math.random(1, 4)
+                local snd = "concussion" .. idx .. ".mp3"
+                net.Start("hg_play_client_sound_file")
+                net.WriteString(snd)
+                net.Send(targetPlayer)
+            end
+        end
+    end
 
 	if org.brain >= 0.01 and math.random(3) == 1 and (rnd or (org.skull - oldDmg) > 0.6) then
 		--hg.applyFencingToPlayer(org.owner, org)

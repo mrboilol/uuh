@@ -295,16 +295,13 @@ net.Receive("hg_RedTrauma", function()
     lobotomy_dir = net.ReadVector()
 end)
 
-net.Receive("hg_HeadTrauma", function()
-    show_image_time = HEAD_TRAUMA_DURATION
-    lobotomy_index = math.random(#lobotomy_mats)
-    surface.PlaySound("concussion"..math.random(4)..".mp3")
-	concussion_effect_time = 2
-    lobotomy_dir = net.ReadVector()
-end)
-
-net.Receive("hg_SmallHeadHit", function()
-    surface.PlaySound("headhit.mp3")
+net.Receive("headtrauma_flash", function()
+    local pos = net.ReadVector()
+    local time = net.ReadFloat()
+    local size = net.ReadInt(20)
+    local lply = LocalPlayer()
+    if not IsValid(lply) then return end
+    hg.AddFlash(lply:EyePos(), 1, pos, time, size)
 end)
 
 net.Receive("hg_DamageIndicator", function()
@@ -319,11 +316,20 @@ net.Receive("hg_MeleeHeadViewpunch", function()
 end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
-    damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.5, 0)
+    damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.3, 0)
     if show_image_time > 0 then -- head trauma
         show_image_time = math.max(show_image_time - FrameTime(), 0)
         local duration = HEAD_TRAUMA_DURATION
         local timer = show_image_time
+
+        DrawMotionBlur(0.4, 0.6, 0.02)
+
+        local color_modify = {
+            ["$pp_colour_brightness"] = 0,
+            ["$pp_colour_contrast"] = 1,
+            ["$pp_colour_colour"] = 0.5,
+        }
+        DrawColorModify(color_modify)
 
         -- White flash
         local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.1), 0, 1) * 200
@@ -335,7 +341,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         -- Red flash for head trauma
         local flash_alpha = math.Clamp(1 - ((duration - timer) / 0.2), 0, 1) * 150
         if flash_alpha > 0 then
-            surface.SetDrawColor(255, 255, 255, flash_alpha) -- WHITE
+            surface.SetDrawColor(255, 0, 0, flash_alpha) -- RED
             surface.DrawRect(0, 0, ScrW(), ScrH())
         end
 
@@ -346,7 +352,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
             surface.SetMaterial(lobotomy_mats[lobotomy_index])
 			local x = ScrW()/2 + lobotomy_dir.x * ScrW()/2
 			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
-            surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
+            surface.DrawTexturedRectRotated(x, y, ScrW(), ScrH(), math.random(-5, 5))
         end
 		if show_image_time == 0 then
 			lobotomy_index = 0
@@ -376,26 +382,21 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         local ang_to_damage = (damage_indicator_dir * -1):Angle()
         local ply_ang = ply:EyeAngles()
         local yaw_diff = math.AngleDifference(ply_ang.y, ang_to_damage.y)
+        local pitch_diff = math.AngleDifference(ply_ang.p, ang_to_damage.p)
 
-        if math.abs(yaw_diff) > 45 then
-            local w, h = ScrW(), ScrH()
-            
-            local radius_x = w/2 - 150
-            local radius_y = h/2 - 150
-            
-            local x = w/2 + radius_x * math.sin(math.rad(yaw_diff))
-            local y = h/2 - radius_y * math.cos(math.rad(yaw_diff))
+        local w, h = ScrW(), ScrH()
 
-            local mat = lobotomy_mats[5]
-            if mat then
-                local alpha = math.min(damage_indicator_time / DAMAGE_INDICATOR_DURATION, 0.75) * 255
-                surface.SetDrawColor(255, 255, 255, alpha)
-                surface.SetMaterial(mat)
+        local mat = lobotomy_mats[1]
+        if mat then
+            local alpha = math.min(damage_indicator_time / DAMAGE_INDICATOR_DURATION, 0.75) * 255
+            surface.SetDrawColor(255, 255, 255, alpha)
+            surface.SetMaterial(mat)
 
-                local size = 128
-                local rotation = yaw_diff
-                surface.DrawTexturedRectRotated(x, y, size, size, rotation)
-            end
+            local size = 256
+            local x = w/2 + math.sin(math.rad(yaw_diff)) * (w/4)
+            local y = h/2 - math.sin(math.rad(pitch_diff)) * (h/4)
+
+            surface.DrawTexturedRect(x - size/2, y - size/2, size, size)
         end
     end
 end)
@@ -815,9 +816,19 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 
 	local blindness_intensity = 0
-    if org and (org.lefteye or 0) >= 1 and (org.righteye or 0) >= 1 then
-        blindness_intensity = 20
-    end
+	if org then
+		if (org.lefteye or 0) >= 1 then
+			surface.SetDrawColor(0, 0, 0, 255)
+			surface.DrawRect(0, 0, ScrW() / 2, ScrH())
+		end
+		if (org.righteye or 0) >= 1 then
+			surface.SetDrawColor(0, 0, 0, 255)
+			surface.DrawRect(ScrW() / 2, 0, ScrW() / 2, ScrH())
+		end
+		if (org.lefteye or 0) >= 1 and (org.righteye or 0) >= 1 then
+			blindness_intensity = 20
+		end
+	end
 
 	if (PainLerp > 0.001 or shockLerp > 5) or org.otrub or blindness_intensity > 0 then
 		local strobe = math.ease.InOutSine(math.abs(math.cos(CurTime() * 2))) * PainLerp / 2
