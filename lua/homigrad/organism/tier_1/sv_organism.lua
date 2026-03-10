@@ -196,7 +196,7 @@ util.AddNetworkString("organism_sendply")
 local CurTime = CurTime
 local nullTbl = {}
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer", 0, FCVAR_SERVER_CAN_EXECUTE, "Toggle developer mode (enables damage traces)", 0, 1)
-local function send_organism(org, ply)
+function hg.send_organism(org, ply)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
 	sendtable.mood = org.mood
@@ -280,10 +280,10 @@ local function send_organism(org, ply)
 	end
 end
 
-local function send_bareinfo(org)
+function hg.send_bareinfo(org)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
-    sendtable.mood = ply.organism.mood
+    sendtable.mood = org.mood
 	sendtable.alive = org.alive
 	sendtable.otrub = org.otrub
 	sendtable.owner = org.owner
@@ -1157,4 +1157,32 @@ hook.Add("PlayerPostThink", "Organism_ForceSuicide", function(ply)
     if IsValid(wep) then
         wep:PrimaryAttack()
     end
+end)
+
+concommand.Add("hg_setmood", function(ply, cmd, args)
+    if not ply:IsAdmin() then return end
+
+    local target = ply
+    if args[2] then
+        target = player.GetByName(args[2])[1]
+    end
+
+    if not IsValid(target) or not target:IsPlayer() then
+        ply:ChatPrint("Invalid target.")
+        return
+    end
+
+    local mood = tonumber(args[1])
+    if not mood then
+        ply:ChatPrint("Invalid mood value.")
+        return
+    end
+
+    if not target.organism then
+        ply:ChatPrint("Target does not have an organism.")
+        return
+    end
+
+    target.organism.mood = math.Clamp(mood, 0, 100)
+    ply:ChatPrint("Set " .. target:Name() .. "'s mood to " .. target.organism.mood)
 end)
