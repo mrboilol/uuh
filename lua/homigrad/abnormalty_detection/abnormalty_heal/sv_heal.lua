@@ -96,6 +96,7 @@ hook.Add("Think", "Abnormalties_Heal", function()
 			
 			if(IsValid(owner) and owner:Alive())then
 				owner:SetHealth(math.min(owner:Health() + 50, owner:GetMaxHealth() * 2))
+				owner.organism.mood = math.min(owner.organism.mood + 20, 100)
 				
 				owner.organism.pain = 0
 				owner.organism.disorientation = 0

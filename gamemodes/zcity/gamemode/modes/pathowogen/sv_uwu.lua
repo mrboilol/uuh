@@ -810,6 +810,9 @@ local killfurries = {
 }
 
 function MODE:PlayerDeath(ply, inflictor, att)
+	if IsValid(att) and att:IsPlayer() and att ~= ply and att.organism then
+		att.organism.mood = math.max(att.organism.mood - 10, 0)
+	end
 	self.saved.DeathNames[ply] = ply:GetNWString("PlayerName") or ply:Name() or "Unknown"
 
 	local most_harm,biggest_attacker = 0,nil

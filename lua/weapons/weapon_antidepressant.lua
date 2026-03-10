@@ -37,7 +37,7 @@ if SERVER then
 		self:SetNextPrimaryFire(CurTime() + self.Primary.Wait)
 
 local mood = org.mood
-		if mood then
+		if mood and GetConVar("hg_mood_enabled"):GetBool() then
 			local new_mood = math.Clamp(mood + 40, 0, 100)
 			hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
 

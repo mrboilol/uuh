@@ -115,7 +115,7 @@ if SERVER then
 		end
 
 local mood = org.mood
-		if mood then
+		if mood and GetConVar("hg_mood_enabled"):GetBool() then
 			local new_mood = mood
 			if ent == owner then
 				new_mood = new_mood + 2 -- Small mood boost for self-healing

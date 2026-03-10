@@ -549,5 +549,13 @@ end
 function hg.get_status_message(ply)
 	local txt = get_status_message(ply)
 
+	if not GetConVar("hg_mood_enabled"):GetBool() and IsValid(ply) and ply:IsPlayer() and ply.organism and ply.organism.blood < 3100 then
+		if math.random(2) == 1 then
+			return near_death_positive[math.random(#near_death_positive)]
+		else
+			return near_death_poetic[math.random(#near_death_poetic)]
+		end
+	end
+
 	return txt
 end

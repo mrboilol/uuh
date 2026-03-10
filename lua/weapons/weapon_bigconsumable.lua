@@ -170,6 +170,7 @@ if SERVER then
 		end
 
 		org.satiety = org.satiety + 25/5
+		org.mood = math.min(org.mood + 5, 100)
 		owner:ViewPunch(ang_eat)
 		
 		ent:EmitSound( self.WaterModel[self.WorldModel] and "snd_jack_hmcd_drink"..math.random(3)..".wav" or "snd_jack_hmcd_eat"..math.random(4)..".wav", 60, math.random(95, 105))

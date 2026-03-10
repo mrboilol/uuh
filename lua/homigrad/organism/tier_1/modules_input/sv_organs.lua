@@ -26,6 +26,7 @@ input_list.heart = function(org, bone, dmg, dmgInfo)
 	
 	org.shock = org.shock + dmg * 20
 	org.internalBleed = org.internalBleed + (org.heart - oldDmg) * 10
+	org.bleed = (org.bleed or 0) + (org.heart - oldDmg) * 0.2
 
 	local staminaLoss = dmg * 3.0
 	org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
@@ -55,6 +56,7 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 	end
 
 	org.internalBleed = org.internalBleed + harmed * 4
+	org.bleed = (org.bleed or 0) + harmed * 0.1
 	
 	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
 		local staminaLoss = dmg * 1.5
@@ -74,6 +76,7 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.stomach - oldDmg) * 2, "Stomach damage harm")
 	
 	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 2
+	org.bleed = (org.bleed or 0) + (org.stomach - oldDmg) * 0.1
 
 	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
 		local staminaLoss = dmg * 1.5
@@ -91,6 +94,7 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
 
 	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 2
+	org.bleed = (org.bleed or 0) + (org.intestines - oldDmg) * 0.1
 
 	if isCrush(dmgInfo) or dmgInfo:IsDamageType(DMG_CLUB) then
 		local staminaLoss = dmg * 1.5
@@ -250,6 +254,7 @@ input_list.lungsL = function(org, bone, dmg, dmgInfo)
 	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsL[2] = math.min(org.lungsL[2] + dmg * 1, 1) end
 
 	org.internalBleed = org.internalBleed + (org.lungsL[1] - oldval) * 2
+	org.bleed = (org.bleed or 0) + (org.lungsL[1] - oldval) * 0.1
 	
 	local staminaLoss = dmg * 2.0
 	org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
@@ -268,6 +273,7 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsR[2] = math.min(org.lungsR[2] + dmg * 1, 1) end
 
 	org.internalBleed = org.internalBleed + (org.lungsR[1] - oldval) * 2
+	org.bleed = (org.bleed or 0) + (org.lungsR[1] - oldval) * 0.1
 
 	local staminaLoss = dmg * 2.0
 	org.stamina[1] = math.max(org.stamina[1] - staminaLoss, 0)
@@ -291,6 +297,7 @@ input_list.trachea = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.trachea - oldDmg) * 8, "Trachea damage harm")
 
 	org.internalBleed = org.internalBleed + dmg * 2
+	org.bleed = (org.bleed or 0) + dmg * 0.2
 
 	return result
 end

@@ -438,6 +438,7 @@ if SERVER then
 		end
 
 		if done then
+			org.mood = math.min(org.mood + 10, 100)
 			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
 
 			if self.poisoned2 then

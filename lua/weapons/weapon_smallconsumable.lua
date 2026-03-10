@@ -104,6 +104,7 @@ if SERVER then
 		end
 
 		org.satiety = org.satiety + 10/5
+		org.mood = math.min(org.mood + 2, 100)
 		local ply = self:GetOwner()
 		ply:ViewPunch(ang_eat)
 		

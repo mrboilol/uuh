@@ -429,6 +429,7 @@ hook.Add("ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
         if not org then return end
 
         local damage = dmginfo:GetDamage()
+        org.mood = math.max(org.mood - damage * 0.2, 0)
         local will_bleed = (org.bleed or 0) > 0
         local took_bone_damage = (org.just_damaged_bone or false)
 

@@ -121,6 +121,7 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 		org.owner:AddNaturalAdrenaline(1)
 		org.immobilization = org.immobilization + dmg * 25
 		org.fearadd = org.fearadd + 0.5
+		org.internalBleed = (org.internalBleed or 0) + 10
 
 		--if org.isPly and !org[key.."amputated"] then org.owner:Notify(broke_leg[math.random(#broke_leg)], 1, "broke"..key, 1, nil, nil) end
 
