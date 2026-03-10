@@ -739,7 +739,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.owner:SetNetVar("arterialwounds", org.arterialwounds)
 
 		if isPly and owner:Alive() then
-			send_organism(org, owner)
+			hg.send_organism(org, owner)
 		end
 	end
 end)
