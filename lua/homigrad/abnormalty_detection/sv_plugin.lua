@@ -91,7 +91,9 @@ util.AddNetworkString("Abnormalties(SendOpenedPage)")
 				-- local query = mysql:Alter("abnormalties_player_info")
 					-- query:Add("knowledge", "TEXT")
 				-- query:Execute()
-			end))
+			end)
+		query:Execute()
+	end)
 
 
 --\\Universal save system

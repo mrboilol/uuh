@@ -42,4 +42,44 @@ hook.Add("Think", "homigrad_status_sounds", function()
             sleepy_sound = nil
         end
     end
+
+    -- Vomiting sound
+    if org.wantToVomit and org.wantToVomit > 0.95 then
+        if not bloodvomit_sound then
+            bloodvomit_sound = CreateSound(ply, "bloodvomit.ogg")
+            bloodvomit_sound:Play()
+        end
+    elseif bloodvomit_sound then
+        bloodvomit_sound:Stop()
+        bloodvomit_sound = nil
+    end
+
+    -- Critical condition sounds
+    if org.critical then
+        if org.consciousness > 0.4 then
+            if not criticalloop_sound or criticalloop_sound_name ~= "criticalloop.ogg" then
+                if criticalloop_sound then criticalloop_sound:Stop() end
+                criticalloop_sound = CreateSound(ply, "criticalloop.ogg")
+                criticalloop_sound:Play()
+                criticalloop_sound_name = "criticalloop.ogg"
+            end
+        else
+            if org.pulse and org.pulse > 0 then
+                if not criticalloop_sound or criticalloop_sound_name ~= "criticalloop-unconscious.ogg" then
+                    if criticalloop_sound then criticalloop_sound:Stop() end
+                    criticalloop_sound = CreateSound(ply, "criticalloop-unconscious.ogg")
+                    criticalloop_sound:Play()
+                    criticalloop_sound_name = "criticalloop-unconscious.ogg"
+                end
+            elseif criticalloop_sound then
+                criticalloop_sound:FadeOut(1)
+                criticalloop_sound = nil
+                criticalloop_sound_name = nil
+            end
+        end
+    elseif criticalloop_sound then
+        criticalloop_sound:Stop()
+        criticalloop_sound = nil
+        criticalloop_sound_name = nil
+    end
 end)

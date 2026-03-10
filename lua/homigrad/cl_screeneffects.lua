@@ -459,6 +459,18 @@ hook.Add("PlayerSpawn", "reset_agony_chance", function(ply)
     end
 end)
 
+local lobotomy_flash_active = false
+local lobotomy_flash_end_time = 0
+
+local vignette_active = false
+local vignette_end_time = 0
+
+local wave_effect_active = false
+local wave_effect_end_time = 0
+
+local grayscale_active = false
+local grayscale_end_time = 0
+
 local function stopthings()
 	PainLerp = 0
 	O2Lerp = 0
@@ -1082,6 +1094,93 @@ local fatman = {
 		["$vertexalpha"] = "1"
 	})
 }
+
+hook.Add("Post Post Processing", "CustomEffects", function()
+    local ply = LocalPlayer()
+    if not IsValid(ply) or not ply:Alive() then return end
+
+    local org = ply.organism
+    if not org then return end
+
+    -- Lobotomy Flash
+    if org.brain and org.brain > 0.01 and org.brain < 0.15 then
+        if not lobotomy_flash_active and math.random(1, 100) < (org.brain * 200) then
+            lobotomy_flash_active = true
+            lobotomy_flash_end_time = CurTime() + 2
+            surface.PlaySound("lobotomy.ogg")
+        end
+    end
+
+    if lobotomy_flash_active then
+        if CurTime() > lobotomy_flash_end_time then
+            lobotomy_flash_active = false
+        else
+            DrawMotionBlur(0.4, 0.8, 0.01)
+            local tab = {}
+            tab["$pp_colour_colour"] = 2
+            DrawColorModify(tab)
+        end
+    end
+
+    -- Vomit vignette
+    if org.wantToVomit and org.wantToVomit > 0.95 and not vignette_active then
+        vignette_active = true
+        -- No end time, it will be disabled when wantToVomit is normal
+    end
+
+    if org.wantToVomit and org.wantToVomit <= 0.95 and vignette_active then
+        vignette_active = false
+    end
+
+    -- Fear effects
+    if org.fear and org.fear > 0.5 then
+        if not wave_effect_active then
+            wave_effect_active = true
+        end
+        if not vignette_active then
+            vignette_active = true
+        end
+    else
+        if wave_effect_active then
+            wave_effect_active = false
+        end
+        if vignette_active and not (org.wantToVomit and org.wantToVomit > 0.95) then
+            vignette_active = false
+        end
+    end
+
+    if wave_effect_active then
+        render.UpdateScreenEffectTexture()
+        tunnelWaveMat:SetFloat("$c1_w", 0.5)
+        render.SetMaterial(tunnelWaveMat)
+        render.DrawScreenQuad()
+    end
+
+    -- Low blood/mood grayscale
+    if (org.blood and org.blood < 2000) or (org.mood and org.mood < 20) then
+        if not grayscale_active then
+            grayscale_active = true
+        end
+    else
+        if grayscale_active then
+            grayscale_active = false
+        end
+    end
+
+    if grayscale_active then
+        local tab = {}
+        tab["$pp_colour_colour"] = 0
+        DrawColorModify(tab)
+    end
+
+    -- Vignette
+    if vignette_active then
+        render.UpdateScreenEffectTexture()
+        vignetteMat:SetFloat("$c1_y", 10)
+        render.SetMaterial(vignetteMat)
+        render.DrawScreenQuad()
+    end
+end)
 
 hook.Add("Think", "hg-aprilfools-fatman", function()
 	if not GetGlobalBool("hg_aprilfools", false) then return end

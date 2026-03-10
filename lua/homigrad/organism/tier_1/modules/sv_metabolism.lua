@@ -70,7 +70,7 @@ module[2] = function(owner, org, timeValue)
         local new_mood = mood
         if org.hungry > 50 then
             local mood_loss = (org.hungry - 50) / 50 * timeValue * 0.5 -- Mood loss starts when hunger is over 50
-            new_mood = new_mood - mood_loss * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
+            new_mood = new_mood - mood_loss * hg.organism.GetMoodInertiaMultiplier(ply)
         end
 
         if org.satiety > 80 then
@@ -80,7 +80,7 @@ module[2] = function(owner, org, timeValue)
 
         new_mood = math.Clamp(new_mood, 0, 100)
         if new_mood != mood then
-            hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
+            org.mood = new_mood
         end
     end
 end

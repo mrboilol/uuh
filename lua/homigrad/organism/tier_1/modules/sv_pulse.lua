@@ -79,7 +79,7 @@ module[2] = function(owner, org, timeValue)
 	if mood then
 		local fear_effect = org.fear * timeValue * 5 -- This will be a value between -5 and 5 per second
         if fear_effect > 0 then
-            fear_effect = fear_effect * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
+            fear_effect = fear_effect * hg.organism.GetMoodInertiaMultiplier(ply)
         end
         local new_mood = mood - fear_effect
 		

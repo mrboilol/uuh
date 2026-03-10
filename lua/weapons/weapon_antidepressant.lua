@@ -47,9 +47,9 @@ local mood = org.mood
 				if not IsValid(owner) then return end
 org.mood = new_mood
 				if current_mood then
-					local mood_drop = 20 * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
+					local mood_drop = 20 * hg.organism.GetMoodInertiaMultiplier(ply)
                     local mood_after_effect = math.Clamp(current_mood - mood_drop, 0, 100)
-                    hg.Abnormalties.SetPlayerStat(owner, "mood", mood_after_effect)
+                    org.mood = mood_after_effect
 					owner:Notify("The world seems a little colder now.", 10, "antidepressant_wore_off", 0, nil, Color(200, 200, 200, 255))
 				end
 			end)

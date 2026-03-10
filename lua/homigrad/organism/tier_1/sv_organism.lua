@@ -1,3 +1,62 @@
+require("homigrad/sh_status_messages")
+
+local fear_hurt_ironic = {
+	"I bet there's a lesson in this... if I survive.",
+	"My future biographer won't believe this part.",
+	"Well, this is a stupid way to go.",
+	"At least my life wasn't boring.",
+	"Note to self: Never do this again.",
+	"This isn't the worst day to die.",
+}
+
+local near_death_positive = {
+	"I don't want to die.",
+	"I have to survive.",
+	"There's still a chance.",
+	"I can't let fear win.",
+	"Just one more try.",
+	"I refuse to die here.",
+	"Alright... think this through.",
+	"Just stay still. Moving makes it worse.",
+	"Breathe slow. Panic won't help.",
+	"It's not over until it's over.",
+	"Pain is just a signal. Ignore it.",
+	"If this is it... at least it's gonna be quick.",
+	"I've survived worse. Probably.",
+	"Need help, Need help...",
+	"I cant die like this. Not yet.",
+	"This isnt it. This cant be it.",
+	"Just.. dont throw up.",
+	"Keep breathing, just keep breathing...",
+	"Theres still people waiting for you at home.",
+	"This isn't how I pictured it.",
+	"Make it stop make it stop...",
+}
+
+local near_death_negative = {
+    "I want to die.",
+    "I can't survive this.",
+    "There's no chance.",
+    "Fear already won.",
+    "Why even try anymore.",
+    "I'm going to die here, aren't I?",
+    "It's over.",
+    "Pain is all there is. Let it end.",
+    "I've survived worse. But not this time.",
+    "Nobody can help me.",
+    "I'm going to die like this. It's my fault.",
+}
+
+local fear_hurt_sarcastic_sad = {
+    "I bet there's a lesson in this... not that it matters now.",
+    "My future biographer will have a very short chapter on me.",
+    "Well, this is a stupid way to go. Figures.",
+    "At least my life wasn't boring. It was just... short.",
+    "Note to self: it's too late for notes.",
+    "This is probably the worst day to die.",
+    "Of course this is happening to me.",
+}
+
 --local Organism = hg.organism
 local sharp_weapons = {
     ["weapon_hg_machete"] = true,
@@ -9,6 +68,15 @@ local sharp_weapons = {
     ["weapon_pocketknife"] = true,
     ["weapon_buck200knife"] = true,
 }
+
+function hg.organism.GetMoodInertiaMultiplier(ply)
+    if not IsValid(ply) or not ply.organism then return 1 end
+    local mood = ply.organism.mood
+    if mood and mood >= 80 then
+        return 0.5 -- Mood decreases at 50% of the normal rate
+    end
+    return 1
+end
 hg.organism.module = hg.organism.module or {}
 local module = hg.organism.module
 hg.organism.lastindex = hg.organism.lastindex or 1000000
@@ -346,11 +414,11 @@ hook.Add("HomigradDamage", "MoodDamage", function(ply, dmgInfo, hitgroup, ent)
 	if not mood then return end
 
 	local damage = dmgInfo:GetDamage()
-    local inertia = hg.Abnormalties:GetMoodInertiaMultiplier(ply)
+    local inertia = hg.organism.GetMoodInertiaMultiplier(ply)
     local mood_loss = damage / 5 * inertia -- Lose 1 mood for every 5 damage
 
     local new_mood = math.Clamp(mood - mood_loss, 0, 100)
-	hg.Abnormalties.SetPlayerStat(ply, "mood", new_mood)
+	org.mood = new_mood
 end)
 
 hook.Add("Org Think", "Main", function(owner, org, timeValue)
@@ -413,12 +481,12 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 		-- Mood loss from pain
 		if org.pain > 20 then
-			new_mood = new_mood - ((org.pain / 100) * timeValue * 2) * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
+			new_mood = new_mood - ((org.pain / 100) * timeValue * 2) * hg.organism.GetMoodInertiaMultiplier(ply)
 		end
 
 		-- Mood loss from broken bones
 		if org.just_damaged_bone then
-			new_mood = new_mood - 15 * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
+			new_mood = new_mood - 15 * hg.organism.GetMoodInertiaMultiplier(ply)
 			org.just_damaged_bone = nil
 		end
 
@@ -1064,6 +1132,18 @@ hook.Add("StartCommand", "Organism_BlockInput_Suicide", function(ply, cmd)
         cmd:ClearMovement()
         cmd:RemoveKey(IN_ATTACK)
         cmd:RemoveKey(IN_ATTACK2)
+    end
+end)
+
+hook.Add("Org Think", "BrainDamageThink", function(owner, org, timeValue)
+    if org.critical or org.incapacitated then
+        local brainDamageRate = 0
+        if org.critical then
+            brainDamageRate = 0.005 -- Slightly more brain damage
+        elseif org.incapacitated then
+            brainDamageRate = 0.002 -- Very slight brain damage
+        end
+        org.brain = org.brain + brainDamageRate * timeValue
     end
 end)
 
