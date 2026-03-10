@@ -1,4 +1,4 @@
-require("homigrad.sh_status_messages")
+require("lua/homigrad/sh_status_messages")
 
 local fear_hurt_ironic = {
 	"I bet there's a lesson in this... if I survive.",
@@ -333,8 +333,7 @@ local function send_bareinfo(org)
 	net.Send(rf)
 end
 
-hg.send_organism = send_organism
-hg.send_bareinfo = send_bareinfo
+
 
 local META = FindMetaTable("Player")
 function META:IsBerserk()
