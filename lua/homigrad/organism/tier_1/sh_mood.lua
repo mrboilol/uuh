@@ -132,7 +132,7 @@ end
         ply.organism.heartstop = true
         ply:Notify("You are having a heart attack.", 10, "heart_attack", 0, nil, Color(255, 0, 0, 255))
     end
-end)
+end
 
 hook.Add("HG_MovementCalc_2", "MoodInertia", function(mul, ply)
     if not IsValid(ply) or not ply:IsPlayer() or not ply.organism then return end
