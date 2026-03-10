@@ -1,4 +1,4 @@
-require("lua/homigrad/sh_status_messages")
+include("homigrad/sh_status_messages.lua")
 
 local fear_hurt_ironic = {
 	"I bet there's a lesson in this... if I survive.",
