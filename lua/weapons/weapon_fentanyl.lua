@@ -113,5 +113,30 @@ if SERVER then
 			//owner:SelectWeapon("weapon_hands_sh")
 			//self:Remove()
 		end
+
+		local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+		if mood then
+			local new_mood = mood
+			if ent == owner then
+				new_mood = new_mood + 2 -- Small mood boost for self-healing
+			else
+				new_mood = new_mood + 5 -- Bigger mood boost for helping others
+			end
+			new_mood = math.Clamp(new_mood, 0, 100)
+			hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
+ 
+            local thought = ""
+            if new_mood > 70 then
+                thought = hg.mood_high_thoughts[math.random(#hg.mood_high_thoughts)]
+            elseif new_mood < 30 then
+                thought = hg.mood_low_thoughts[math.random(#hg.mood_low_thoughts)]
+            else
+                thought = hg.mood_neutral_thoughts[math.random(#hg.mood_neutral_thoughts)]
+            end
+
+            if thought ~= "" then
+                owner:Notify(thought, 10, "mood_thought", 0, nil, Color(200, 200, 200, 255))
+            end
+		end
 	end
 end

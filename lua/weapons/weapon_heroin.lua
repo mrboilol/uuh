@@ -82,5 +82,27 @@ if SERVER then
 			//owner:SelectWeapon("weapon_hands_sh")
 			//self:Remove()
 		end
+
+		local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+		if mood then
+			local new_mood = mood
+			if ent == owner then
+				new_mood = new_mood + 10 -- Larger mood boost for self-healing
+			else
+				new_mood = new_mood + 15 -- Even bigger mood boost for helping others
+			end
+			new_mood = math.Clamp(new_mood, 0, 100)
+			hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
+
+			timer.Simple(60, function()
+				if not IsValid(ent) then return end
+				local org = ent.organism
+				if not org then return end
+				local mood = hg.Abnormalties.GetPlayerStat(ent, "mood")
+				if not mood then return end
+				local new_mood = math.Clamp(mood - 20, 0, 100) -- Mood crash
+				hg.Abnormalties.SetPlayerStat(ent, "mood", new_mood)
+			end)
+		end
 	end
 end

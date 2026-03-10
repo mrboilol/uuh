@@ -202,8 +202,31 @@ local near_death_positive = {
 	"Keep breathing, just keep breathing...",
 	"Theres still people waiting for you at home.",
 	"This isn't how I pictured it.",
-	"This isn't how I pictured it.",
 	"Make it stop make it stop...",
+}
+
+local fear_hurt_sarcastic_sad = {
+    "I bet there's a lesson in this... not that it matters now.",
+    "My future biographer will have a very short chapter on me.",
+    "Well, this is a stupid way to go. Figures.",
+    "At least my life wasn't boring. It was just... short.",
+    "Note to self: it's too late for notes.",
+    "This is probably the worst day to die.",
+    "Of course this is happening to me.",
+}
+
+local near_death_negative = {
+    "I want to die.",
+    "I can't survive this.",
+    "There's no chance.",
+    "Fear already won.",
+    "Why even try anymore.",
+    "I'm going to die here, aren't I?",
+    "It's over.",
+    "Pain is all there is. Let it end.",
+    "I've survived worse. But not this time.",
+    "Nobody can help me.",
+    "I'm going to die like this. It's my fault.",
 }
 
 local broken_limb = {

@@ -327,6 +327,21 @@ hook.Add("HomigradDamage", "Berserk", function(ply, dmgInfo, hitgroup, ent)
 	end)
 end)
 
+hook.Add("HomigradDamage", "MoodDamage", function(ply, dmgInfo, hitgroup, ent)
+	local org = ply.organism
+	if not org then return end
+
+	local mood = hg.Abnormalties.GetPlayerStat(ply, "mood")
+	if not mood then return end
+
+	local damage = dmgInfo:GetDamage()
+    local inertia = hg.Abnormalties:GetMoodInertiaMultiplier(ply)
+    local mood_loss = damage / 5 * inertia -- Lose 1 mood for every 5 damage
+
+    local new_mood = math.Clamp(mood - mood_loss, 0, 100)
+	hg.Abnormalties.SetPlayerStat(ply, "mood", new_mood)
+end)
+
 hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if not IsValid(owner) then
 		hg.organism.list[owner] = nil
@@ -380,6 +395,44 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		module.random_events[2](owner, org, timeValue)
 	end
 	module.pulse[2](owner, org, timeValue)
+
+	local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+	if mood then
+		local new_mood = mood
+
+		-- Mood loss from pain
+		if org.pain > 20 then
+			new_mood = new_mood - ((org.pain / 100) * timeValue * 2) * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
+		end
+
+		-- Mood loss from broken bones
+		if org.just_damaged_bone then
+			new_mood = new_mood - 15 * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
+			org.just_damaged_bone = nil
+		end
+
+		-- Mood gain from analgesia
+		if org.analgesia > 0 then
+			new_mood = new_mood + org.analgesia * timeValue * 0.2
+		end
+
+		-- Mood gain from being healthy
+		if owner:Health() > 90 and org.pain < 10 and org.bleed < 1 and (org.hungry or 0) < 20 then
+			new_mood = new_mood + timeValue * 0.1
+		end
+
+		new_mood = math.Clamp(new_mood, 0, 100)
+		if new_mood != mood then
+			hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
+		end
+
+		if mood > 70 then
+			local mood_bonus = (mood - 70) / 30
+			org.recoilmul = 1 - (mood_bonus * 0.1) -- Up to 10% recoil reduction
+		else
+			org.recoilmul = 1
+		end
+	end
 
 	if org.owner.PlayerClassName == "furry" then
 		org.assimilated = 0

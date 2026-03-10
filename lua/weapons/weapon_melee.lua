@@ -767,23 +767,28 @@ if CLIENT then
 end
 
 function SWEP:MultiplyDMG(owner, ent, vellen, mul)
-    mul = mul * 1 / math.Clamp((180 - owner.organism.stamina[1]) / 90,1,1.3)
-    mul = mul * math.Clamp(vellen / 250, 0.9, 1.25)
-    if SERVER then
-        mul = mul * (1 + (self.swingSpeed or 0) * 0.1) -- Swing speed multiplier
-    end
-    mul = mul * (ent ~= owner and 0.75 or 1)
-    mul = mul * (owner.MeleeDamageMul or 1)
+	mul = mul * 1 / math.Clamp((180 - owner.organism.stamina[1]) / 90,1,1.3)
+	mul = mul * math.Clamp(vellen / 250, 0.9, 1.25)
+	if SERVER then
+		mul = mul * (1 + (self.swingSpeed or 0) * 0.1) -- Swing speed multiplier
+		
+		local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+		if mood and mood >= 80 then
+			mul = mul * 1.2 -- 20% damage bonus for high mood
+		end
+	end
+	mul = mul * (ent ~= owner and 0.75 or 1)
+	mul = mul * (owner.MeleeDamageMul or 1)
 
-    if owner.organism.superfighter then
-        mul = mul * 5
-    end
+	if owner.organism.superfighter then
+		mul = mul * 5
+	end
 
-    if owner:IsBerserk() then
-        mul = mul * (1 + owner.organism.berserk)
-    end
+	if owner:IsBerserk() then
+		mul = mul * (1 + owner.organism.berserk)
+	end
 
-    return mul
+	return mul
 end
 
 function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
