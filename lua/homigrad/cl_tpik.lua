@@ -1092,7 +1092,7 @@ function hg.DoTPIK(ply, ent)
         local q = Quaternion()--:SetAngle(eyeang)
         q = q * Quaternion():SetAngleAxis(angrr.y, Vector(0, 0, 1))
         q = q * Quaternion():SetAngleAxis(angrr.p, Vector(0, 1, 0))
-        q = q * Quaternion():SetAngleAxis(-135 + angrr.y - eyeang.y + eyeang.r, Vector(1, 0, 0))
+        q = q * Quaternion():SetAngleAxis(-120 + angrr.y - eyeang.y + eyeang.r, Vector(1, 0, 0))
         --q:SetAngleAxis(-angle2 + 180, Vector(0, 1, 0))
         --q:SetAngleAxis(180, Vector(1, 0, 0))
         local ang = q:Angle()
@@ -1112,7 +1112,7 @@ function hg.DoTPIK(ply, ent)
         local q = Quaternion()--:SetAngle(anga)
         q = q * Quaternion():SetAngleAxis(angrr.y, Vector(0, 0, 1))
         q = q * Quaternion():SetAngleAxis(angrr.p, Vector(0, 1, 0))
-        q = q * Quaternion():SetAngleAxis(-90 - angrr.r + eyeang.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, Vector(1, 0, 0))
+        q = q * Quaternion():SetAngleAxis(-120 - angrr.r + eyeang.r - math.NormalizeAngle((eyeang.y - angrr.y)) * (math.NormalizeAngle(angrr.p)) / 90, Vector(1, 0, 0))
         --q:SetAngleAxis(-angle2 + 180, Vector(0, 1, 0))
         --q:SetAngleAxis(180, Vector(1, 0, 0))
         local ang = q:Angle()
@@ -1135,8 +1135,8 @@ function hg.DoTPIK(ply, ent)
             hg.bone_apply_matrix(ply, ply_r_hand_index, ply_r_hand_matrix)
         end
 
-        local angrotate = math.NormalizeAngle(-eyeang.r + ply_r_hand_matrix:GetAngles().r + math.NormalizeAngle((eyeang.y - ply_r_hand_matrix:GetAngles().y)) * (math.NormalizeAngle(ply_r_hand_matrix:GetAngles().p)) / 90 + 270)
-
+        local angrotate = math.NormalizeAngle(-eyeang.r + ply_r_hand_matrix:GetAngles().r + math.NormalizeAngle((eyeang.y - ply_r_hand_matrix:GetAngles().y)) * (math.NormalizeAngle(ply_r_hand_matrix:GetAngles().p)) / 90 + -90)
+        
         local wrst = ent:LookupBone("ValveBiped.Bip01_R_Ulna")
         local wmat = wrst and ent:GetBoneMatrix(wrst)
         if wrst and wmat then
