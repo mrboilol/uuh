@@ -36,7 +36,7 @@ if SERVER then
 
 		self:SetNextPrimaryFire(CurTime() + self.Primary.Wait)
 
-		local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+local mood = org.mood
 		if mood then
 			local new_mood = math.Clamp(mood + 40, 0, 100)
 			hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
@@ -45,7 +45,7 @@ if SERVER then
 
 			timer.Simple(120, function()
 				if not IsValid(owner) then return end
-				local current_mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+org.mood = new_mood
 				if current_mood then
 					local mood_drop = 20 * hg.Abnormalties:GetMoodInertiaMultiplier(owner)
                     local mood_after_effect = math.Clamp(current_mood - mood_drop, 0, 100)

@@ -114,7 +114,7 @@ if SERVER then
 			//self:Remove()
 		end
 
-		local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+local mood = org.mood
 		if mood then
 			local new_mood = mood
 			if ent == owner then

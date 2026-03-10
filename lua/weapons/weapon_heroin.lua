@@ -83,7 +83,7 @@ if SERVER then
 			//self:Remove()
 		end
 
-		local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+	local mood = org.mood
 		if mood then
 			local new_mood = mood
 			if ent == owner then
@@ -98,7 +98,7 @@ if SERVER then
 				if not IsValid(ent) then return end
 				local org = ent.organism
 				if not org then return end
-				local mood = hg.Abnormalties.GetPlayerStat(ent, "mood")
+local mood = org.mood
 				if not mood then return end
 				local new_mood = math.Clamp(mood - 20, 0, 100) -- Mood crash
 				hg.Abnormalties.SetPlayerStat(ent, "mood", new_mood)

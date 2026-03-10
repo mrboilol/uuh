@@ -231,7 +231,7 @@ module[2] = function(owner, org, timeValue)
 		local sprayed = org.is_sprayed_at
         org.is_sprayed_at = nil
 
-        local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+    local mood = org.mood
         local mood_bonus = 1
         if mood and mood >= 80 then
             mood_bonus = 1.2 -- 20% bonus to O2 regeneration for high mood

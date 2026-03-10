@@ -81,7 +81,7 @@ module[2] = function(owner, org, timeValue)
 	stamina.sub = stamina.sub + stamina.sub * stamina.weight * (muffed and 2 or 1)
     org.hungry = org.hungry or 0
 
-    local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+local mood = org.mood
     local mood_bonus = 1
     if mood and mood >= 80 then
         mood_bonus = 1.15 -- 15% bonus to max stamina for high mood

@@ -1,9 +1,20 @@
 --local Organism = hg.organism
+local sharp_weapons = {
+    ["weapon_hg_machete"] = true,
+    ["weapon_hg_glassshard"] = true,
+    ["weapon_hg_glassshard_taped"] = true,
+    ["weapon_hg_bottlebroken"] = true,
+    ["weapon_hg_razor"] = true,
+    ["weapon_sogknife"] = true,
+    ["weapon_pocketknife"] = true,
+    ["weapon_buck200knife"] = true,
+}
 hg.organism.module = hg.organism.module or {}
 local module = hg.organism.module
 hg.organism.lastindex = hg.organism.lastindex or 1000000
 util.AddNetworkString("hg_play_client_sound")
 hook.Add("Org Clear", "Main", function(org)
+	org.mood = 100
 	org.alive = true
 	org.otrub = false
 	org.entindex = IsValid(org.owner) and org.owner:EntIndex() or hg.organism.lastindex + 1
@@ -120,7 +131,7 @@ local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") 
 local function send_organism(org, ply)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
-
+	sendtable.mood = org.mood
 	sendtable.alive = org.alive
 	sendtable.otrub = org.otrub
 	sendtable.uncon_timer = org.uncon_timer
@@ -204,7 +215,7 @@ end
 local function send_bareinfo(org)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
-
+    sendtable.mood = ply.organism.mood
 	sendtable.alive = org.alive
 	sendtable.otrub = org.otrub
 	sendtable.owner = org.owner
@@ -331,7 +342,7 @@ hook.Add("HomigradDamage", "MoodDamage", function(ply, dmgInfo, hitgroup, ent)
 	local org = ply.organism
 	if not org then return end
 
-	local mood = hg.Abnormalties.GetPlayerStat(ply, "mood")
+    local mood = org.mood
 	if not mood then return end
 
 	local damage = dmgInfo:GetDamage()
@@ -396,7 +407,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	end
 	module.pulse[2](owner, org, timeValue)
 
-	local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+   local mood = org.mood
 	if mood then
 		local new_mood = mood
 
@@ -975,4 +986,96 @@ concommand.Add("hg_heal_eye", function(ply, cmd, args)
 			ply:ChatPrint("You healed the right eye.")
 		end
 	end
+end)
+
+hook.Add("PlayerPostThink", "Organism_Mood_Thoughts", function(ply)
+    if not ply:Alive() or not ply.organism then return end
+    if (ply.NextMoodThought or 0) > CurTime() then return end
+
+    local mood = ply.organism.mood
+    if not mood then return end
+
+    ply.NextMoodThought = CurTime() + math.random(25, 40)
+
+    local thought = ""
+    local thought_key = "mood_thought"
+    local thought_color = Color(200, 200, 200, 255)
+
+    if mood >= 80 then
+        local org = ply.organism
+        if org.health < 30 then
+            thought = near_death_positive[math.random(#near_death_positive)]
+        else
+            thought = fear_hurt_ironic[math.random(#fear_hurt_ironic)]
+        end
+        thought_key = "mood_high"
+        thought_color = Color(150, 255, 150, 255)
+    elseif mood <= 30 then
+        local org = ply.organism
+        if org.health < 30 then
+            thought = near_death_negative[math.random(#near_death_negative)]
+        else
+            thought = fear_hurt_sarcastic_sad[math.random(#fear_hurt_sarcastic_sad)]
+        end
+        thought_key = "mood_low"
+        thought_color = Color(255, 150, 150, 255)
+    else -- 31-79
+        thought = hg.get_status_message(ply)
+        thought_key = "mood_neutral"
+    end
+
+    if thought != "" then
+        ply:Notify(thought, 30, thought_key, 0, nil, thought_color)
+    end
+end)
+
+hook.Add("PlayerPostThink", "Organism_Mood_Suicide", function(ply)
+    if not ply:Alive() or not ply.organism or ply.IsSuiciding then return end
+
+    local mood = ply.organism.mood
+    if not mood or mood > 2 then return end
+
+    local suicide_weapon = nil
+    for _, wep in ipairs(ply:GetWeapons()) do
+        if wep:Clip1() > 0 then -- any loaded gun
+            suicide_weapon = wep
+            break
+        end
+        if sharp_weapons[wep:GetClass()] then
+            suicide_weapon = wep
+            break
+        end
+    end
+
+    if suicide_weapon then
+        ply.IsSuiciding = true
+        ply:SelectWeapon(suicide_weapon:GetClass())
+        ply:Notify("You can't fight the intrusive thoughts anymore.", 10, "suicide_imminent", 0, nil, Color(255, 0, 0, 255))
+
+        timer.Simple(1, function()
+            if not IsValid(ply) or not ply.IsSuiciding then return end
+            ply:SetEyeAngles(Angle(90, ply:GetAimVector():Angle().y, 0))
+        end)
+    end
+end)
+
+hook.Add("StartCommand", "Organism_BlockInput_Suicide", function(ply, cmd)
+    if ply.IsSuiciding then
+        cmd:ClearMovement()
+        cmd:RemoveKey(IN_ATTACK)
+        cmd:RemoveKey(IN_ATTACK2)
+    end
+end)
+
+hook.Add("PlayerDeath", "Organism_ClearSuicide", function(ply)
+    ply.IsSuiciding = false
+end)
+
+hook.Add("PlayerPostThink", "Organism_ForceSuicide", function(ply)
+    if not ply.IsSuiciding then return end
+
+    local wep = ply:GetActiveWeapon()
+    if IsValid(wep) then
+        wep:PrimaryAttack()
+    end
 end)

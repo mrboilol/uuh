@@ -772,7 +772,7 @@ function SWEP:MultiplyDMG(owner, ent, vellen, mul)
 	if SERVER then
 		mul = mul * (1 + (self.swingSpeed or 0) * 0.1) -- Swing speed multiplier
 		
-		local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+local mood = org.mood
 		if mood and mood >= 80 then
 			mul = mul * 1.2 -- 20% damage bonus for high mood
 		end

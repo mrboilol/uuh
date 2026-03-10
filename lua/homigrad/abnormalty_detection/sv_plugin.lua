@@ -1,16 +1,7 @@
 hg.Abnormalties = hg.Abnormalties or {}
 local PLUGIN = hg.Abnormalties
 
-local sharp_weapons = {
-    ["weapon_hg_machete"] = true,
-    ["weapon_hg_glassshard"] = true,
-    ["weapon_hg_glassshard_taped"] = true,
-    ["weapon_hg_bottlebroken"] = true,
-    ["weapon_hg_razor"] = true,
-    ["weapon_sogknife"] = true,
-    ["weapon_pocketknife"] = true,
-    ["weapon_buck200knife"] = true,
-}
+
 
 SetGlobalBool("AbnormaltiesEnabled", false)
 util.AddNetworkString("Abnormalties(ShowTranslation)")
@@ -94,117 +85,18 @@ util.AddNetworkString("Abnormalties(SendOpenedPage)")
 			query:Create("consequences", "INTEGER NOT NULL")
 			query:Create("punishment", "INTEGER NOT NULL DEFAULT 0")
 			query:Create("rituals_amt", "INTEGER NOT NULL DEFAULT 0")
-			query:Create("mood", "INTEGER NOT NULL DEFAULT 100")
 			query:Create("knowledge", "TEXT")
 			query:PrimaryKey("steamid")
 			query:Callback(function(result)
 				-- local query = mysql:Alter("abnormalties_player_info")
 					-- query:Add("knowledge", "TEXT")
 				-- query:Execute()
-			end)
+			end))
 
-hook.Add("PlayerPostThink", "Abnormalties_Mood_Thoughts", function(ply)
-	if not ply:Alive() or not ply.organism then return end
-	if (ply.NextMoodThought or 0) > CurTime() then return end
-
-	local mood = PLUGIN.GetPlayerStat(ply, "mood")
-	if not mood then return end
-
-	ply.NextMoodThought = CurTime() + math.random(25, 40)
-
-	local thought = ""
-    local thought_key = "mood_thought"
-    local thought_color = Color(200, 200, 200, 255)
-
-    if mood >= 80 then
-        local org = ply.organism
-        if org.health < 30 then
-            thought = near_death_positive[math.random(#near_death_positive)]
-        else
-            thought = fear_hurt_ironic[math.random(#fear_hurt_ironic)]
-        end
-        thought_key = "mood_high"
-        thought_color = Color(150, 255, 150, 255)
-    elseif mood <= 30 then
-        local org = ply.organism
-        if org.health < 30 then
-            thought = near_death_negative[math.random(#near_death_negative)]
-        else
-            thought = fear_hurt_sarcastic_sad[math.random(#fear_hurt_sarcastic_sad)]
-        end
-        thought_key = "mood_low"
-        thought_color = Color(255, 150, 150, 255)
-    else -- 31-79
-        thought = hg.get_status_message(ply)
-        thought_key = "mood_neutral"
-    end
-
-	if thought != "" then
-		ply:Notify(thought, 30, thought_key, 0, nil, thought_color)
-	end
-end)
-		query:Execute()
-	end)
-
-	hook.Add("PlayerInitialSpawn", "AbnormaltiesSQL", function(ply)
-		PLUGIN.LoadConsequences(ply, true)
-	end)
-
-hook.Add("PlayerPostThink", "Abnormalties_Mood_Suicide", function(ply)
-	if not ply:Alive() or not ply.organism or ply.IsSuiciding then return end
-
-	local mood = PLUGIN.GetPlayerStat(ply, "mood")
-	if not mood or mood > 2 then return end
-
-    local suicide_weapon = nil
-    for _, wep in ipairs(ply:GetWeapons()) do
-        if wep:Clip1() > 0 then -- any loaded gun
-            suicide_weapon = wep
-            break
-        end
-        if sharp_weapons[wep:GetClass()] then
-            suicide_weapon = wep
-            break
-        end
-    end
-
-    if suicide_weapon then
-        ply.IsSuiciding = true
-        ply:SelectWeapon(suicide_weapon:GetClass())
-        ply:Notify("You can't fight the intrusive thoughts anymore.", 10, "suicide_imminent", 0, nil, Color(255, 0, 0, 255))
-    
-        timer.Simple(1, function()
-            if not IsValid(ply) or not ply.IsSuiciding then return end
-            ply:SetEyeAngles(Angle(90, ply:GetAimVector():Angle().y, 0))
-        end)
-    end
-end)
-
-hook.Add("StartCommand", "Abnormalties_BlockInput_Suicide", function(ply, cmd)
-    if ply.IsSuiciding then
-        cmd:ClearMovement()
-        cmd:RemoveKey(IN_ATTACK)
-        cmd:RemoveKey(IN_ATTACK2)
-    end
-end)
-
-hook.Add("PlayerDeath", "Abnormalties_ClearSuicide", function(ply)
-    ply.IsSuiciding = false
-end)
-
-hook.Add("PlayerPostThink", "Abnormalties_ForceSuicide", function(ply)
-    if not ply.IsSuiciding then return end
-
-    local wep = ply:GetActiveWeapon()
-    if IsValid(wep) then
-        wep:PrimaryAttack()
-    end
-end)
 
 --\\Universal save system
 	PLUGIN.PlayerStatsToAddAfterLoad = {
-		["rituals_amt"] = true,
-		["mood"] = true,
+		["rituals_amt"] = true
 	}
 	
 	PLUGIN.PlayerStats = PLUGIN.PlayerStats or {}
@@ -407,15 +299,13 @@ end)
 				query:Select("knowledge")
 				query:Select("punishment")
 				query:Select("rituals_amt")
-				query:Select("mood")
 				query:Where("steamid", ply:SteamID64())
 				query:Callback(function(result)
 					local consequences = 0
 					local knowledge = {}
 					local stats = {
 						punishment = 0,
-						rituals_amt = 0,
-						mood = 100
+						rituals_amt = 0
 					}
 					local registered = false
 				
@@ -436,10 +326,6 @@ end)
 							if(result[1].rituals_amt)then
 								stats.rituals_amt = tonumber(result[1].rituals_amt)
 							end
-
-							if(result[1].mood)then
-								stats.mood = tonumber(result[1].mood)
-							end
 							
 							registered = true
 						else
@@ -450,7 +336,6 @@ end)
 									query:Insert("knowledge", util.TableToJSON({}))
 									query:Insert("punishment", 0)
 									query:Insert("rituals_amt", 0)
-									query:Insert("mood", 100)
 								query:Execute()
 								
 								registered = true
@@ -1382,57 +1267,4 @@ end)
 			end
 		end
 	end)
-
-hook.Add("PlayerPostThink", "Abnormalties_Mood", function(ply)
-	if not ply:Alive() or not ply.organism then return end
-
-	local mood = PLUGIN.GetPlayerStat(ply, "mood")
-	if not mood then return end
-
-	local org = ply.organism
-
-	-- Low mood effects
-	if mood < 40 then
-		-- Stamina and consciousness debuffs
-		local debuff_multiplier = 1 - (mood / 40) -- from 0 to 1 as mood goes from 40 to 0
-		org.stamina.regen = org.stamina.regen * (1 - (debuff_multiplier * 0.5)) -- Max 50% stamina regen debuff
-		org.consciousness = org.consciousness - (debuff_multiplier * 0.0005)
-
-		-- Random stunning
-		if mood < 20 and math.random(1, 1000) == 1 then
-			local stun_duration = math.Rand(0.5, 2)
-			hg.LightStunPlayer(ply, stun_duration)
-		end
-
-		-- Heart attack
-		if mood < 5 and math.random(1, 2000) == 1 then
-			org.heartstop = true
-			ply:Notify("You feel a sharp pain in your chest...", 10, "heart_attack", 0, nil, Color(255, 0, 0, 255))
-		end
-	end
-end)
-function PLUGIN:GetMoodInertiaMultiplier(ply)
-    local mood = self:GetPlayerStat(ply, "mood")
-    if mood and mood >= 80 then
-        return 0.5 -- Mood decreases at 50% of the normal rate
-    end
-    return 1
-end
-
-concommand.Add("dbg_mood_up", function(ply)
-    if not ply:IsAdmin() then return end
-    local mood = PLUGIN.GetPlayerStat(ply, "mood") or 50
-    local new_mood = math.Clamp(mood + 10, 0, 100)
-    PLUGIN.SetPlayerStat(ply, "mood", new_mood)
-    ply:Notify("Mood set to " .. new_mood)
-end)
-
-concommand.Add("dbg_mood_down", function(ply)
-    if not ply:IsAdmin() then return end
-    local mood = PLUGIN.GetPlayerStat(ply, "mood") or 50
-    local new_mood = math.Clamp(mood - 10, 0, 100)
-    PLUGIN.SetPlayerStat(ply, "mood", new_mood)
-    ply:Notify("Mood set to " .. new_mood)
-end)
-
 --//

@@ -75,7 +75,7 @@ module[2] = function(owner, org, timeValue)
 	org.fearadd = math.Approach(org.fearadd, 0, gainfear and timeValue or timeValue / 4.9) -- 15 seconds to stop fearing something and start to calm down
 	org.fearadd = math.Approach(org.fearadd, 1, gainfear and timeValue / 5 or 0)
 
-	local mood = hg.Abnormalties.GetPlayerStat(owner, "mood")
+    local mood = org.mood
 	if mood then
 		local fear_effect = org.fear * timeValue * 5 -- This will be a value between -5 and 5 per second
         if fear_effect > 0 then
@@ -89,7 +89,7 @@ module[2] = function(owner, org, timeValue)
 		end
 
 		new_mood = math.Clamp(new_mood, 0, 100)
-		hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
+		org.mood = new_mood
 	end
 	
 	local adrenK = max(1 + org.adrenaline, 1)
