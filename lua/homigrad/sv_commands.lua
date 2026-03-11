@@ -230,4 +230,13 @@ if SERVER then
 			end
 		end
 	end, 0}
+
+    concommand.Add("hg_set_blindness", function(ply, cmd, args)
+        if not IsValid(ply) or not ply:IsPlayer() or not ply.organism then return end
+        
+        local duration = tonumber(args[1])
+        if not duration or duration <= 0 then return end
+    
+        ply.organism.blindness_end_time = CurTime() + duration
+    end)
 end

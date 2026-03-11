@@ -1107,23 +1107,28 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     if not org then return end
 
     -- Lobotomy Flash
-    if org.brain and org.brain > 0.01 and org.brain < 0.15 then
-        if not lobotomy_flash_active and math.random(1, 100) < (org.brain * 200) then
-            lobotomy_flash_active = true
-            lobotomy_flash_end_time = CurTime() + 2
-            surface.PlaySound("lobotomy.ogg")
-        end
+    if org.lobotomized and math.random(1, 200) == 1 then
+        if (ply.lastLobotomyFlash or 0) + 15 > CurTime() then return end
+        ply.lastLobotomyFlash = CurTime()
+        ply.lobotomyFlash = CurTime() + 0.5
+        ply.lobotomyBlur = 1
+        surface.PlaySound("lobotomy.ogg")
+
+        local random_duration = math.Rand(2.5, 5)
+        RunConsoleCommand("hg_set_blindness", tostring(random_duration))
     end
 
-    if lobotomy_flash_active then
-        if CurTime() > lobotomy_flash_end_time then
-            lobotomy_flash_active = false
-        else
-            DrawMotionBlur(0.4, 0.8, 0.01)
-            local tab = {}
-            tab["$pp_colour_colour"] = 2
-            DrawColorModify(tab)
-        end
+    if ply.lobotomyFlash and ply.lobotomyFlash > CurTime() then
+        local frac = (ply.lobotomyFlash - CurTime()) / 0.5
+        frac = frac * frac
+
+        local motion_blur_val = math.min(frac * (ply.lobotomyBlur or 0) * 2, 0.8)
+        DrawMotionBlur(0.4, motion_blur_val, 0.01)
+
+        ply.lobotomyBlur = math.Approach(ply.lobotomyBlur or 0, 0, FrameTime() * 2)
+
+        surface.SetDrawColor(255, 255, 255, frac * 255)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
     -- Vomit vignette

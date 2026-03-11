@@ -45,6 +45,23 @@ local function manageMoodleState(ply, moodleID, isActive, texturePath, count)
     end
 end
 
+local function manageHierarchicalMoodle(ply, baseID, levels, value)
+    local active_level = 0
+    for i = #levels, 1, -1 do
+        local level_info = levels[i]
+        if value >= level_info.threshold then
+            active_level = i
+            break
+        end
+    end
+
+    for i = 1, #levels do
+        local level_info = levels[i]
+        local moodleID = baseID .. "_" .. i
+        manageMoodleState(ply, moodleID, i == active_level, level_info.texture)
+    end
+end
+
 -- Main sync function where your custom logic goes
 local function SyncMoodles(ply)
     if not IsValid(ply) or not ply:Alive() then return end
@@ -75,11 +92,12 @@ local function SyncMoodles(ply)
 
     -- Hypovolemia (Low Blood Volume)
     local blood = org.blood or 5000
-    local bloodPct = blood / 5000
-    manageMoodleState(ply, "hypovolemia_1", bloodPct < 0.8 and bloodPct >= 0.6, "materials/moodels/Bleeding_1.png") -- Mild
-    manageMoodleState(ply, "hypovolemia_2", bloodPct < 0.6 and bloodPct >= 0.4, "materials/moodels/Bleeding_2.png") -- Moderate
-    manageMoodleState(ply, "hypovolemia_3", bloodPct < 0.4 and bloodPct >= 0.2, "materials/moodels/Bleeding_3.png") -- Severe
-    manageMoodleState(ply, "hypovolemia_4", bloodPct < 0.2, "materials/moodels/Bleeding_4.png") -- Critical
+    manageHierarchicalMoodle(ply, "hypovolemia", {
+        { threshold = 0.80, texture = "materials/moodels/Bleeding_1.png" },
+        { threshold = 0.65, texture = "materials/moodels/Bleeding_2.png" },
+        { threshold = 0.55, texture = "materials/moodels/Bleeding_3.png" },
+        { threshold = 0,    texture = "materials/moodels/Bleeding_4.png" },
+    }, 1 - (blood / 5000))
 
     -- Bradycardia & Tachycardia
     local pulse = org.pulse or 70
@@ -87,11 +105,12 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "tachycardia", pulse > 120, "materials/moodels/Tachycardia_Moodle.png")
 
     -- Brain Damage
-    local brainDamage = org.brain or 0
-    manageMoodleState(ply, "brain_damage_1", brainDamage > 0.05 and brainDamage <= 0.10, "materials/moodels/Braindamage_Moodle_1.png")
-    manageMoodleState(ply, "brain_damage_2", brainDamage > 0.10 and brainDamage <= 0.20, "materials/moodels/Braindamage_Moodle_2.png")
-    manageMoodleState(ply, "brain_damage_3", brainDamage > 0.20 and brainDamage <= 0.40, "materials/moodels/Braindamage_Moodle_3.png")
-    manageMoodleState(ply, "brain_damage_4", brainDamage > 0.40, "materials/moodels/Braindamage_Moodle_4_Crit.png")
+    manageHierarchicalMoodle(ply, "brain_damage", {
+        { threshold = 0.05, texture = "materials/moodels/Braindamage_Moodle_1.png" },
+        { threshold = 0.10, texture = "materials/moodels/Braindamage_Moodle_2.png" },
+        { threshold = 0.20, texture = "materials/moodels/Braindamage_Moodle_3.png" },
+        { threshold = 0.30, texture = "materials/moodels/Braindamage_Moodle_4_Crit.png" },
+    }, org.brain or 0)
 
     -- Cardiac Arrest
     manageMoodleState(ply, "cardiac_arrest", org.heartstop, "materials/moodels/Cardiacarrest_Moodle.png")
@@ -176,10 +195,16 @@ local function SyncMoodles(ply)
     -- Faint (Scaling based on Low Consciousness + Disorientation)
     local consciousness = org.consciousness or 1
     local disorientation = org.disorientation or 0
-    manageMoodleState(ply, "faint_1", consciousness < 0.8 and consciousness >= 0.6 or disorientation > 0.1, "materials/moodels/Faint_1.png")
-    manageMoodleState(ply, "faint_2", consciousness < 0.6 and consciousness >= 0.4 or disorientation > 1, "materials/moodels/Faint_2.png")
-    manageMoodleState(ply, "faint_3", consciousness < 0.4 and consciousness >= 0.2 or disorientation > 2, "materials/moodels/Faint_3.png")
-    manageMoodleState(ply, "faint_4", consciousness < 0.2 or disorientation > 3, "materials/moodels/Faint_4.png")
+    local faint_level = 0
+    if consciousness < 0.8 or disorientation > 0.1 then faint_level = 1 end
+    if consciousness < 0.6 or disorientation > 1 then faint_level = 2 end
+    if consciousness < 0.4 or disorientation > 2 then faint_level = 3 end
+    if org.otrub and disorientation > 3 then faint_level = 4 end
+
+    manageMoodleState(ply, "faint_1", faint_level == 1, "materials/moodels/Faint_1.png")
+    manageMoodleState(ply, "faint_2", faint_level == 2, "materials/moodels/Faint_2.png")
+    manageMoodleState(ply, "faint_3", faint_level == 3, "materials/moodels/Faint_3.png")
+    manageMoodleState(ply, "faint_4", faint_level == 4, "materials/moodels/Faint_4.png")
 
     -- Fight or Flight
     manageMoodleState(ply, "fight_or_flight", (org.adrenaline or 0) > 5, "materials/moodels/FightOrFlight_Moodle.png")
