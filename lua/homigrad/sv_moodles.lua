@@ -200,10 +200,14 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "overdose_4", overdose > 1.25, "materials/moodels/Overdose_Moodle_4.png")
 
     -- Oxygen
-    local oxy = (org.o2 and org.o2[1]) or 100
-    manageMoodleState(ply, "oxygen", oxy < 50 and oxy >= 30, "materials/moodels/Oxygen_Moodle_1.png")
-    manageMoodleState(ply, "oxygen_2", oxy < 30 and oxy >= 10, "materials/moodels/Oxygen_Moodle_2.png")
-    manageMoodleState(ply, "oxygen_3", oxy < 10, "materials/moodels/Oxygen_Moodle_3.png")
+    local o2_val = org.o2 and org.o2[1]
+    local o2_range = org.o2 and org.o2.range
+    if o2_val and o2_range and o2_range > 0 then
+        local o2_pct = o2_val / o2_range
+        manageMoodleState(ply, "oxygen", o2_pct < 0.8 and o2_pct >= 0.5, "materials/moodels/Oxygen_Moodle_1.png")
+        manageMoodleState(ply, "oxygen_2", o2_pct < 0.5 and o2_pct >= 0.25, "materials/moodels/Oxygen_Moodle_2.png")
+        manageMoodleState(ply, "oxygen_3", o2_pct < 0.25, "materials/moodels/Oxygen_Moodle_3.png")
+    end
 
     -- Pain
     local pain = org.pain or 0

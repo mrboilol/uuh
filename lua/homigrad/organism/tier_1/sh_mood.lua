@@ -98,40 +98,38 @@ if SERVER then
     end)
 end
 
-	if SERVER then
-		concommand.Add("suicide", function(ply)
-			ply.suiciding = !ply.suiciding
-		end)
-	end
-    if not IsValid(ply) or not ply:Alive() or ply:IsSuiciding() then return end
+if SERVER then
+    concommand.Add("suicide", function(ply)
+        if not IsValid(ply) or not ply:Alive() or ply:IsSuiciding() then return end
 
-    if ply.organism.mood > 70 and GetConVar("hg_mood_enabled"):GetBool() then
-        ply:Notify("I cant...")
-        return
-    end
-
-    local suicide_weapon = nil
-    for _, wep in ipairs(ply:GetWeapons()) do
-        if sharp_weapons[wep:GetClass()] then
-            suicide_weapon = wep
-            break
+        if ply.organism.mood > 70 and GetConVar("hg_mood_enabled"):GetBool() then
+            ply:Notify("I cant...")
+            return
         end
-    end
 
-    if suicide_weapon then
-        ply:SelectWeapon(suicide_weapon:GetClass())
-        ply.IsSuiciding = true
-		ply:Notify(suicide_phrases[math.random(#suicide_phrases)], 10, "suicide_imminent", 0, nil, Color(255, 0, 0, 255))
+        local suicide_weapon = nil
+        for _, wep in ipairs(ply:GetWeapons()) do
+            if sharp_weapons[wep:GetClass()] then
+                suicide_weapon = wep
+                break
+            end
+        end
 
-		ply.canSuicide = false
-		timer.Simple(3, function()
-			if not IsValid(ply) then return end
-			ply.canSuicide = true
-		end)
-    else
-        ply.organism.heartstop = true
-        ply:Notify("You are having a heart attack.", 10, "heart_attack", 0, nil, Color(255, 0, 0, 255))
-    end
+        if suicide_weapon then
+            ply:SelectWeapon(suicide_weapon:GetClass())
+            ply.IsSuiciding = true
+            ply:Notify(suicide_phrases[math.random(#suicide_phrases)], 10, "suicide_imminent", 0, nil, Color(255, 0, 0, 255))
+
+            ply.canSuicide = false
+            timer.Simple(3, function()
+                if not IsValid(ply) then return end
+                ply.canSuicide = true
+            end)
+        else
+            ply.organism.heartstop = true
+            --ply:Notify("You are having a heart attack.", 10, "heart_attack", 0, nil, Color(255, 0, 0, 255))
+        end
+    end)
 end
 
 hook.Add("HG_MovementCalc_2", "MoodInertia", function(mul, ply)

@@ -113,7 +113,7 @@ module[2] = function(owner, org, mulTime)
 		for i, wound in pairs(org.wounds) do
 			local rand1 = math.Rand(4, 10) * 1
 			local rand2 = math.Rand(0.5, 1) * 1
-			local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.02
+			local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.03
 			local coagulate = 2 * mulTime * rand2 * (adrenaline * 0.1 + 1) * 0.04 * (1 + org.tranexamic_acid * 2)-- / #org.wounds
 			bleedoutspeed = bleedoutspeed + bleed / rand1 * 3--we pray for the luck of it being in the center
 			coagulatespeed = coagulatespeed + coagulate / rand2 * 1
