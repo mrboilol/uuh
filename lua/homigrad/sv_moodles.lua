@@ -75,8 +75,8 @@ local function SyncMoodles(ply)
 
     -- Bradycardia & Tachycardia
     local pulse = org.pulse or 70
-    manageMoodleState(ply, "bradycardia", pulse < 40, "materials/moodels/Bradycardia_Moodle_Animated.gif")
-    manageMoodleState(ply, "tachycardia", pulse > 120, "materials/moodels/Tachycardia_Moodle.gif")
+    manageMoodleState(ply, "bradycardia", pulse < 40, "materials/moodels/Bradycardia_Moodle_Animated.png")
+    manageMoodleState(ply, "tachycardia", pulse > 120, "materials/moodels/Tachycardia_Moodle.png")
 
     -- Brain Damage
     local brainDamage = org.brain or 0
@@ -163,7 +163,7 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "faint_4", consciousness < 0.2 or disorientation > 3, "materials/moodels/Faint_4.png")
 
     -- Fight or Flight
-    manageMoodleState(ply, "fight_or_flight", (org.adrenaline or 0) > 5, "materials/moodels/FightOrFlight_Moodle.gif")
+    manageMoodleState(ply, "fight_or_flight", (org.adrenaline or 0) > 5, "materials/moodels/FightOrFlight_Moodle.png")
 
     -- Fractures
     local fracCount = 0
@@ -179,7 +179,7 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "fractured_ribs", (org.chest or 0) >= 1, "materials/moodels/Fractured_ribs.png")
 
     -- Hemothorax
-    manageMoodleState(ply, "hemothorax", (org.pneumothorax or 0) > 0, "materials/moodels/Hemothorax_Moodle_Animated_Crit.gif")
+    manageMoodleState(ply, "hemothorax", (org.pneumothorax or 0) > 0, "materials/moodels/Hemothorax_Moodle_Animated_Crit.png")
 
     -- Hunger
     local hunger = org.hungry or 0
@@ -190,7 +190,7 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "hunger_5", hunger >= 100, "materials/moodels/Hunger_5.png")
 
     -- Internal Bleed
-    manageMoodleState(ply, "internal_bleed", (org.internalBleed or 0) > 0.1, "materials/moodels/InternalBleed_Moodle_Animated_Crit.gif")
+    manageMoodleState(ply, "internal_bleed", (org.internalBleed or 0) > 0.1, "materials/moodels/InternalBleed_Moodle_Animated_Crit.png")
 
     -- Overdose (Using Analgesia/Painkillers as threshold mapping)
     local overdose = org.analgesia or 0
