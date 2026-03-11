@@ -55,27 +55,25 @@ hook.Add("Think", "homigrad_status_sounds", function()
     end
 
     -- Critical condition sounds
-    if org.critical then
-        if org.consciousness > 0.4 then
-            if not criticalloop_sound or criticalloop_sound_name ~= "criticalloop.ogg" then
-                if criticalloop_sound then criticalloop_sound:Stop() end
-                criticalloop_sound = CreateSound(ply, "criticalloop.ogg")
-                criticalloop_sound:Play()
-                criticalloop_sound_name = "criticalloop.ogg"
-            end
-        else
-            if org.pulse and org.pulse > 0 then
-                if not criticalloop_sound or criticalloop_sound_name ~= "criticalloop-unconscious.ogg" then
-                    if criticalloop_sound then criticalloop_sound:Stop() end
-                    criticalloop_sound = CreateSound(ply, "criticalloop-unconscious.ogg")
-                    criticalloop_sound:Play()
-                    criticalloop_sound_name = "criticalloop-unconscious.ogg"
-                end
-            elseif criticalloop_sound then
-                criticalloop_sound:FadeOut(1)
-                criticalloop_sound = nil
-                criticalloop_sound_name = nil
-            end
+    local is_critical = org.critical or org.incapacitated
+    local has_pulse = org.pulse and org.pulse > 0
+
+    if is_critical and has_pulse and not org.heartstop then
+        local volume = (org.incapacitated and not org.critical) and 0.4 or 1.0
+        local sound_to_play = (org.consciousness or 1) > 0.4 and "criticalloop.ogg" or "criticalloop-unconscious.ogg"
+
+        if org.otrub then
+            sound_to_play = "criticalloop-unconscious.ogg"
+            volume = 1.0
+        end
+
+        if not criticalloop_sound or criticalloop_sound_name ~= sound_to_play then
+            if criticalloop_sound then criticalloop_sound:Stop() end
+
+            criticalloop_sound = CreateSound(ply, sound_to_play)
+            criticalloop_sound:Play()
+            criticalloop_sound:SetVolume(volume)
+            criticalloop_sound_name = sound_to_play
         end
     elseif criticalloop_sound then
         criticalloop_sound:Stop()

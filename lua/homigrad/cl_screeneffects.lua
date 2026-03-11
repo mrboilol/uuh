@@ -846,12 +846,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				DrawMotionBlur(0.1, 1., 0.01)
 				lply:ScreenFade( SCREENFADE.IN, Color(0,0,0), 2, 0.5 )
 		end
-		
+
+
 		//if pain > 10 then
 			if IsValid(PainStation) then
-				local target_vol = math.Clamp(math.Remap(pain, 0, 120, 0, 2), 0, 2)
-				local current_vol = PainStation:GetVolume()
-				PainStation:SetVolume(Lerp(FrameTime() * 5, current_vol, target_vol))
+				PainStation:SetVolume(math.Clamp(math.Remap(PainLerp, 0, 120, 0, 2), 0, 2))
 				local rate = org.otrub and 1 or math.Rand(0.75, 1.1)
 				PainStation:SetPlaybackRate(rate)
 			end
@@ -1142,7 +1141,7 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     end
 
     -- Fear effects
-    if org.fear and org.fear > 0.5 then
+    if org.fear and org.fear > 0.8 then
         if not wave_effect_active then
             wave_effect_active = true
         end

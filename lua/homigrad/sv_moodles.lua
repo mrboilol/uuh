@@ -92,12 +92,14 @@ local function SyncMoodles(ply)
 
     -- Hypovolemia (Low Blood Volume)
     local blood = org.blood or 5000
+    local blood_loss = 1 - (blood / 5000)
+    if blood_loss < 0 then blood_loss = 0 end
     manageHierarchicalMoodle(ply, "hypovolemia", {
-        { threshold = 0.80, texture = "materials/moodels/Bleeding_1.png" },
-        { threshold = 0.65, texture = "materials/moodels/Bleeding_2.png" },
-        { threshold = 0.55, texture = "materials/moodels/Bleeding_3.png" },
-        { threshold = 0,    texture = "materials/moodels/Bleeding_4.png" },
-    }, 1 - (blood / 5000))
+        { threshold = 0.05, texture = "materials/moodels/blood_loss1.png" },
+        { threshold = 0.25, texture = "materials/moodels/blood_loss2.png" },
+        { threshold = 0.40, texture = "materials/moodels/blood_loss3.png" },
+        { threshold = 0.55, texture = "materials/moodels/blood_loss4.png" },
+    }, blood_loss)
 
     -- Bradycardia & Tachycardia
     local pulse = org.pulse or 70
@@ -283,11 +285,16 @@ local function SyncMoodles(ply)
     -- Thorax Destroyed (Skull Fracture)
     manageMoodleState(ply, "concussion", (org.skull or 0) >= 1, "materials/moodels/Concussion_moodle.png")
 
-    -- Trauma (Fear)
+    -- Fear
     local fear = org.fear or 0
+    manageMoodleState(ply, "trauma_1", fear > 0.1 and fear <= 0.25, "materials/moodels/Trauma_Moodle_1.png")
     manageMoodleState(ply, "trauma_2", fear > 0.25 and fear <= 0.5, "materials/moodels/Trauma_Moodle_2.png")
-    manageMoodleState(ply, "trauma_3", fear > 0.5 and fear <= 0.75, "materials/moodels/Trauma_Moodle_3.png")
-    manageMoodleState(ply, "trauma_4", fear > 0.75, "materials/moodels/Trauma_Moodle_4.png")
+    manageMoodleState(ply, "trauma_3", fear > 0.5 and fear <= 0.8, "materials/moodels/Trauma_Moodle_3.png")
+    manageMoodleState(ply, "trauma_4", fear > 0.8, "materials/moodels/Trauma_Moodle_4.png")
+
+    if fear > 0.8 then
+        org.adrenaline = (org.adrenaline or 0) + 0.75
+    end
 
     -- Unconscious
     manageMoodleState(ply, "unconscious", org.otrub or false, "materials/moodels/Unconscious_Moodle.png")

@@ -120,12 +120,13 @@ local MOODLE_INFO = {
     ["stimulated"] = { title = "Stimulated", desc = "NOW nothing cant stop me!" },
     ["tachycardia"] = { title = "Tachycardia", desc = "Something is probably wrong, or not." },
     ["thoraxdestroyed"] = { title = "Skull Fracture", desc = "Your skull is poking at your brain as you read this!" },
+    ["trauma_1"] = { title = "Anxious", desc = "You are feeling a bit on edge." },
     ["trauma_2"] = { title = "Scared", desc = "You dont want to continue experiencing this." },
     ["trauma_3"] = { title = "Terrified", desc = "You are REALLY scared." },
-    ["trauma_4"] = { title = "Horrified", desc = "You cant even comprehend your emotions." },
+    ["trauma_4"] = { title = "Really fucking scared", desc = "You cant even comprehend your emotions." },
     ["unconscious"] = { title = "Unconscious", desc = "Or sleeping, but probably knocked out." },
     ["sepsis"] = { title = "Sepsis", desc = "Not so fun now is it?" },
-    ["horrified"] = { title = "Horrified", desc = "Locked in or cheating?" },
+    ["horrified"] = { title = "Critically Injured", desc = "You cant be saved." },
 }
 
 -- Networking
@@ -204,13 +205,13 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         local drawX = x
 
         -- Flashing border for critical moodles
-        if CRITICAL_MOODLES[id] then
-            local flash = (math.sin(CurTime() * 8) + 1) / 2
-            local flashAlpha = 50 + flash * 150
-            surface.SetDrawColor(255, 0, 0, flashAlpha)
-            surface.DrawOutlinedRect(drawX - 1, drawY - 1, drawW + 2, drawH + 2)
-            surface.DrawOutlinedRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4)
-        end
+        -- if CRITICAL_MOODLES[id] then
+        --     local flash = (math.sin(CurTime() * 8) + 1) / 2
+        --     local flashAlpha = 50 + flash * 150
+        --     surface.SetDrawColor(255, 0, 0, flashAlpha)
+        --     surface.DrawOutlinedRect(drawX - 1, drawY - 1, drawW + 2, drawH + 2)
+        --     surface.DrawOutlinedRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4)
+        -- end
 
         -- Draw texture or fallback box
         if data.mat and not data.mat:IsError() then
