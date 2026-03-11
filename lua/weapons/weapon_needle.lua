@@ -93,10 +93,8 @@ if SERVER then
 		org.needle = 1
 
 		if org.trachea and org.trachea > 0 then
-			org.trachea = org.trachea * 0.6
-		end
-
-		if !(org.lungsR[2] == 1 or org.lungsL[2] == 1) then
+			org.trachea = org.trachea * math.Rand(0.75, 0.85) -- Reduce damage by 15-25%
+		elseif !(org.lungsR[2] == 1 or org.lungsL[2] == 1) then
 			if math.random(2) == 1 then 
 				org.lungsR[2] = 1
 			else

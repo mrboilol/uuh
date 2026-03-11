@@ -469,47 +469,62 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	module.pulse[2](owner, org, timeValue)
 	hg.organism.UpdateSuicidalTendencies(owner, timeValue)
 
-   local mood = org.mood
-	if mood and GetConVar("hg_mood_enabled"):GetBool() then
-		local new_mood = mood
+    -- Mood update logic
+    local mood = org.mood
+    if mood and GetConVar("hg_mood_enabled"):GetBool() then
+        local new_mood = mood
 
-		if GetConVar("hg_mood_always_happy"):GetBool() then
-			new_mood = 100
-		end
+        if GetConVar("hg_mood_always_happy"):GetBool() then
+            new_mood = 100
+        else
+            -- Mood loss from pain
+            if org.pain > 20 then
+                new_mood = new_mood - ((org.pain / 100) * timeValue * 2) * hg.organism.GetMoodInertiaMultiplier(owner)
+            end
 
-		-- Mood loss from pain
-		if org.pain > 20 then
-			new_mood = new_mood - ((org.pain / 100) * timeValue * 2) * hg.organism.GetMoodInertiaMultiplier(ply)
-		end
+            -- Mood change from fear
+            if org.fear ~= 0 then
+                local fear_effect = org.fear * timeValue * 5 -- This will be a value between -5 and 5 per second
+                if fear_effect > 0 then
+                    fear_effect = fear_effect * hg.organism.GetMoodInertiaMultiplier(owner)
+                end
+                new_mood = new_mood - fear_effect
+            end
 
-		-- Mood loss from broken bones
-		if org.just_damaged_bone then
-			new_mood = new_mood - 15 * hg.organism.GetMoodInertiaMultiplier(ply)
-			org.just_damaged_bone = nil
-		end
+            -- Mood slowly recovers when not in fear
+            if org.fear <= 0 then
+                new_mood = new_mood + timeValue * 0.5 -- Slow recovery
+            end
 
-		-- Mood gain from analgesia
-		if org.analgesia > 0 then
-			new_mood = new_mood + org.analgesia * timeValue * 0.2
-		end
+            -- Mood loss from broken bones
+            if org.just_damaged_bone then
+                new_mood = new_mood - 15 * hg.organism.GetMoodInertiaMultiplier(owner)
+                org.just_damaged_bone = nil
+            end
 
-		-- Mood gain from being healthy
-		if owner:Health() > 90 and org.pain < 10 and org.bleed < 1 and (org.hungry or 0) < 20 then
-			new_mood = new_mood + timeValue * 0.1
-		end
+            -- Mood gain from analgesia
+            if org.analgesia > 0 then
+                new_mood = new_mood + org.analgesia * timeValue * 0.2
+            end
 
-		new_mood = math.Clamp(new_mood, 0, 100)
-		if new_mood != mood then
-			hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
-		end
+            -- Mood gain from being healthy
+            if owner:Health() > 90 and org.pain < 10 and org.bleed < 1 and (org.hungry or 0) < 20 then
+                new_mood = new_mood + timeValue * 0.1
+            end
+        end
 
-		if mood > 70 then
-			local mood_bonus = (mood - 70) / 30
-			org.recoilmul = 1 - (mood_bonus * 0.1) -- Up to 10% recoil reduction
-		else
-			org.recoilmul = 1
-		end
-	end
+        new_mood = math.Clamp(new_mood, 0, 100)
+        if new_mood ~= mood then
+            hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
+        end
+
+        if mood > 70 then
+            local mood_bonus = (mood - 70) / 30
+            org.recoilmul = 1 - (mood_bonus * 0.1) -- Up to 10% recoil reduction
+        else
+            org.recoilmul = 1
+        end
+    end
 
 	if org.owner.PlayerClassName == "furry" then
 		org.assimilated = 0

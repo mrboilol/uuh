@@ -582,9 +582,13 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	end
 
 	if org.blindness or amtflashed >= 0.8 then
-		local blindness = ((org.blindness and math.Round(org.blindness) == 0) or amtflashed >= 0.8) and 0 or (org.blindness)
-		render.UpdateScreenEffectTexture()
-		render.UpdateFullScreenDepthTexture()
+        if not org.blindness_end_time or org.blindness_end_time < CurTime() then
+            RunConsoleCommand("hg_set_blindness", "1")
+        end
+
+        local blindness = ((org.blindness and math.Round(org.blindness) == 0) or amtflashed >= 0.8) and 0 or (org.blindness)
+        render.UpdateScreenEffectTexture()
+        render.UpdateFullScreenDepthTexture()
 		
 		blindMat:SetFloat("$c0_x", 5)
 		blindMat:SetFloat("$c0_y", CurTime())

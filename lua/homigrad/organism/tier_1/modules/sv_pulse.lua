@@ -74,23 +74,6 @@ module[2] = function(owner, org, timeValue)
 	local gainfear = hg.organism.should_gain_fear(org)
 	org.fearadd = math.Approach(org.fearadd, 0, gainfear and timeValue or timeValue / 4.9) -- 15 seconds to stop fearing something and start to calm down
 	org.fearadd = math.Approach(org.fearadd, 1, gainfear and timeValue / 5 or 0)
-
-    local mood = org.mood
-	if mood then
-		local fear_effect = org.fear * timeValue * 5 -- This will be a value between -5 and 5 per second
-        if fear_effect > 0 then
-            fear_effect = fear_effect * hg.organism.GetMoodInertiaMultiplier(ply)
-        end
-        local new_mood = mood - fear_effect
-		
-		-- Mood slowly recovers when not in fear
-		if org.fear <= 0 then
-			new_mood = new_mood + timeValue * 0.5 -- Slow recovery
-		end
-
-		new_mood = math.Clamp(new_mood, 0, 100)
-		org.mood = new_mood
-	end
 	
 	local adrenK = max(1 + org.adrenaline, 1)
 	local adren = org.adrenaline

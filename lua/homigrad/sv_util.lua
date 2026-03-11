@@ -1855,6 +1855,9 @@ end
 
 function plymeta:AddTinnitus(time,needSound)
 	needSound = needSound or false
+    if self.organism then
+	    self.organism.tinnitus_end_time = CurTime() + time
+    end
 
 	net.Start("send_tinnitus")
 		net.WriteFloat(time)
