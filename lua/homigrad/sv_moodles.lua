@@ -67,11 +67,19 @@ local function SyncMoodles(ply)
 
     -- Bleeding
     local bleedRate = org.bleed or 0
-    local isArterial = org.arteria or org.rarmartery or org.larmartery or org.rlegartery or org.llegartery
+    local isArterial = ((org.arteria or 0) + (org.rarmartery or 0) + (org.larmartery or 0) + (org.rlegartery or 0) + (org.llegartery or 0)) > 0
     manageMoodleState(ply, "bleeding_1", bleedRate > 0.1 and bleedRate <= 1 and not isArterial, "materials/moodels/Bleeding_1.png")
     manageMoodleState(ply, "bleeding_2", bleedRate > 1 and bleedRate <= 5 and not isArterial, "materials/moodels/Bleeding_2.png")
     manageMoodleState(ply, "bleeding_3", bleedRate > 5 and bleedRate <= 15 and not isArterial, "materials/moodels/Bleeding_3.png")
     manageMoodleState(ply, "bleeding_4", bleedRate > 15 or isArterial, "materials/moodels/Bleeding_4.png")
+
+    -- Hypovolemia (Low Blood Volume)
+    local blood = org.blood or 5000
+    local bloodPct = blood / 5000
+    manageMoodleState(ply, "hypovolemia_1", bloodPct < 0.8 and bloodPct >= 0.6, "materials/moodels/Bleeding_1.png") -- Mild
+    manageMoodleState(ply, "hypovolemia_2", bloodPct < 0.6 and bloodPct >= 0.4, "materials/moodels/Bleeding_2.png") -- Moderate
+    manageMoodleState(ply, "hypovolemia_3", bloodPct < 0.4 and bloodPct >= 0.2, "materials/moodels/Bleeding_3.png") -- Severe
+    manageMoodleState(ply, "hypovolemia_4", bloodPct < 0.2, "materials/moodels/Bleeding_4.png") -- Critical
 
     -- Bradycardia & Tachycardia
     local pulse = org.pulse or 70
@@ -111,16 +119,27 @@ local function SyncMoodles(ply)
 
 
     -- Depression / Happy
-    local mood = org.mood or 50
-    manageMoodleState(ply, "depression_1", mood < 40 and mood >= 30, "materials/moodels/Depression_1.png")
-    manageMoodleState(ply, "depression_2", mood < 30 and mood >= 20, "materials/moodels/Depression_2.png")
-    manageMoodleState(ply, "depression_3", mood < 20 and mood >= 10, "materials/moodels/Depression_3.png")
-    manageMoodleState(ply, "depression_4", mood < 10, "materials/moodels/Depression_4.png")
+    if GetConVar("hg_mood_enabled"):GetBool() then
+        local mood = org.mood or 50
+        manageMoodleState(ply, "depression_1", mood < 40 and mood >= 30, "materials/moodels/Depression_1.png")
+        manageMoodleState(ply, "depression_2", mood < 30 and mood >= 20, "materials/moodels/Depression_2.png")
+        manageMoodleState(ply, "depression_3", mood < 20 and mood >= 10, "materials/moodels/Depression_3.png")
+        manageMoodleState(ply, "depression_4", mood < 10, "materials/moodels/Depression_4.png")
 
-    manageMoodleState(ply, "happy_1", mood >= 60 and mood < 70, "materials/moodels/Happy_1.png")
-    manageMoodleState(ply, "happy_2", mood >= 70 and mood < 80, "materials/moodels/Happy_2.png")
-    manageMoodleState(ply, "happy_3", mood >= 80 and mood < 90, "materials/moodels/Happy_3.png")
-    manageMoodleState(ply, "happy_4", mood >= 90, "materials/moodels/Happy_4.png")
+        manageMoodleState(ply, "happy_1", mood >= 60 and mood < 70, "materials/moodels/Happy_1.png")
+        manageMoodleState(ply, "happy_2", mood >= 70 and mood < 80, "materials/moodels/Happy_2.png")
+        manageMoodleState(ply, "happy_3", mood >= 80 and mood < 90, "materials/moodels/Happy_3.png")
+        manageMoodleState(ply, "happy_4", mood >= 90, "materials/moodels/Happy_4.png")
+    else
+        manageMoodleState(ply, "depression_1", false)
+        manageMoodleState(ply, "depression_2", false)
+        manageMoodleState(ply, "depression_3", false)
+        manageMoodleState(ply, "depression_4", false)
+        manageMoodleState(ply, "happy_1", false)
+        manageMoodleState(ply, "happy_2", false)
+        manageMoodleState(ply, "happy_3", false)
+        manageMoodleState(ply, "happy_4", false)
+    end
 
     -- Dislocated Spine & Jaw
     local spineDislocated = (org.spine1 or 0) > 0 or (org.spine2 or 0) > 0
@@ -204,9 +223,9 @@ local function SyncMoodles(ply)
     local o2_range = org.o2 and org.o2.range
     if o2_val and o2_range and o2_range > 0 then
         local o2_pct = o2_val / o2_range
-        manageMoodleState(ply, "oxygen", o2_pct < 0.8 and o2_pct >= 0.5, "materials/moodels/Oxygen_Moodle_1.png")
-        manageMoodleState(ply, "oxygen_2", o2_pct < 0.5 and o2_pct >= 0.25, "materials/moodels/Oxygen_Moodle_2.png")
-        manageMoodleState(ply, "oxygen_3", o2_pct < 0.25, "materials/moodels/Oxygen_Moodle_3.png")
+        manageMoodleState(ply, "oxygen", o2_pct < 0.5 and o2_pct >= 0.3, "materials/moodels/Oxygen_Moodle_1.png")
+        manageMoodleState(ply, "oxygen_2", o2_pct < 0.3 and o2_pct >= 0.15, "materials/moodels/Oxygen_Moodle_2.png")
+        manageMoodleState(ply, "oxygen_3", o2_pct < 0.15, "materials/moodels/Oxygen_Moodle_3.png")
     end
 
     -- Pain

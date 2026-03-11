@@ -14,28 +14,35 @@ local colorRed = Color(125,25,25)
 module[2] = function(owner, org, timeValue)
     local mood = org.mood
 
-    if org.satiety <= 0 and hg_hungersystem:GetBool() then 
+    if org.satiety <= 10 and hg_hungersystem:GetBool() then 
         org.hungry = min(max(org.hungry + timeValue * 0.01, 0),100)
-        //if org.isPly and not org.otrub and org.hungry > 25 and org.hungry < 45 then org.owner:Notify(table.Random(pharse),60,"hungry",6) end
-        org.hungryDmgCd = org.hungryDmgCd or 0
-        if org.alive and org.hungryDmgCd < CurTime() and org.hungry > 45 then
-            //org.owner:Notify(table.Random(veryPharse),20,"hungry",6,nil,colorRed)
-            org.painadd = org.painadd + 25 * (org.hungry/45)
-            org.hungryDmgCd = CurTime() + (math.random(40,55) - (org.hungry/5.5))
-            //owner:TakeDamage(5,owner,owner)
-            if org.hungry > 80 then
-                org.stomach = math.min(org.stomach + 0.1,1)
-                if org.stomach > 0.85 and org.heart < 0.3 then
-                    org.heart = org.heart + 0.1
-                end
-                if org.heart > 0.3 then
-                    org.o2.regen = 0
-                end
-                //owner:TakeDamage(15,owner,owner)
-            end
+
+        if org.satiety <= 10 and org.satiety > 5 then
+            if org.isPly and not org.otrub then owner:Notify("Im starting to get really hungry...", 15, "starvation_warning_1") end
+        end
+
+        if org.satiety <= 5 and org.satiety > 0 then
+            org.stomach = math.min(org.stomach + timeValue * 0.01, 1)
+            org.intestines = math.min(org.intestines + timeValue * 0.01, 1)
+            if org.isPly and not org.otrub then owner:Notify("My stomach is eating itself... I need to eat.", 15, "starvation_warning_2", 0, nil, Color(255, 100, 100)) end
+        end
+
+        if org.satiety <= 0 then
+            org.o2[1] = math.max(org.o2[1] - timeValue * 0.1, 0)
+            if org.isPly and not org.otrub then owner:Notify("Im so, SO HUNGRY... I NEED FOOD", 15, "starvation_critical", 0, nil, Color(255, 0, 0)) end
+        end
+
+        if org.satiety < 25 then
+            local pain_multiplier = math.Clamp(math.Remap(org.satiety, 25, 0, 0.1, 2), 0.1, 2)
+            org.painadd = org.painadd + timeValue * pain_multiplier
         end
     else
         org.hungry = min(max(org.hungry - timeValue * 2, 0),100)
+        if org.isPly then
+            owner:ResetNotification("starvation_warning_1")
+            owner:ResetNotification("starvation_warning_2")
+            owner:ResetNotification("starvation_critical")
+        end
     end
     org.hungry = Round(org.hungry or 0,3)
 

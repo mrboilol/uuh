@@ -11,6 +11,31 @@ local function IsDebugDrawEnabled() return GetConVar("moodle_debug_draw"):GetInt
 
 local CLIENT_MOODLES = {}
 
+local CRITICAL_MOODLES = {
+    ["bleeding_4"] = true,
+    ["brain_damage_4"] = true,
+    ["cardiac_arrest"] = true,
+    ["cold_4"] = true,
+    ["heat_4"] = true,
+    ["depression_4"] = true,
+    ["endurance_4"] = true,
+    ["faint_4"] = true,
+    ["fractured_neck"] = true,
+    ["hemothorax"] = true,
+    ["hunger_5"] = true,
+    ["internal_bleed"] = true,
+    ["overdose_4"] = true,
+    ["oxygen_3"] = true,
+    ["pain_4"] = true,
+    ["respfailure"] = true,
+    ["rippedeye_4"] = true,
+    ["hypovolemia_4"] = true,
+    ["unconscious"] = true,
+    ["sepsis"] = true,
+    ["horrified"] = true,
+    ["deceased"] = true,
+}
+
 -- =======================================================
 -- TOOLTIP DATA
 -- =======================================================
@@ -65,6 +90,10 @@ local MOODLE_INFO = {
     ["heat_3"] = { title = "Very Hot", desc = "Its WAY too hot..." },
     ["heat_4"] = { title = "Hyperthermia", desc = "I CANT TAKE THIS HEAT ANYMORE!" },
     ["hemothorax"] = { title = "Pneumothorax", desc = "Its like breathing does nothing..." },
+    ["hypovolemia_1"] = { title = "Mild Hypovolemia", desc = "You've lost some blood. You feel a bit weak." },
+    ["hypovolemia_2"] = { title = "Moderate Hypovolemia", desc = "Significant blood loss. You feel weak and dizzy." },
+    ["hypovolemia_3"] = { title = "Severe Hypovolemia", desc = "You are on the verge of collapsing from blood loss." },
+    ["hypovolemia_4"] = { title = "Critical Hypovolemia", desc = "Your body is shutting down from a lack of blood." },
     ["hunger_1"] = { title = "Peckish", desc = "I could go for a bite." },
     ["hunger_2"] = { title = "Hungry", desc = "I could eat a horse right now." },
     ["hunger_3"] = { title = "Very Hungry", desc = "Now im hungry..." },
@@ -173,6 +202,15 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
 
         local drawY = baseY - yRowOffset + (iconSize - drawH)
         local drawX = x
+
+        -- Flashing border for critical moodles
+        if CRITICAL_MOODLES[id] then
+            local flash = (math.sin(CurTime() * 8) + 1) / 2
+            local flashAlpha = 50 + flash * 150
+            surface.SetDrawColor(255, 0, 0, flashAlpha)
+            surface.DrawOutlinedRect(drawX - 1, drawY - 1, drawW + 2, drawH + 2)
+            surface.DrawOutlinedRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4)
+        end
 
         -- Draw texture or fallback box
         if data.mat and not data.mat:IsError() then

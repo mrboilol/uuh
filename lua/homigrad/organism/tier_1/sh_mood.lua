@@ -133,6 +133,7 @@ if SERVER then
 end
 
 hook.Add("HG_MovementCalc_2", "MoodInertia", function(mul, ply)
+    if not GetConVar("hg_mood_enabled"):GetBool() then return end
     if not IsValid(ply) or not ply:IsPlayer() or not ply.organism then return end
 
     local multiplier = hg.organism.GetMoodInertiaMultiplier(ply)
