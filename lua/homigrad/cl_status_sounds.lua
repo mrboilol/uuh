@@ -71,9 +71,11 @@ hook.Add("Think", "homigrad_status_sounds", function()
             if criticalloop_sound then criticalloop_sound:Stop() end
 
             criticalloop_sound = CreateSound(ply, sound_to_play)
-            criticalloop_sound:Play()
-            criticalloop_sound:SetVolume(volume)
-            criticalloop_sound_name = sound_to_play
+            if criticalloop_sound then
+                criticalloop_sound:Play()
+                criticalloop_sound:SetVolume(volume)
+                criticalloop_sound_name = sound_to_play
+            end
         end
     elseif criticalloop_sound then
         criticalloop_sound:Stop()

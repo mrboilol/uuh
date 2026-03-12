@@ -1,11 +1,11 @@
 --
-local hg_hungersystem = CreateConVar("hg_hungersystem", 0, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "Enables/disabled hunger system", 0, 1)
+local hg_hungersystem = CreateConVar("hg_hungersystem", 1, FCVAR_ARCHIVE + FCVAR_REPLICATED + FCVAR_NOTIFY, "Enables/disabled hunger system", 0, 1)
 local max, min, Round, Lerp, halfValue2 = math.max, math.min, math.Round, Lerp, util.halfValue2
 --local Organism = hg.organism
 hg.organism.module.metabolism = {}
 local module = hg.organism.module.metabolism
 module[1] = function(org)
-	org.satiety = 0
+	org.satiety = 100
     org.hungry = 0
     org.hungryDmgCd = 0
 end
@@ -14,55 +14,76 @@ local colorRed = Color(125,25,25)
 module[2] = function(owner, org, timeValue)
     local mood = org.mood
 
-    if org.satiety <= 10 and hg_hungersystem:GetBool() then 
-        org.hungry = min(max(org.hungry + timeValue * 0.01, 0),100)
+    -- Satiety decrease
+    local satiety_decrease_rate = 0.5 -- Base rate
+    if mood and mood < 30 then
+        satiety_decrease_rate = satiety_decrease_rate * (1 + (30 - mood) / 30 * 0.5) -- Up to 50% more satiety loss
+    end
+    org.satiety = math.max(org.satiety - timeValue * satiety_decrease_rate, 0)
 
-        if org.satiety <= 10 and org.satiety > 5 then
-            if org.isPly and not org.otrub then owner:Notify("Im starting to get really hungry...", 15, "starvation_warning_1") end
-        end
-
-        if org.satiety <= 5 and org.satiety > 0 then
-            org.stomach = math.min(org.stomach + timeValue * 0.01, 1)
-            org.intestines = math.min(org.intestines + timeValue * 0.01, 1)
-            if org.isPly and not org.otrub then owner:Notify("My stomach is eating itself... I need to eat.", 15, "starvation_warning_2", 0, nil, Color(255, 100, 100)) end
-        end
-
-        if org.satiety <= 0 then
-            org.o2[1] = math.max(org.o2[1] - timeValue * 0.1, 0)
-            if org.isPly and not org.otrub then owner:Notify("Im so, SO HUNGRY... I NEED FOOD", 15, "starvation_critical", 0, nil, Color(255, 0, 0)) end
-        end
-
-        if org.satiety < 25 then
-            local pain_multiplier = math.Clamp(math.Remap(org.satiety, 25, 0, 0.1, 2), 0.1, 2)
-            org.painadd = org.painadd + timeValue * pain_multiplier
-        end
+    -- Hunger logic based on satiety
+    local hunger_change_rate = 0
+    if org.satiety > 80 then
+        -- Satiated, hunger decreases
+        hunger_change_rate = -2.0 -- Faster decrease when very full
+    elseif org.satiety > 20 then
+        -- Neutral zone, slow hunger decrease
+        hunger_change_rate = -0.5
     else
-        org.hungry = min(max(org.hungry - timeValue * 2, 0),100)
-        if org.isPly then
-            owner:ResetNotification("starvation_warning_1")
-            owner:ResetNotification("starvation_warning_2")
-            owner:ResetNotification("starvation_critical")
+        -- Low satiety, hunger increases
+        hunger_change_rate = 1.0 -- Base hunger increase
+        if org.satiety <= 10 then
+            hunger_change_rate = 2.0 -- Faster increase
+        end
+        if org.satiety == 0 then
+            hunger_change_rate = 4.0 -- Fastest increase when empty
         end
     end
+
+    org.hungry = math.Clamp(org.hungry + timeValue * hunger_change_rate * 0.1, 0, 100)
     org.hungry = Round(org.hungry or 0,3)
+
+
+    -- Debuffs and messages based on hunger
+    if hg_hungersystem:GetBool() then
+        if org.hungry > 95 then
+            if org.isPly and not org.otrub then owner:Notify("Im so, SO HUNGRY... I NEED FOOD", 15, "starvation_critical", 0, nil, Color(255, 0, 0)) end
+            org.o2[1] = math.max(org.o2[1] - timeValue * 0.1, 0)
+        elseif org.hungry > 75 then
+            if org.isPly and not org.otrub then owner:Notify("My stomach is eating itself... I need to eat.", 15, "starvation_warning_2", 0, nil, Color(255, 100, 100)) end
+            org.stomach = math.min(org.stomach + timeValue * 0.01, 1)
+            org.intestines = math.min(org.intestines + timeValue * 0.01, 1)
+        elseif org.hungry > 50 then
+            if org.isPly and not org.otrub then owner:Notify("Im starting to get really hungry...", 15, "starvation_warning_1") end
+        else
+             if org.isPly then
+                owner:ResetNotification("starvation_warning_1")
+                owner:ResetNotification("starvation_warning_2")
+                owner:ResetNotification("starvation_critical")
+            end
+        end
+
+        if org.hungry > 60 then
+            local pain_multiplier = math.Clamp(math.Remap(org.hungry, 60, 100, 0.1, 2), 0.1, 2)
+            org.painadd = (org.painadd or 0) + timeValue * pain_multiplier
+        end
+    end
+
 
     if (org.intestines > 0.5 or org.stomach > 0.5) and not org.otrub and owner:IsPlayer() and org.satiety > 1 then
         if not org.randomPainSound or org.randomPainSound < CurTime() then
             org.randomPainSound = CurTime() + math.random(20,45)
             owner:EmitSound("zcitysnd/"..(ThatPlyIsFemale(owner) and "female" or "male").."/pain_"..math.random(1,8)..".mp3")
-            org.painadd = org.painadd + 20
-            //owner:TakeDamage(5,owner,owner)
+            org.painadd = (org.painadd or 0) + 20
         end
     end
 
-    if org.satiety == 0 then return end
-
-    org.satiety = min(max(org.satiety - timeValue * 0.5, 0), 100)
-
+    -- Benefits from satiety (not hunger)
     local mood_blood_bonus = 1
     if mood and mood >= 80 then
         mood_blood_bonus = 1.1 -- 10% bonus to blood regeneration
     end
+    -- Blood and HP regen still rely on satiety, as you need substance to regenerate.
     org.blood = min(org.blood + timeValue * (org.satiety/10) * mood_blood_bonus, 5000)
 
     if mood and mood > 70 then
@@ -71,13 +92,14 @@ module[2] = function(owner, org, timeValue)
     else
         org.regeneratehp = (!((org.regeneratehp or 0) >= 1) and min( (org.regeneratehp or 0) + timeValue * (org.satiety/100), 1)) or 0
     end
-    owner:SetHealth(min(owner:Health() + org.regeneratehp,100))
+    owner:SetHealth(min(owner:Health() + (org.regeneratehp or 0),100))
 
+    -- Mood effects
     if mood then
         local new_mood = mood
         if org.hungry > 50 then
             local mood_loss = (org.hungry - 50) / 50 * timeValue * 0.5 -- Mood loss starts when hunger is over 50
-            new_mood = new_mood - mood_loss * hg.organism.GetMoodInertiaMultiplier(ply)
+            new_mood = new_mood - mood_loss * (hg.organism.GetMoodInertiaMultiplier and hg.organism.GetMoodInertiaMultiplier(owner) or 1)
         end
 
         if org.satiety > 80 then

@@ -301,7 +301,7 @@ local DAMAGE_INDICATOR_DURATION = 2 -- seconds
 
 net.Receive("headtrauma_flash", function()
     print("Head-trauma flash received")
-    surface.PlaySound("headhit.mp3")
+    if IsValid(LocalPlayer()) then LocalPlayer():EmitSound("headhit.mp3") end
     local pos = net.ReadVector()
     local time = net.ReadFloat()
     local size = net.ReadInt(20)
@@ -581,18 +581,16 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 	end
 
-	if org.blindness or amtflashed >= 0.8 then
-        if not org.blindness_end_time or org.blindness_end_time < CurTime() then
-            RunConsoleCommand("hg_set_blindness", "1")
-        end
+    if (org.blindness_end_time and org.blindness_end_time > CurTime()) or amtflashed >= 0.8 then
+        local blindness_duration = (org.blindness_end_time or 0) - CurTime()
+        local blindness = amtflashed >= 0.8 and 1 or math.min(blindness_duration, 1)
 
-        local blindness = ((org.blindness and math.Round(org.blindness) == 0) or amtflashed >= 0.8) and 0 or (org.blindness)
         render.UpdateScreenEffectTexture()
         render.UpdateFullScreenDepthTexture()
 		
 		blindMat:SetFloat("$c0_x", 5)
 		blindMat:SetFloat("$c0_y", CurTime())
-		blindMat:SetFloat("$c0_z", math.Round(blindness))
+		blindMat:SetFloat("$c0_z", blindness)
 	
 		render.SetMaterial(blindMat)
 		render.DrawScreenQuad()
@@ -917,6 +915,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 		if IsValid(Tinnitus) then
 			Tinnitus:SetVolume(org.otrub and 0.05 or math.min(math.max(lply.tinnitus - CurTime(), 0) / 10, 1))
+            local rate = org.otrub and 1 or math.Rand(0.9, 1.1)
+            Tinnitus:SetPlaybackRate(rate)
 		end
 	else
 		if IsValid(Tinnitus) then
@@ -1050,8 +1050,9 @@ hook.Add("PreDrawOpaqueRenderables", "renderblindnessflash", function()
 	local organism = lply:Alive() and lply.organism or (IsValid(spect) and spect.organism)
 	if not organism or isbool(organism) then return end
 
-	if !(organism.blindness or (amtflashed or 0) >= 0.8) then removeflash() return end
-	local blindness = ((organism.blindness and math.Round(organism.blindness) == 0) or amtflashed >= 0.8) and 0 or (organism.blindness)
+	if !((organism.blindness_end_time and organism.blindness_end_time > CurTime()) or (amtflashed or 0) >= 0.8) then removeflash() return end
+	local blindness_duration = (organism.blindness_end_time or 0) - CurTime()
+	local blindness = (amtflashed or 0) >= 0.8 and 1 or math.min(blindness_duration, 1)
 
 	local eyesmode = math.Round(blindness)
 	
@@ -1106,7 +1107,7 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     if not org then return end
 
     -- Lobotomy Flash
-    if org.lobotomized and math.random(1, 200) == 1 then
+    if (org.brain or 0) > 0.1 and math.random(1, 800) == 1 then
         if (ply.lastLobotomyFlash or 0) + 15 > CurTime() then return end
         ply.lastLobotomyFlash = CurTime()
         ply.lobotomyFlash = CurTime() + 0.5
@@ -1131,31 +1132,13 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     end
 
     -- Vomit vignette
-    if org.wantToVomit and org.wantToVomit > 0.95 and not vignette_active then
-        vignette_active = true
-        -- No end time, it will be disabled when wantToVomit is normal
-    end
-
-    if org.wantToVomit and org.wantToVomit <= 0.95 and vignette_active then
-        vignette_active = false
-    end
+    local vomit_vignette = org.wantToVomit and org.wantToVomit > 0.95
 
     -- Fear effects
-    if org.fear and org.fear > 0.8 then
-        if not wave_effect_active then
-            wave_effect_active = true
-        end
-        if not vignette_active then
-            vignette_active = true
-        end
-    else
-        if wave_effect_active then
-            wave_effect_active = false
-        end
-        if vignette_active and not (org.wantToVomit and org.wantToVomit > 0.95) then
-            vignette_active = false
-        end
-    end
+    local fear_vignette = org.fear and org.fear > 0.8
+    wave_effect_active = fear_vignette
+
+    vignette_active = vomit_vignette or fear_vignette
 
     if wave_effect_active then
         render.UpdateScreenEffectTexture()

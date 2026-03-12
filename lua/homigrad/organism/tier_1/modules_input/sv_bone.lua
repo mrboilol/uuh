@@ -220,12 +220,16 @@ end
 local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricochet)
 	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 3 end
 
+	if number == 3 then
+		dmg = dmg * 1.3
+	end
+
 	local name = "spine" .. number
 	local name2 = "fake_spine" .. number
-	if org[name] >= hg.organism[name2] then return 0 end
+	if org[name] >= 1 then return 0 end
 	local oldDmg = org[name]
 
-	local result, vecrand = damageBone(org, 0.1, isCrush(dmgInfo) and dmg * 2 or dmg * 2, dmgInfo, name, boneindex, dir, hit, ricochet)
+	local result, vecrand = damageBone(org, 0.1, isCrush(dmgInfo) and dmg * 2.5 or dmg * 2.5, dmgInfo, name, boneindex, dir, hit, ricochet)
 	
 	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
 	
@@ -233,12 +237,51 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 		hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 8, "Broken spine harm")
 	end
 
-	if org[name] >= hg.organism[name2] and org.isPly then
+	if org[name] >= (number == 3 and 0.75 or 1) then
+		org.paralyzed = true
+	elseif number == 3 and org[name] > 0.5 then
+		org.stamina[1] = math.max(org.stamina[1] - 50, 0)
+		if org.o2 and org.o2[1] then
+			org.o2[1] = math.max(org.o2[1] - 20, 0)
+		end
+		org.consciousness = math.max(org.consciousness - 0.2, 0)
+		org.disorientation = (org.disorientation or 0) + 5
+	end
+
+	if org[name] >= 1 and org.isPly then
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
 		if org.owner:IsPlayer() then
 			org.owner:Notify(huyasd[name], true, name, 2)
 		end
 		org.painadd = org.painadd + 25
+		
+		if number == 1 then
+			org.owner:SetJumpPower(0)
+			org.owner:SetRunSpeed(1)
+			org.owner:SetWalkSpeed(1)
+		elseif number == 2 then
+			org.owner:SetJumpPower(0)
+			org.owner:SetRunSpeed(1)
+			org.owner:SetWalkSpeed(1)
+			org.SwayAdd = (org.SwayAdd or 0) + 1
+			org.RecoilAdd = (org.RecoilAdd or 0) + 1
+			org.MeleeDamageMul = 0
+		end
+	elseif org[name] > 0.75 then
+		local spine_damage = org[name]
+		
+		if math.random(1, 10) <= 3 then -- 30% chance of dislocation
+			org[name.."dislocation"] = true
+			if org.isPly then
+				--org.owner:Notify("Your spine feels dislocated!", 1, "dislocated"..name, 1, nil, nil)
+			end
+			PlayInjurySound(org.owner, "dislocation")
+		else
+			if org.isPly then
+				--org.owner:Notify("Your spine is severely damaged!", 1, "damaged"..name, 1, nil, nil)
+			end
+			PlayInjurySound(org.owner, "break")
+		end
 	end
 	
 	if dmg > 0.2 then

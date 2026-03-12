@@ -64,7 +64,10 @@ local MOODLE_INFO = {
     ["depression_2"] = { title = "Depressed", desc = "Maybe you didnt eat enough?" },
     ["depression_3"] = { title = "Severely Depressed", desc = "Life stopped making sense." },
     ["depression_4"] = { title = "Suicidal", desc = "You will soon leave this world without a care." },
-    ["dislocated_spine"] = { title = "Damaged Spine", desc = "For some reason you cant move your legs." },
+    ["spine_damage_1"] = { title = "Minor Spine Damage", desc = "Your back hurts, moving is difficult." },
+    ["spine_damage_2"] = { title = "Moderate Spine Damage", desc = "Your arms and back are in immense pain, making it hard to fight." },
+    ["spine_damage_3"] = { title = "Severe Spine Damage", desc = "You can barely move, breathe, or even think straight." },
+    ["spine_damage_4"] = { title = "Broken Spine", desc = "You are paralyzed from the neck down." },
     ["dislocated_jaw"] = { title = "Dislocated Jaw", desc = "Your jaw is out of place, put it back in!" },
     ["dislocation"] = { title = "Dislocation", desc = "Its not really that bad, but its recommened to place it back." },
     ["encumbered"] = { title = "Encumbered", desc = "You are severely immobilized." },
@@ -126,7 +129,7 @@ local MOODLE_INFO = {
     ["trauma_4"] = { title = "Really fucking scared", desc = "You cant even comprehend your emotions." },
     ["unconscious"] = { title = "Unconscious", desc = "Or sleeping, but probably knocked out." },
     ["sepsis"] = { title = "Sepsis", desc = "Not so fun now is it?" },
-    ["horrified"] = { title = "Critically Injured", desc = "You cant be saved." },
+    ["horrified"] = { title = "Critically Injured", desc = "This is the end of you. Goodbye!" },
 }
 
 -- Networking

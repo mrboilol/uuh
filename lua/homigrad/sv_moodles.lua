@@ -95,10 +95,10 @@ local function SyncMoodles(ply)
     local blood_loss = 1 - (blood / 5000)
     if blood_loss < 0 then blood_loss = 0 end
     manageHierarchicalMoodle(ply, "hypovolemia", {
-        { threshold = 0.05, texture = "materials/moodels/blood_loss1.png" },
-        { threshold = 0.25, texture = "materials/moodels/blood_loss2.png" },
-        { threshold = 0.40, texture = "materials/moodels/blood_loss3.png" },
-        { threshold = 0.55, texture = "materials/moodels/blood_loss4.png" },
+        { threshold = 0.05, texture = "materials/moodels/Blood_loss_1.png" },
+        { threshold = 0.25, texture = "materials/moodels/Blood_loss_2.png" },
+        { threshold = 0.40, texture = "materials/moodels/Blood_loss_3.png" },
+        { threshold = 0.55, texture = "materials/moodels/Blood_loss_4.png" },
     }, blood_loss)
 
     -- Bradycardia & Tachycardia
@@ -135,7 +135,7 @@ local function SyncMoodles(ply)
 
     -- Tinnitus
     local tinnitus_active = (org.tinnitus_end_time or 0) > CurTime()
-    manageMoodleState(ply, "deaf_1", tinnitus_active, "materials/moodels/Deaf_1.png")
+    manageMoodleState(ply, "deaf_1", tinnitus_active, "materials/moodels/Deaf_2.png")
 
 
 
@@ -162,9 +162,17 @@ local function SyncMoodles(ply)
         manageMoodleState(ply, "happy_4", false)
     end
 
-    -- Dislocated Spine & Jaw
-    local spineDislocated = (org.spine1 or 0) > 0 or (org.spine2 or 0) > 0
-    manageMoodleState(ply, "dislocated_spine", spineDislocated, "materials/moodels/Dislocated_spine.png")
+
+    -- Dislocated Spine
+    local dislocated_spine_1_2 = (org.spine1dislocation or org.spine2dislocation) or ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
+    local dislocated_spine_3 = org.spine3dislocation and (org.spine3 > 0.5 and org.spine3 < 0.75)
+    local dislocated_spine = dislocated_spine_1_2 or dislocated_spine_3
+    manageMoodleState(ply, "dislocated_spine", dislocated_spine, "materials/moodels/dislocated_spine.png")
+
+    -- Broken Neck
+    local broken_neck = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 > 0.75)
+    manageMoodleState(ply, "broken_neck", broken_neck, "materials/moodels/broken_neck.png")
+
     manageMoodleState(ply, "dislocated_jaw", org.jawdislocation, "materials/moodels/Dislocated_jaw.png")
 
     -- Dislocation

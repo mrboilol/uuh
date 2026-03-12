@@ -115,6 +115,9 @@ hook.Add("Org Clear", "Main", function(org)
 	org.rarmdislocation = false
 	org.larmdislocation = false
 	org.jawdislocation = false
+	org.spine1dislocation = false
+	org.spine2dislocation = false
+	org.spine3dislocation = false
 
 	org.llegamputated = false
 	org.rlegamputated = false
@@ -234,6 +237,12 @@ local function send_organism(org, ply)
 	sendtable.rarmdislocation = org.rarmdislocation
 	sendtable.larmdislocation = org.larmdislocation
 	sendtable.jawdislocation = org.jawdislocation
+	sendtable.spine1dislocation = org.spine1dislocation
+	sendtable.spine2dislocation = org.spine2dislocation
+	sendtable.spine3dislocation = org.spine3dislocation
+	sendtable.spine1dislocation = org.spine1dislocation
+	sendtable.spine2dislocation = org.spine2dislocation
+	sendtable.spine3dislocation = org.spine3dislocation
 	sendtable.llegamputated = org.llegamputated
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
@@ -621,6 +630,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
         hook.Run("PlayerDropWeapon", owner) 
         net.Start("hg_play_client_sound")
         net.WriteString("owfuck.ogg")
+        net.WriteFloat(1.0)
         net.Send(owner)
     end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
@@ -891,7 +901,30 @@ concommand.Add("hg_organism_clear", function(ply, cmd, args)
 	end
 end)
 
-hook.Add("SetupMove", "hg-speed", function(ply, mv) end) --mv:SetMaxClientSpeed(100) --mv:SetMaxSpeed(100)
+hook.Add("SetupMove", "hg-speed", function(ply, mv)
+	local org = ply.organism
+    if not org then return end
+
+	if org.paralyzed then
+		mv:SetMaxSpeed(1)
+		mv:SetMaxClientSpeed(1)
+		return
+	end
+
+    local spine_dmg_total = (org.spine1 or 0) + (org.spine2 or 0) + (org.spine3 or 0)
+	if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
+		spine_dmg_total = spine_dmg_total + 0.3
+	end
+
+	if spine_dmg_total > 0 then
+		local max_speed = mv:GetMaxSpeed()
+		local reduction_multiplier = 1 - (spine_dmg_total * 0.15)
+		local new_speed = max_speed * reduction_multiplier
+
+		mv:SetMaxSpeed(new_speed)
+		mv:SetMaxClientSpeed(new_speed)
+	end
+end) --mv:SetMaxClientSpeed(100) --mv:SetMaxSpeed(100)
 
 hook.Add("StartCommand","hg_lol",function(ply,cmd)
 	if ply.organism.otrub and ply:Alive() then
@@ -935,6 +968,8 @@ hook.Add("HG_OnOtrub", "fearful", function( plya )// ЧЕ
 	end
 end)
 
+local hg_relocate_requires_bandage = CreateConVar("hg_relocate_requires_bandage", "1", FCVAR_ARCHIVE, "Require a bandage to be applied before a dislocated spine can be relocated.")
+
 local unlucky_dislocations = {
 	"Why can't I fix this goddamn dislocation...",
 	"Please... why is it so hard.",
@@ -950,6 +985,22 @@ local finally_fixed = {
 }
 
 local function fixlimb(org, key, fixer)
+	local is_spine = string.find(key, "spine")
+	if is_spine and org[key] >= (key == "spine3" and 0.75 or 1) then
+		fixer:Notify("This spine is completely broken and cannot be relocated.", 1, "cant_fix_broken_spine", 5)
+		return
+	end
+
+	if is_spine and hg_relocate_requires_bandage:GetBool() then
+        local body_part = "chest"
+        if key == "spine1" then body_part = "stomach" end
+
+        if not org.bandaged_parts or not org.bandaged_parts[body_part] then
+            fixer:Notify("The area must be bandaged before you can attempt to relocate the spine.", 1, "spine_needs_bandage", 5)
+            return
+        end
+    end
+
 	if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
 		org[key.."dislocation"] = false
 		org.painadd = org.painadd + 5 * math.random(1, 3)
@@ -970,6 +1021,16 @@ local function fixlimb(org, key, fixer)
 
 		org.owner:EmitSound("physics/body/body_medium_impact_soft"..math.random(7)..".wav", 65)
 		
+		if is_spine and math.random(100) <= 2 then -- 2% chance to break the spine
+			local dmgInfo = DamageInfo()
+			dmgInfo:SetDamage(100)
+			dmgInfo:SetDamageType(DMG_CLUB)
+			dmgInfo:SetAttacker(fixer)
+			hg.organism.input_list[key](org.owner.organism, 1, 10, dmgInfo, 0, vector_up)
+			fixer:Notify("You felt something snap horribly out of place! You may have made things worse...", 1, "spine_break_on_relocate", 10)
+			return
+		end
+
 		if fixer.Profession != "doctor" and math.random(5) == 1 then
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(50)
@@ -1038,6 +1099,14 @@ concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	elseif math.Round(tonumber(args[1])) == 3 then
 		if org.jawdislocation then
 			fixlimb(org, "jaw", fixer)
+		end
+	elseif math.Round(tonumber(args[1])) == 4 then
+		if org.spine1dislocation then
+			fixlimb(org, "spine1", fixer)
+		elseif org.spine2dislocation then
+			fixlimb(org, "spine2", fixer)
+		elseif org.spine3dislocation then
+			fixlimb(org, "spine3", fixer)
 		end
 	end
 end)

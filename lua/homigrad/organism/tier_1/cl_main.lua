@@ -301,6 +301,15 @@ hook.Add("radialOptions", "DislocatedJaw", function()
             "Fix dislocation (jaw)"
         }
         hg.radialOptions[#hg.radialOptions + 1] = tbl
+	elseif org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
+        local tbl = {
+            function()
+				lply.tried_fixing_limb = CurTime() + 0.5
+				RunConsoleCommand("hg_fixdislocation", 4, 0)
+            end,
+            "Fix dislocation (spine)"
+        }
+        hg.radialOptions[#hg.radialOptions + 1] = tbl
 	else
 		local ent = hg.eyeTrace(lply).Entity
 

@@ -108,9 +108,9 @@ hook.Add("Think", "Abnormalties_Heal", function()
 				owner.organism.pulse = 80
 				-- owner.organism.bleedStart = 12312312312
 				owner.organism.internalBleed = 0
-				owner.organism.spine1 = 0
-				owner.organism.spine2 = 0
-				owner.organism.spine3 = 0
+				if owner.organism.spine1 < 1 then owner.organism.spine1 = 0 end
+				if owner.organism.spine2 < 1 then owner.organism.spine2 = 0 end
+				if owner.organism.spine3 < 1 then owner.organism.spine3 = 0 end
 				owner.organism.lleg = 0
 				owner.organism.rleg = 0
 				owner.organism.trachea = 0

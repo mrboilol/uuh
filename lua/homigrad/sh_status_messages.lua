@@ -256,6 +256,24 @@ local dislocated_limb = {
 	"My limb is out of place.",
 }
 
+local dislocated_spine = {
+	"My back feels... wrong.",
+	"I think I popped something in my spine.",
+	"There's a sharp pain in my back.",
+}
+
+local partial_break_spine = {
+	"I can't feel my legs...",
+	"Something is very wrong with my back.",
+	"I think... I think I broke my back.",
+}
+
+local break_spine = {
+	"I can't move...",
+	"I'm paralyzed...",
+	"Help me...",
+}
+
 local hungry_a_bit = {
     "Mgh, I'm hungry...",
     "Some food would be great...",
@@ -454,6 +472,10 @@ end
 	local dislocated_notify = (org.rarm == 0.5) or (org.larm == 0.5) or (org.rleg == 0.5) or (org.lleg == 0.5)
 	local after_unconscious_notify = org.after_otrub
 
+	local dislocated_spine_notify = (org.spine1dislocation or org.spine2dislocation or org.spine3dislocation)
+	local partial_break_spine_notify = (org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1) or (org.spine3 > 0.75 and org.spine3 < 1)
+	local break_spine_notify = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 == 1)
+
 	if not isnumber(pain) then return "" end
 
 	local str = ""
@@ -502,6 +524,14 @@ end
 
 	if not most_wanted_phraselist and hungry and hungry > 25 and math.random(3) == 1 then
 		most_wanted_phraselist = hungry > 45 and very_hungry or hungry_a_bit
+	end
+
+	if dislocated_spine_notify then
+		most_wanted_phraselist = dislocated_spine
+	elseif partial_break_spine_notify then
+		most_wanted_phraselist = partial_break_spine
+	elseif break_spine_notify then
+		most_wanted_phraselist = break_spine
 	end
 
 	if brain > 0.1 then

@@ -94,6 +94,10 @@ util.AddNetworkString("Abnormalties(SendOpenedPage)")
 				-- query:Execute()
 			end)
 		query:Execute()
+
+		local alterQuery = mysql:Alter("abnormalties_player_info")
+		alterQuery:Add("mood", "FLOAT NOT NULL DEFAULT 50")
+		alterQuery:Execute()
 	end)
 
 
