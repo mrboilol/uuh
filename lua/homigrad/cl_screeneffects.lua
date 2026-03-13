@@ -601,6 +601,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
         local severity_multiplier = math.Clamp(conc_sev / 10, 0, 1)
         show_image_time = HEAD_TRAUMA_DURATION * (1 + severity_multiplier * 2) -- Longer effect for more severe concussions
         lobotomy_index = math.random(#lobotomy_mats)
+        lobotomy_dir = Vector(0,0,0)
         DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
         if severity_multiplier > 0.7 then
             lply:SetDSP(1) -- More intense DSP
@@ -915,8 +916,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 		if IsValid(Tinnitus) then
 			Tinnitus:SetVolume(org.otrub and 0.05 or math.min(math.max(lply.tinnitus - CurTime(), 0) / 10, 1))
-            local rate = org.otrub and 1 or math.Rand(0.9, 1.1)
-            Tinnitus:SetPlaybackRate(rate)
+            Tinnitus:SetPlaybackRate(1)
 		end
 	else
 		if IsValid(Tinnitus) then

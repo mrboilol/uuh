@@ -2,6 +2,10 @@ gs = {
 	random = include("minstd.lua") -- from https://github.com/Kefta/Lua-MINSTD
 }
 
+function isSfdRound(org)
+    return false
+end
+
 
 DEBUG_LENGTH = 3
 
