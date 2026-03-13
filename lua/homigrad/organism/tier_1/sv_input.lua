@@ -1,6 +1,11 @@
 hg = hg or {}
 hg.organism = hg.organism or {}
 
+util.AddNetworkString("headtrauma_flash")
+util.AddNetworkString("hg_RedTrauma")
+util.AddNetworkString("hg_DamageIndicator")
+util.AddNetworkString("hg_MeleeHeadViewpunch")
+util.AddNetworkString("send_info_org")
 hg.organism.fake_spine1 = 1
 hg.organism.fake_spine2 = 1
 hg.organism.fake_spine3 = 0.75
@@ -270,14 +275,6 @@ function hg.organism.AddWound(ent, tr, bone, dmgInfo, dmgPos, dmgBlood, inputHol
 			end
 			
 			table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
-
-util.AddNetworkString("headtrauma_flash")
-util.AddNetworkString("hg_RedTrauma")
-util.AddNetworkString("hg_DamageIndicator")
-util.AddNetworkString("hg_MeleeHeadViewpunch")
-util.AddNetworkString("send_info_org")
-
-
 
 			if #org.wounds <= 30 then
 				local wounds = org.wounds
