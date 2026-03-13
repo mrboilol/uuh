@@ -281,8 +281,6 @@ module[2] = function(owner, org, timeValue)
 		o2[1] = math.max(5, o2[1])
 	end
 
-		if org.isPly and not org.otrub and o2.curregen < losing_oxy and org.analgesia <= 1.5 and !org.heartstop then
-	
 	org.choke_time = org.choke_time or 0
 	org.was_choking = org.was_choking or false
 	if chokingEffective then
