@@ -890,6 +890,66 @@ for i = 1, 4 do
 	bluntDecalsRand = i
 end
 
+function SWEP:IsHeadHit(ent, trace)
+    if trace.HitGroup == HITGROUP_HEAD then return true end
+    if not IsValid(ent) then return false end
+    if trace.PhysicsBone == nil then return false end
+
+    local bone = ent:TranslatePhysBoneToBone(trace.PhysicsBone)
+    if not bone then return false end
+
+    return ent:GetBoneName(bone) == "ValveBiped.Bip01_Head1"
+end
+
+function SWEP:IsBehindTarget(ent)
+    local attacker = self:GetOwner()
+    if not IsValid(attacker) then return false end
+
+    local victim = hg.RagdollOwner(ent) or ent
+    if not IsValid(victim) then return false end
+
+    if victim:IsPlayer() then
+        local other_angle = victim:EyeAngles()[2]
+        local ply_angle = (victim:GetPos() - attacker:GetPos()):Angle()[2]
+        local ang_diff = math.abs(math.AngleDifference(other_angle, ply_angle))
+        return ang_diff < 100
+    end
+
+    if ent:IsRagdoll() then
+        local bone_id = ent:LookupBone("ValveBiped.Bip01_Head1")
+        if not bone_id then return false end
+
+        local bone_matrix = ent:GetBoneMatrix(bone_id)
+        if not bone_matrix then return false end
+
+        local pos, ang = bone_matrix:GetTranslation(), bone_matrix:GetAngles()
+        local other_normal = -ang:Right()
+        local shootPos = attacker.GetShootPos and attacker:GetShootPos() or attacker:EyePos()
+        local ply_normal = pos - shootPos
+        local dist_z = math.abs(pos.z - shootPos.z)
+
+        if dist_z < 50 then
+            ply_normal:Normalize()
+
+            local ang_diff = -(math.deg(math.acos(ply_normal:DotProduct(other_normal))) - 180)
+            return ang_diff < 100
+        end
+    end
+
+    return false
+end
+
+function SWEP:GetBackHeadDamageMul(ent, trace)
+    local mul = self.BackHeadDamageMul or 1
+    if mul <= 1 then return 1 end
+
+    if not self:IsEntSoft(ent) then return 1 end
+    if not self:IsHeadHit(ent, trace) then return 1 end
+    if not self:IsBehindTarget(ent) then return 1 end
+
+    return mul
+end
+
 function SWEP:PlayEffects(trace, attacktype)
     local owner = self:GetOwner()
     
