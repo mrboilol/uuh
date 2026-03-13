@@ -185,6 +185,18 @@ module[2] = function(owner, org, timeValue)
 		org.larm = max(org.larm - timeValue / 240, 0)
 	end
 
+	if org.spine1 < 1 then
+		org.spine1 = max(org.spine1 - timeValue / 300, 0)
+	end
+
+	if org.spine2 < 1 then
+		org.spine2 = max(org.spine2 - timeValue / 300, 0)
+	end
+
+	if org.spine3 < 1 then
+		org.spine3 = max(org.spine3 - timeValue / 300, 0)
+	end
+
 	if org.pain > 120 then
 		org.needfake = true
 	end

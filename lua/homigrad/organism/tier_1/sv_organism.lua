@@ -904,13 +904,6 @@ end)
 hook.Add("SetupMove", "hg-speed", function(ply, mv)
 	local org = ply.organism
     if not org then return end
-
-	if org.paralyzed then
-		mv:SetMaxSpeed(1)
-		mv:SetMaxClientSpeed(1)
-		return
-	end
-
     local spine_dmg_total = (org.spine1 or 0) + (org.spine2 or 0) + (org.spine3 or 0)
 	if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
 		spine_dmg_total = spine_dmg_total + 0.3

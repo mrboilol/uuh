@@ -238,8 +238,8 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 	end
 
 	if org[name] >= (number == 3 and 0.75 or 1) then
-		org.paralyzed = true
 	elseif number == 3 and org[name] > 0.5 then
+		--org.paralyzed = true
 		org.stamina[1] = math.max(org.stamina[1] - 50, 0)
 		if org.o2 and org.o2[1] then
 			org.o2[1] = math.max(org.o2[1] - 20, 0)
