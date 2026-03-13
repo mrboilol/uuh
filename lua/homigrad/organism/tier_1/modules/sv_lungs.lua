@@ -282,21 +282,19 @@ module[2] = function(owner, org, timeValue)
 	end
 
 		if org.isPly and not org.otrub and o2.curregen < losing_oxy and org.analgesia <= 1.5 and !org.heartstop then
-	
-	org.choke_time = org.choke_time or 0
-	org.was_choking = org.was_choking or false
-	if chokingEffective then
-		org.choke_time = org.choke_time + timeValue
-	else
-		if org.was_choking then
-			local over = math.max(0, org.choke_time - 10)
-			org.choke_recovery_unlock = time + 15 + over * 5
+		org.choke_time = org.choke_time or 0
+		org.was_choking = org.was_choking or false
+		if chokingEffective then
+			org.choke_time = org.choke_time + timeValue
+		else
+			if org.was_choking then
+				local over = math.max(0, org.choke_time - 10)
+				org.choke_recovery_unlock = time + 15 + over * 5
+			end
+			org.choke_time = 0
 		end
-		org.choke_time = 0
-	end
-	org.was_choking = chokingEffective
-	
-	if org.isPly and not org.otrub and o2.curregen < losing_oxy and org.analgesia <= 1.5 then
+		org.was_choking = chokingEffective
+		
 		if mask_blevota then
 			if o2[1] < 15 then
 				org.owner:Notify("DROP THE FUCKING MASK", 25, "take_gasmask2", 0, nil, color_red2)
