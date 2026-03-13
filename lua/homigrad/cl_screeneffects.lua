@@ -557,6 +557,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		DrawMotionBlur(0.2, 0.8, 0.05)
 	end
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
+	local ply = lply:Alive() and lply or spect
 	
 	if IsValid(PainStation) then
 		PainStation:SetVolume(0)
