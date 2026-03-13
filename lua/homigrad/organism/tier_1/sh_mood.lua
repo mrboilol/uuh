@@ -44,31 +44,9 @@ function hg.organism.UpdateSuicidalTendencies(ply, timeValue)
 
     local sadness_duration_for_suicide = math.max(30, 120 - (20 - org.mood) * 5)
 
-    if org.sad_time > sadness_duration_for_suicide and not ply.IsSuiciding then
-		local suicide_weapon = nil
-		for _, wep in ipairs(ply:GetWeapons()) do
-			if sharp_weapons[wep:GetClass()] then
-				suicide_weapon = wep
-				break
-			end
-		end
-
-		if suicide_weapon then
-			ply:SelectWeapon(suicide_weapon:GetClass())
-			org.suicidal = true
-			ply.IsSuiciding = true
-			ply:Notify("Do it.", 10, "suicide_imminent", 0, nil, Color(255, 0, 0, 255))
-
-			ply.canSuicide = false
-			timer.Simple(3, function()
-				if not IsValid(ply) then return end
-				ply.canSuicide = true
-			end)
-		else
-			org.heartstop = true
-			ply:Notify("I dont feel so good...", 10, "heart_attack", 0, nil, Color(255, 0, 0, 255))
-		end
-
+    if org.sad_time > sadness_duration_for_suicide and not org.suicidal then
+        org.suicidal = true
+        ply:Notify("I can't take this anymore.", 10, "suicide_thoughts", 0, nil, Color(255, 0, 0, 255))
     elseif org.sad_time <= sadness_duration_for_suicide then
         org.suicidal = false
     end
@@ -100,35 +78,14 @@ end
 
 if SERVER then
     concommand.Add("suicide", function(ply)
-        if not IsValid(ply) or not ply:Alive() or ply.IsSuiciding then return end
-
-        if ply.organism.mood > 70 and GetConVar("hg_mood_enabled"):GetBool() then
-            ply:Notify("I cant...")
+        if not IsValid(ply) or not ply:Alive() then return end
+        
+        if not ply.organism or not ply.organism.suicidal then
+            ply:Notify("I cant do that...")
             return
         end
 
-        local suicide_weapon = nil
-        for _, wep in ipairs(ply:GetWeapons()) do
-            if sharp_weapons[wep:GetClass()] then
-                suicide_weapon = wep
-                break
-            end
-        end
-
-        if suicide_weapon then
-            ply:SelectWeapon(suicide_weapon:GetClass())
-            ply.IsSuiciding = true
-            ply:Notify(suicide_phrases[math.random(#suicide_phrases)], 10, "suicide_imminent", 0, nil, Color(255, 0, 0, 255))
-
-            ply.canSuicide = false
-            timer.Simple(3, function()
-                if not IsValid(ply) then return end
-                ply.canSuicide = true
-            end)
-        else
-            ply.organism.heartstop = true
-            --ply:Notify("You are having a heart attack.", 10, "heart_attack", 0, nil, Color(255, 0, 0, 255))
-        end
+        ply.suiciding = not ply.suiciding
     end)
 end
 
