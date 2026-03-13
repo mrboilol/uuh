@@ -795,13 +795,23 @@ function SWEP:SecondaryAttack()
 				maxs = trMaxsClaws,
 			})
 		else
-			tr = util.TraceHull({
+			tr = util.TraceLine({
 				start = pos,
 				endpos = pos + owner:GetAimVector() * self.ReachDistance,
 				filter = {ply, hg.GetCurrentCharacter(ply)},
 				mins = trMins,
 				maxs = trMaxs,
 			})
+
+			if !tr.Hit or tr.Entity:IsWorld() then
+				tr = util.TraceHull({
+					start = pos,
+					endpos = pos + owner:GetAimVector() * self.ReachDistance,
+					filter = {ply, hg.GetCurrentCharacter(ply)},
+					mins = trMins,
+					maxs = trMaxs,
+				})
+			end
 		end
 
 		--if (IsValid(tr.Entity) or game.GetWorld() == tr.Entity) and self:CanPickup(tr.Entity) and not tr.Entity:IsPlayer() then
@@ -1037,11 +1047,12 @@ function SWEP:ApplyForce()
 
 				local tr = {}
 				tr.start = TargetPos
-				tr.endpos = TargetPos - vector_up * 16
-				tr.mask = MASK_SOLID_BRUSHONLY
+				tr.endpos = TargetPos - vector_up * 32
+				tr.mask = MASK_SOLID
+				tr.filter = {self.CarryEnt, self, ply}
 				local trace = util.TraceLine(tr)
 
-				if bone != "ValveBiped.Bip01_Spine2" or not trace.Hit then
+				if bone != "ValveBiped.Bip01_Spine2" or !trace.Hit then
 					phys:ApplyForceCenter(ply:GetAimVector() * math.min(5000, phys:GetMass() * 800))
 					self:SetCarrying()
 				end
@@ -1059,7 +1070,7 @@ function SWEP:ApplyForce()
 					if (self.CPRThink or 0) < CurTime() then
 						self.CPRThink = CurTime() + (1 / 120) * 60
 						if org.alive then
-							//org.o2[1] = math.min(org.o2[1] + hg.organism.OxygenateBlood(org) * 2 * (ply.Profession == "doctor" and 2 or 1), org.o2.range)
+							org.o2[1] = math.min(org.o2[1] + hg.organism.OxygenateBlood(org) * 2 * (ply.Profession == "doctor" and 2 or 1), org.o2.range)
 							org.pulse = math.min(org.pulse + 5 * (ply.Profession == "doctor" and 2 or 1),70)
 							org.CO = math.Approach(org.CO, 0, (ply.Profession == "doctor" and 2 or 1))
 							org.COregen = math.Approach(org.COregen, 0, (ply.Profession == "doctor" and 2 or 1))
@@ -1465,7 +1476,7 @@ function SWEP:PrimaryAttack(forcespecial)
 	end
 
 	if self.IsLocal and self:IsLocal() then
-		ViewPunch(special_attack and Angle(0, 0, 0) or Angle((-1), -(rand and 2 or -2), (rand and 6 or -6)))
+		ViewPunch(special_attack and Angle(0, 0, 0) or Angle((-1), -(rand and 2 or -2), (rand and 8 or -8)))
 		//ViewPunch2(special_attack and Angle(5, -2, 2) or Angle((-1), -(rand and 2 or -2), (rand and 6 or -6)))
 		if special_attack then
 			timer.Simple(0.06, function()
@@ -1665,7 +1676,7 @@ function SWEP:AttackFront(special_attack, rand)
 		end
 
 		if owner.organism.superfighter then
-		Mul = Mul * 1 * self.Penetration
+			Mul = Mul * 5 * self.Penetration
 			if Ent.organism then
 				Ent.organism.immobilization = 10
 			end
@@ -2042,3 +2053,33 @@ function SWEP:Holster( wep )
 
 	return true
 end
+
+-- hook.Add("IKPoleRightArm", "HandsPoles", function(ply, ent)
+-- 	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon() or false
+-- 	if wep and IsValid(wep) then
+-- 		local mdl = wep.GetWM and IsValid(wep:GetWM()) and wep:GetWM() or false
+-- 		if mdl then
+-- 			local rh = mdl:LookupBone("ValveBiped.Bip01_R_Forearm")
+-- 			if not rh then return end
+-- 			local rhmat = mdl:GetBoneMatrix(rh)
+-- 			if rhmat then
+-- 				return rhmat:GetTranslation()
+-- 			end
+-- 		end
+-- 	end
+-- end)
+
+-- hook.Add("IKPoleLeftArm", "HandsPoles", function(ply, ent)
+-- 	local wep = ply.GetActiveWeapon and ply:GetActiveWeapon() or false
+-- 	if wep and IsValid(wep) then
+-- 		local mdl = wep.GetWM and IsValid(wep:GetWM()) and wep:GetWM() or false
+-- 		if mdl then
+-- 			local lh = mdl:LookupBone("ValveBiped.Bip01_L_Forearm")
+-- 			if not lh then return end
+-- 			local lhmat = mdl:GetBoneMatrix(lh)
+-- 			if lhmat then
+-- 				return lhmat:GetTranslation()
+-- 			end
+-- 		end
+-- 	end
+-- end)
