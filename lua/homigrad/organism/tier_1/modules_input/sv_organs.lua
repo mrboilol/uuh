@@ -197,7 +197,16 @@ local arterySize = {
 	["larmartery"] = 8,
 	["rlegartery"] = 12,
 	["llegartery"] = 12,
-	["spineartery"] = 13,
+	["spineartery"] = 14,
+}
+
+local veinSize = {
+	["vein"] = 12,
+	["rarmvein"] = 4,
+	["larmvein"] = 4,
+	["rlegvein"] = 6,
+	["llegvein"] = 6,
+	["spinevein"] = 8,
 }
 
 local arteryMessages ={
@@ -243,7 +252,35 @@ input_list.rarmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) r
 input_list.larmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("larmartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.rlegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("rlegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.llegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("llegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
-input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
+local function hitVein(vein, org, dmg, dmgInfo, boneindex, dir, hit)
+	if isCrush(dmgInfo) then return 1 end
+	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
+
+	org.painadd = org.painadd + dmg * 0.5
+	if org[vein] == 1 then return 0 end
+	if org[string.Replace(vein, "vein", "").."amputated"] then return end
+
+	hg.AddHarmToAttacker(dmgInfo, 2, "Vein punctured harm")
+
+	org[vein] = math.min(org[vein] + 1, 1)
+
+	local owner = org.owner
+	local bonea = owner:LookupBone(boneindex)
+	local localPos, localAng, dir2 = getlocalshit(owner, bonea, dmgInfo, dir, hit)
+	table.insert(org.veinwounds, {veinSize[vein], localPos, localAng, boneindex, CurTime(), dir2 * 50, vein})
+	owner:SetNetVar("veinwounds", org.veinwounds)
+	return 0
+end
+
+input_list.vein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit)
+	return hitVein("vein", org, dmg, dmgInfo, "ValveBiped.Bip01_Neck1", dir, hit)
+end
+
+input_list.rarmvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("rarmvein", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.larmvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("larmvein", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.rlegvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("rlegvein", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.llegvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("llegvein", org, dmg, dmgInfo, boneindex, dir, hit) end
+input_list.spinevein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("spinevein", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.lungsL = function(org, bone, dmg, dmgInfo)
 	local prot = math.max(0.3 - org.lungsL[1],0)
 	local oldval = org.lungsL[1]

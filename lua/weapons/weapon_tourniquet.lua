@@ -98,3 +98,51 @@ function SWEP:Heal(ent, mode)
 	if self:Tourniquet(ent, bone) then self.modeValues[1] = 0 self:GetOwner():SelectWeapon("weapon_hands_sh") self:Remove() end
 end
 
+
+local function stop_bleeding(ply, bone)
+	local org = ply.organism
+	if not org then return false end
+
+	local success = false
+	for i, wound in ipairs(org.wounds) do
+		if wound.bone == bone then
+			wound[1] = 0
+			success = true
+		end
+	end
+
+	for i, wound in ipairs(org.arterialwounds) do
+		if wound[4] == bone then
+			wound[1] = 0
+			success = true
+		end
+	end
+
+	for i, wound in ipairs(org.veinwounds) do
+		if wound.bone == bone then
+			wound.damage = 0
+			success = true
+		end
+	end
+
+	return success
+end
+
+function SWEP:Tourniquet(ent, bone)
+	local org = ent.organism
+	if not org then return false end
+
+	local boneName = ent:GetBoneName(bone)
+	local limb = hg.amputatedlimbs2[boneName]
+
+	if limb and limb ~= "head" and limb ~= "chest" then
+		if stop_bleeding(ent, boneName) then
+			org.painadd = org.painadd + 20
+			ent:EmitSound("physics/flesh/flesh_impact_hard6.wav", 65)
+			return true
+		end
+	end
+
+	return false
+end
+

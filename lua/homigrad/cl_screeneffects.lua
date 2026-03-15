@@ -1136,8 +1136,6 @@ hook.Add("PreDrawOpaqueRenderables", "renderblindnessflash", function()
 	local blindness_duration = (organism.blindness_end_time or 0) - CurTime()
 	local blindness = (amtflashed or 0) >= 0.8 and 1 or math.min(blindness_duration, 1)
 
-	local eyesmode = math.Round(blindness)
-	
 	local view = render.GetViewSetup(true)
 	
 	if not IsValid(lply.blindflash) then
@@ -1148,8 +1146,7 @@ hook.Add("PreDrawOpaqueRenderables", "renderblindnessflash", function()
 	end
 	
 	local Ang = view.angles
-	Ang[2] = Ang[2] + (eyesmode == 2 and 90 or eyesmode == 1 and -90 or 0)
-	Ang[1] = eyesmode == 0 and Ang[1] or 0
+	Ang[1] = 0
 	lply.blindflash:SetFarZ(40)
 	lply.blindflash:SetFOV(160)
 	lply.blindflash:SetBrightness(1)
