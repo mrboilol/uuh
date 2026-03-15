@@ -24,11 +24,13 @@ end
 local function manageMoodleState(ply, moodleID, isActive, texturePath, count)
     if not IsValid(ply) then return end
     ply.MoodleStates = ply.MoodleStates or {}
+    ply.MoodleCooldowns = ply.MoodleCooldowns or {}
     
     if isActive then
         count = count or 1
         if ply.MoodleStates[moodleID] ~= count then
             ply.MoodleStates[moodleID] = count
+            ply.MoodleCooldowns[moodleID] = nil -- Remove cooldown when it becomes active again
             net.Start("Moodle_Add")
                 net.WriteString(moodleID)
                 net.WriteString(texturePath or "")
@@ -37,11 +39,18 @@ local function manageMoodleState(ply, moodleID, isActive, texturePath, count)
             if MOODLE_DEBUG then MsgC(DEBUG_COLOR_SV, "[Moodle] ADD -> "..moodleID.." (x"..tostring(count)..")\n") end
         end
     elseif ply.MoodleStates[moodleID] then
-        ply.MoodleStates[moodleID] = nil
-        net.Start("Moodle_Remove")
-            net.WriteString(moodleID)
-        net.Send(ply)
-        if MOODLE_DEBUG then MsgC(DEBUG_COLOR_SV, "[Moodle] REMOVE -> "..moodleID.."\n") end
+        if not ply.MoodleCooldowns[moodleID] then
+            ply.MoodleCooldowns[moodleID] = CurTime() + 2 -- 2 second cooldown
+        end
+
+        if CurTime() >= ply.MoodleCooldowns[moodleID] then
+            ply.MoodleStates[moodleID] = nil
+            ply.MoodleCooldowns[moodleID] = nil
+            net.Start("Moodle_Remove")
+                net.WriteString(moodleID)
+            net.Send(ply)
+            if MOODLE_DEBUG then MsgC(DEBUG_COLOR_SV, "[Moodle] REMOVE -> "..moodleID.."\n") end
+        end
     end
 end
 
@@ -237,8 +246,6 @@ local function SyncMoodles(ply)
 
     -- Hunger
     local hunger = org.hungry or 0
-    manageMoodleState(ply, "hunger_1", hunger > 20 and hunger <= 40, "materials/moodels/Hunger_1.png")
-    manageMoodleState(ply, "hunger_2", hunger > 40 and hunger <= 60, "materials/moodels/Hunger_2.png")
     manageMoodleState(ply, "hunger_3", hunger > 60 and hunger <= 80, "materials/moodels/Hunger_3.png")
     manageMoodleState(ply, "hunger_4", hunger > 80 and hunger < 100, "materials/moodels/Hunger_4.png")
     manageMoodleState(ply, "hunger_5", hunger >= 100, "materials/moodels/Hunger_5.png")
@@ -288,7 +295,7 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "shock", (org.shock or 0) > 25, "materials/moodels/Shock.png")
 
     -- Speechless
-    manageMoodleState(ply, "speechless", pain > 80 or brainDamage > 0.2 or (org.jaw or 0) >= 1, "materials/moodels/Speechless.png")
+    manageMoodleState(ply, "speechless", (org.pain or 0) > 80 or (org.brain or 0) > 0.05 or (org.jaw or 0) >= 1, "materials/moodels/Speechless.png")
 
     -- Thorax Destroyed (Skull Fracture)
     manageMoodleState(ply, "concussion", (org.skull or 0) >= 1, "materials/moodels/Concussion_moodle.png")
@@ -311,7 +318,7 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "sepsis", (org.hemotransfusionshock and (type(org.hemotransfusionshock) == "boolean" or org.hemotransfusionshock > 0)), "materials/moodels/Sepsis_2.png")
 
     -- Horrified (Noradrenaline/Berserk)
-    manageMoodleState(ply, "stimulated", (org.noradrenalineActive or org.berserkActive2 or (org.berserk or 0) > 0 or (org.noradrenaline or 0) > 0), "materials/moodels/Stimulated.png")
+    manageMoodleState(ply, "stimulated", (org.berserk or 0) > 0 or (org.noradrenaline or 0) > 0, "materials/moodels/Stimulated.png")
 
 end
 

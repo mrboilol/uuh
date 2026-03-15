@@ -1349,12 +1349,12 @@ local paintable = {
 	end,
 }
 
---[[hook.Add("HomigradDamage", "painsounds",function(ply, dmgInfo, hitgroup, ent) -- Пример использования HomigradDamage
-	--ply.painCD = ply.painCD or 0
-	--if paintable[hitgroup] and ply.painCD and ply.painCD < CurTime() and ply.organism and !ply.organism.otrub and ply:Alive() and !ply.organism.holdingbreath then 
-	--	paintable[hitgroup](ply,ent)
-	--end
-end)--	]]
+hook.Add("HomigradDamage", "painsounds",function(ply, dmgInfo, hitgroup, ent) -- Пример использования HomigradDamage
+	ply.painCD = ply.painCD or 0
+	if paintable[hitgroup] and ply.painCD and ply.painCD < CurTime() and ply.organism and !ply.organism.otrub and ply:Alive() and !ply.organism.holdingbreath then 
+		paintable[hitgroup](ply,ent)
+	end
+end)
 
 function hg.organism.DamageTypeAffliction(dmg, dmgInfo, ply, org)
 	local dmgBlood, dmgHurt, instaPain, immobilization = dmg, dmg, dmg, 0

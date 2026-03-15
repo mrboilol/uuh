@@ -11,11 +11,32 @@ module[1] = function(org)
 end
 
 local colorRed = Color(125,25,25)
+
+local hunger_messages_1 = {
+    "I'm starting to get really hungry...",
+    "My stomach is starting to rumble.",
+    "I could use a snack."
+}
+
+local hunger_messages_2 = {
+    "My stomach is eating itself... I need to eat.",
+    "I'm so hungry, I could eat a horse.",
+    "I need to find some food, and soon."
+}
+
+local hunger_messages_3 = {
+    "I'm so, SO HUNGRY... I NEED FOOD",
+    "I feel like I'm going to starve to death.",
+    "If I don't eat something now, I'm not sure what will happen."
+}
+
+local hungerMessageCooldown = 30 -- 30 seconds
+
 module[2] = function(owner, org, timeValue)
     local mood = org.mood
 
     -- Satiety decrease
-    local satiety_decrease_rate = 0.5 -- Base rate
+    local satiety_decrease_rate = 0.25 -- Base rate
     if mood and mood < 30 then
         satiety_decrease_rate = satiety_decrease_rate * (1 + (30 - mood) / 30 * 0.5) -- Up to 50% more satiety loss
     end
@@ -31,30 +52,45 @@ module[2] = function(owner, org, timeValue)
         hunger_change_rate = -0.5
     else
         -- Low satiety, hunger increases
-        hunger_change_rate = 1.0 -- Base hunger increase
+        hunger_change_rate = 3.0 -- Base hunger increase
         if org.satiety <= 10 then
-            hunger_change_rate = 2.0 -- Faster increase
+            hunger_change_rate = 5.0 -- Faster increase
         end
         if org.satiety == 0 then
-            hunger_change_rate = 4.0 -- Fastest increase when empty
+            hunger_change_rate = 7.0 -- Fastest increase when empty
         end
     end
 
+    local oldHunger = org.hungry
     org.hungry = math.Clamp(org.hungry + timeValue * hunger_change_rate * 0.1, 0, 100)
     org.hungry = Round(org.hungry or 0,3)
 
 
     -- Debuffs and messages based on hunger
     if hg_hungersystem:GetBool() then
-        if org.hungry > 95 then
-            if org.isPly and not org.otrub then owner:Notify("Im so, SO HUNGRY... I NEED FOOD", 15, "starvation_critical", 0, nil, Color(255, 0, 0)) end
-            org.o2[1] = math.max(org.o2[1] - timeValue * 0.1, 0)
-        elseif org.hungry > 75 then
-            if org.isPly and not org.otrub then owner:Notify("My stomach is eating itself... I need to eat.", 15, "starvation_warning_2", 0, nil, Color(255, 100, 100)) end
-            org.stomach = math.min(org.stomach + timeValue * 0.01, 1)
-            org.intestines = math.min(org.intestines + timeValue * 0.01, 1)
-        elseif org.hungry > 50 then
-            if org.isPly and not org.otrub then owner:Notify("Im starting to get really hungry...", 15, "starvation_warning_1") end
+        if org.hungry > oldHunger then -- Only show messages if hunger is increasing
+            if org.hungry > 95 then
+                if org.isPly and not org.otrub and (org.lastHungerMessageTime or 0) < CurTime() then
+                    org.lastHungerMessageTime = CurTime() + hungerMessageCooldown
+                    local message = hunger_messages_3[math.random(#hunger_messages_3)]
+                    owner:Notify(message, 15, "starvation_critical", 0, nil, Color(255, 0, 0))
+                end
+                org.o2[1] = math.max(org.o2[1] - timeValue * 0.1, 0)
+            elseif org.hungry > 75 then
+                if org.isPly and not org.otrub and (org.lastHungerMessageTime or 0) < CurTime() then
+                    org.lastHungerMessageTime = CurTime() + hungerMessageCooldown
+                    local message = hunger_messages_2[math.random(#hunger_messages_2)]
+                    owner:Notify(message, 15, "starvation_warning_2", 0, nil, Color(255, 100, 100))
+                end
+                org.stomach = math.min(org.stomach + timeValue * 0.01, 1)
+                org.intestines = math.min(org.intestines + timeValue * 0.01, 1)
+            elseif org.hungry > 50 then
+                if org.isPly and not org.otrub and (org.lastHungerMessageTime or 0) < CurTime() then
+                    org.lastHungerMessageTime = CurTime() + hungerMessageCooldown
+                    local message = hunger_messages_1[math.random(#hunger_messages_1)]
+                    owner:Notify(message, 15, "starvation_warning_1")
+                end
+            end
         else
              if org.isPly then
                 owner:ResetNotification("starvation_warning_1")
