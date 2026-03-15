@@ -21,7 +21,7 @@ end
 
 -- Core function to handle state changes and networking
 -- Only sends net messages when a state actually changes
-local function manageMoodleState(ply, moodleID, isActive, texturePath, count)
+local function manageMoodleState(ply, moodleID, isActive, texturePath, count, bypassCooldown)
     if not IsValid(ply) then return end
     ply.MoodleStates = ply.MoodleStates or {}
     ply.MoodleCooldowns = ply.MoodleCooldowns or {}
@@ -39,11 +39,11 @@ local function manageMoodleState(ply, moodleID, isActive, texturePath, count)
             if MOODLE_DEBUG then MsgC(DEBUG_COLOR_SV, "[Moodle] ADD -> "..moodleID.." (x"..tostring(count)..")\n") end
         end
     elseif ply.MoodleStates[moodleID] then
-        if not ply.MoodleCooldowns[moodleID] then
+        if not ply.MoodleCooldowns[moodleID] and not bypassCooldown then
             ply.MoodleCooldowns[moodleID] = CurTime() + 2 -- 2 second cooldown
         end
 
-        if CurTime() >= ply.MoodleCooldowns[moodleID] then
+        if bypassCooldown or (ply.MoodleCooldowns[moodleID] and CurTime() >= ply.MoodleCooldowns[moodleID]) then
             ply.MoodleStates[moodleID] = nil
             ply.MoodleCooldowns[moodleID] = nil
             net.Start("Moodle_Remove")
@@ -67,7 +67,46 @@ local function manageHierarchicalMoodle(ply, baseID, levels, value)
     for i = 1, #levels do
         local level_info = levels[i]
         local moodleID = baseID .. "_" .. i
-        manageMoodleState(ply, moodleID, i == active_level, level_info.texture)
+        local should_be_active = (i == active_level)
+        local bypass_cooldown = (should_be_active == false and active_level > 0)
+        manageMoodleState(ply, moodleID, should_be_active, level_info.texture, nil, bypass_cooldown)
+    end
+end
+
+local function ApplyBrainDamageEffects(ply, org)
+    local brain_damage = org.brain or 0
+    if brain_damage < 0.1 then return end
+
+    -- Fake moodles
+    -- The chance of a fake moodle appearing increases with brain damage.
+    local chance = (brain_damage - 0.1) * 0.2
+    if math.random() < chance then
+        local fake_moodles = {
+            { id = "happy_4", texture = "materials/moodels/Happy_4.png" },
+            { id = "energized", texture = "materials/moodels/Energized.png" },
+            { id = "pain_4", texture = "materials/moodels/Pain_4.png" },
+            { id = "hunger_5", texture = "materials/moodels/Hunger_5.png" },
+            { id = "cold_4", texture = "materials/moodels/Cold_4.png" },
+            { id = "heat_4", texture = "materials/moodels/Heat_4.png" },
+        }
+        local chosen_moodle = fake_moodles[math.random(1, #fake_moodles)]
+        
+        -- A fake moodle should not have a real counterpart active
+        if ply.MoodleStates[chosen_moodle.id] then return end
+
+        local fake_id = chosen_moodle.id .. "_fake"
+        
+        -- Don't stack fake moodles
+        if ply.MoodleStates[fake_id] then return end
+
+        manageMoodleState(ply, fake_id, true, chosen_moodle.texture)
+
+        -- Remove after a short, random duration
+        local duration = math.Rand(3, 7)
+        timer.Simple(duration, function()
+            if not IsValid(ply) then return end
+            manageMoodleState(ply, fake_id, false, nil, nil, true) -- Bypass cooldown
+        end)
     end
 end
 
@@ -176,11 +215,11 @@ local function SyncMoodles(ply)
     local dislocated_spine_1_2 = (org.spine1dislocation or org.spine2dislocation) or ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
     local dislocated_spine_3 = org.spine3dislocation and (org.spine3 > 0.5 and org.spine3 < 0.75)
     local dislocated_spine = dislocated_spine_1_2 or dislocated_spine_3
-    manageMoodleState(ply, "dislocated_spine", dislocated_spine, "materials/moodels/dislocated_spine.png")
+    manageMoodleState(ply, "dislocated_spine", dislocated_spine, "materials/moodels/Dislocated_spine.png")
 
     -- Broken Neck
     local broken_neck = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 > 0.75)
-    manageMoodleState(ply, "broken_neck", broken_neck, "materials/moodels/broken_neck.png")
+    manageMoodleState(ply, "broken_neck", broken_neck, "materials/moodels/Fractured_neck.png")
 
     manageMoodleState(ply, "dislocated_jaw", org.jawdislocation, "materials/moodels/Dislocated_jaw.png")
 
@@ -193,7 +232,7 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "dislocation", dislocCount > 0, "materials/moodels/Dislocation_4.png", dislocCount)
 
     -- Encumbered
-    local maxweight = 25 -- You might want to configure this value
+    local maxweight = 30 -- You might want to configure this value
     local weightmul = hg.CalculateWeight(ply, maxweight)
 
     manageMoodleState(ply, "encumbered_1", weightmul < 0.8 and weightmul >= 0.6, "materials/moodels/Encumbered_Moodle_1.png")
@@ -320,6 +359,9 @@ local function SyncMoodles(ply)
     -- Horrified (Noradrenaline/Berserk)
     manageMoodleState(ply, "stimulated", (org.berserk or 0) > 0 or (org.noradrenaline or 0) > 0, "materials/moodels/Stimulated.png")
 
+    if (org.brain or 0) > 0.01 then
+        ApplyBrainDamageEffects(ply, org)
+    end
 end
 
 -- Think loop for periodic syncing

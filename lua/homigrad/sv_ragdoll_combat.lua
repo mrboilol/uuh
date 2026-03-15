@@ -7,10 +7,10 @@ local HIGH_VELOCITY_THRESHOLD = 175
 
 -- Damage multipliers
 local MULTIPLIERS = {
-    head = 0.08,
-    legs = 0.07,
-    arms = 0.06,
-    hands = 0.05
+    head = 0.16,
+    legs = 0.14,
+    arms = 0.12,
+    hands = 0.10
 }
 
 -- Dislocation chances
