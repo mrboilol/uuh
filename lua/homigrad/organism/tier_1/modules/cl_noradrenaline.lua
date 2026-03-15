@@ -47,7 +47,7 @@ hook.Add("RenderScreenspaceEffects", "noradrenalineEffect", function()
 	
 	hg.noradrenalineClamped = noradrenalineClamped
 
-	if noradrenaline > 0.0001 and !hg.undernoradrenaline then
+	if noradrenaline > 0.0001 and !hg.undernoradrenaline and !hg.underberserk2 then
 		hg.undernoradrenaline = true
 		surface.PlaySound("shitty/music/mi_deathcam.mp3")
 		hg.DynamicMusicV2.Player.Start("overdose")
