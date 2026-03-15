@@ -730,7 +730,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
             end
         end
 
-        if criticalloop_sound then
+        if criticalloop_sound and criticalloop_sound:IsPlaying() then
             criticalloop_sound:SetVolume(volume)
         end
     elseif criticalloop_sound then
@@ -741,7 +741,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 	local brain = org.brain or 0
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
 
-	tempLerp = LerpFT(0.01, tempLerp, org.temperature)
+	tempLerp = LerpFT(0.01, tempLerp, org.temperature or 36.6)
 
 	if tempLerp > 38 then
 		local heat = tempLerp - 38
@@ -1136,7 +1136,7 @@ hook.Add("PreDrawOpaqueRenderables", "renderblindnessflash", function()
 	local blindness_duration = (organism.blindness_end_time or 0) - CurTime()
 	local blindness = (amtflashed or 0) >= 0.8 and 1 or math.min(blindness_duration, 1)
 
-	local view = render.GetViewSetup(true)
+	local view = render.GetViewSetup()
 	
 	if not IsValid(lply.blindflash) then
 		lply.blindflash = ProjectedTexture()

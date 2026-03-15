@@ -216,9 +216,9 @@ local arteryMessages ={
 }
 
 local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
-	if isCrush(dmgInfo) then return 1 end
+	-- if isCrush(dmgInfo) then return 1 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
-	if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
+	-- if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
 	org.painadd = org.painadd + dmg * 1
 	if org[artery] == 1 then return 0 end
 	if org[string.Replace(artery, "artery", "").."amputated"] then return end
@@ -253,7 +253,7 @@ input_list.larmartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) r
 input_list.rlegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("rlegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.llegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("llegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 local function hitVein(vein, org, dmg, dmgInfo, boneindex, dir, hit)
-	if isCrush(dmgInfo) then return 1 end
+	-- if isCrush(dmgInfo) then return 1 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
 
 	org.painadd = org.painadd + dmg * 0.5
@@ -320,7 +320,7 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 	return 0//isCrush(dmgInfo) and 1 or prot
 end
 
-input_list.trachea = function(org, bone, dmg, dmgInfo)
+input_list.trachea = function(org, bone, dmg, dmgInfo, boneindex, dir, hit)
 	local oldDmg = org.trachea
 
 	if not dmgInfo:IsDamageType(DMG_BLAST) and math.random(1, 10) ~= 1 then -- haha blocked
@@ -335,6 +335,10 @@ input_list.trachea = function(org, bone, dmg, dmgInfo)
 
 	org.internalBleed = org.internalBleed + dmg * 2
 	org.bleed = (org.bleed or 0) + dmg * 0.2
+
+	if math.random(1, 4) == 1 then -- 25% chance to hit artery on trachea hit
+		hitArtery("arteria", org, dmg, dmgInfo, "ValveBiped.Bip01_Neck1", dir, hit)
+	end
 
 	return result
 end

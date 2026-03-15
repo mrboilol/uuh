@@ -308,82 +308,133 @@ if SERVER then
 		local org = ent.organism
 		local owner = self:GetOwner()
 		if not org then return end
-		
-		-- Если растрелять труп а потом его взорвать гранатой, после перевязать - крашнет сервер why?
-		if self.modeValues[1] <= 0 or not (#org.wounds > 0 or org.lleg == 1 or org.rleg == 1 or org.skull >= 0.6 or org.chest == 1 or org.rarm == 1 or org.larm == 1) then return end
-		table.sort(org.wounds, function(a, b) return a[1] > b[1] end)
+
+		if self.modeValues[1] <= 0 then return end
+
+		local normal_wounds = {}
+		for i, wound in ipairs(org.wounds) do
+			if not bone or ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
+				table.insert(normal_wounds, {
+					wound = wound,
+					type = "wound",
+					severity = wound[1],
+					index = i
+				})
+			end
+		end
+
+		local critical_wounds = {}
+		for i, wound in ipairs(org.arterialwounds) do
+			if not bone or ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
+				table.insert(critical_wounds, {
+					wound = wound,
+					type = "arterial",
+					severity = wound[1],
+					index = i,
+					name = wound[7]
+				})
+			end
+		end
+		for i, wound in ipairs(org.veinwounds) do
+			if not bone or ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
+				table.insert(critical_wounds, {
+					wound = wound,
+					type = "vein",
+					severity = wound[1],
+					index = i,
+					name = wound[7]
+				})
+			end
+		end
+
+		if #normal_wounds == 0 and #critical_wounds == 0 and org.skull < 0.6 and org.chest ~= 1 and org.lleg ~= 1 and org.rleg ~= 1 and org.rarm ~= 1 and org.larm ~= 1 then return end
+
+		table.sort(normal_wounds, function(a, b) return a.severity > b.severity end)
+		table.sort(critical_wounds, function(a, b) return a.severity > b.severity end)
 		
 		local done = false
 		local bandaged = false
-		
-		if not bone then
-			--print(#org.wounds)
-			for i = 1, #org.wounds do
-				if self.modeValues[1] > 0 and #org.wounds > 0 then
-					local biggestWound = org.wounds[1][1]
-					local healedWound = math.max(biggestWound - self.modeValues[1], 0)
-					local woundHeal = self.modeValues[1] - (biggestWound - healedWound)-- * ((owner.Profession == "doctor") and 0.33 or 1)
-					org.bleed = math.max(org.bleed - (biggestWound - healedWound), 0)
-					org.wounds[1][1] = healedWound
-					self.modeValues[1] = woundHeal > 0.1 and woundHeal or 0
-					
-					if (biggestWound - healedWound) > 0.1 then
-						bandaged = true
-					end
 
-					local owner = self:GetOwner()
-					if owner.Karma then
-						--owner.Karma = math.Clamp(owner.Karma + 0.25,0,zb.MaxKarma)
-					end
-					ent.bandaged_limbs = ent.bandaged_limbs or {}
-					local bone_name = org.wounds[1][4]
-					if not ent.bandaged_limbs[bone_name] then
-						ent.bandaged_limbs[bone_name] = true
-						done = true
-					end
-					if org.wounds[1][1] == 0 then table.remove(org.wounds, 1) end
-				end
-			end
-		else
-			local bonewounds = {}
+		-- Heal normal wounds first
+		local wounds_to_remove = {}
+		for i, woundinfo in ipairs(normal_wounds) do
+			if self.modeValues[1] <= 0 then break end
 			
-			for i, tbl in pairs(org.wounds) do
-				if ent:GetBoneName(ent:LookupBone(tbl[4])) == bone then
-					table.insert(bonewounds,i)
-				end
+			local wound = woundinfo.wound
+			local biggestWound = woundinfo.severity
+
+			local healedWound = math.max(biggestWound - self.modeValues[1], 0)
+			local woundHeal = self.modeValues[1] - (biggestWound - healedWound)
+
+			org.bleed = math.max(org.bleed - (biggestWound - healedWound), 0)
+			wound[1] = healedWound
+			
+			self.modeValues[1] = self.modeValues[1] - woundHeal
+			if self.modeValues[1] < 0 then self.modeValues[1] = 0 end
+
+			if (biggestWound - healedWound) > 0.1 then
+				bandaged = true
 			end
 			
-			for i = 1, #bonewounds do
-				if self.modeValues[1] ~= 0 and #bonewounds > 0 then
-					if org.wounds[bonewounds[1]] then
-						local biggestWound = org.wounds[bonewounds[1]][1]
-						local healedWound = math.max(biggestWound - self.modeValues[1], 0)
-						local woundHeal = self.modeValues[1] - (biggestWound - healedWound)
-						org.bleed = math.max(org.bleed - (biggestWound - healedWound), 0)
-						org.wounds[bonewounds[1]][1] = healedWound
-						self.modeValues[1] = woundHeal
+			local bone_name = wound[4]
+			if not ent.bandaged_limbs[bone_name] then
+				ent.bandaged_limbs[bone_name] = true
+				done = true
+			end
 
-						org.pain = math.max(org.pain - (biggestWound - healedWound) / 4, 0)
+			if healedWound == 0 then
+				table.insert(wounds_to_remove, woundinfo.index)
+			end
+		end
 
-						if (biggestWound - healedWound) > 0.1 then
-							bandaged = true
-						end
+		table.sort(wounds_to_remove, function(a,b) return a > b end)
+		for _, index in ipairs(wounds_to_remove) do
+			table.remove(org.wounds, index)
+		end
 
-						ent.bandaged_limbs = ent.bandaged_limbs or {}
-						local bone_name = ent:GetBoneName(ent:LookupBone(org.wounds[bonewounds[1]][4]))
-						
-						if not ent.bandaged_limbs[bone_name] then
-							ent.bandaged_limbs[bone_name] = true
-							done = true
-						end
 
-						if org.wounds[bonewounds[1]][1] == 0 then table.remove(org.wounds, bonewounds[1]) end
-					end
-					table.remove(bonewounds, 1)
+		-- Then heal critical wounds if possible
+		local arterialwounds_to_remove = {}
+		local veinwounds_to_remove = {}
+		for _, woundinfo in ipairs(critical_wounds) do
+			if self.modeValues[1] <= 0 then break end
+
+			local wound = woundinfo.wound
+			local biggestWound = woundinfo.severity
+
+			if self.modeValues[1] >= biggestWound then
+				wound[1] = 0
+				org[wound[7]] = 0 -- Also reset the artery/vein status
+				self.modeValues[1] = self.modeValues[1] - biggestWound
+				bandaged = true
+				done = true
+
+				local bone_name = wound[4]
+				if not ent.bandaged_limbs[bone_name] then
+					ent.bandaged_limbs[bone_name] = true
+				end
+
+				if woundinfo.type == "arterial" then
+					table.insert(arterialwounds_to_remove, woundinfo.index)
+				elseif woundinfo.type == "vein" then
+					table.insert(veinwounds_to_remove, woundinfo.index)
 				end
 			end
 		end
+
+		table.sort(arterialwounds_to_remove, function(a,b) return a > b end)
+		for _, index in ipairs(arterialwounds_to_remove) do
+			table.remove(org.arterialwounds, index)
+		end
+
+		table.sort(veinwounds_to_remove, function(a,b) return a > b end)
+		for _, index in ipairs(veinwounds_to_remove) do
+			table.remove(org.veinwounds, index)
+		end
+		
 		org.owner:SetNetVar("wounds",org.wounds)
+		org.owner:SetNetVar("arterialwounds",org.arterialwounds)
+		org.owner:SetNetVar("veinwounds",org.veinwounds)
 		timer.Create("bandage_limbs"..ent:EntIndex(),0.1,1,function()
 			ent:SetNetVar("bandaged_limbs",ent.bandaged_limbs)
 			if ent:IsRagdoll() and hg.RagdollOwner(ent) and hg.RagdollOwner(ent):Alive() then
@@ -622,7 +673,7 @@ if SERVER then
 			local bonewounds = {}
 			if not bone then
 				for i,wound in pairs(org.arterialwounds) do
-					if wound[7] != "arteria" then 
+					if wound[7] != "arteria" and wound[7] != "spineartery" then 
 						pw = i 
 						for i1,tbl in pairs(org.wounds) do
 							if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
