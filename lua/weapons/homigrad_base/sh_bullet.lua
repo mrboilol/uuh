@@ -322,13 +322,13 @@ bulletHit = function(ply, tr, dmgInfo, bullet, Weapon)
 		util.ScreenShake(trPos, 3, 1, 1, 128)
 	end
 	
-	if force >= 35 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) and !tr.Entity:IsRagdoll() then
-		util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
-		util.ScreenShake(trPos, 3, 10, 1, 150)
-	end
+	-- if force >= 35 and dist <= 1400000 and (math.random(3) == 2 or force >= 45) and !tr.Entity:IsRagdoll() then
+	-- 	util.Decal("Impact.ShootPowderAdd", trPos + trNormal, trPos - trNormal)
+	-- 	util.ScreenShake(trPos, 3, 10, 1, 150)
+	-- end
 
-	gasInertia(trPos, force * 3, -tr.Normal, Weapon, tr)
-	gasInertia(trStart, force * 3, tr.Normal, Weapon, tr)
+	-- gasInertia(trPos, force * 3, -tr.Normal, Weapon, tr)
+	-- gasInertia(trStart, force * 3, tr.Normal, Weapon, tr)
 
 	local penetration, dmgmul
 	if tr.Entity:IsVehicle() then
