@@ -711,7 +711,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     local is_critical = org.critical or org.incapacitated
     local has_pulse = org.pulse and org.pulse > 0
 
-    if is_critical and has_pulse and not org.heartstop then
+    if is_critical and has_pulse and not org.heartstop and lply:Alive() then
         local volume = (org.incapacitated and not org.critical) and 0.4 or 1.0
         local sound_to_play = (org.consciousness or 1) > 0.4 and "criticalloop.ogg" or "criticalloop-unconscious.ogg"
 

@@ -82,20 +82,17 @@ function SWEP:OwnerChanged()
 end
 
 function SWEP:Heal(ent, mode, bone)
-	if ent:IsNPC() then
-		self:NPCHeal(ent, 0.25, "snd_jack_hmcd_bandage.wav")
-	end
+    local org = ent.organism
+    if not org then return false end
 
-	local owner = self:GetOwner()
-	if ent == hg.GetCurrentCharacter(owner) and hg_healanims:GetBool() then
-		self:SetHolding(math.min(self:GetHolding() + 10, 100))
+    if self:Tourniquet(ent, bone) then
+        self.modeValues[1] = 0
+        self:GetOwner():SelectWeapon("weapon_hands_sh")
+        self:Remove()
+        return true
+    end
 
-		if self:GetHolding() < 100 then return end
-	end
-
-	local org = ent.organism
-	if not org then return end
-	if self:Tourniquet(ent, bone) then self.modeValues[1] = 0 self:GetOwner():SelectWeapon("weapon_hands_sh") self:Remove() end
+    return false
 end
 
 

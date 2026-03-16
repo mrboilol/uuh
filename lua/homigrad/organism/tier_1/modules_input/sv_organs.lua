@@ -219,7 +219,7 @@ local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 	-- if isCrush(dmgInfo) then return 1 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
 	-- if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
-	org.painadd = org.painadd + dmg * 1
+	org.painadd = (org.painadd or 0) + dmg * 1
 	if org[artery] == 1 then return 0 end
 	if org[string.Replace(artery, "artery", "").."amputated"] then return end
 
@@ -256,7 +256,7 @@ local function hitVein(vein, org, dmg, dmgInfo, boneindex, dir, hit)
 	-- if isCrush(dmgInfo) then return 1 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
 
-	org.painadd = org.painadd + dmg * 0.5
+	org.painadd = (org.painadd or 0) + dmg * 0.5
 	if org[vein] == 1 then return 0 end
 	if org[string.Replace(vein, "vein", "").."amputated"] then return end
 
@@ -360,9 +360,7 @@ input_list.lefteye = function(org, bone, dmg, dmgInfo)
     -- eye popped: play short-range cue
     if oldDmg < 1 and (org.lefteye or 0) >= 1 then
         if IsValid(org.owner) then
-            net.Start("hg_play_client_sound")
-            net.WriteString("eyegone.mp3")
-            net.Send(org.owner)
+            org.owner:EmitSound("eyegone.mp3")
         end
     end
 
@@ -386,9 +384,7 @@ input_list.righteye = function(org, bone, dmg, dmgInfo)
     -- eye popped: play short-range cue
     if oldDmg < 1 and (org.righteye or 0) >= 1 then
         if IsValid(org.owner) then
-            net.Start("hg_play_client_sound")
-            net.WriteString("eyegone.mp3")
-            net.Send(org.owner)
+            org.owner:EmitSound("eyegone.mp3")
         end
     end
 

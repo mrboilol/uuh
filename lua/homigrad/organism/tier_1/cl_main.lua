@@ -416,6 +416,9 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	if organism.owner == LocalPlayer() then
 		if new_organism.otrub and !old then
 			hook.Run("HG_OnOtrub", new_organism.owner)
+            if new_organism.owner == LocalPlayer() then
+                new_organism.owner:EmitSound("harmsting.ogg")
+            end
 		end
 		
 		old = new_organism.otrub

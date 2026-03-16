@@ -194,6 +194,14 @@ if CLIENT then
 
 		if msg == "" then return end
 
+        if not lply.notification_sound then
+            lply.notification_sound = math.random(1, 2) == 1 and "" or "speech.mp3"
+        end
+
+        if lply.notification_sound ~= "" then
+            surface.PlaySound(lply.notification_sound)
+        end
+
 		CreateNotification(msg, showtime, clr)
 	end)
 

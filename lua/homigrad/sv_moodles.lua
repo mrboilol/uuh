@@ -72,7 +72,9 @@ local function manageHierarchicalMoodle(ply, baseID, levels, value)
         local level_info = levels[i]
         local moodleID = baseID .. "_" .. i
         local should_be_active = (i == active_level)
-        local bypass_cooldown = (should_be_active == false and active_level > 0)
+        local should_be_active = (i == active_level)
+        -- When a moodle is being deactivated as part of a hierarchy change, bypass the cooldown to prevent flickering.
+        local bypass_cooldown = (not should_be_active and active_level > 0)
         manageMoodleState(ply, moodleID, should_be_active, level_info.texture, nil, bypass_cooldown)
     end
 end

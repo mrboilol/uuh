@@ -162,20 +162,27 @@ hook.Add("PostDrawTranslucentRenderables", "DrawOtherMoodles", function()
     local pad = 4
 
     for _, ply in ipairs(player.GetAll()) do
-        if ply ~= lply and ply:Alive() and ply:GetNWTable("MoodleStates") then
+        if ply ~= lply and ply:Alive() and IsValid(ply) then
             local moodles = ply:GetNWTable("MoodleStates")
+            if not moodles then continue end
+            
             local pos = ply:GetPos() + Vector(0, 0, 80)
             local ang = (lply:GetPos() - pos):Angle()
 
             cam.Start3D2D(pos, Angle(0, ang.y - 90, 90), 0.25)
                 local x = 0
+                local y = 0
                 for id, data in pairs(moodles) do
                     if data.mat and not data.mat:IsError() then
                         surface.SetDrawColor(255, 255, 255, 200)
                         surface.SetMaterial(data.mat)
-                        surface.DrawTexturedRect(x, 0, iconSize, iconSize)
+                        surface.DrawTexturedRect(x, y, iconSize, iconSize)
                     end
-                    x = x + iconSize + pad
+                    if GetConVar("hg_sidemoodles"):GetBool() then
+                        y = y + iconSize + pad
+                    else
+                        x = x + iconSize + pad
+                    end
                 end
             cam.End3D2D()
         end
@@ -209,17 +216,15 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     local baseX, baseY
 
     if GetConVar("hg_sidemoodles"):GetBool() then
-        baseX = 16
-        baseY = screenH / 2
+        baseX = screenW - 64
+        baseY = 16
     else
-        baseX = screenW / 2
-        baseY = screenH - 64
+        baseX = 16
+        baseY = 16
     end
     
-    local mx, my = gui.MousePos()
-    local hovered = nil
     local x = baseX
-    local yRowOffset = 0
+    local y = baseY
 
     -- Animation helper
     local function easeOutBack(t)
@@ -234,20 +239,19 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         local dt = CurTime() - spawn
         
         -- Animations
-        local animT = math.Clamp(dt / 0.55, 0, 1)
+        local animT = math.Clamp(dt / 0.275, 0, 1)
         local scale = 0.2 + easeOutBack(animT) * 0.8
-        local alpha = math.Clamp(dt / 0.25, 0, 1) * 255
+        local alpha = math.Clamp(dt / 0.125, 0, 1) * 255
 
         local drawW, drawH = iconSize * scale, iconSize * scale
         
-        -- Wrap to new row if hitting right edge
-        if (x + iconSize) > (screenW - 16) then
-            x = baseX
-            yRowOffset = yRowOffset + (iconSize + pad)
+        if GetConVar("hg_sidemoodles"):GetBool() then
+            drawY = y
+            y = y + drawH + pad
+        else
+            drawX = x
+            x = x + drawW + pad
         end
-
-        local drawY = baseY - yRowOffset + (iconSize - drawH)
-        local drawX = x
 
         -- Flashing border for critical moodles
         -- if CRITICAL_MOODLES[id] then

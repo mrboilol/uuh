@@ -43,6 +43,7 @@ module[1] = function(org)
 	end
 
 	org.hemotransfusionshock = 0
+    org.has_hemothorax = false
 
 	org.survivalchance = 1
 end
@@ -185,9 +186,13 @@ module[2] = function(owner, org, mulTime)
 	
 	if bleed > 0 then
         org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1)
-        if math.random() < bleed * 0.01 then
-            org.pneumothorax = (org.pneumothorax or 0) + bleed * 0.1
+        if not org.has_hemothorax and math.random() < bleed * 0.001 then
+            org.has_hemothorax = true
         end
+    end
+
+    if org.has_hemothorax then
+        org.pneumothorax = (org.pneumothorax or 0) + mulTime * 0.05
     end
 	
 	if (org.internalBleed > 1 or org.pneumothorax > 0) and org.blood > 2000 and org.o2[1] > 0 then
