@@ -183,7 +183,12 @@ module[2] = function(owner, org, mulTime)
     org.internalBleed = math.Approach(org.internalBleed, 0, org.tranexamic_acid > 0 and mulTime / 2 or mulTime / 55)
     coagulatespeed = coagulatespeed + mulTime
 	
-	if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end
+	if bleed > 0 then
+        org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1)
+        if math.random() < bleed * 0.01 then
+            org.pneumothorax = (org.pneumothorax or 0) + bleed * 0.1
+        end
+    end
 	
 	if (org.internalBleed > 1 or org.pneumothorax > 0) and org.blood > 2000 and org.o2[1] > 0 then
 		org.wantToVomit = org.wantToVomit or 0

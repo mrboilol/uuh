@@ -161,8 +161,10 @@ module[2] = function(owner, org, timeValue)
 		org.adrenalineAdd = Approach(org.adrenalineAdd, 4, timeValue / 5)
 	end
 
-	if org.adrenalineAdd > 0 then
+	if org.adrenalineAdd > 0 and (org.lastAdrenaline or 0) < CurTime() then
 		org.adrenaline = Approach(org.adrenaline, 4, timeValue / 5)
+		org.adrenalineAdd = org.adrenalineAdd - timeValue * 2
+		org.lastAdrenaline = CurTime() + 1
 	end
 
 	org.adrenalineAdd = Approach(org.adrenalineAdd, 0, org.adrenalineAdd < 0 and timeValue / 30 or timeValue / 5)

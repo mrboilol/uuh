@@ -159,3 +159,28 @@ function SWEP:Tourniquet(ent, bone)
 	return false
 end
 
+
+function SWEP:PrimaryAttack()
+    if GetConVar("use_homigrad_hud"):GetBool() then
+        if CLIENT then
+            RunConsoleCommand("homigrad_show_hud")
+        end
+        return
+    end
+
+	if SERVER then
+		local trace = hg.eyeTrace(self:GetOwner())
+		self.healbuddy = self:GetOwner()
+		local done = self:Heal(self.healbuddy, self.mode, trace.PhysicsBone)
+		
+		if(done and self.PostHeal)then
+			self:PostHeal(self.healbuddy, self.mode)
+		end
+
+		if self.net_cooldown2 < CurTime() then
+			self:SetNetVar("modeValues",self.modeValues)
+			--self.net_cooldown2 = CurTime() + 0.1
+		end
+	end
+end
+

@@ -2,6 +2,9 @@
 -- Client-side moodle rendering template
 if not CLIENT then return end
 
+CreateConVar("hg_showothermoodle", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Show moodles of other players above their head", 0, 1)
+CreateConVar("hg_sidemoodles", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Show moodles on the side of the screen", 0, 1)
+
 local DEBUG_COLOR_CL_ADD = Color(0, 255, 0)
 local DEBUG_COLOR_CL_REMOVE = Color(255, 0, 0)
 local color_black = Color(0, 0, 0, 255)
@@ -64,13 +67,16 @@ local MOODLE_INFO = {
     ["depression_2"] = { title = "Depressed", desc = "Maybe you didnt eat enough?" },
     ["depression_3"] = { title = "Severely Depressed", desc = "Life stopped making sense." },
     ["depression_4"] = { title = "Suicidal", desc = "You will soon leave this world without a care." },
+
+    ["spine_damage_3"] = { title = "Severe Spine Damage", desc = "You can barely move, breathe, or even think straight." },
+    ["spine_damage_4"] = { title = "Broken Spine", desc = "You are paralyzed from the neck down." },
     ["spine_damage_1"] = { title = "Minor Spine Damage", desc = "Your back hurts, moving is difficult." },
     ["spine_damage_2"] = { title = "Moderate Spine Damage", desc = "Your arms and back are in immense pain, making it hard to fight." },
     ["spine_damage_3"] = { title = "Severe Spine Damage", desc = "You can barely move, breathe, or even think straight." },
     ["spine_damage_4"] = { title = "Broken Spine", desc = "You are paralyzed from the neck down." },
     ["dislocated_jaw"] = { title = "Dislocated Jaw", desc = "Your jaw is out of place, put it back in!" },
     ["dislocation"] = { title = "Dislocation", desc = "Its not really that bad, but its recommened to place it back." },
-    ["encumbered"] = { title = "Encumbered", desc = "You are severely immobilized." },
+    ["encumbered"] = { title = "Encumbered", desc = "You are carrying too much, making it hard to move." },
     ["endurance_1"] = { title = "Tired", desc = "Lets take a break..." },
     ["endurance_2"] = { title = "Exhausted", desc = "Lets REALLY take a break..." },
     ["endurance_3"] = { title = "Severely Exhausted", desc = "I can barely go on..." },
@@ -148,6 +154,34 @@ net.Receive("Moodle_Add", function()
     if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_ADD, "[M] + "..id.."\n") end
 end)
 
+hook.Add("PostDrawTranslucentRenderables", "DrawOtherMoodles", function()
+    if not GetConVar("hg_showothermoodle"):GetBool() then return end
+
+    local lply = LocalPlayer()
+    local iconSize = 48
+    local pad = 4
+
+    for _, ply in ipairs(player.GetAll()) do
+        if ply ~= lply and ply:Alive() and ply:GetNWTable("MoodleStates") then
+            local moodles = ply:GetNWTable("MoodleStates")
+            local pos = ply:GetPos() + Vector(0, 0, 80)
+            local ang = (lply:GetPos() - pos):Angle()
+
+            cam.Start3D2D(pos, Angle(0, ang.y - 90, 90), 0.25)
+                local x = 0
+                for id, data in pairs(moodles) do
+                    if data.mat and not data.mat:IsError() then
+                        surface.SetDrawColor(255, 255, 255, 200)
+                        surface.SetMaterial(data.mat)
+                        surface.DrawTexturedRect(x, 0, iconSize, iconSize)
+                    end
+                    x = x + iconSize + pad
+                end
+            cam.End3D2D()
+        end
+    end
+end)
+
 net.Receive("Moodle_Remove", function()
     local id = net.ReadString()
     if id == "*" then 
@@ -170,9 +204,17 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     
     -- Layout settings
     local iconSize, pad = 48, 6
-    local baseX = 16 
-    local baseY = ScrH() - iconSize - 16
     local screenW = ScrW() > 0 and ScrW() or 1920
+    local screenH = ScrH()
+    local baseX, baseY
+
+    if GetConVar("hg_sidemoodles"):GetBool() then
+        baseX = 16
+        baseY = screenH / 2
+    else
+        baseX = screenW / 2
+        baseY = screenH - 64
+    end
     
     local mx, my = gui.MousePos()
     local hovered = nil

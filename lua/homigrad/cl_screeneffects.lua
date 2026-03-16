@@ -1223,7 +1223,11 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     -- Suicidal vignette
     local suicidal_vignette = org.mood and org.mood < 10
 
-    vignette_active = vomit_vignette or fear_vignette or low_mood_fear_vignette or suicidal_vignette
+    local vignette_intensity = 0
+    if vomit_vignette then vignette_intensity = vignette_intensity + 5 end
+    if fear_vignette then vignette_intensity = vignette_intensity + 10 end
+    if low_mood_fear_vignette then vignette_intensity = vignette_intensity + 7 end
+    if suicidal_vignette then vignette_intensity = vignette_intensity + 12 end
 
     if wave_effect_active then
         render.UpdateScreenEffectTexture()
@@ -1233,26 +1237,33 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     end
 
     -- Low blood/mood grayscale
-    if (org.blood and org.blood < 2000) and (org.mood and org.mood < 40) then
-        if not grayscale_active then
-            grayscale_active = true
-        end
-    else
-        if grayscale_active then
-            grayscale_active = false
-        end
-    end
+    local blood_val = org.blood or 5000
+    local mood_val = org.mood or 100
+    
+    local saturation = 1
 
-    if grayscale_active then
+    -- Only calculate if one of the conditions is met
+    if blood_val < 4500 or mood_val < 40 then
+        -- Calculate saturation based on blood, defaults to 1 if blood is not low
+        local blood_saturation = (blood_val < 4500) and math.Clamp(math.Remap(blood_val, 1000, 4500, 0, 1), 0, 1) or 1
+        
+        -- Calculate saturation based on mood, defaults to 1 if mood is not low
+        local mood_saturation = (mood_val < 40) and math.Clamp(math.Remap(mood_val, 0, 40, 0, 1), 0, 1) or 1
+        
+        -- The final saturation is the minimum of the two, so the strongest effect applies
+        saturation = math.min(blood_saturation, mood_saturation)
+    end
+    
+    -- Only draw if the effect is active
+    if saturation < 1 then
         local tab = {}
-        tab["$pp_colour_colour"] = 0
+        tab["$pp_colour_colour"] = saturation
         DrawColorModify(tab)
     end
 
-    -- Vignette
-    if vignette_active then
+    if vignette_intensity > 0 then
         render.UpdateScreenEffectTexture()
-        vignetteMat:SetFloat("$c1_y", 10)
+        vignetteMat:SetFloat("$c1_y", vignette_intensity)
         render.SetMaterial(vignetteMat)
         render.DrawScreenQuad()
     end

@@ -25,6 +25,10 @@ local function manageMoodleState(ply, moodleID, isActive, texturePath, count, by
     if not IsValid(ply) then return end
     ply.MoodleStates = ply.MoodleStates or {}
     ply.MoodleCooldowns = ply.MoodleCooldowns or {}
+
+    if ply.organism and (ply.organism.brain or 0) > 0.3 and math.random() < (ply.organism.brain - 0.3) * 0.5 then
+        return
+    end
     
     if isActive then
         count = count or 1
@@ -79,7 +83,7 @@ local function ApplyBrainDamageEffects(ply, org)
 
     -- Fake moodles
     -- The chance of a fake moodle appearing increases with brain damage.
-    local chance = (brain_damage - 0.1) * 0.2
+    local chance = (brain_damage - 0.1) * 0.5 -- Increased from 0.2
     if math.random() < chance then
         local fake_moodles = {
             { id = "happy_4", texture = "materials/moodels/Happy_4.png" },
@@ -102,7 +106,7 @@ local function ApplyBrainDamageEffects(ply, org)
         manageMoodleState(ply, fake_id, true, chosen_moodle.texture)
 
         -- Remove after a short, random duration
-        local duration = math.Rand(3, 7)
+        local duration = math.Rand(5, 15) -- Increased from 3-7
         timer.Simple(duration, function()
             if not IsValid(ply) then return end
             manageMoodleState(ply, fake_id, false, nil, nil, true) -- Bypass cooldown
@@ -265,7 +269,7 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "faint_4", faint_level == 4, "materials/moodels/Faint_4.png")
 
     -- Fight or Flight
-    manageMoodleState(ply, "fight_or_flight", (org.adrenaline or 0) > 5, "materials/moodels/FightOrFlight_Moodle.png")
+    manageMoodleState(ply, "fight_or_flight", (org.adrenaline or 0) > 1, "materials/moodels/FightOrFlight_Moodle.png")
 
     -- Fractures
     local fracCount = 0
@@ -278,7 +282,7 @@ local function SyncMoodles(ply)
     
     local spine3_thresh = hg and hg.organism and hg.organism.fake_spine3 or 0.8
     manageMoodleState(ply, "fractured_neck", (org.spine3 or 0) >= spine3_thresh, "materials/moodels/Fractured_neck.png")
-    manageMoodleState(ply, "fractured_ribs", (org.chest or 0) >= 1, "materials/moodels/Fractured_ribs.png")
+    manageMoodleState(ply, "fractured_ribs", (org.chest or 0) >= 0.3, "materials/moodels/Fractured_ribs.png")
 
     -- Hemothorax
     manageMoodleState(ply, "hemothorax", (org.pneumothorax or 0) > 0, "materials/moodels/Hemothorax_Moodle_Animated_Crit.png")
