@@ -80,7 +80,8 @@ if SERVER then
     concommand.Add("suicide", function(ply)
         if not IsValid(ply) or not ply:Alive() then return end
         
-        if not ply.organism or not ply.organism.suicidal then
+        local mood_enabled = GetConVar("hg_mood_enabled"):GetBool()
+        if mood_enabled and (not ply.organism or not ply.organism.suicidal) then
             ply:Notify("I cant do that...")
             return
         end

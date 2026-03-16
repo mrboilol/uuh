@@ -1,6 +1,40 @@
 hg = hg or {}
 hg.organism = hg.organism or {}
 
+local artery_keys = {
+    "arteria",
+    "rarmartery",
+    "larmartery",
+    "rlegartery",
+    "llegartery",
+    "spineartery",
+}
+
+local vein_keys = {
+    "vein",
+    "rarmvein",
+    "larmvein",
+    "rlegvein",
+    "llegvein",
+    "spinevein",
+}
+
+hook.Add("PlayerSpawn", "InitArteriesAndVeins", function(ply)
+    if not IsValid(ply) then return end
+    if not ply.organism then
+        -- This should not happen, but as a safeguard
+        ply.organism = {}
+    end
+
+    for _, key in ipairs(artery_keys) do
+        ply.organism[key] = ply.organism[key] or 0
+    end
+
+    for _, key in ipairs(vein_keys) do
+        ply.organism[key] = ply.organism[key] or 0
+    end
+end)
+
 util.AddNetworkString("headtrauma_flash")
 util.AddNetworkString("hg_RedTrauma")
 util.AddNetworkString("hg_DamageIndicator")
@@ -156,7 +190,15 @@ local limbs = {
 	["rleg"] = "ValveBiped.Bip01_R_Calf",
 	["larm"] = "ValveBiped.Bip01_L_Forearm",
 	["rarm"] = "ValveBiped.Bip01_R_Forearm",
+	["head"] = "ValveBiped.Bip01_Head1"
 }
+
+hg.amputatedlimbs = limbs
+
+hg.amputatedlimbs2 = {}
+for k, v in pairs(limbs) do
+	hg.amputatedlimbs2[v] = k
+end
 
 local sounds = {
 	Sound("player/zombie_head_explode_01.wav"),

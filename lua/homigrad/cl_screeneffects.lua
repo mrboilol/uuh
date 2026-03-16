@@ -721,7 +721,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
         end
 
         if not criticalloop_sound or criticalloop_sound_name ~= sound_to_play then
-            if criticalloop_sound then criticalloop_sound:Stop() end
+            if IsValid(criticalloop_sound) then criticalloop_sound:Stop() end
 
             criticalloop_sound = CreateSound(ply, sound_to_play)
             if criticalloop_sound then
@@ -730,10 +730,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
             end
         end
 
-        if criticalloop_sound and criticalloop_sound:IsPlaying() then
+        if IsValid(criticalloop_sound) and criticalloop_sound:IsPlaying() then
             criticalloop_sound:SetVolume(volume)
         end
-    elseif criticalloop_sound then
+    elseif IsValid(criticalloop_sound) then
         criticalloop_sound:Stop()
         criticalloop_sound = nil
         criticalloop_sound_name = nil
@@ -932,8 +932,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//if pain > 10 then
 			if IsValid(PainStation) then
 				PainStation:SetVolume(math.Clamp(math.Remap(PainLerp, 0, 120, 0, 2), 0, 2))
-				local rate = org.otrub and 1 or math.Rand(0.75, 1.1)
-				PainStation:SetPlaybackRate(rate)
+				--local rate = org.otrub and 1 or math.Rand(0.75, 1.1)
+				--PainStation:SetPlaybackRate(rate)
 			end
 		//else
 		//	if IsValid(PainStation) then
@@ -1217,7 +1217,13 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     local fear_vignette = org.fear and org.fear > 0.8
     wave_effect_active = fear_vignette
 
-    vignette_active = vomit_vignette or fear_vignette
+    -- Low mood and fear vignette
+    local low_mood_fear_vignette = (org.mood and org.mood < 40) and (org.fear and org.fear > 0.1)
+
+    -- Suicidal vignette
+    local suicidal_vignette = org.mood and org.mood < 10
+
+    vignette_active = vomit_vignette or fear_vignette or low_mood_fear_vignette or suicidal_vignette
 
     if wave_effect_active then
         render.UpdateScreenEffectTexture()
@@ -1227,7 +1233,7 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     end
 
     -- Low blood/mood grayscale
-    if (org.blood and org.blood < 2000) or (org.mood and org.mood < 20) then
+    if (org.blood and org.blood < 2000) and (org.mood and org.mood < 40) then
         if not grayscale_active then
             grayscale_active = true
         end

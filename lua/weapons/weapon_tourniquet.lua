@@ -99,45 +99,58 @@ function SWEP:Heal(ent, mode, bone)
 end
 
 
-local function stop_bleeding(ply, bone)
-	local org = ply.organism
-	if not org then return false end
-
-	local success = false
-	for i, wound in ipairs(org.wounds) do
-		if wound.bone == bone then
-			wound[1] = 0
-			success = true
-		end
-	end
-
-	for i, wound in ipairs(org.arterialwounds) do
-		if wound[4] == bone then
-			wound[1] = 0
-			success = true
-		end
-	end
-
-	for i, wound in ipairs(org.veinwounds) do
-		if wound.bone == bone then
-			wound.damage = 0
-			success = true
-		end
-	end
-
-	return success
-end
-
 function SWEP:Tourniquet(ent, bone)
 	local org = ent.organism
 	if not org then return false end
 
 	local boneName = ent:GetBoneName(bone)
-	local limb = hg.amputatedlimbs2[boneName]
+	-- Find the limb associated with the bone
+	local limb
+	for l, b in pairs(hg.amputatedlimbs) do
+		if b == boneName then
+			limb = l
+			break
+		end
+	end
+
+	if not limb then
+		for l, b in pairs(hg.amputatedlimbs2) do
+			if b == boneName then
+				limb = l
+				break
+			end
+		end
+	end
 
 	if limb and limb ~= "head" and limb ~= "chest" then
-		if stop_bleeding(ent, boneName) then
-			org.painadd = org.painadd + 20
+		local applied = false
+		for i, wound in ipairs(org.arterialwounds) do
+			local wound_bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
+			local wound_limb
+			for l, b in pairs(hg.amputatedlimbs) do
+				if b == wound_bone_name then
+					wound_limb = l
+					break
+				end
+			end
+
+			if not wound_limb then
+				for l, b in pairs(hg.amputatedlimbs2) do
+					if b == wound_bone_name then
+						wound_limb = l
+						break
+					end
+				end
+			end
+
+			if wound_limb and string.find(wound_limb, limb) then
+				org[limb .. "tourniquet"] = CurTime() + 120 -- Apply for 120 seconds
+				applied = true
+			end
+		end
+
+		if applied then
+			org.painadd = (org.painadd or 0) + 20
 			ent:EmitSound("physics/flesh/flesh_impact_hard6.wav", 65)
 			return true
 		end

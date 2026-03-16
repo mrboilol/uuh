@@ -480,7 +480,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
     -- Mood update logic
     local mood = org.mood
-    if mood and GetConVar("hg_mood_enabled"):GetBool() then
+    if mood and owner:IsPlayer() and GetConVar("hg_mood_enabled"):GetBool() then
         local new_mood = mood
 
         if GetConVar("hg_mood_always_happy"):GetBool() then

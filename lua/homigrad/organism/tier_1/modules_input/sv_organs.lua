@@ -350,7 +350,7 @@ input_list.lefteye = function(org, bone, dmg, dmgInfo)
     hg.AddHarmToAttacker(dmgInfo, math.max((org.lefteye or 0) - oldDmg, 0) * 6, "Left eye damage harm")
 
     -- strong pain and shock response
-    org.painadd = org.painadd + dmg * 35
+    org.painadd = (org.painadd or 0) + dmg * 35
     org.shock = org.shock + dmg * 10
     org.disorientation = org.disorientation + dmg * 2
 
@@ -375,7 +375,7 @@ input_list.righteye = function(org, bone, dmg, dmgInfo)
 
     hg.AddHarmToAttacker(dmgInfo, math.max((org.righteye or 0) - oldDmg, 0) * 6, "Right eye damage harm")
 
-    org.painadd = org.painadd + dmg * 35
+    org.painadd = (org.painadd or 0) + dmg * 35
     org.shock = org.shock + dmg * 10
     org.disorientation = org.disorientation + dmg * 2
 
