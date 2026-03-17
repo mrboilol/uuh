@@ -1803,7 +1803,7 @@ function SWEP:GetAdditionalValues()
 		self.ZoomAnimLerp = LerpFT(0.05,self.ZoomAnimLerp or 0,self.k > 0.2 and self.k < 0.6 and 1 or 0)
 		self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] + math.ease.InOutBack(self.ZoomAnimLerp) * 3
 		self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] + math.ease.InOutBack(self.ZoomAnimLerp) * 2
-		if self.k > 0.65 and self.k < 0.75 then
+		if self.k > 0.7 and self.k < 0.75 then
 			local punchAng = Angle(math.Rand(-0.5, 0.5), math.Rand(-0.5, 0.5), math.Rand(-1, 1)) * (hg_coolcamera:GetBool() and 1 or 0.2)
 			ViewPunch(punchAng)
 			ViewPunch2(-punchAng)
