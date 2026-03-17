@@ -235,6 +235,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
 
     -- Draw Icons
     for id, data in pairs(CLIENT_MOODLES) do
+        local drawX = baseX
         local spawn = data.spawn or CurTime()
         local dt = CurTime() - spawn
         

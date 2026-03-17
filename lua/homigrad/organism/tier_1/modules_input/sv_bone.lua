@@ -87,7 +87,7 @@ local function PlayInjurySound(owner, injuryType)
     if injuryType == "break" then
         owner:EmitSound("owfuck" .. math.random(1, 4) .. ".ogg", 75, 100, 1, CHAN_AUTO)
     elseif injuryType == "dislocation" then
-        owner:EmitSound("disloc" .. math.random(1, 2) .. ".wav", 75, 100, 1, CHAN_AUTO)
+        owner:EmitSound("disloc" .. math.random(1, 2) .. ".ogg", 75, 100, 1, CHAN_AUTO)
     end
 end
 
