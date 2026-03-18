@@ -81,11 +81,10 @@ end
 
 local function ApplyBrainDamageEffects(ply, org)
     local brain_damage = org.brain or 0
-    if brain_damage < 0.1 then return end
+    if brain_damage < 0.1 or org.otrub then return end
 
-    -- Fake moodles
-    -- The chance of a fake moodle appearing increases with brain damage.
-    local chance = (brain_damage - 0.1) * 0.5 -- Increased from 0.2
+    -- Increase chance and duration based on brain damage
+    local chance = (brain_damage - 0.1) * 0.8 -- Increased from 0.5
     if math.random() < chance then
         local fake_moodles = {
             { id = "happy_4", texture = "materials/moodels/Happy_4.png" },
@@ -100,6 +99,18 @@ local function ApplyBrainDamageEffects(ply, org)
         -- A fake moodle should not have a real counterpart active
         if ply.MoodleStates[chosen_moodle.id] then return end
 
+        -- Check for similar or more severe moodles
+        local base_id, level = chosen_moodle.id:match("(.+)_([%d+])")
+        if base_id and level then
+            level = tonumber(level)
+            for existing_moodle_id, _ in pairs(ply.MoodleStates) do
+                local existing_base_id, existing_level = existing_moodle_id:match("(.+)_([%d+])")
+                if existing_base_id == base_id and existing_level and tonumber(existing_level) >= level then
+                    return -- A more severe or equal level moodle is already active
+                end
+            end
+        end
+
         local fake_id = chosen_moodle.id .. "_fake"
         
         -- Don't stack fake moodles
@@ -107,8 +118,8 @@ local function ApplyBrainDamageEffects(ply, org)
 
         manageMoodleState(ply, fake_id, true, chosen_moodle.texture)
 
-        -- Remove after a short, random duration
-        local duration = math.Rand(5, 15) -- Increased from 3-7
+        -- Remove after a short, random duration, scaled with brain damage
+        local duration = math.Rand(10, 20) + (brain_damage * 30) -- Increased duration and scaling
         timer.Simple(duration, function()
             if not IsValid(ply) then return end
             manageMoodleState(ply, fake_id, false, nil, nil, true) -- Bypass cooldown
@@ -180,10 +191,10 @@ local function SyncMoodles(ply)
     -- Cold / Heat
     local temperature = org.temperature or 36.7
     manageHierarchicalMoodle(ply, "cold", {
-        { threshold = 35, texture = "materials/moodels/Cold_1.png" },
-        { threshold = 32, texture = "materials/moodels/Cold_2.png" },
-        { threshold = 30, texture = "materials/moodels/Cold_3.png" },
-        { threshold = -100, texture = "materials/moodels/Cold_4.png" }, -- Using a low number for the last threshold
+        { threshold = 1.5, texture = "materials/moodels/Cold_1.png" },
+        { threshold = 4.5, texture = "materials/moodels/Cold_2.png" },
+        { threshold = 6.5, texture = "materials/moodels/Cold_3.png" },
+        { threshold = 8.5, texture = "materials/moodels/Cold_4.png" }, 
     }, 36.5 - temperature) -- Invert temperature for cold
 
     manageHierarchicalMoodle(ply, "heat", {
@@ -264,10 +275,10 @@ local function SyncMoodles(ply)
     local stPct = stamina / maxStamina
     manageHierarchicalMoodle(ply, "endurance", {
         { threshold = 0.25, texture = "materials/moodels/Endurance_1.png" },
-        { threshold = 0.1, texture = "materials/moodels/Endurance_2.png" },
-        { threshold = 0.0, texture = "materials/moodels/Endurance_3.png" },
-        { threshold = -1, texture = "materials/moodels/Endurance_4.png" },
-    }, 0.5 - stPct) -- Inverted
+        { threshold = 0.5, texture = "materials/moodels/Endurance_2.png" },
+        { threshold = 0.75, texture = "materials/moodels/Endurance_3.png" },
+        { threshold = 1, texture = "materials/moodels/Endurance_4.png" },
+    }, 1 - stPct)
     manageMoodleState(ply, "energized", stamina > maxStamina * 1.5, "materials/moodels/Energized.png")
 
     -- Faint (Scaling based on Low Consciousness + Disorientation)
@@ -346,7 +357,10 @@ local function SyncMoodles(ply)
     }, pain)
 
     -- Respiratory Failure
-    manageMoodleState(ply, "respfailure", (org.trachea or 0) >= 0.5 or org.lungsfunction == false, "materials/moodels/Respfailure.png")
+    local o2_val = org.o2 and org.o2[1]
+    local o2_range = org.o2 and org.o2.range
+    local o2_pct = (o2_val and o2_range and o2_range > 0) and (o2_val / o2_range) or 1
+    manageMoodleState(ply, "respfailure", ((org.trachea or 0) >= 0.5 and o2_pct < 0.9) or org.lungsfunction == false, "materials/moodels/Respfailure.png")
 
     -- Ripped Eye and Blindness
     local missingEyes = 0
@@ -357,13 +371,13 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "rippedeye_4", missingEyes == 2 or isBlinded, "materials/moodels/Rippedeye_Moodle_4.png")
 
     -- Ripped Jaw
-    manageMoodleState(ply, "rippedjaw", (org.jaw or 0) >= 1 or org.jawdislocation, "materials/moodels/Rippedjaw_Moodle.png")
+    manageMoodleState(ply, "rippedjaw", (org.jaw or 0) >= 1, "materials/moodels/Rippedjaw_Moodle.png")
 
     -- Shock
     manageMoodleState(ply, "shock", (org.shock or 0) > 25, "materials/moodels/Shock.png")
 
     -- Speechless
-    manageMoodleState(ply, "speechless", (org.pain or 0) > 80 or (org.brain or 0) > 0.05 or (org.jaw or 0) >= 1, "materials/moodels/Speechless.png")
+    manageMoodleState(ply, "speechless", (org.pain or 0) > 80 or (org.brain or 0) > 0.05 or (org.jaw or 0) >= 1 or org.jawdislocation, "materials/moodels/Speechless.png")
 
     -- Thorax Destroyed (Skull Fracture)
     manageMoodleState(ply, "concussion", (org.skull or 0) >= 1, "materials/moodels/Concussion_moodle.png")
@@ -377,9 +391,6 @@ local function SyncMoodles(ply)
         { threshold = 0.8, texture = "materials/moodels/Trauma_Moodle_4.png" },
     }, fear)
 
-    if fear > 0.25 then
-        org.adrenalineAdd = (org.adrenalineAdd or 0) + (fear * 0.5)
-    end
 
     -- Unconscious
     manageMoodleState(ply, "unconscious", org.otrub or false, "materials/moodels/Unconscious_Moodle.png")

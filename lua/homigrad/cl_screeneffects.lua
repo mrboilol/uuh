@@ -306,13 +306,15 @@ local DAMAGE_INDICATOR_DURATION = 2 -- seconds
 
 
 net.Receive("headtrauma_flash", function()
-    print("Head-trauma flash received")
-    if IsValid(LocalPlayer()) then LocalPlayer():EmitSound("headhit.mp3") end
     local pos = net.ReadVector()
     local time = net.ReadFloat()
     local size = net.ReadInt(20)
+	local sound = net.ReadString()
     local lply = LocalPlayer()
-    if not IsValid(lply) then return end
+	if not IsValid(lply) then return end
+	if sound ~= "" then
+		lply:EmitSound(sound)
+	end
     hg.AddFlash(lply:EyePos(), 1, pos, time, size)
 end)
 
@@ -532,6 +534,11 @@ local function stopthings()
 		Tinnitus = nil
 	end
 
+    if IsValid(criticalloop_sound) then
+        criticalloop_sound:Stop()
+        criticalloop_sound = nil
+    end
+
 	if IsValid(AssimilationStation) then
 		AssimilationStation:Stop()
 		AssimilationStation = nil
@@ -588,17 +595,15 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 	end
 
-    if (org.blindness_end_time and org.blindness_end_time > CurTime()) or amtflashed >= 0.8 then
-        local blindness_duration = (org.blindness_end_time or 0) - CurTime()
-        local blindness = amtflashed >= 0.8 and 1 or math.min(blindness_duration, 1)
+	if org.blindness or amtflashed >= 0.8 then
+		local blindness = ((org.blindness and math.Round(org.blindness) == 0) or amtflashed >= 0.8) and 0 or (org.blindness)
+		render.UpdateScreenEffectTexture()
+		render.UpdateFullScreenDepthTexture()
 
-        render.UpdateScreenEffectTexture()
-        render.UpdateFullScreenDepthTexture()
-		
 		blindMat:SetFloat("$c0_x", 5)
 		blindMat:SetFloat("$c0_y", CurTime())
-		blindMat:SetFloat("$c0_z", blindness)
-	
+		blindMat:SetFloat("$c0_z", math.Round(blindness))
+
 		render.SetMaterial(blindMat)
 		render.DrawScreenQuad()
 	end
@@ -731,10 +736,14 @@ hook.Add("Post Post Processing", "ItHurts", function()
         end
 
         if IsValid(criticalloop_sound) and criticalloop_sound:IsPlaying() then
-            criticalloop_sound:SetVolume(volume)
+            criticalloop_sound:ChangeVolume(volume, 0.5)
         end
     elseif IsValid(criticalloop_sound) then
-        criticalloop_sound:Stop()
+        if org.heartstop then
+            criticalloop_sound:FadeOut(2) -- Fade out over 2 seconds
+        else
+            criticalloop_sound:Stop()
+        end
         criticalloop_sound = nil
         criticalloop_sound_name = nil
     end
@@ -1132,11 +1141,12 @@ hook.Add("PreDrawOpaqueRenderables", "renderblindnessflash", function()
 	local organism = lply:Alive() and lply.organism or (IsValid(spect) and spect.organism)
 	if not organism or isbool(organism) then return end
 
-	if !((organism.blindness_end_time and organism.blindness_end_time > CurTime()) or (amtflashed or 0) >= 0.8) then removeflash() return end
-	local blindness_duration = (organism.blindness_end_time or 0) - CurTime()
-	local blindness = (amtflashed or 0) >= 0.8 and 1 or math.min(blindness_duration, 1)
+	if !(organism.blindness or (amtflashed or 0) >= 0.8) then removeflash() return end
+	local blindness = ((organism.blindness and math.Round(organism.blindness) == 0) or amtflashed >= 0.8) and 0 or (organism.blindness)
 
-	local view = render.GetViewSetup()
+	local eyesmode = math.Round(blindness)
+
+	local view = render.GetViewSetup(true)
 	
 	if not IsValid(lply.blindflash) then
 		lply.blindflash = ProjectedTexture()
@@ -1146,7 +1156,8 @@ hook.Add("PreDrawOpaqueRenderables", "renderblindnessflash", function()
 	end
 	
 	local Ang = view.angles
-	Ang[1] = 0
+	Ang[2] = Ang[2] + (eyesmode == 2 and 90 or eyesmode == 1 and -90 or 0)
+	Ang[1] = eyesmode == 0 and Ang[1] or 0
 	lply.blindflash:SetFarZ(40)
 	lply.blindflash:SetFOV(160)
 	lply.blindflash:SetBrightness(1)
@@ -1225,7 +1236,7 @@ hook.Add("Post Post Processing", "CustomEffects", function()
 
     local vignette_intensity = 0
     if vomit_vignette then vignette_intensity = vignette_intensity + 5 end
-    if fear_vignette then vignette_intensity = vignette_intensity + 10 end
+    if fear_vignette then vignette_intensity = vignette_intensity + 20 end
     if low_mood_fear_vignette then vignette_intensity = vignette_intensity + 7 end
     if suicidal_vignette then vignette_intensity = vignette_intensity + 12 end
 

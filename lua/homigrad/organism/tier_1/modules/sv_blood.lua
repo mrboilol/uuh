@@ -33,6 +33,7 @@ module[1] = function(org)
 	org.arterialwounds = {}
 	org.veinwounds = {}
 	org.vessel_o2_debuff = 0
+	org.vessel_co_debuff = 0
 	org.wantToVomit = 0
 	org.vomitInThroat = nil
 
@@ -100,9 +101,14 @@ module[2] = function(owner, org, mulTime)
 	end
 
 	if org.arteria == 1 or org.vessel_o2_debuff > 0 then
-		local debuff_amount = org.arteria == 1 and 5 or org.vessel_o2_debuff
-		org.o2[1] = math.max(org.o2[1] - mulTime * debuff_amount, 0)
-		org.vessel_o2_debuff = math.max(org.vessel_o2_debuff - mulTime * 0.05, 0)
+        local debuff_amount = org.arteria == 1 and 5 or org.vessel_o2_debuff
+        org.o2[1] = math.max(org.o2[1] - mulTime * debuff_amount, 0)
+        org.vessel_o2_debuff = math.max(org.vessel_o2_debuff - mulTime * 0.05, 0)
+    end
+
+	if org.vessel_co_debuff > 0 then
+		org.CO = (org.CO or 0) + mulTime * org.vessel_co_debuff
+		org.vessel_co_debuff = math.max(org.vessel_co_debuff - mulTime * 0.05, 0)
 	end
 
 	org.consciousness = math.min(org.consciousness, math.min(org.blood / 3000, 1) * math.Clamp(((org.temperature < 30 and org.temperature - 30 or 0) * 0.25 + 1), 0.25, 1))
@@ -155,6 +161,7 @@ module[2] = function(owner, org, mulTime)
 	local ent = owner:IsPlayer() and IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 	for i, wound in pairs(org.arterialwounds) do
 		bleedoutspeed2 = bleedoutspeed2 + wound[1] * mulTime * 0.2 * math.max(org.pulse, 20) / 80
+		org.vessel_o2_debuff = org.vessel_o2_debuff + wound[1] * mulTime * 0.01
 
 		if wound[5] + next_arterypump * 2 < time then
 			local pos, ang = ent:GetBonePosition(ent:LookupBone(wound[4]))
@@ -171,6 +178,31 @@ module[2] = function(owner, org, mulTime)
 			if wound[1] == 0 then
 				table.remove(org.arterialwounds, i)
 				owner:SetNetVar("arterialwounds", org.arterialwounds)
+
+				org[wound[7]] = 0
+			end
+		end
+	end
+
+	for i, wound in pairs(org.veinwounds) do
+		bleedoutspeed2 = bleedoutspeed2 + wound[1] * mulTime * 0.1 * math.max(org.pulse, 20) / 80 -- Less bleeding than arteries
+		org.vessel_co_debuff = org.vessel_co_debuff + wound[1] * mulTime * 0.01
+
+		if wound[5] + next_arterypump * 2 < time then
+			local pos, ang = ent:GetBonePosition(ent:LookupBone(wound[4]))
+			wound[5] = time
+			org.blood = max(org.blood - wound[1] * mulTime * 2.5 * math.max(org.pulse, 20) / 80, 1) -- Less blood loss than arteries
+			if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
+				local dir = wound[6]
+				local len = dir:Length()
+				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
+				dir = -dir:Forward() * len
+				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-10, 10) + dir, false) -- Not an artery
+			end
+
+			if wound[1] == 0 then
+				table.remove(org.veinwounds, i)
+				owner:SetNetVar("veinwounds", org.veinwounds)
 
 				org[wound[7]] = 0
 			end

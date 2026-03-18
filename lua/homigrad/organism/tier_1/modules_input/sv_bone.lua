@@ -341,9 +341,9 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 		if org.isPly then org.owner:Notify(jaw_dislocated_msg[math.random(#jaw_dislocated_msg)], true, "jaw", 2) end
 	end
 
-	if dmg > 0.2 then
-		if org.isPly then timer.Simple(0, function() hg.LightStunPlayer(org.owner,1 + dmg) end) end
-	end
+	if (org.jaw - oldDmg) > 0.05 then
+        hg.organism.headTraumaFlash(org.owner, dmgInfo, "jaw", org.jaw - oldDmg)
+    end
 
 	return result, vecrand
 end
@@ -471,25 +471,28 @@ local function ApplyConcussion(org, dmg, targetPlayer)
     -- Add disorientation
     org.disorientation = math.min(org.disorientation + dmg * 2.0, 2.5)
 
-    -- Play concussion sound
-    local idx = math.random(1, 4)
-    local snd = "concussion" .. idx .. ".mp3"
-    net.Start("hg_play_client_sound_file")
-    net.WriteString(snd)
-    net.Send(targetPlayer)
+    -- Play concussion sound & flash
+    hg.organism.headTraumaFlash(targetPlayer, nil, "concussion", dmg)
 end
 hg.organism.ApplyConcussion = ApplyConcussion
 
-local function headTraumaFlash(targetPlayer, dmgInfo, skullDelta, oldBrain, newBrain)
+local function headTraumaFlash(targetPlayer, dmgInfo, flashType, severity)
 	if not (IsValid(targetPlayer) and targetPlayer:IsPlayer()) then return end
 
-	local flashTime, flashSize
+	local flashTime, flashSize, sound
 	local worldPos
 
-	if skullDelta then
-		-- Melee/Collision flash
-		flashTime = math.Clamp(0.5 + skullDelta * 1.5, 0.5, 2.0)
-		flashSize = math.Clamp(1600 + skullDelta * 2000, 1600, 4000)
+	if flashType == "concussion" then
+		flashTime = math.Clamp(0.8 + severity * 2.0, 0.8, 3.0)
+		flashSize = math.Clamp(2000 + severity * 2500, 2000, 5000)
+		sound = "concussion" .. math.random(1, 4) .. ".mp3"
+		local eyePos = targetPlayer:EyePos()
+		local ang = targetPlayer:EyeAngles()
+		worldPos = eyePos + ang:Forward() * 16
+	elseif flashType == "jaw" then
+		flashTime = math.Clamp(0.4 + severity * 1.2, 0.4, 1.8)
+		flashSize = math.Clamp(1500 + severity * 1800, 1500, 3500)
+		sound = "headhit.mp3"
 		local eyePos = targetPlayer:EyePos()
 		local ang = targetPlayer:EyeAngles()
 		local incomingPos = dmgInfo:GetDamagePosition()
@@ -497,13 +500,10 @@ local function headTraumaFlash(targetPlayer, dmgInfo, skullDelta, oldBrain, newB
 		local dotRight = ang:Right():Dot(incDir)
 		local offset = ang:Right() * (dotRight * 160)
 		worldPos = eyePos + offset + ang:Forward() * 16
-	elseif oldBrain and newBrain then
-		-- Brain damage flash
-		local brainDelta = math.max(newBrain - oldBrain, 0)
-		if brainDelta <= 0.15 then return end
-
-		flashTime = math.Clamp(0.25 + brainDelta * 0.8, 0.25, 1.0)
-		flashSize = math.Clamp(1400 + brainDelta * 1600, 1200, 3000)
+	else -- Default to skull/melee
+		flashTime = math.Clamp(0.5 + severity * 1.5, 0.5, 2.0)
+		flashSize = math.Clamp(1600 + severity * 2000, 1600, 4000)
+		sound = "headhit.mp3"
 		local eyePos = targetPlayer:EyePos()
 		local ang = targetPlayer:EyeAngles()
 		local incomingPos = dmgInfo:GetDamagePosition()
@@ -520,8 +520,8 @@ local function headTraumaFlash(targetPlayer, dmgInfo, skullDelta, oldBrain, newB
 			net.WriteVector(worldPos)
 			net.WriteFloat(flashTime)
 			net.WriteInt(flashSize, 20)
+			net.WriteString(sound)
 			net.Send(targetPlayer)
-			targetPlayer:PlayCustomTinnitus("headhit.mp3")
 			targetPlayer.HeadDisorientFlashCooldown = CurTime() + 0.8
 		end
 	end
@@ -638,11 +638,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
                     
                     -- play local head-hit tinnitus for victim only
 
-                    net.Start("headtrauma_flash")
-                        net.WriteVector(worldPos)
-                        net.WriteFloat(flashTime)
-                        net.WriteInt(flashSize, 20)
-                    net.Send(targetPlayer)
+                    hg.organism.headTraumaFlash(targetPlayer, dmgInfo, "skull", skullDelta)
 			end
 		end
 	end
@@ -697,11 +693,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 
 					tp.HeadDisorientFlashCooldown = tp.HeadDisorientFlashCooldown or 0
 					if tp.HeadDisorientFlashCooldown < CurTime() then
-						net.Start("headtrauma_flash")
-							net.WriteVector(worldPos)
-							net.WriteFloat(baseFlashTime)
-							net.WriteInt(baseFlashSize, 20)
-						net.Send(tp)
+						hg.organism.headTraumaFlash(tp, dmgInfo, "skull", skullDelta)
 						-- local tinnitus ping
 						tp.HeadDisorientFlashCooldown = CurTime() + 0.2
 					end
@@ -715,11 +707,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 
 					tp.HeadDisorientFlashCooldown = tp.HeadDisorientFlashCooldown or 0
 					if tp.HeadDisorientFlashCooldown < CurTime() then
-						net.Start("headtrauma_flash")
-							net.WriteVector(worldPos2)
-							net.WriteFloat(baseFlashTime)
-							net.WriteInt(baseFlashSize, 20)
-						net.Send(tp)
+						hg.organism.headTraumaFlash(tp, dmgInfo, "skull", skullDelta)
 						-- local tinnitus ping
 						tp:PlayCustomTinnitus("headhit.mp3")
 						tp.HeadDisorientFlashCooldown = CurTime() + 0.2
@@ -761,11 +749,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 					-- simple cooldown to avoid doubling with melee block
 					targetPlayer.HeadDisorientFlashCooldown = targetPlayer.HeadDisorientFlashCooldown or 0
 					if targetPlayer.HeadDisorientFlashCooldown < CurTime() then
-						net.Start("headtrauma_flash")
-							net.WriteVector(worldPos)
-							net.WriteFloat(flashTime)
-							net.WriteInt(flashSize, 20)
-						net.Send(targetPlayer)
+						hg.organism.headTraumaFlash(targetPlayer, dmgInfo, "skull", skullDelta)
 						-- local tinnitus ping
 						targetPlayer:PlayCustomTinnitus("headhit.mp3")
 						targetPlayer.HeadDisorientFlashCooldown = CurTime() + 0.2
@@ -793,11 +777,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
                     -- play local head-hit tinnitus for victim only
                     targetPlayer:PlayCustomTinnitus("headhit.mp3")
 
-                    net.Start("headtrauma_flash")
-                        net.WriteVector(worldPos)
-                        net.WriteFloat(flashTime)
-                        net.WriteInt(flashSize, 20)
-                    net.Send(targetPlayer)
+                    hg.organism.headTraumaFlash(targetPlayer, dmgInfo, "skull", skullDelta)
 				end
 			end
 		end

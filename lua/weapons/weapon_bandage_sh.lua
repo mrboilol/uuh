@@ -603,7 +603,71 @@ if SERVER then
 			done = true
 		end
 
-		if done then
+		local USAGE_COST_ARTERIAL = 20
+        local USAGE_COST_VEIN = 10
+
+        if #org.arterialwounds > 0 and self.modeValues[1] >= USAGE_COST_ARTERIAL then
+            local wound_to_heal_idx
+            if bone then
+                for i, wound in ipairs(org.arterialwounds) do
+                    if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
+                        wound_to_heal_idx = i
+                        break
+                    end
+                end
+            else
+                for i, wound in ipairs(org.arterialwounds) do
+                    if wound[7] ~= "arteria" and wound[7] ~= "spineartery" then
+                        wound_to_heal_idx = i
+                        break
+                    end
+                end
+            end
+
+            if wound_to_heal_idx then
+                local wound = org.arterialwounds[wound_to_heal_idx]
+                table.remove(org.arterialwounds, wound_to_heal_idx)
+                org[wound[7]] = 0
+                self.modeValues[1] = self.modeValues[1] - USAGE_COST_ARTERIAL
+                done = true
+                bandaged = true
+                ent.bandaged_limbs = ent.bandaged_limbs or {}
+                local bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
+                if not ent.bandaged_limbs[bone_name] then
+                    ent.bandaged_limbs[bone_name] = true
+                end
+            end
+        end
+
+        if #org.veinwounds > 0 and self.modeValues[1] >= USAGE_COST_VEIN then
+            local wound_to_heal_idx
+            if bone then
+                for i, wound in ipairs(org.veinwounds) do
+                    if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
+                        wound_to_heal_idx = i
+                        break
+                    end
+                end
+            else
+                wound_to_heal_idx = 1
+            end
+
+            if wound_to_heal_idx and org.veinwounds[wound_to_heal_idx] then
+                local wound = org.veinwounds[wound_to_heal_idx]
+                table.remove(org.veinwounds, wound_to_heal_idx)
+                org[wound[7]] = 0
+                self.modeValues[1] = self.modeValues[1] - USAGE_COST_VEIN
+                done = true
+                bandaged = true
+                ent.bandaged_limbs = ent.bandaged_limbs or {}
+                local bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
+                if not ent.bandaged_limbs[bone_name] then
+                    ent.bandaged_limbs[bone_name] = true
+                end
+            end
+        end
+
+        if done then
 			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
 
 			if self.poisoned2 then

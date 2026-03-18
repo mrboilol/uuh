@@ -184,7 +184,6 @@ if SERVER then
 
 		if !ent.PlayerClassName or ent.PlayerClassName != "furry" then
 			org.berserk = org.berserk + 2
-            org.noradrenaline = (org.noradrenaline or 0) + 0.5
 			org.trachea = 0
 		else
 			org.o2["curregen"] = 0
