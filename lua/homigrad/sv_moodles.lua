@@ -81,10 +81,10 @@ end
 
 local function ApplyBrainDamageEffects(ply, org)
     local brain_damage = org.brain or 0
-    if brain_damage < 0.1 or org.otrub then return end
+    if brain_damage < 0.025 or org.otrub then return end
 
     -- Increase chance and duration based on brain damage
-    local chance = (brain_damage - 0.1) * 0.8 -- Increased from 0.5
+    local chance = ((brain_damage - 0.025) / 0.975)^2 * 0.8
     if math.random() < chance then
         local fake_moodles = {
             { id = "happy_4", texture = "materials/moodels/Happy_4.png" },
@@ -93,6 +93,15 @@ local function ApplyBrainDamageEffects(ply, org)
             { id = "hunger_5", texture = "materials/moodels/Hunger_5.png" },
             { id = "cold_4", texture = "materials/moodels/Cold_4.png" },
             { id = "heat_4", texture = "materials/moodels/Heat_4.png" },
+            { id = "trauma_4", texture = "materials/moodels/Trauma_Moodle_4.png" },
+            { id = "depression_4", texture = "materials/moodels/Depression_4.png" },
+            { id = "faint_2", texture = "materials/moodels/Faint_2.png" },
+            { id = "bleeding_4", texture = "materials/moodels/Bleeding_4.png" },
+            { id = "fracture_4", texture = "materials/moodels/Fracture_4.png" },
+            { id = "bradycardia", texture = "materials/moodels/Bradycardia_Moodle_Animated.png" },
+            { id = "tachycardia", texture = "materials/moodels/Tachycardia_Moodle.png" },
+            { id = "shock", texture = "materials/moodels/Shock.png" },
+            { id = "overdose_4", texture = "materials/moodels/Overdose_Moodle_4.png" },
         }
         local chosen_moodle = fake_moodles[math.random(1, #fake_moodles)]
         
@@ -205,7 +214,7 @@ local function SyncMoodles(ply)
     }, temperature)
 
     -- Concussion / Critical
-    manageMoodleState(ply, "thoraxdestroyed", org.incapacitated, "materials/moodels/Thoraxdestroyed_Moodle.png")
+    manageMoodleState(ply, "concussion", org.incapacitated, "materials/moodels/Concussion_moodle.png")
     manageMoodleState(ply, "horrified", org.critical, "materials/moodels/HorrifiedMoodle.png")
 
     -- Tinnitus
@@ -249,7 +258,7 @@ local function SyncMoodles(ply)
     local broken_neck = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 > 0.75)
     manageMoodleState(ply, "broken_neck", broken_neck, "materials/moodels/Fractured_neck.png")
 
-    manageMoodleState(ply, "dislocated_jaw", org.jawdislocation, "materials/moodels/Dislocated_jaw.png")
+    manageMoodleState(ply, "dislocated_jaw", org.jawdislocation or (org.skull or 0) >= 1, "materials/moodels/Dislocated_jaw.png")
 
     -- Dislocation
     local dislocCount = 0
@@ -379,8 +388,9 @@ local function SyncMoodles(ply)
     -- Speechless
     manageMoodleState(ply, "speechless", (org.pain or 0) > 80 or (org.brain or 0) > 0.05 or (org.jaw or 0) >= 1 or org.jawdislocation, "materials/moodels/Speechless.png")
 
-    -- Thorax Destroyed (Skull Fracture)
-    manageMoodleState(ply, "concussion", (org.skull or 0) >= 1, "materials/moodels/Concussion_moodle.png")
+    -- Thorax Destroyed
+    local is_thorax_destroyed = (org.heart or 0) >= 0.7 or ((org.lungsL and org.lungsL[1] or 0) >= 0.7 or (org.lungsR and org.lungsR[1] or 0) >= 0.7) or (org.trachea or 0) >= 0.7
+    manageMoodleState(ply, "thoraxdestroyed", is_thorax_destroyed, "materials/moodels/Thoraxdestroyed_Moodle.png")
 
     -- Fear
     local fear = org.fear or 0
