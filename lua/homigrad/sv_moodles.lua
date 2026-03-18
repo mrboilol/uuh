@@ -139,10 +139,16 @@ local function SyncMoodles(ply)
     -- Bleeding
     local bleedRate = org.bleed or 0
     local isArterial = ((org.arteria or 0) + (org.rarmartery or 0) + (org.larmartery or 0) + (org.rlegartery or 0) + (org.llegartery or 0)) > 0
-    manageMoodleState(ply, "bleeding_1", bleedRate > 0.1 and bleedRate <= 1 and not isArterial, "materials/moodels/Bleeding_1.png")
-    manageMoodleState(ply, "bleeding_2", bleedRate > 1 and bleedRate <= 5 and not isArterial, "materials/moodels/Bleeding_2.png")
-    manageMoodleState(ply, "bleeding_3", bleedRate > 5 and bleedRate <= 15 and not isArterial, "materials/moodels/Bleeding_3.png")
-    manageMoodleState(ply, "bleeding_4", bleedRate > 15 or isArterial, "materials/moodels/Bleeding_4.png")
+    if isArterial then
+        manageMoodleState(ply, "bleeding_4", true, "materials/moodels/Bleeding_4.png")
+    else
+        manageHierarchicalMoodle(ply, "bleeding", {
+            { threshold = 0.1, texture = "materials/moodels/Bleeding_1.png" },
+            { threshold = 1, texture = "materials/moodels/Bleeding_2.png" },
+            { threshold = 5, texture = "materials/moodels/Bleeding_3.png" },
+            { threshold = 15, texture = "materials/moodels/Bleeding_4.png" },
+        }, bleedRate)
+    end
 
     -- Hypovolemia (Low Blood Volume)
     local blood = org.blood or 5000
@@ -173,15 +179,19 @@ local function SyncMoodles(ply)
 
     -- Cold / Heat
     local temperature = org.temperature or 36.7
-    manageMoodleState(ply, "cold_1", temperature < 36.5 and temperature >= 35, "materials/moodels/Cold_1.png")
-    manageMoodleState(ply, "cold_2", temperature < 35 and temperature >= 32, "materials/moodels/Cold_2.png")
-    manageMoodleState(ply, "cold_3", temperature < 32 and temperature >= 30, "materials/moodels/Cold_3.png")
-    manageMoodleState(ply, "cold_4", temperature < 30, "materials/moodels/Cold_4.png")
+    manageHierarchicalMoodle(ply, "cold", {
+        { threshold = 35, texture = "materials/moodels/Cold_1.png" },
+        { threshold = 32, texture = "materials/moodels/Cold_2.png" },
+        { threshold = 30, texture = "materials/moodels/Cold_3.png" },
+        { threshold = -100, texture = "materials/moodels/Cold_4.png" }, -- Using a low number for the last threshold
+    }, 36.5 - temperature) -- Invert temperature for cold
 
-    manageMoodleState(ply, "heat_1", temperature > 37.5 and temperature <= 38.5, "materials/moodels/Heat_1.png")
-    manageMoodleState(ply, "heat_2", temperature > 38.5 and temperature <= 40.0, "materials/moodels/Heat_2.png")
-    manageMoodleState(ply, "heat_3", temperature > 40.0 and temperature <= 42.0, "materials/moodels/Heat_3.png")
-    manageMoodleState(ply, "heat_4", temperature > 42.0, "materials/moodels/Heat_4.png")
+    manageHierarchicalMoodle(ply, "heat", {
+        { threshold = 37.5, texture = "materials/moodels/Heat_1.png" },
+        { threshold = 38.5, texture = "materials/moodels/Heat_2.png" },
+        { threshold = 40.0, texture = "materials/moodels/Heat_3.png" },
+        { threshold = 42.0, texture = "materials/moodels/Heat_4.png" },
+    }, temperature)
 
     -- Concussion / Critical
     manageMoodleState(ply, "thoraxdestroyed", org.incapacitated, "materials/moodels/Thoraxdestroyed_Moodle.png")
@@ -191,31 +201,32 @@ local function SyncMoodles(ply)
     local tinnitus_active = (org.tinnitus_end_time or 0) > CurTime()
     manageMoodleState(ply, "deaf_1", tinnitus_active, "materials/moodels/Deaf_2.png")
 
-
-
     -- Depression / Happy
     if GetConVar("hg_mood_enabled"):GetBool() then
         local mood = org.mood or 50
-        manageMoodleState(ply, "depression_1", mood < 40 and mood >= 30, "materials/moodels/Depression_1.png")
-        manageMoodleState(ply, "depression_2", mood < 30 and mood >= 20, "materials/moodels/Depression_2.png")
-        manageMoodleState(ply, "depression_3", mood < 20 and mood >= 10, "materials/moodels/Depression_3.png")
-        manageMoodleState(ply, "depression_4", mood < 10, "materials/moodels/Depression_4.png")
+        manageHierarchicalMoodle(ply, "depression", {
+            { threshold = 30, texture = "materials/moodels/Depression_1.png" },
+            { threshold = 20, texture = "materials/moodels/Depression_2.png" },
+            { threshold = 10, texture = "materials/moodels/Depression_3.png" },
+            { threshold = 0, texture = "materials/moodels/Depression_4.png" },
+        }, 40 - mood) -- Inverted for depression
 
-        manageMoodleState(ply, "happy_1", mood >= 60 and mood < 70, "materials/moodels/Happy_1.png")
-        manageMoodleState(ply, "happy_2", mood >= 70 and mood < 80, "materials/moodels/Happy_2.png")
-        manageMoodleState(ply, "happy_3", mood >= 80 and mood < 90, "materials/moodels/Happy_3.png")
-        manageMoodleState(ply, "happy_4", mood >= 90, "materials/moodels/Happy_4.png")
+        manageHierarchicalMoodle(ply, "happy", {
+            { threshold = 60, texture = "materials/moodels/Happy_1.png" },
+            { threshold = 70, texture = "materials/moodels/Happy_2.png" },
+            { threshold = 80, texture = "materials/moodels/Happy_3.png" },
+            { threshold = 90, texture = "materials/moodels/Happy_4.png" },
+        }, mood)
     else
-        manageMoodleState(ply, "depression_1", false)
-        manageMoodleState(ply, "depression_2", false)
-        manageMoodleState(ply, "depression_3", false)
-        manageMoodleState(ply, "depression_4", false)
-        manageMoodleState(ply, "happy_1", false)
-        manageMoodleState(ply, "happy_2", false)
-        manageMoodleState(ply, "happy_3", false)
-        manageMoodleState(ply, "happy_4", false)
+        manageMoodleState(ply, "depression_1", false, nil, nil, true)
+        manageMoodleState(ply, "depression_2", false, nil, nil, true)
+        manageMoodleState(ply, "depression_3", false, nil, nil, true)
+        manageMoodleState(ply, "depression_4", false, nil, nil, true)
+        manageMoodleState(ply, "happy_1", false, nil, nil, true)
+        manageMoodleState(ply, "happy_2", false, nil, nil, true)
+        manageMoodleState(ply, "happy_3", false, nil, nil, true)
+        manageMoodleState(ply, "happy_4", false, nil, nil, true)
     end
-
 
     -- Dislocated Spine
     local dislocated_spine_1_2 = (org.spine1dislocation or org.spine2dislocation) or ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
@@ -240,20 +251,23 @@ local function SyncMoodles(ply)
     -- Encumbered
     local maxweight = 30 -- You might want to configure this value
     local weightmul = hg.CalculateWeight(ply, maxweight)
-
-    manageMoodleState(ply, "encumbered_1", weightmul < 0.8 and weightmul >= 0.6, "materials/moodels/Encumbered_Moodle_1.png")
-    manageMoodleState(ply, "encumbered_2", weightmul < 0.6 and weightmul >= 0.4, "materials/moodels/Encumbered_Moodle_2.png")
-    manageMoodleState(ply, "encumbered_3", weightmul < 0.4 and weightmul >= 0.2, "materials/moodels/Encumbered_Moodle_3.png")
-    manageMoodleState(ply, "encumbered_4", weightmul < 0.2, "materials/moodels/Encumbered_Moodle_4.png")
+    manageHierarchicalMoodle(ply, "encumbered", {
+        { threshold = 0.6, texture = "materials/moodels/Encumbered_Moodle_1.png" },
+        { threshold = 0.4, texture = "materials/moodels/Encumbered_Moodle_2.png" },
+        { threshold = 0.2, texture = "materials/moodels/Encumbered_Moodle_3.png" },
+        { threshold = 0, texture = "materials/moodels/Encumbered_Moodle_4.png" },
+    }, 0.8 - weightmul) -- Inverted
 
     -- Endurance
     local stamina = (org.stamina and org.stamina[1]) or 100
     local maxStamina = (org.stamina and org.stamina.max) or 100
     local stPct = stamina / maxStamina
-    manageMoodleState(ply, "endurance_1", stPct < 0.5 and stPct >= 0.25, "materials/moodels/Endurance_1.png")
-    manageMoodleState(ply, "endurance_2", stPct < 0.25 and stPct >= 0.1, "materials/moodels/Endurance_2.png")
-    manageMoodleState(ply, "endurance_3", stPct < 0.1 and stPct > 0, "materials/moodels/Endurance_3.png")
-    manageMoodleState(ply, "endurance_4", stPct <= 0, "materials/moodels/Endurance_4.png")
+    manageHierarchicalMoodle(ply, "endurance", {
+        { threshold = 0.25, texture = "materials/moodels/Endurance_1.png" },
+        { threshold = 0.1, texture = "materials/moodels/Endurance_2.png" },
+        { threshold = 0.0, texture = "materials/moodels/Endurance_3.png" },
+        { threshold = -1, texture = "materials/moodels/Endurance_4.png" },
+    }, 0.5 - stPct) -- Inverted
     manageMoodleState(ply, "energized", stamina > maxStamina * 1.5, "materials/moodels/Energized.png")
 
     -- Faint (Scaling based on Low Consciousness + Disorientation)
@@ -264,11 +278,12 @@ local function SyncMoodles(ply)
     if consciousness < 0.6 or disorientation > 1 then faint_level = 2 end
     if consciousness < 0.4 or disorientation > 2 then faint_level = 3 end
     if org.otrub and disorientation > 3 then faint_level = 4 end
-
-    manageMoodleState(ply, "faint_1", faint_level == 1, "materials/moodels/Faint_1.png")
-    manageMoodleState(ply, "faint_2", faint_level == 2, "materials/moodels/Faint_2.png")
-    manageMoodleState(ply, "faint_3", faint_level == 3, "materials/moodels/Faint_3.png")
-    manageMoodleState(ply, "faint_4", faint_level == 4, "materials/moodels/Faint_4.png")
+    manageHierarchicalMoodle(ply, "faint", {
+        { threshold = 1, texture = "materials/moodels/Faint_1.png" },
+        { threshold = 2, texture = "materials/moodels/Faint_2.png" },
+        { threshold = 3, texture = "materials/moodels/Faint_3.png" },
+        { threshold = 4, texture = "materials/moodels/Faint_4.png" },
+    }, faint_level)
 
     -- Fight or Flight
     manageMoodleState(ply, "fight_or_flight", (org.adrenaline or 0) > 1, "materials/moodels/FightOrFlight_Moodle.png")
@@ -291,36 +306,44 @@ local function SyncMoodles(ply)
 
     -- Hunger
     local hunger = org.hungry or 0
-    manageMoodleState(ply, "hunger_3", hunger > 60 and hunger <= 80, "materials/moodels/Hunger_3.png")
-    manageMoodleState(ply, "hunger_4", hunger > 80 and hunger < 100, "materials/moodels/Hunger_4.png")
-    manageMoodleState(ply, "hunger_5", hunger >= 100, "materials/moodels/Hunger_5.png")
+    manageHierarchicalMoodle(ply, "hunger", {
+        { threshold = 60, texture = "materials/moodels/Hunger_3.png" },
+        { threshold = 80, texture = "materials/moodels/Hunger_4.png" },
+        { threshold = 100, texture = "materials/moodels/Hunger_5.png" },
+    }, hunger)
 
     -- Internal Bleed
     manageMoodleState(ply, "internal_bleed", (org.internalBleed or 0) > 0.1, "materials/moodels/InternalBleed_Moodle_Animated_Crit.png")
 
     -- Overdose (Using Analgesia/Painkillers as threshold mapping)
     local overdose = org.analgesia or 0
-    manageMoodleState(ply, "overdose_1", overdose > 0.50 and overdose <= 0.75, "materials/moodels/Overdose_Moodle_1.png")
-    manageMoodleState(ply, "overdose_2", overdose > 0.75 and overdose <= 0.90, "materials/moodels/Overdose_Moodle_2.png")
-    manageMoodleState(ply, "overdose_3", overdose > 0.90 and overdose <= 1.25, "materials/moodels/Overdose_Moodle_3.png")
-    manageMoodleState(ply, "overdose_4", overdose > 1.25, "materials/moodels/Overdose_Moodle_4.png")
+    manageHierarchicalMoodle(ply, "overdose", {
+        { threshold = 0.50, texture = "materials/moodels/Overdose_Moodle_1.png" },
+        { threshold = 0.75, texture = "materials/moodels/Overdose_Moodle_2.png" },
+        { threshold = 0.90, texture = "materials/moodels/Overdose_Moodle_3.png" },
+        { threshold = 1.25, texture = "materials/moodels/Overdose_Moodle_4.png" },
+    }, overdose)
 
     -- Oxygen
     local o2_val = org.o2 and org.o2[1]
     local o2_range = org.o2 and org.o2.range
     if o2_val and o2_range and o2_range > 0 then
         local o2_pct = o2_val / o2_range
-        manageMoodleState(ply, "oxygen", o2_pct < 0.5 and o2_pct >= 0.3, "materials/moodels/Oxygen_Moodle_1.png")
-        manageMoodleState(ply, "oxygen_2", o2_pct < 0.3 and o2_pct >= 0.15, "materials/moodels/Oxygen_Moodle_2.png")
-        manageMoodleState(ply, "oxygen_3", o2_pct < 0.15, "materials/moodels/Oxygen_Moodle_3.png")
+        manageHierarchicalMoodle(ply, "oxygen", {
+            { threshold = 0.3, texture = "materials/moodels/Oxygen_Moodle_1.png" },
+            { threshold = 0.15, texture = "materials/moodels/Oxygen_Moodle_2.png" },
+            { threshold = 0, texture = "materials/moodels/Oxygen_Moodle_3.png" },
+        }, 0.5 - o2_pct) -- Inverted
     end
 
     -- Pain
     local pain = org.pain or 0
-    manageMoodleState(ply, "pain_1", pain > 25 and pain <= 50, "materials/moodels/Pain_1.png")
-    manageMoodleState(ply, "pain_2", pain > 50 and pain <= 75, "materials/moodels/Pain_2.png")
-    manageMoodleState(ply, "pain_3", pain > 75 and pain < 100, "materials/moodels/Pain_3.png")
-    manageMoodleState(ply, "pain_4", pain >= 100, "materials/moodels/Pain_4.png")
+    manageHierarchicalMoodle(ply, "pain", {
+        { threshold = 25, texture = "materials/moodels/Pain_1.png" },
+        { threshold = 50, texture = "materials/moodels/Pain_2.png" },
+        { threshold = 75, texture = "materials/moodels/Pain_3.png" },
+        { threshold = 100, texture = "materials/moodels/Pain_4.png" },
+    }, pain)
 
     -- Respiratory Failure
     manageMoodleState(ply, "respfailure", (org.trachea or 0) >= 0.5 or org.lungsfunction == false, "materials/moodels/Respfailure.png")
@@ -347,13 +370,15 @@ local function SyncMoodles(ply)
 
     -- Fear
     local fear = org.fear or 0
-    manageMoodleState(ply, "trauma_1", fear > 0.1 and fear <= 0.25, "materials/moodels/Trauma_Moodle_1.png")
-    manageMoodleState(ply, "trauma_2", fear > 0.25 and fear <= 0.5, "materials/moodels/Trauma_Moodle_2.png")
-    manageMoodleState(ply, "trauma_3", fear > 0.5 and fear <= 0.8, "materials/moodels/Trauma_Moodle_3.png")
-    manageMoodleState(ply, "trauma_4", fear > 0.8, "materials/moodels/Trauma_Moodle_4.png")
+    manageHierarchicalMoodle(ply, "trauma", {
+        { threshold = 0.1, texture = "materials/moodels/Trauma_Moodle_1.png" },
+        { threshold = 0.25, texture = "materials/moodels/Trauma_Moodle_2.png" },
+        { threshold = 0.5, texture = "materials/moodels/Trauma_Moodle_3.png" },
+        { threshold = 0.8, texture = "materials/moodels/Trauma_Moodle_4.png" },
+    }, fear)
 
-    if fear > 0.8 then
-        org.adrenaline = (org.adrenaline or 0) + 0.75
+    if fear > 0.25 then
+        org.adrenalineAdd = (org.adrenalineAdd or 0) + (fear * 0.5)
     end
 
     -- Unconscious

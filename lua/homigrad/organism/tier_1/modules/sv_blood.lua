@@ -32,7 +32,7 @@ module[1] = function(org)
 	org.wounds = {}
 	org.arterialwounds = {}
 	org.veinwounds = {}
-	org.artery_o2_debuff = 0
+	org.vessel_o2_debuff = 0
 	org.wantToVomit = 0
 	org.vomitInThroat = nil
 
@@ -99,10 +99,10 @@ module[2] = function(owner, org, mulTime)
 		org.internalBleed = org.internalBleed + mulTime / 30
 	end
 
-	if org.arteria == 1 or org.artery_o2_debuff > 0 then
-		local debuff_amount = org.arteria == 1 and 5 or org.artery_o2_debuff
+	if org.arteria == 1 or org.vessel_o2_debuff > 0 then
+		local debuff_amount = org.arteria == 1 and 5 or org.vessel_o2_debuff
 		org.o2[1] = math.max(org.o2[1] - mulTime * debuff_amount, 0)
-		org.artery_o2_debuff = math.max(org.artery_o2_debuff - mulTime * 0.1, 0)
+		org.vessel_o2_debuff = math.max(org.vessel_o2_debuff - mulTime * 0.05, 0)
 	end
 
 	org.consciousness = math.min(org.consciousness, math.min(org.blood / 3000, 1) * math.Clamp(((org.temperature < 30 and org.temperature - 30 or 0) * 0.25 + 1), 0.25, 1))
@@ -186,13 +186,13 @@ module[2] = function(owner, org, mulTime)
 	
 	if bleed > 0 then
         org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1)
-        if not org.has_hemothorax and math.random() < bleed * 0.001 then
+        if not org.has_hemothorax and math.random() < bleed * 0.0005 then
             org.has_hemothorax = true
         end
     end
 
     if org.has_hemothorax then
-        org.pneumothorax = (org.pneumothorax or 0) + mulTime * 0.05
+        org.pneumothorax = (org.pneumothorax or 0) + mulTime * 0.02
     end
 	
 	if (org.internalBleed > 1 or org.pneumothorax > 0) and org.blood > 2000 and org.o2[1] > 0 then
@@ -242,7 +242,8 @@ function hg.organism.Vomit(owner, snd)
 	if !hg.IsValidPlayer(owner) then return end
 	
 	local org = owner.organism
-	org.blood = math.max(org.blood - 200, 0)
+	org.blood = math.max(org.blood - 300, 0)
+	org.internalBleed = math.max(org.internalBleed * math.Rand(0.8, 0.9), 0)
 	local ent = hg.GetCurrentCharacter(owner)
 
 	local bon = "ValveBiped.Bip01_Head1"

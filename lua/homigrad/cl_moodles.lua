@@ -202,6 +202,7 @@ end)
 
 -- HUD paint
 hook.Add("HUDPaint", "Moodle_Draw", function()
+    local mx, my = gui.MouseX(), gui.MouseY()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then 
         CLIENT_MOODLES = {} 
@@ -235,7 +236,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
 
     -- Draw Icons
     for id, data in pairs(CLIENT_MOODLES) do
-        local drawX = baseX
+        local drawX, drawY = baseX, baseY
         local spawn = data.spawn or CurTime()
         local dt = CurTime() - spawn
         
@@ -282,8 +283,6 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         if mx >= drawX and mx <= drawX + drawW and my >= drawY and my <= drawY + drawH then
             hovered = id
         end
-        
-        x = x + iconSize + pad
     end
 
     -- Draw Tooltip

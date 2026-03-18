@@ -400,24 +400,33 @@ if SERVER then
 			if self.modeValues[1] <= 0 then break end
 
 			local wound = woundinfo.wound
-			local biggestWound = woundinfo.severity
+			local wound_size = wound[1]
 
-			if self.modeValues[1] >= biggestWound then
-				wound[1] = 0
-				org[wound[7]] = 0 -- Also reset the artery/vein status
-				self.modeValues[1] = self.modeValues[1] - biggestWound
+			local heal_amount = math.min(self.modeValues[1], wound_size)
+
+			if heal_amount > 0 then
+				wound[1] = wound_size - heal_amount
+				self.modeValues[1] = self.modeValues[1] - heal_amount
 				bandaged = true
 				done = true
 
-				local bone_name = wound[4]
-				if not ent.bandaged_limbs[bone_name] then
-					ent.bandaged_limbs[bone_name] = true
-				end
+				if wound[1] <= 0 then
+					-- Fully healed
+					org[wound[7]] = 0 -- Also reset the artery/vein status
 
-				if woundinfo.type == "arterial" then
-					table.insert(arterialwounds_to_remove, woundinfo.index)
-				elseif woundinfo.type == "vein" then
-					table.insert(veinwounds_to_remove, woundinfo.index)
+					-- Apply O2/CO2 debuff
+					org.vessel_o2_debuff = (org.vessel_o2_debuff or 0) + (wound_size * 0.75) -- Debuff proportional to original artery size
+
+					local bone_name = wound[4]
+					if not ent.bandaged_limbs[bone_name] then
+						ent.bandaged_limbs[bone_name] = true
+					end
+
+					if woundinfo.type == "arterial" then
+						table.insert(arterialwounds_to_remove, woundinfo.index)
+					elseif woundinfo.type == "vein" then
+						table.insert(veinwounds_to_remove, woundinfo.index)
+					end
 				end
 			end
 		end

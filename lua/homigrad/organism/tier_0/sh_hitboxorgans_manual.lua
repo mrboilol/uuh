@@ -75,47 +75,12 @@ male["ValveBiped.Bip01_Head1"] = {
 
 local spine = 0.25
 male["ValveBiped.Bip01_Neck1"] = {
-	{
-		"spine3", --spine3 neck
-		spine,
-		Vector(1, 1, 0),
-		Angle(0, 0, 0),
-		Vector(2, 0.5, 0.5),
-		Color(0, 125, 0)
-	},
-	{"trachea", nil, Vector(2, -2, 0), Angle(0, 0, 0), Vector(2, 0.5, 0.5), Color(0, 125, 255)},
-	{
-		"arteria", --right artery
-		nil,
-		Vector(3.5, -2, 2.3),
-		Angle(0, 0, 0),
-		Vector(2.5, 0.45, 0.45),
-		Color(200, 0, 0)
-	},
-	{
-		"arteria", --left artery
-		nil,
-		Vector(3.5, -2, -2.3),
-		Angle(0, 0, 0),
-		Vector(2.5, 0.45, 0.45),
-		Color(200, 0, 0)
-	},
-	{
-		"vein", --right vein
-		nil,
-		Vector(3.5, -2, 2.5),
-		Angle(0, 0, 0),
-		Vector(2.5, 0.45, 0.45),
-		Color(0, 0, 200)
-	},
-	{
-		"vein", --left vein
-		nil,
-		Vector(3.5, -2, -2.5),
-		Angle(0, 0, 0),
-		Vector(2.5, 0.45, 0.45),
-		Color(0, 0, 200)
-	},
+	{"spine3", spine, Vector(1, 1, 0), Angle(0, 0, 0), Vector(2, 0.5, 0.5), Color(0, 125, 0)},
+	{"arteria", nil, Vector(3, -2.5, 2.5), Angle(0, 0, 0), Vector(1.5, 1, 1), Color(255, 0, 0)},
+	{"arteria", nil, Vector(3, -2.5, -2.5), Angle(0, 0, 0), Vector(1.5, 1, 1), Color(255, 0, 0)},
+	{"vein", nil, Vector(3.5, -2.5, 2.5), Angle(0, 0, 0), Vector(1.5, 1, 1), Color(0, 0, 255)},
+	{"vein", nil, Vector(3.5, -2.5, -2.5), Angle(0, 0, 0), Vector(1.5, 1, 1), Color(0, 0, 255)},
+	{"trachea", nil, Vector(3, -3, 0), Angle(0, 0, 0), Vector(1, 1.5, 1.5), Color(255, 255, 0)}
 }
 
 local bone = 0.5

@@ -98,62 +98,88 @@ end
 
 function SWEP:Tourniquet(ent, bone)
 	local org = ent.organism
-	if not org then return false end
+	if not org then return end
+	if #org.arterialwounds > 0 then
+		local ent = org.isPly and org.owner or ent
+		ent.tourniquets = ent.tourniquets or {}
 
-	local boneName = ent:GetBoneName(bone)
-	-- Find the limb associated with the bone
-	local limb
-	for l, b in pairs(hg.amputatedlimbs) do
-		if b == boneName then
-			limb = l
-			break
-		end
-	end
-
-	if not limb then
-		for l, b in pairs(hg.amputatedlimbs2) do
-			if b == boneName then
-				limb = l
-				break
-			end
-		end
-	end
-
-	if limb and limb ~= "head" and limb ~= "chest" then
-		local applied = false
-		for i, wound in ipairs(org.arterialwounds) do
-			local wound_bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
-			local wound_limb
-			for l, b in pairs(hg.amputatedlimbs) do
-				if b == wound_bone_name then
-					wound_limb = l
-					break
-				end
-			end
-
-			if not wound_limb then
-				for l, b in pairs(hg.amputatedlimbs2) do
-					if b == wound_bone_name then
-						wound_limb = l
-						break
+		local pw
+		local bonewounds = {}
+		if not bone then
+			for i,wound in pairs(org.arterialwounds) do
+				if wound[7] ~= "arteria" and wound[7] ~= "spineartery" then 
+					pw = i 
+					for i1,tbl in pairs(org.wounds) do
+						if !tbl or !tbl[4] or !ent:LookupBone(tbl[4]) then continue end
+						local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
+						local sec_bonename = ent:GetBoneName(ent:LookupBone(wound[4]))
+						if bonename == sec_bonename or (tourniqet_bones[sec_bonename] and tourniqet_bones[sec_bonename][bonename]) then
+							table.insert(bonewounds,i1)
+						end
 					end
+				break end
+			end
+		else
+			for i,wound in pairs(org.arterialwounds) do
+				if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then pw = i break end
+			end
+			for i,tbl in pairs(org.wounds) do
+				local bonename = ent:GetBoneName(ent:LookupBone(tbl[4]))
+				if bonename == bone or (tourniqet_bones[bone] and tourniqet_bones[bone][bonename]) then
+					table.insert(bonewounds,i)
 				end
 			end
+		end		
+		pw = pw or math.random(#org.arterialwounds)
 
-			if wound_limb and string.find(wound_limb, limb) then
-				org[limb .. "tourniquet"] = CurTime() + 120 -- Apply for 120 seconds
-				applied = true
+		local wound = org.arterialwounds[pw]
+		if not wound then return false end
+
+		if wound[7] == "spineartery" or wound[7] == "arteria" then
+			self:GetOwner():Notify("You cannot apply a tourniquet here!", 1)
+			return false
+		end
+
+		ent.tourniquets[#ent.tourniquets + 1] = {wound[2], wound[3], wound[4]}
+		org[wound[7]] = 0
+
+		if wound[7] == "arteria" then org.o2.regen = 0 end
+
+		table.remove(org.arterialwounds,pw)
+
+		org.owner:SetNetVar("arterialwounds",org.arterialwounds)
+
+		for i = 1, #bonewounds do
+			if org.wounds[bonewounds[i]] then
+				org.wounds[bonewounds[i]][1] = 0
+			end
+		end
+		for i = 1, #bonewounds do
+			if org.wounds[bonewounds[i]] then
+				table.remove(org.wounds, bonewounds[i])
 			end
 		end
 
-		if applied then
-			org.painadd = (org.painadd or 0) + 20
-			ent:EmitSound("physics/flesh/flesh_impact_hard6.wav", 65)
-			return true
-		end
-	end
+		org.owner:SetNetVar("wounds",org.wounds)
 
-	return false
+		ent:SetNetVar("Tourniquets",ent.tourniquets)
+		if IsValid(ent.FakeRagdoll) then
+			ent.FakeRagdoll:SetNetVar("Tourniquets",ent.tourniquets)
+		end
+		
+		if not table.HasValue(hg.TourniquetGuys,ent) then
+			table.insert(hg.TourniquetGuys,ent)
+		end
+
+		for i,ent in ipairs(hg.TourniquetGuys) do
+			if not IsValid(ent) or not ent.tourniquets or table.IsEmpty(ent.tourniquets) then table.remove(hg.TourniquetGuys,i) end
+		end
+
+		SetNetVar("TourniquetGuys",hg.TourniquetGuys)
+
+		self:GetOwner():EmitSound("snd_jack_hmcd_bandage.wav", 65, math.random(95, 105))
+		return true
+	end
 end
 
 

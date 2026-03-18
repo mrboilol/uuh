@@ -105,7 +105,11 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 end
 
 input_list.brain = function(org, bone, dmg, dmgInfo)
-	if dmgInfo:IsDamageType(DMG_BLAST) then dmg = dmg / 50 end
+	if dmgInfo:IsDamageType(DMG_BLAST) then 
+		dmg = dmg / 50
+		damageOrgan(org, dmg * 1.5, dmgInfo, "lefteye")
+		damageOrgan(org, dmg * 1.5, dmgInfo, "righteye")
+	end
 	local oldDmg = org.brain
 	local result = damageOrgan(org, dmg * 1, dmgInfo, "brain")
 
@@ -216,7 +220,7 @@ local arteryMessages ={
 }
 
 local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
-	-- if isCrush(dmgInfo) then return 1 end
+	if isCrush(dmgInfo) then return 1 end
 	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
 	-- if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
 	org.painadd = (org.painadd or 0) + dmg * 1
@@ -389,4 +393,20 @@ input_list.righteye = function(org, bone, dmg, dmgInfo)
     end
 
     return result
+end
+
+input_list.spine1 = function(org, bone, dmg, dmgInfo)
+    if isCrush(dmgInfo) then dmg = dmg * 0.8 end -- Reduce crush damage
+	local result = damageOrgan(org, dmg, dmgInfo, "spine1")
+	return result
+end
+input_list.spine2 = function(org, bone, dmg, dmgInfo)
+    if isCrush(dmgInfo) then dmg = dmg * 0.8 end -- Reduce crush damage
+	local result = damageOrgan(org, dmg, dmgInfo, "spine2")
+	return result
+end
+input_list.spine3 = function(org, bone, dmg, dmgInfo)
+    if isCrush(dmgInfo) then dmg = dmg * 0.8 end -- Reduce crush damage
+	local result = damageOrgan(org, dmg, dmgInfo, "spine3")
+	return result
 end
