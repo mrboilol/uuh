@@ -159,7 +159,7 @@ if SERVER then
     concommand.Add("sbox_list_professions", function(ply, cmd, args, argStr) local msg = "Available professions:\n" for name, data in pairs(Professions) do msg = msg .. "- " .. name .. " (" .. data.Name .. ")\n" end if IsValid(ply) then ply:ChatPrint(msg) else print(msg) end end)
 
     hook.Add("PlayerSpawn", "SandboxRoles_PlayerSpawn", function(ply)
-        if not GetConVar("sandbox_subroles_enabled"):GetBool() or game.GetGamemode().Id ~= "sandbox" then return end
+        if not GetConVar("sandbox_subroles_enabled"):GetBool() then return end
         
         if not ply:GetData("SandboxProfession_SetByCommand", false) then
             ply.SandboxProfession = nil

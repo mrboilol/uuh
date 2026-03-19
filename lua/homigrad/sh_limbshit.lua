@@ -17,7 +17,7 @@ if SERVER then
 	for _, path in ipairs(SPRITES) do resource.AddFile(path) end
 	
 	-- Make sure to change this string to whatever you name this lua file in your autorun folder
-	AddCSLuaFile("autorun/zb_limb_indicator.lua") 
+	AddCSLuaFile("homigrad/sh_limbshit.lua") 
 	
 	return
 end
