@@ -121,7 +121,7 @@ if SERVER then
         if not IsValid(target_ply) then print("Player not found: " .. target_name) if IsValid(ply) then ply:ChatPrint("Player not found: " .. target_name) end return end
         if not Professions[prof_name] then print("Profession not found: " .. prof_name) if IsValid(ply) then ply:ChatPrint("Profession not found: " .. prof_name) end return end
         target_ply.SandboxProfession = prof_name
-        target_ply:SetData("SandboxProfession_SetByCommand", true)
+        target_ply:SetPData("SandboxProfession_SetByCommand", "true")
         target_ply:StripWeapons()
         Professions[prof_name].SpawnFunction(target_ply)
         if target_ply.isSandboxTraitor and target_ply.SandboxSubrole and SubRoles[target_ply.SandboxSubrole] then SubRoles[target_ply.SandboxSubrole].SpawnFunction(target_ply) end
@@ -161,7 +161,7 @@ if SERVER then
     hook.Add("PlayerSpawn", "SandboxRoles_PlayerSpawn", function(ply)
         if not GetConVar("sandbox_subroles_enabled"):GetBool() then return end
         
-        if not ply:GetData("SandboxProfession_SetByCommand", false) then
+        if ply:GetPData("SandboxProfession_SetByCommand", "false") == "false" then
             ply.SandboxProfession = nil
         end
         
@@ -177,7 +177,6 @@ if SERVER then
             end
             local random_prof = prof_keys[math.random(#prof_keys)]
             ply.SandboxProfession = random_prof
-            ply:SetData("SandboxProfession_SetByCommand", false)
         end
         
         local prof_data = Professions[ply.SandboxProfession]
@@ -217,7 +216,7 @@ if SERVER then
     end
 
     hook.Add("PlayerPostThink", "Sandbox_SubroleAbilities", function(ply)
-        if not GetConVar("sandbox_subroles_enabled"):GetBool() or game.GetGamemode().Id ~= "sandbox" then return end
+        if not GetConVar("sandbox_subroles_enabled"):GetBool() then return end
         if not IsValid(ply) or not ply:Alive() then return end
 
         if ply:KeyDown(IN_WALK) then -- Alt key
@@ -285,7 +284,7 @@ if SERVER then
     end)
 
     hook.Add("HG_PlayerFootstep_Notify", "Sandbox_HuntsmanAbility", function(ply, pos, foot, snd, volume, filter)
-        if not GetConVar("sandbox_subroles_enabled"):GetBool() or game.GetGamemode().Id ~= "sandbox" then return end
+        if not GetConVar("sandbox_subroles_enabled"):GetBool() then return end
         for _, p in ipairs(player.GetAll()) do
             if p.SandboxProfession == "huntsman" and p != ply and p:GetPos():DistToSqr(pos) < 250000 then
                 net.Start("Sandbox_Subroles_AddFootstep")
