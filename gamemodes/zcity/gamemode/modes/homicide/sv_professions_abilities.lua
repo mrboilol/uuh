@@ -1,5 +1,5 @@
 local MODE = MODE
-MODE.SendFootStepEvery = 3
+MODE.SendFootStepEvery = 6
 -- MODE.SendFootStepEvery = 1
 
 util.AddNetworkString("HMCD_Professions_Abilities_AddFootstep")

@@ -243,7 +243,7 @@ hook.Add( "PreDrawHalos", "AddPropHalos", function() -- вариант с под
 	local pickuphalo = {}
 	 
 	local tr = hg.eyeTrace(lply,72)
-	if IsValid(tr.Entity) and haloents[tr.Entity.Base] then
+	if tr and IsValid(tr.Entity) and haloents[tr.Entity.Base] then
 		table.insert(pickuphalo, tr.Entity)
 		local dist = lply:GetPos():Distance(tr.Entity:GetPos()) * 0.03
 		--print(dist)

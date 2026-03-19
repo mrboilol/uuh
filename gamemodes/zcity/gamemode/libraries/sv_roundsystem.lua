@@ -470,7 +470,7 @@ function zb.GetModesInfo()
 					name = (mode.PrintName or mode.name or name).."/"..name2,
 					description = mode.Description or "",
 					forBigMaps = mode.ForBigMaps or false,
-					canlaunch = (mode:CanLaunch() and 1 or 0)
+					canlaunch = ((not mode.CanLaunch or mode:CanLaunch()) and 1 or 0)
 				})
 			end
 		else
@@ -479,7 +479,7 @@ function zb.GetModesInfo()
 				name = mode.PrintName or mode.name or name,
 				description = mode.Description or "",
 				forBigMaps = mode.ForBigMaps or false,
-				canlaunch = (mode:CanLaunch() and 1 or 0)
+				canlaunch = ((not mode.CanLaunch or mode:CanLaunch()) and 1 or 0)
 			})
 		end
 	end

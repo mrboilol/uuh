@@ -26,7 +26,7 @@ if SERVER then
     util.AddNetworkString("send_positioning")
     hook.Add("Think","gunposchange",function()
         if time > CurTime() then return end
-        time = CurTime() + 1
+        time = CurTime() + 3
         local NetworkingTable = {}
 
         for i, ply in player.Iterator() do

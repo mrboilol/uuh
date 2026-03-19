@@ -710,8 +710,8 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		MaxPenLenGlobal = nil
 	end
 
-	local shockMul = 	( bullet ~= nil and bullet.ShockMultiplier ) or
-						( IsValid(inf) and inf.ShockMultiplier ) or 1
+	local instantPainMul = (bullet ~= nil and bullet.InstantPainMultiplier) or
+                         (IsValid(inf) and inf.InstantPainMultiplier) or 0.5
 
 	local bleedMul = 	( bullet ~= nil and bullet.BleedMultiplier ) or
 						( IsValid(inf) and inf.BleedMultiplier ) or 1
@@ -1395,7 +1395,8 @@ hook.Add("HomigradDamage", "painsounds",function(ply, dmgInfo, hitgroup, ent) --
 	end
 end)
 
-function hg.organism.DamageTypeAffliction(dmg, dmgInfo, ply, org)
+function hg.organism.DamageTypeAffliction(dmg, dmgInfo, ent, org)
+	local instantPainMul = 1
 	local dmgBlood, dmgHurt, instaPain, immobilization = dmg, dmg, dmg, 0
 	
 	if dmgInfo:IsDamageType(DMG_VEHICLE + DMG_SHOCK) then

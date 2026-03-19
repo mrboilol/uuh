@@ -325,13 +325,16 @@ local function send_bareinfo(org)
 	rf:AddPVS(org.owner:GetPos())
 	if org.owner:IsPlayer() then rf:RemovePlayer(org.owner) end
 
-	net.Start("organism_send", hg_unreliable_nets:GetBool())
-	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
-	net.WriteBool(org.owner.fullsend)
-	net.WriteBool(true)
-	net.WriteBool(false)
-	net.WriteBool(false)
-	net.Send(rf)
+	    timer.Create("send_bareinfo_timer" .. org.owner:EntIndex(), 0.1, 1, function()
+        if not IsValid(org.owner) then return end
+        net.Start("organism_send", hg_unreliable_nets:GetBool())
+        net.WriteTable(not hg_developer:GetBool() and sendtable or org)
+        net.WriteBool(org.owner.fullsend)
+        net.WriteBool(true)
+        net.WriteBool(false)
+        net.WriteBool(false)
+        net.Send(rf)
+    end)
 end
 
 hg.send_organism = send_organism
