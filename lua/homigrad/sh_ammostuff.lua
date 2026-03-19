@@ -333,7 +333,7 @@ end
 local matPistolAmmo = Material("vgui/hud/bullets/low_caliber.png")
 local matRfileAmmo = Material("vgui/hud/bullets/high_caliber.png")
 local matShotgunAmmo = Material("vgui/hud/bullets/buck_caliber.png")
-hg.ammotypeshuy = {
+hg.ammotypes = {
 	["5.56x45mm"] = {
 		name = "5.56x45 mm",
 		allowed = true,
@@ -357,16 +357,14 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 44,
-			Force = 44,
+			Damage = 66,
+			Force = 55,
 			Penetration = 13,
 			Shell = "556x45",
 			Speed = 890,
 			Diameter = 5.56,
 			Mass = 4,
-			Icon = matRfileAmmo,
-            CaliberPainMultiplier = 1.0,
-            CaliberShockMultiplier = 1.0
+			Icon = matRfileAmmo
 		}
 	},
 	["5.56x45mmm856"] = {
@@ -392,8 +390,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 44,
-			Force = 44,
+			Damage = 66,
+			Force = 55,
 			Penetration = 16,
 			Shell = "556x45",
 			Speed = 860,
@@ -425,8 +423,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 44,
-			Force = 44,
+			Damage = 66,
+			Force = 55,
 			Penetration = 15,
 			Shell = "556x45",
 			Speed = 980,
@@ -458,17 +456,15 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 68,
-			Force = 45,
+			Damage = 102,
+			Force = 56,
 			Penetration = 9.98,
 			Shell = "762x39",
 			Speed = 772,
 			AirResistMul = 0.00011,
 			Diameter = 7.62,
 			Mass = 8.5,
-			Icon = matRfileAmmo,
-            CaliberPainMultiplier = 1.2,
-            CaliberShockMultiplier = 1.2
+			Icon = matRfileAmmo
 		}
 	},
 	["7.62x39mm"] = {
@@ -494,8 +490,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 50,
-			Force = 50,
+			Damage = 75,
+			Force = 63,
 			Penetration = 13,
 			Shell = "762x39",
 			Speed = 650,
@@ -528,8 +524,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 58.8,
-			Force = 66,
+			Damage = 88.2,
+			Force = 83,
 			Penetration = 17.8,
 			Shell = "762x39",
 			Speed = 730,
@@ -562,8 +558,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 50,
-			Force = 50,
+			Damage = 75,
+			Force = 63,
 			Penetration = 3,
 			Shell = "366tkm",
 			Speed = 650,
@@ -596,8 +592,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 35,
-			Force = 35,
+			Damage = 52.5,
+			Force = 44,
 			Penetration = 11,
 			Shell = "545x39",
 			Speed = 850,
@@ -629,8 +625,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 16,
-			Force = 12,
+			Damage = 24,
+			Force = 15,
 			Penetration = 8,
 			NumBullet = 8,
 			Shell = "12x70",
@@ -665,8 +661,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 16,
-			Force = 8,
+			Damage = 24,
+			Force = 10,
 			Penetration = 8,
 			NumBullet = 8,
 			Shell = "12x70",
@@ -675,9 +671,7 @@ hg.ammotypeshuy = {
 			Diameter = 12/8,
 			Mass = 32/8,
 			Icon = matShotgunAmmo,
-			ShellColor = Color(255,0,0),
-            CaliberPainMultiplier = 1.1,
-            CaliberShockMultiplier = 1.5
+			ShellColor = Color(255,0,0)
 		}
 	},
 	["12/70beanbag"] = {
@@ -704,8 +698,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 60,
-			Force = 150,
+			Damage = 90,
+			Force = 188,
 			Penetration = 3,
 			Shell = "12x70beanbag",
 			Spread = Vector(0, 0, 0),
@@ -741,8 +735,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 120,
-			Force = 120,
+			Damage = 180,
+			Force = 150,
 			Penetration = 15,
 			Shell = "12x70slug",
 			Spread = Vector(0, 0, 0),
@@ -779,8 +773,8 @@ hg.ammotypeshuy = {
 			
 		},
 		BulletSettings = {
-			Damage = 200,
-			Force = 90,
+			Damage = 300,
+			Force = 113,
 			Penetration = 8,
 			Shell = "12x70slug",
 			Spread = Vector(0, 0, 0),
@@ -816,8 +810,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 16,
-			Force = 8,
+			Damage = 24,
+			Force = 10,
 			Penetration = 8,
 			NumBullet = 8,
 			Shell = "12x70blank",
@@ -854,8 +848,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 20,
-			Force = 6,
+			Damage = 30,
+			Force = 8,
 			Penetration = 8,
 			NumBullet = 10,
 			Shell = "23x75sh10",
@@ -891,8 +885,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 20,
-			Force = 2,
+			Damage = 30,
+			Force = 3,
 			Penetration = 8,
 			NumBullet = 25,
 			Shell = "23x75sh25",
@@ -928,8 +922,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 120,
-			Force = 100,
+			Damage = 180,
+			Force = 125,
 			Penetration = 25,
 			Shell = "23x75barricade",
 			Spread = Vector(0, 0, 0),
@@ -965,8 +959,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 16,
-			Force = 6,
+			Damage = 24,
+			Force = 8,
 			Penetration = 8,
 			NumBullet = 8,
 			Shell = "23x75zvezda",
@@ -1003,8 +997,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 80,
-			Force = 100,
+			Damage = 120,
+			Force = 125,
 			Penetration = 1,
 			Shell = "23x75waver",
 			Spread = Vector(0, 0, 0),
@@ -1040,8 +1034,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 12,
-			Force = 6,
+			Damage = 18,
+			Force = 8,
 			Penetration = 6,
 			NumBullet = 11,
 			Shell = "20/70",
@@ -1077,8 +1071,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 120,
-			Force = 120,
+			Damage = 180,
+			Force = 150,
 			Penetration = 8,
 			Shell = "20/70",
 			Spread = Vector(0, 0, 0),
@@ -1114,8 +1108,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 16,
-			Force = 6,
+			Damage = 24,
+			Force = 8,
 			Penetration = 6,
 			NumBullet = 8,
 			Shell = "20/70",
@@ -1150,8 +1144,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 24,
-			Force = 24,
+			Damage = 36,
+			Force = 30,
 			Penetration = 6,
 			Shell = "9x18",
 			Speed = 309,
@@ -1183,8 +1177,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 24,
-			Force = 24,
+			Damage = 36,
+			Force = 30,
 			Penetration = 6,
 			Shell = "9x18",
 			Speed = 309,
@@ -1216,8 +1210,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 25,
-			Force = 25,
+			Damage = 37.5,
+			Force = 31,
 			Penetration = 7,
 			Shell = "9x19",
 			Speed = 352,
@@ -1249,8 +1243,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 58.23,
-			Force = 27,
+			Damage = 87.345,
+			Force = 34,
 			Penetration = 6.1,
 			Shell = "9x19",
 			Speed = 291,
@@ -1282,8 +1276,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 25,
-			Force = 25,
+			Damage = 37.5,
+			Force = 31,
 			Penetration = 7,
 			Shell = "45acp",
 			Speed = 352,
@@ -1315,8 +1309,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 45,
-			Force = 45,
+			Damage = 67.5,
+			Force = 56,
 			Penetration = 4,
 			Shell = "45acp",
 			Speed = 256,
@@ -1348,8 +1342,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 30,
-			Force = 35,
+			Damage = 45,
+			Force = 44,
 			Penetration = 6.5,
 			Shell = "45acp",
 			Speed = 259,
@@ -1381,8 +1375,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 50,
-			Force = 50,
+			Damage = 75,
+			Force = 63,
 			Penetration = 5,
 			Shell = "45acp",
 			Speed = 259,
@@ -1414,8 +1408,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 35,
-			Force = 35,
+			Damage = 52.5,
+			Force = 44,
 			Penetration = 9,
 			Shell = "10mm",
 			Speed = 376,
@@ -1447,8 +1441,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 25,
-			Force = 25,
+			Damage = 37.5,
+			Force = 31,
 			Penetration = 7,
 			Shell = "9x19",
 			Speed = 352,
@@ -1481,8 +1475,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 30,
-			Force = 30,
+			Damage = 45,
+			Force = 38,
 			Penetration = 1,
 			Shell = "9x18",
 			Speed = 259,
@@ -1515,8 +1509,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 8,
-			Force = 5,
+			Damage = 12,
+			Force = 6,
 			Penetration = 4,
 			Shell = "9x18",
 			Speed = 259,
@@ -1550,8 +1544,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 8,
-			Force = 5,
+			Damage = 12,
+			Force = 6,
 			Penetration = 4,
 			Shell = "9x18",
 			Speed = 259,
@@ -1597,8 +1591,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 35,
-			Force = 32,
+			Damage = 52.5,
+			Force = 40,
 			Penetration = 1,
 			Shell = "50ae",
 			Speed = 250,
@@ -1631,8 +1625,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 15,
-			Force = 10,
+			Damage = 22.5,
+			Force = 13,
 			Penetration = 2,
 			Shell = "50ae",
 			Speed = 250,
@@ -1665,8 +1659,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 32,
-			Force = 32,
+			Damage = 48,
+			Force = 40,
 			Penetration = 10,
 			Shell = "556x45",
 			Speed = 734,
@@ -1698,8 +1692,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 32,
-			Force = 32,
+			Damage = 48,
+			Force = 40,
 			Penetration = 10.5,
 			Shell = "556x45",
 			Speed = 853,
@@ -1730,8 +1724,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 20000
 		},
 		BulletSettings = {
-			Damage = 40,
-			Force = 40,
+			Damage = 60,
+			Force = 50,
 			Penetration = 10,
 			Shell = "10mm",
 			Speed = 472,
@@ -1763,8 +1757,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 20000
 		},
 		BulletSettings = {
-			Damage = 40,
-			Force = 40,
+			Damage = 60,
+			Force = 50,
 			Penetration = 10,
 			Shell = "10mm",
 			Speed = 450,
@@ -1796,8 +1790,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 20000
 		},
 		BulletSettings = {
-			Damage = 27,
-			Force = 27,
+			Damage = 40.5,
+			Force = 34,
 			Penetration = 7,
 			Shell = "10mm",
 			Speed = 290,
@@ -1817,8 +1811,8 @@ hg.ammotypeshuy = {
 		minsplash = 5,
 		maxsplash = 5,
 		BulletSettings = {
-			Damage = 550,
-			Force = 100,
+			Damage = 825,
+			Force = 125,
 			Penetration = 320,
 			Shell = "50cal",
 			Speed = 1000,
@@ -1849,8 +1843,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 250,
-			Force = 100,
+			Damage = 375,
+			Force = 125,
 			Penetration = 320,
 			Shell = "50cal",
 			Speed = 1000,
@@ -1881,8 +1875,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 15000
 		},
 		BulletSettings = {
-			Damage = 42,
-			Force = 42,
+			Damage = 63,
+			Force = 53,
 			Penetration = 15,
 			Shell = "762x39",
 			Speed = 300,
@@ -1914,8 +1908,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 40,
-			Force = 40,
+			Damage = 60,
+			Force = 50,
 			Penetration = 11,
 			Shell = "50ae",
 			Speed = 440,
@@ -1947,8 +1941,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 81,
-			Force = 40,
+			Damage = 121.5,
+			Force = 50,
 			Penetration = 10,
 			Shell = "50ae",
 			Speed = 460,
@@ -1980,8 +1974,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 101.5,
-			Force = 110,
+			Damage = 152.25,
+			Force = 138,
 			Penetration = 9.6,
 			Shell = "50ae",
 			Speed = 440,
@@ -2013,8 +2007,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 65,
-			Force = 65,
+			Damage = 97.5,
+			Force = 81,
 			Penetration = 18,
 			Shell = "762x51",
 			Speed = 840,
@@ -2046,8 +2040,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 74.7,
-			Force = 69,
+			Damage = 112.05,
+			Force = 86,
 			Penetration = 23.4,
 			Shell = "762x51",
 			Speed = 930,
@@ -2079,8 +2073,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 70,
-			Force = 70,
+			Damage = 105,
+			Force = 88,
 			Penetration = 20,
 			Shell = "762x54",
 			Speed = 860,
@@ -2111,8 +2105,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 180,
-			Force = 60,
+			Damage = 270,
+			Force = 75,
 			Penetration = 35,
 			Shell = ".338Lapua",
 			Speed = 880,
@@ -2144,8 +2138,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 10000
 		},
 		BulletSettings = {
-			Damage = 17,
-			Force = 20,
+			Damage = 25.5,
+			Force = 25,
 			Penetration = 6.5,
 			Shell = ".22lr",
 			Speed = 335,
@@ -2187,13 +2181,13 @@ hg.ammotypeshuy = {
 			TracerSpeed = 45000
 		},
 		BulletSettings = {
-			Damage = 150,
-			Force = 40,
+			Damage = 225,
+			Force = 50,
 			Penetration = 60,
 			Shell = "50cal",
 			Speed = 820,
 			Diameter = 12.7,
-			Mass = 8,
+			Mass = 48,
 			Icon = matRfileAmmo
 		}
 	},
@@ -2219,8 +2213,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 45000
 		},
 		BulletSettings = {
-			Damage = 255,
-			Force = 40,
+			Damage = 382.5,
+			Force = 50,
 			Penetration = 9,
 			Shell = "50cal",
 			Speed = 315, --asha it's subsonic rifle... deka you are stupid
@@ -2256,8 +2250,8 @@ hg.ammotypeshuy = {
 		BulletSettings = {
 			Mass = 200,
 			Icon = matRfileAmmo,
-			Damage = 256.8,
-			Force = 30.9,
+			Damage = 385.2,
+			Force = 39,
 			Penetration = 50,
 		},
 		FunctionInfo = {
@@ -2294,7 +2288,7 @@ hg.ammotypeshuy = {
 		BulletSettings = {
 			Mass = 40,
 			Icon = matRfileAmmo,
-			Damage = 35,
+			Damage = 52.5,
 			Speed = 5,
 			PhysPenetrationMul = 0.0,
 		},
@@ -2368,8 +2362,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 25000
 		},
 		BulletSettings = {
-			Damage = 50,
-			Force = 50,
+			Damage = 75,
+			Force = 63,
 			Penetration = 17,
 			Shell = "Pulse",
 			Speed = 1000,
@@ -2404,7 +2398,7 @@ hg.ammotypeshuy = {
 		},
 		BulletSettings = {
 			Damage = 0,
-			Force = 50,
+			Force = 63,
 			Penetration = 17,
 			-- Shell = "Pulse",
 			Speed = 1000,
@@ -2463,8 +2457,8 @@ hg.ammotypeshuy = {
 			TracerSpeed = 6000
 		},
 		BulletSettings = {
-			Damage = 100,
-			Force = 120,
+			Damage = 150,
+			Force = 150,
 			Penetration = 1,
 			Shell = "",
 			Speed = 170,
@@ -2496,8 +2490,8 @@ hg.ammotypeshuy = {
 			NoSpin = true,
 		},
 		BulletSettings = {
-			Damage = 5,
-			Force = 10,
+			Damage = 7.5,
+			Force = 13,
 			Penetration = 0,
 			Shell = "9x19",
 			Spread = Vector(0, 0, 0),
@@ -2918,11 +2912,6 @@ end
 
 addAmmoTypes()
 hook.Add("Initialize", "init-ammo", addAmmoTypes)
-
-hg.ammoindextoname = {}
-for name, tbl in pairs(game.GetAmmoTypes()) do
-    hg.ammoindextoname[tbl.id] = name
-end
 
 --коэффициент лобового сопротивления также можно рассчитать математически
 --11300 - плотность свинца в кг/м3
