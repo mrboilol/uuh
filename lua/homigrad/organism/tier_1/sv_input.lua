@@ -1296,6 +1296,15 @@ end)
 	end
 
 	-- EFFECT
+	if (hitgroup == HITGROUP_HEAD and org.skull > 0.6) then
+		local effdata = EffectData()
+		effdata:SetOrigin( dmgPos )
+		effdata:SetRadius(0)
+		effdata:SetMagnitude(0)
+		effdata:SetScale(0)
+		util.Effect("BloodImpact",effdata)
+	end
+
 	if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
 		if dmgBlood > 1 and #inputHole > 0 then
 			net.Start("hg_bloodimpact")
@@ -1304,19 +1313,6 @@ end)
 			net.WriteFloat(dmg / 10)
 			net.WriteInt(1, 8)
 			net.Broadcast()
-
-			--[[if (hitgroup ~= HITGROUP_HEAD) then
-				if dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT) then
-					local effdata = EffectData()
-					effdata:SetOrigin( dmgPos )
-					effdata:SetRadius(0)
-					effdata:SetMagnitude(0)
-					effdata:SetScale(0)
-					util.Effect("BloodImpact",effdata)
-				else
-					ParticleEffect( "headshot", dmgPos, dirCool:Angle() )
-				end
-			end	]]
 		end
 	end
 	
@@ -1731,7 +1727,7 @@ local function velocityDamage(ent, data)
 		
 		if (not ply:Alive() or not org.alive) and (math.Round(ply:GetInfoNum("hg_deathfadeout", 1)) == 1) then// or org.otrub or hg.organism.paincheck(org) or (ply:Health() <= 0) then
 			if org.skull == 1 then
-				//ent:SetNWString("PlayerName", "Unidentifiable person")
+				ent:SetNWString("PlayerName", "Disfigured".. org.owner:Nick())
 			end
 			
 			ply:ScreenFade(0, color_black, 1, 1)

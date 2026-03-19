@@ -79,7 +79,7 @@ end
 local HUD = {
 	enabled = true,
 	base_x = nil,
-	base_y = 200,
+	base_y = HUD.base_y
 	
 	limb_offsets = {
 		head =        { x = 55,   y = -15 },
@@ -130,7 +130,15 @@ local function draw_sprites()
 	local ply = LocalPlayer()
 	if not IsValid(ply) or not ply.organism then return end
 	
-	if HUD.base_x == nil then HUD.base_x = ScrW() - 120 end
+	local sideMoodles = GetConVar("hg_sidemoodles"):GetBool()
+
+	if sideMoodles then
+		HUD.base_x = 16
+		HUD.base_y = 60
+	else
+		if HUD.base_x == nil then HUD.base_x = ScrW() - 120 end
+		HUD.base_y = 60
+	end
 	
 	local org = ply.organism
 	local base_x = HUD.base_x

@@ -258,7 +258,7 @@ local function SyncMoodles(ply)
     local broken_neck = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 > 0.75)
     manageMoodleState(ply, "broken_neck", broken_neck, "materials/moodels/Fractured_neck.png")
 
-    manageMoodleState(ply, "dislocated_jaw", org.jawdislocation or (org.skull or 0) >= 1, "materials/moodels/Dislocated_jaw.png")
+    manageMoodleState(ply, "dislocated_jaw", org.jawdislocation or (org.skull or 0) >= 0.6, "materials/moodels/Dislocated_jaw.png")
 
     -- Dislocation
     local dislocCount = 0
