@@ -333,7 +333,7 @@ end
 local matPistolAmmo = Material("vgui/hud/bullets/low_caliber.png")
 local matRfileAmmo = Material("vgui/hud/bullets/high_caliber.png")
 local matShotgunAmmo = Material("vgui/hud/bullets/buck_caliber.png")
-hg.ammotypes = {
+hg.ammotypeshuy = {
 	["5.56x45mm"] = {
 		name = "5.56x45 mm",
 		allowed = true,
@@ -364,7 +364,9 @@ hg.ammotypes = {
 			Speed = 890,
 			Diameter = 5.56,
 			Mass = 4,
-			Icon = matRfileAmmo
+			Icon = matRfileAmmo,
+            CaliberPainMultiplier = 1.0,
+            CaliberShockMultiplier = 1.0
 		}
 	},
 	["5.56x45mmm856"] = {
@@ -464,7 +466,9 @@ hg.ammotypes = {
 			AirResistMul = 0.00011,
 			Diameter = 7.62,
 			Mass = 8.5,
-			Icon = matRfileAmmo
+			Icon = matRfileAmmo,
+            CaliberPainMultiplier = 1.2,
+            CaliberShockMultiplier = 1.2
 		}
 	},
 	["7.62x39mm"] = {
@@ -671,7 +675,9 @@ hg.ammotypes = {
 			Diameter = 12/8,
 			Mass = 32/8,
 			Icon = matShotgunAmmo,
-			ShellColor = Color(255,0,0)
+			ShellColor = Color(255,0,0),
+            CaliberPainMultiplier = 1.1,
+            CaliberShockMultiplier = 1.5
 		}
 	},
 	["12/70beanbag"] = {
@@ -2187,7 +2193,7 @@ hg.ammotypes = {
 			Shell = "50cal",
 			Speed = 820,
 			Diameter = 12.7,
-			Mass = 48,
+			Mass = 8,
 			Icon = matRfileAmmo
 		}
 	},
@@ -2912,6 +2918,11 @@ end
 
 addAmmoTypes()
 hook.Add("Initialize", "init-ammo", addAmmoTypes)
+
+hg.ammoindextoname = {}
+for name, tbl in pairs(game.GetAmmoTypes()) do
+    hg.ammoindextoname[tbl.id] = name
+end
 
 --коэффициент лобового сопротивления также можно рассчитать математически
 --11300 - плотность свинца в кг/м3

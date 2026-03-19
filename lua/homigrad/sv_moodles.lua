@@ -258,7 +258,26 @@ local function SyncMoodles(ply)
     local broken_neck = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 > 0.75)
     manageMoodleState(ply, "broken_neck", broken_neck, "materials/moodels/Fractured_neck.png")
 
-    manageMoodleState(ply, "dislocated_jaw", org.jawdislocation or (org.skull or 0) >= 0.6, "materials/moodels/Dislocated_jaw.png")
+    local has_jaw = org.jawdislocation
+    local has_skull = (org.skull or 0) >= 0.6
+
+    if has_jaw and has_skull then
+        manageMoodleState(ply, "dislocated_jaw_and_fractured_skull", true, "materials/moodels/Dislocated_jaw.png")
+        manageMoodleState(ply, "dislocated_jaw", false, nil, true)
+        manageMoodleState(ply, "fractured_skull", false, nil, true)
+    elseif has_jaw then
+        manageMoodleState(ply, "dislocated_jaw", true, "materials/moodels/Dislocated_jaw.png")
+        manageMoodleState(ply, "dislocated_jaw_and_fractured_skull", false, nil, true)
+        manageMoodleState(ply, "fractured_skull", false, nil, true)
+    elseif has_skull then
+        manageMoodleState(ply, "fractured_skull", true, "materials/moodels/Dislocated_jaw.png")
+        manageMoodleState(ply, "dislocated_jaw_and_fractured_skull", false, nil, true)
+        manageMoodleState(ply, "dislocated_jaw", false, nil, true)
+    else
+        manageMoodleState(ply, "dislocated_jaw_and_fractured_skull", false, nil, true)
+        manageMoodleState(ply, "dislocated_jaw", false, nil, true)
+        manageMoodleState(ply, "fractured_skull", false, nil, true)
+    end
 
     -- Dislocation
     local dislocCount = 0
@@ -386,7 +405,10 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "shock", (org.shock or 0) > 25, "materials/moodels/Shock.png")
 
     -- Speechless
-    manageMoodleState(ply, "speechless", (org.pain or 0) > 80 or (org.brain or 0) > 0.05 or (org.jaw or 0) >= 1 or org.jawdislocation, "materials/moodels/Speechless.png")
+    local o2_val = org.o2 and org.o2[1]
+    local o2_range = org.o2 and org.o2.range
+    local o2_pct = (o2_val and o2_range and o2_range > 0) and (o2_val / o2_range) or 1
+    manageMoodleState(ply, "speechless", o2_pct < 0.2 or (org.pain or 0) > 80 or (org.brain or 0) > 0.05 or (org.jaw or 0) >= 1 or org.jawdislocation, "materials/moodels/Speechless.png")
 
     -- Thorax Destroyed
     local is_thorax_destroyed = (org.heart or 0) >= 0.7 or ((org.lungsL and org.lungsL[1] or 0) >= 0.7 or (org.lungsR and org.lungsR[1] or 0) >= 0.7) or (org.trachea or 0) >= 0.7

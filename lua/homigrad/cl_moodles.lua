@@ -75,6 +75,8 @@ local MOODLE_INFO = {
     ["spine_damage_3"] = { title = "Severe Spine Damage", desc = "You can barely move, breathe, or even think straight." },
     ["spine_damage_4"] = { title = "Broken Spine", desc = "You are paralyzed from the neck down." },
     ["dislocated_jaw"] = { title = "Dislocated Jaw", desc = "Your jaw is out of place, put it back in!" },
+    ["dislocated_jaw_and_fractured_skull"] = { title = "Jaw and Skull Trauma", desc = "Your jaw is dislocated and your skull is fractured." },
+    ["fractured_skull"] = { title = "Fractured Skull", desc = "WHERES YO HEAD AT??????????" },
     ["dislocation"] = { title = "Dislocation", desc = "Its not really that bad, but its recommened to place it back." },
     ["encumbered"] = { title = "Encumbered", desc = "You are carrying too much, making it hard to move." },
     ["endurance_1"] = { title = "Tired", desc = "Lets take a break..." },
@@ -113,9 +115,9 @@ local MOODLE_INFO = {
     ["overdose_2"] = { title = "Overdose", desc = "This feels REALLY good..." },
     ["overdose_3"] = { title = "Severe Overdose", desc = "I see sounds and hear colors..." },
     ["overdose_4"] = { title = "Critical Overdose", desc = "Okay, i think i took too much..." },
-    ["oxygen"] = { title = "Low Oxygen", desc = "My skin is all weird and rubbery..." },
-    ["oxygen_2"] = { title = "Very Low Oxygen", desc = "Air.. I need air..." },
-    ["oxygen_3"] = { title = "Critical Oxygen", desc = "Brain damage is starting to set in." },
+    ["oxygen"] = { title = "Hypoxemic", desc = "My skin is all weird and rubbery..." },
+    ["oxygen_2"] = { title = "Hypoxemic", desc = "Air.. I need air..." },
+    ["oxygen_3"] = { title = "Critical Hypoxemia", desc = "..." },
     ["pain_1"] = { title = "Minor Pain", desc = "Just some discomfort." },
     ["pain_2"] = { title = "Moderate Pain", desc = "Something might be wrong..." },
     ["pain_3"] = { title = "Severe Pain", desc = "Something is wrong..." },
@@ -123,17 +125,17 @@ local MOODLE_INFO = {
     ["respfailure"] = { title = "Respiratory Failure", desc = "I cant breathe..." },
     ["rippedeye_3"] = { title = "Missing Eye", desc = "I cant see out of my eye." },
     ["rippedeye_4"] = { title = "Blind", desc = "Who turned the lights off?" },
-    ["rippedjaw"] = { title = "Fractured Jaw", desc = "Wheres yo head at?" },
+    ["rippedjaw"] = { title = "Fractured Jaw", desc = "Wheres yo head at?", desc2 = "Your skull is also fractured." },
     ["shock"] = { title = "Shock", desc = "Hurts so much i cant move..." },
-    ["speechless"] = { title = "Speechless", desc = "I dont know about people understanding your gibberish." },
+    ["speechless"] = { title = "Affected Speech", desc = "I dont know about people understanding your gibberish." },
     ["stimulated"] = { title = "Stimulated", desc = "NOW nothing cant stop me!" },
     ["tachycardia"] = { title = "Tachycardia", desc = "Something is probably wrong, or not." },
-    ["thoraxdestroyed"] = { title = "Skull Fracture", desc = "Your skull is poking at your brain as you read this!" },
+    ["thoraxdestroyed"] = { title = "Severe Chest Injury", desc = "Your vital organs in your chest are severely damaged." },,
     ["trauma_1"] = { title = "Anxious", desc = "You are feeling a bit on edge." },
     ["trauma_2"] = { title = "Scared", desc = "You dont want to continue experiencing this." },
     ["trauma_3"] = { title = "Terrified", desc = "You are REALLY scared." },
     ["trauma_4"] = { title = "Really fucking scared", desc = "You cant even comprehend your emotions." },
-    ["unconscious"] = { title = "Unconscious", desc = "Or sleeping, but probably knocked out." },
+    ["unconscious"] = { title = "Syncope", desc = "Unresponsive to stimuli, lights out!" },
     ["sepsis"] = { title = "Sepsis", desc = "Not so fun now is it?" },
     ["horrified"] = { title = "Critically Injured", desc = "This is the end of you. Goodbye!" },
 }
@@ -200,7 +202,6 @@ net.Receive("Moodle_Remove", function()
     if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_REMOVE, "[MM] - "..id.."\n") end
 end)
 
--- HUD paint
 hook.Add("HUDPaint", "Moodle_Draw", function()
     local mx, my = gui.MouseX(), gui.MouseY()
     local ply = LocalPlayer()
@@ -226,6 +227,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     
     local x = baseX
     local y = baseY
+    local hovered = nil
 
     -- Animation helper
     local function easeOutBack(t)
@@ -237,7 +239,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     -- Draw Icons
     for id, data in pairs(CLIENT_MOODLES) do
         local drawX, drawY = baseX, baseY
-        local spawn = data.spawn or CurTime()
+        local spawn = data.spawn or (CurTime() - 10) -- Default to old for moodles that existed before joining
         local dt = CurTime() - spawn
         
         -- Animations
@@ -255,14 +257,9 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
             x = x + drawW + pad
         end
 
-        -- Flashing border for critical moodles
-        -- if CRITICAL_MOODLES[id] then
-        --     local flash = (math.sin(CurTime() * 8) + 1) / 2
-        --     local flashAlpha = 50 + flash * 150
-        --     surface.SetDrawColor(255, 0, 0, flashAlpha)
-        --     surface.DrawOutlinedRect(drawX - 1, drawY - 1, drawW + 2, drawH + 2)
-        --     surface.DrawOutlinedRect(drawX - 2, drawY - 2, drawW + 4, drawH + 4)
-        -- end
+        -- Red border
+        surface.SetDrawColor(255, 0, 0, alpha)
+        surface.DrawOutlinedRect(drawX, drawY, drawW, drawH)
 
         -- Draw texture or fallback box
         if data.mat and not data.mat:IsError() then
@@ -276,7 +273,29 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
 
         -- Draw stack count if > 1
         if data.count and data.count > 1 then
-            draw.SimpleText(tostring(data.count), "DermaDefaultBold", drawX + drawW - 4, drawY + drawH - 4, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+            draw.SimpleText(tostring(data.count), "ZB_ScrappersSmall", drawX + drawW - 4, drawY + drawH - 4, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+        end
+
+        -- New moodle notification
+        if dt < 3 then
+            local info = MOODLE_INFO[id]
+            if info then
+                local fade_alpha = math.Clamp(1 - (dt / 3), 0, 1) * alpha
+                local text_x, text_y
+                local alignment, y_alignment
+                if GetConVar("hg_sidemoodles"):GetBool() then
+                    text_x = drawX - 10
+                    text_y = drawY + drawH / 2
+                    alignment = TEXT_ALIGN_RIGHT
+                    y_alignment = TEXT_ALIGN_CENTER
+                else
+                    text_x = drawX + drawW / 2
+                    text_y = drawY + drawH + 5
+                    alignment = TEXT_ALIGN_CENTER
+                    y_alignment = TEXT_ALIGN_TOP
+                end
+                draw.SimpleText(info.title, "ZB_InterfaceMedium", text_x, text_y, Color(255, 255, 255, fade_alpha), alignment, y_alignment)
+            end
         end
 
         -- Hover detection (uses unscaled area for easier targeting)
@@ -289,11 +308,27 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     if hovered and MOODLE_INFO[hovered] then
         local info = MOODLE_INFO[hovered]
         local tw = 360
-        local tx = math.min(mx + 12, ScrW() - tw - 12)
-        local ty = my - 72
+        local th = 68
+        if info.desc2 then
+            th = 88
+        end
         
-        draw.RoundedBox(6, tx - 6, ty - 6, tw, 68, Color(0, 0, 0, 200))
-        draw.SimpleText(info.title, "DermaDefaultBold", tx, ty, color_white)
-        draw.SimpleText(info.desc, "DermaDefault", tx, ty + 22, Color(200, 200, 200))
+        local tx = mx + 12
+        local ty = my + 12
+
+        if tx + tw > ScrW() then
+            tx = mx - tw - 12
+        end
+
+        if ty + th > ScrH() then
+            ty = my - th - 12
+        end
+        
+        draw.RoundedBox(6, tx - 6, ty - 6, tw, th, Color(0, 0, 0, 200))
+        draw.SimpleText(info.title, "ZB_InterfaceMedium", tx, ty, color_white)
+        draw.SimpleText(info.desc, "ZB_ScrappersSmall", tx, ty + 22, Color(200, 200, 200))
+        if info.desc2 then
+            draw.SimpleText(info.desc2, "ZB_ScrappersSmall", tx, ty + 42, Color(200, 200, 200))
+        end
     end
 end)
