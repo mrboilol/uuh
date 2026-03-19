@@ -121,6 +121,7 @@ if SERVER then
         if not IsValid(target_ply) then print("Player not found: " .. target_name) if IsValid(ply) then ply:ChatPrint("Player not found: " .. target_name) end return end
         if not Professions[prof_name] then print("Profession not found: " .. prof_name) if IsValid(ply) then ply:ChatPrint("Profession not found: " .. prof_name) end return end
         target_ply.SandboxProfession = prof_name
+        target_ply:SetData("SandboxProfession_SetByCommand", true)
         target_ply:StripWeapons()
         Professions[prof_name].SpawnFunction(target_ply)
         if target_ply.isSandboxTraitor and target_ply.SandboxSubrole and SubRoles[target_ply.SandboxSubrole] then SubRoles[target_ply.SandboxSubrole].SpawnFunction(target_ply) end
@@ -159,10 +160,34 @@ if SERVER then
 
     hook.Add("PlayerSpawn", "SandboxRoles_PlayerSpawn", function(ply)
         if not GetConVar("sandbox_subroles_enabled"):GetBool() or game.GetGamemode().Id ~= "sandbox" then return end
+        
+        if not ply:GetData("SandboxProfession_SetByCommand", false) then
+            ply.SandboxProfession = nil
+        end
+        
+        ply.isSandboxTraitor = false
+        ply.SandboxSubrole = nil
+        
         ply:StripWeapons()
-        if not ply.SandboxProfession then local prof_keys = {} for k in pairs(Professions) do table.insert(prof_keys, k) end local random_prof = prof_keys[math.random(#prof_keys)] ply.SandboxProfession = random_prof end
-        local prof_data = Professions[ply.SandboxProfession] if prof_data then prof_data.SpawnFunction(ply) ply:ChatPrint("You spawned as a " .. prof_data.Name .. ".") if prof_data.Description then ply:ChatPrint("Profession Info: " .. prof_data.Description) end end
-        if ply.isSandboxTraitor and ply.SandboxSubrole then local subrole_data = SubRoles[ply.SandboxSubrole] if subrole_data then subrole_data.SpawnFunction(ply) ply:ChatPrint("You are a " .. subrole_data.Name .. " traitor.") if subrole_data.Objective then ply:ChatPrint("Objective: " .. subrole_data.Objective) end end end
+
+        if not ply.SandboxProfession then 
+            local prof_keys = {}
+            for k in pairs(Professions) do
+                table.insert(prof_keys, k)
+            end
+            local random_prof = prof_keys[math.random(#prof_keys)]
+            ply.SandboxProfession = random_prof
+            ply:SetData("SandboxProfession_SetByCommand", false)
+        end
+        
+        local prof_data = Professions[ply.SandboxProfession]
+        if prof_data then
+            prof_data.SpawnFunction(ply)
+            ply:ChatPrint("You spawned as a " .. prof_data.Name .. ".")
+            if prof_data.Description then
+                ply:ChatPrint("Profession Info: " .. prof_data.Description)
+            end
+        end
     end)
     
     local function CanPlayerBreakOtherNeck(ply, aim_ent)
