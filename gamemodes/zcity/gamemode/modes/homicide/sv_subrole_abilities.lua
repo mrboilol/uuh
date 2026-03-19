@@ -87,27 +87,65 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 			end
 			
 			if(ply.SubRole == "traitor_assasin" or ply.SubRole == "traitor_assasin_soe")then
-				if(ply:KeyDown(IN_WALK))then
-					if(ply:KeyPressed(IN_USE))then
-						local aim_ent, other_ply, trace = MODE.GetPlayerTraceToOther(ply, nil, MODE.DisarmReach)
-						
-						if(IsValid(aim_ent))then
-							if(other_ply and MODE.CanPlayerDisarmOther(ply, aim_ent, MODE.DisarmReach) and MODE.CanPlayerDisarmOtherPly(ply, other_ply, MODE.DisarmReach))then
-								MODE.StartDisarmingOther(ply, other_ply)
-							end
-						end
-					elseif(ply:KeyDown(IN_USE))then
-						if(ply.Ability_Disarm)then
-							MODE.ContinueDisarmingOther(ply)
-						end
-					end
-					
-					if(ply:KeyReleased(IN_USE))then
-						MODE.StopDisarmingOther(ply)
-					end
-				else
-					MODE.StopDisarmingOther(ply)
-				end
+				local is_choking = ply:GetNetVar("isChoking", false)
+                local choke_target = ply:GetNetVar("chokeTarget", NULL)
+
+                if ply:KeyDown(IN_WALK) then -- Alt key
+                    if ply:KeyPressed(IN_USE) and not is_choking then
+                        local tr = util.TraceLine({ start = ply:EyePos(), endpos = ply:EyePos() + ply:GetAimVector() * 85, filter = ply })
+                        if IsValid(tr.Entity) and tr.Entity:IsPlayer() and tr.Entity:Alive() then
+                            local victim = tr.Entity
+                            local wep = victim:GetActiveWeapon()
+                            if IsValid(wep) and wep:GetClass() ~= "weapon_hands" then victim:DropWeapon(wep) end
+                            
+                            victim:SetRagdoll(true, 1.5)
+
+                            timer.Simple(0.1, function()
+                                if not IsValid(ply) or not ply:KeyDown(IN_USE) then 
+                                    victim:SetRagdoll(false)
+                                    return 
+                                end
+                                ply:SetNetVar("isChoking", true) 
+                                ply:SetNetVar("chokeTarget", victim) 
+                                victim:SetNetVar("chokedBy", ply) 
+                                if victim.organism then victim.organism.choking = true end
+                            end)
+                        end
+                    elseif ply:KeyDown(IN_USE) and is_choking and IsValid(choke_target) then
+                        if choke_target:Health() <= 0 then 
+                            ply:SetNetVar("isChoking", false) 
+                            if IsValid(choke_target) then 
+                                choke_target:SetNetVar("chokedBy", NULL) 
+                                if choke_target.organism then choke_target.organism.choking = false end
+                            end 
+                            return 
+                        end
+                        local attachmentID = choke_target:LookupAttachment("chest")
+                        if attachmentID > 0 then 
+                            local attachment = choke_target:GetAttachment(attachmentID) 
+                            if attachment then 
+                                ply:SetPos(attachment.Pos + attachment.Ang:Forward() * -25) 
+                                ply:SetEyeAngles((choke_target:GetPos() - ply:GetPos()):Angle()) 
+                            end 
+                        end
+                    elseif (ply:KeyReleased(IN_USE) and is_choking) or (is_choking and not IsValid(choke_target)) then 
+                        ply:SetNetVar("isChoking", false) 
+                        if IsValid(choke_target) then 
+                            choke_target:SetNetVar("chokedBy", NULL) 
+                            choke_target:SetRagdoll(false)
+                            if choke_target.organism then choke_target.organism.choking = false end
+                        end 
+                    end
+                else
+                    if is_choking then 
+                        ply:SetNetVar("isChoking", false) 
+                        if IsValid(choke_target) then 
+                            choke_target:SetNetVar("chokedBy", NULL) 
+                            choke_target:SetRagdoll(false)
+                            if choke_target.organism then choke_target.organism.choking = false end
+                        end 
+                    end
+                end
 			end
 			
 			if(ply.SubRole == "traitor_zombie")then
@@ -127,4 +165,17 @@ hook.Add("PlayerPostThink", "HMCD_SubRoles_Abilities", function(ply)
 			end
 		end
 	end
+end)
+
+hook.Add("SetupMove", "Sandbox_ChokeVictim", function(ply, mv, cmd)
+    if not IsValid(ply) then return end
+    local choker = ply:GetNetVar("chokedBy", NULL)
+    if IsValid(choker) then
+        mv:SetForwardSpeed(0)
+        mv:SetSideSpeed(0)
+        mv:SetButtons(0)
+        
+        local ang = (choker:GetPos() - ply:GetPos()):Angle()
+        ply:SetEyeAngles(ang)
+    end
 end)
