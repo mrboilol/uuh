@@ -79,7 +79,7 @@ end
 local HUD = {
 	enabled = true,
 	base_x = nil,
-	base_y = HUD.base_y
+	base_y = nil,
 	
 	limb_offsets = {
 		head =        { x = 55,   y = -15 },

@@ -104,8 +104,8 @@ if SERVER then
     CreateConVar("sandbox_subroles_enabled", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable traitor subroles in Sandbox")
 
     timer.Simple(0, function()
-        if not GetConVar("sandbox_subroles_enabled"):GetBool() or game.GetGamemode().Id ~= "sandbox" then
-            if game.GetGamemode().Id ~= "sandbox" then print("Sandbox Subroles: Not in sandbox gamemode.") else print("Sandbox Subroles: Disabled by convar.") end
+        if not GetConVar("sandbox_subroles_enabled"):GetBool() then
+            print("Sandbox Subroles: Disabled by convar.")
             return
         end
         print("Sandbox Subroles: Initializing...")
