@@ -130,7 +130,7 @@ local MOODLE_INFO = {
     ["speechless"] = { title = "Affected Speech", desc = "I dont know about people understanding your gibberish." },
     ["stimulated"] = { title = "Stimulated", desc = "NOW nothing cant stop me!" },
     ["tachycardia"] = { title = "Tachycardia", desc = "Something is probably wrong, or not." },
-    ["thoraxdestroyed"] = { title = "Severe Chest Injury", desc = "Your vital organs in your chest are severely damaged." },,
+    ["thoraxdestroyed"] = { title = "Severe Chest Injury", desc = "Your vital organs in your chest are severely damaged." },
     ["trauma_1"] = { title = "Anxious", desc = "You are feeling a bit on edge." },
     ["trauma_2"] = { title = "Scared", desc = "You dont want to continue experiencing this." },
     ["trauma_3"] = { title = "Terrified", desc = "You are REALLY scared." },
