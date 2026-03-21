@@ -257,9 +257,8 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
             x = x + drawW + pad
         end
 
-        -- Red border
-        surface.SetDrawColor(255, 0, 0, alpha)
-        surface.DrawOutlinedRect(drawX, drawY, drawW, drawH)
+        -- surface.SetDrawColor(255, 0, 0, alpha)
+        -- surface.DrawOutlinedRect(drawX, drawY, drawW, drawH)
 
         -- Draw texture or fallback box
         if data.mat and not data.mat:IsError() then
@@ -273,7 +272,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
 
         -- Draw stack count if > 1
         if data.count and data.count > 1 then
-            draw.SimpleText(tostring(data.count), "ZB_ScrappersSmall", drawX + drawW - 4, drawY + drawH - 4, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
+            draw.SimpleText(tostring(data.count), "ZCity_Small", drawX + drawW - 4, drawY + drawH - 4, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
         end
 
         -- New moodle notification
@@ -294,7 +293,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
                     alignment = TEXT_ALIGN_CENTER
                     y_alignment = TEXT_ALIGN_TOP
                 end
-                draw.SimpleText(info.title, "ZB_InterfaceMedium", text_x, text_y, Color(255, 255, 255, fade_alpha), alignment, y_alignment)
+                draw.SimpleText(info.title, "ZCity_Medium", text_x, text_y, Color(255, 255, 255, fade_alpha), alignment, y_alignment)
             end
         end
 
@@ -325,10 +324,14 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         end
         
         draw.RoundedBox(6, tx - 6, ty - 6, tw, th, Color(0, 0, 0, 200))
-        draw.SimpleText(info.title, "ZB_InterfaceMedium", tx, ty, color_white)
-        draw.SimpleText(info.desc, "ZB_ScrappersSmall", tx, ty + 22, Color(200, 200, 200))
+        if CRITICAL_MOODLES[hovered] then
+            surface.SetDrawColor(255, 0, 0, 200)
+            surface.DrawOutlinedRect(tx - 6, ty - 6, tw, th)
+        end
+        draw.SimpleText(info.title, "ZCity_Medium", tx, ty, color_white)
+        draw.SimpleText(info.desc, "ZCity_Small", tx, ty + 22, Color(200, 200, 200))
         if info.desc2 then
-            draw.SimpleText(info.desc2, "ZB_ScrappersSmall", tx, ty + 42, Color(200, 200, 200))
+            draw.SimpleText(info.desc2, "ZCity_Small", tx, ty + 42, Color(200, 200, 200))
         end
     end
 end)

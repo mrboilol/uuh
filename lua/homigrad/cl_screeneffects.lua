@@ -7,6 +7,15 @@ local sleepy_sound
 local bloodvomit_sound
 local criticalloop_sound
 local criticalloop_sound_name
+
+hook.Add("PlayerDeath", "StopCriticalLoopOnDeath", function(victim, inflictor, attacker)
+    if victim == LocalPlayer() and IsValid(criticalloop_sound) then
+        criticalloop_sound:Stop()
+        criticalloop_sound = nil
+        criticalloop_sound_name = nil
+    end
+end)
+
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
 	if not sun then return end

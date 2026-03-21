@@ -3093,4 +3093,13 @@ if SERVER then
 		ply.inventory.Ammo = ply:GetAmmo()
 		ply:SetNetVar("Inventory",ply.inventory)
     end)
+
+    timer.Simple(0, function()
+        if not hg then hg = {} end
+        hg.ammoindextoname = {}
+        local ammoTypes = game.GetAmmoTypes()
+        for _, ammoData in pairs(ammoTypes) do
+            hg.ammoindextoname[ammoData.id] = ammoData.name
+        end
+    end)
 end
