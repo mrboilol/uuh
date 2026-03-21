@@ -115,6 +115,10 @@ hook.Add("Think", "stanleytumbler", function()
             end
         end
 
+        if org.superfighter then
+            tripChance = tripChance * 0.1
+        end
+
         if org.noradrenaline and org.noradrenaline > 0 then
             tripChance = tripChance * 0.1
         end
@@ -131,51 +135,53 @@ hook.Add("Think", "stanleytumbler", function()
             if math.random() < tripChance then
                 hg.Fake(ply)
                 --mcity reference?
-                local breakChance = 0.05
-                local dislocationChance = 0.2
+                if not org.superfighter then
+                    local breakChance = 0.05
+                    local dislocationChance = 0.2
 
-                if math.random() < breakChance then
-                    -- Limb break
-                    ply:EmitSound("owfuck"..math.random(1, 4)..".ogg")
-                    org.painadd = (org.painadd or 0) + 70 -- More pain for a break
+                    if math.random() < breakChance then
+                        -- Limb break
+                        ply:EmitSound("owfuck"..math.random(1, 4)..".ogg")
+                        org.painadd = (org.painadd or 0) + 70 -- More pain for a break
 
-                    if tripType == "wall" then
-                        if trHighHit then
-                            org.jaw = 1 -- Break jaw
-                        else
-                            if math.random(1, 2) == 1 then
-                                org.rleg = 1 -- Break right leg
+                        if tripType == "wall" then
+                            if trHighHit then
+                                org.jaw = 1 -- Break jaw
                             else
-                                org.lleg = 1 -- Break left leg
+                                if math.random(1, 2) == 1 then
+                                    org.rleg = 1 -- Break right leg
+                                else
+                                    org.lleg = 1 -- Break left leg
+                                end
+                            end
+                        elseif tripType == "ragdoll" then
+                            if math.random(1, 2) == 1 then
+                                org.rarm = 1 -- Break right arm
+                            else
+                                org.larm = 1 -- Break left arm
                             end
                         end
-                    elseif tripType == "ragdoll" then
-                        if math.random(1, 2) == 1 then
-                            org.rarm = 1 -- Break right arm
-                        else
-                            org.larm = 1 -- Break left arm
-                        end
-                    end
-                elseif math.random() < dislocationChance then
-                    -- Limb dislocation
-                    ply:EmitSound("disloc"..math.random(1, 2)..".wav")
-                    org.painadd = (org.painadd or 0) + 35
+                    elseif math.random() < dislocationChance then
+                        -- Limb dislocation
+                        ply:EmitSound("disloc"..math.random(1, 2)..".wav")
+                        org.painadd = (org.painadd or 0) + 35
 
-                    if tripType == "wall" then
-                        if trHighHit then
-                            org.jawdislocation = true
-                        else
-                            if math.random(1, 2) == 1 then
-                                org.rlegdislocation = true
+                        if tripType == "wall" then
+                            if trHighHit then
+                                org.jawdislocation = true
                             else
-                                org.llegdislocation = true
+                                if math.random(1, 2) == 1 then
+                                    org.rlegdislocation = true
+                                else
+                                    org.llegdislocation = true
+                                end
                             end
-                        end
-                    elseif tripType == "ragdoll" then
-                        if math.random(1, 2) == 1 then
-                            org.rarmdislocation = true
-                        else
-                            org.larmdislocation = true
+                        elseif tripType == "ragdoll" then
+                            if math.random(1, 2) == 1 then
+                                org.rarmdislocation = true
+                            else
+                                org.larmdislocation = true
+                            end
                         end
                     end
                 end
