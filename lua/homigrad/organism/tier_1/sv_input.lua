@@ -733,6 +733,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		dmgInfo:ScaleDamage(1)
 	end
 
+	local shockMul = 1
 	if dmgInfo:IsDamageType(DMG_BURN) then
 		painMul = 0.1
 		shockMul = 0.1

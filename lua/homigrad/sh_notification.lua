@@ -194,9 +194,7 @@ if CLIENT then
 
 		if msg == "" then return end
 
-        if not lply.notification_sound then
-            lply.notification_sound = "speech.mp3"
-        end
+        lply.notification_sound = "speech.mp3"
 
         if lply.notification_sound ~= "" then
             lply:EmitSound(lply.notification_sound, 75, 100, 0.75)

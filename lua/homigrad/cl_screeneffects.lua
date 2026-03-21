@@ -10,7 +10,7 @@ local criticalloop_sound_name
 
 hook.Add("PlayerDeath", "StopCriticalLoopOnDeath", function(victim, inflictor, attacker)
     if victim == LocalPlayer() and IsValid(criticalloop_sound) then
-        criticalloop_sound:Stop()
+        criticalloop_sound:FadeOut(0.5)
         criticalloop_sound = nil
         criticalloop_sound_name = nil
     end
@@ -544,7 +544,7 @@ local function stopthings()
 	end
 
     if IsValid(criticalloop_sound) then
-        criticalloop_sound:Stop()
+        criticalloop_sound:FadeOut(0.5)
         criticalloop_sound = nil
     end
 
@@ -735,7 +735,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
         end
 
         if not criticalloop_sound or criticalloop_sound_name ~= sound_to_play then
-            if IsValid(criticalloop_sound) then criticalloop_sound:Stop() end
+            if IsValid(criticalloop_sound) then criticalloop_sound:FadeOut(0.5) end
 
             criticalloop_sound = CreateSound(ply, sound_to_play)
             if criticalloop_sound then
@@ -751,7 +751,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
         if org.heartstop then
             criticalloop_sound:FadeOut(2) -- Fade out over 2 seconds
         else
-            criticalloop_sound:Stop()
+            criticalloop_sound:FadeOut(0.5)
         end
         criticalloop_sound = nil
         criticalloop_sound_name = nil

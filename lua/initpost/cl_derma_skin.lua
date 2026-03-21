@@ -38,7 +38,7 @@ surface.CreateFont("ZCity_VerySuperTiny", {
 
 surface.CreateFont("ZCity_SuperTiny", {
 	font = font(),
-	size = ScreenScale(6),
+	size = ScreenScale(5),
 	weight = 200
 })
 
@@ -50,7 +50,7 @@ surface.CreateFont("ZCity_Fixed_SuperTiny", {
 
 surface.CreateFont("ZCity_Tiny", {
 	font = font(),
-	size = ScreenScale(8),
+	size = ScreenScale(7),
 	weight = 200
 })
 
@@ -62,13 +62,13 @@ surface.CreateFont("ZCity_Fixed_Tiny", {
 
 surface.CreateFont("ZCity_Small", {
 	font = font(),
-	size = ScreenScale(15),
+	size = ScreenScale(10),
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Medium", {
 	font = font(),
-	size = ScreenScale(25),
+	size = ScreenScale(15),
 	weight = 200
 })
 
