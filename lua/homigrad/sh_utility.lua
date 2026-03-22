@@ -5,6 +5,9 @@ local PLAYER = FindMetaTable("Player")
 
 hg.ConVars = hg.ConVars or {}
 
+local hg_bulletholes = CreateConVar("hg_bulletholes", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Enable R6S bulletholes feature", 0, 1)
+hg.ConVars.hg_bulletholes = hg_bulletholes
+
 --\\ Is Changed
 	local ChangedTable = {}
 
@@ -716,7 +719,8 @@ local IsValid = IsValid
 	function IsLookingAt(ply, targetVec, floatDiff)
 		if not IsValid(ply) or not ply:IsPlayer() then return false end
 		local diff = targetVec - ply:GetShootPos()
-		return ply:GetAimVector():Dot(diff) / diff:Length() >= (floatDiff or 0.8)
+		local val = ply:GetAimVector():Dot(diff) / diff:Length()
+		return val >= (floatDiff or 0.8), val
 	end
 --//
 --\\ Custom Hull check

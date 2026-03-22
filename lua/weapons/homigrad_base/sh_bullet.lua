@@ -37,6 +37,16 @@ local effect = {
 	[MAT_GLASS] = {"glass",1},
 }
 
+if SERVER then
+	hg.bulletholes = hg.bulletholes or {}
+
+	hook.Add("PostCleanupMap", "cleanupholes", function()
+		hg.bulletholes = {}
+
+		SetNetVar("BulletHoles", hg.bulletholes)
+	end)
+end
+
 local bulletHit
 --local hg_bulletholes = GetConVar("hg_bulletholes") or CreateClientConVar("hg_bulletholes", "150", true, false, "0-500, amount of bullet hole effects (r6s-like)", 0, 500)
 local timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game = timer, util, math, IsValid, WorldToLocal, Vector, sound, EffectData, game
@@ -80,21 +90,9 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			Penetrated = penetration
 		end
 
-		if CLIENT then
-			if Penetrated then				
-				local ent = IsValid(tr.Entity) and tr.Entity or Entity(0)
-				--if #hg.bulletholes > hg_bulletholes:GetInt() then table.remove(hg.bulletholes,1) table.remove(hg.bulletholes,1) end
-				local hitPos2,dir2 = WorldToLocal(hitPos,dir:Angle(),ent:GetPos(),ent:GetAngles())
-				local _,hitNormal2 = WorldToLocal(hitPos,hitNormal:Angle(),ent:GetPos(),ent:GetAngles())
-				--table.insert(hg.bulletholes,{hitPos2,dir2,SearchDist,hitNormal2,Pen,ent})
-				local hitPos2,dir2 = WorldToLocal(hit.HitPos,(-dir):Angle(),ent:GetPos(),ent:GetAngles())
-				local _,hitNormal2 = WorldToLocal(hit.HitPos,hit.HitNormal:Angle(),ent:GetPos(),ent:GetAngles())
-				--table.insert(hg.bulletholes,{hitPos2,dir2,SearchDist,hitNormal2,Pen,ent})
-				hg.addBulletHoleEffect(hitPos)
-				hg.addBulletHoleEffect(hit.HitPos)
-				--return true
-			end
-			--return false
+		if CLIENT and Penetrated then
+			hg.addBulletHoleEffect(hitPos)
+			hg.addBulletHoleEffect(hit.HitPos)
 		end
 
 		if Penetrated then
@@ -146,12 +144,62 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			self.bullet = tBullet
 			
 			self:FireLuaBullets( tBullet )
-			
+
+			if hg.ConVars.hg_bulletholes:GetBool() then
+				local ent = IsValid(tr.Entity) and tr.Entity or Entity(0)
+				
+				--if #hg.bulletholes > hg_bulletholes:GetInt() then table.remove(hg.bulletholes,1) table.remove(hg.bulletholes,1) end
+				
+				local hitPos2, dir2 = WorldToLocal(hitPos, dir:Angle(), ent:GetPos(), ent:GetAngles())
+				local _, hitNormal2 = WorldToLocal(hitPos, hitNormal:Angle(), ent:GetPos(), ent:GetAngles())
+				
+				local dontadd = false
+				for i = 1, #hg.bulletholes do
+					if hitPos2:IsEqualTol(hg.bulletholes[i][1], bullet.Diameter / 25.4 * 3) then
+						dontadd = true
+						break
+					end
+				end
+
+				if IsValid(ent) and hgIsDoor(ent) then
+					-- open areaportal
+				end
+
+				if !dontadd then
+					local dist = hitPos:Distance(hit.HitPos)
+					table.insert(hg.bulletholes, {hitPos2, dir2, dist, hitNormal2, bullet.Diameter / 25.4 * 3, ent})
+					
+					local hitPos2, dir2 = WorldToLocal(hit.HitPos, (-dir):Angle(), ent:GetPos(), ent:GetAngles())
+					local _, hitNormal2 = WorldToLocal(hit.HitPos, hit.HitNormal:Angle(), ent:GetPos(), ent:GetAngles())
+					table.insert(hg.bulletholes, {hitPos2, dir2, dist, hitNormal2, bullet.Diameter / 25.4 * 3, ent})
+
+					if hgIsDoor(ent) then -- open the areaportal so it can be seen through
+						for i, enta in ipairs(ents.FindByClass("func_areaportal")) do
+							if enta:GetInternalVariable("target") == ent:GetName() then
+								enta:SetKeyValue("target", "")
+								enta:Fire("Open")
+								-- that door is now always "open"
+								-- fuck your optimisation mr mapping guy!!!
+								break
+							end
+						end
+					end
+
+					if #hg.bulletholes > 160 then
+						table.remove(hg.bulletholes, 1)
+						table.remove(hg.bulletholes, 1)
+					end
+
+					SetNetVar("BulletHoles", hg.bulletholes, nil, true)
+				end
+			end
+
 			local tr = util.TraceLine( {
 				start = SearchPos + dir,
 				endpos = SearchPos + dir * 10000,
 				mask = MASK_SHOT
 			} )
+
 			timer.Simple(0.1,function()
 				local effectdata1 = EffectData()
 				effectdata1:SetOrigin(tr.HitPos)
