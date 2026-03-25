@@ -641,6 +641,11 @@ if SERVER then
 			self.nextSpreadThink = curTime + vFireSpreadThinkTickRate + throttleAdd
 		end
 
+		if curTime >= (self.nextCOThink or 0) then
+			self:COThink()
+			self.nextCOThink = curTime + 1 + throttleAdd
+		end
+
 
 
 		-- Our next think will always be the minimal of our next think tasks' timings
@@ -650,13 +655,35 @@ if SERVER then
 			self.nextEatThink,
 			self.nextBurnThink,
 			self.nextDropThink,
-			self.nextSpreadThink
+			self.nextSpreadThink,
+			self.nextCOThink or 0
 		)
 
 
 		self:NextThink(nextThink)
 		return true
 
+	end
+
+	function ENT:COThink()
+		local fireState = self:GetFireState()
+		if fireState <= 0 then return end
+
+		local firePos = self:GetPos()
+		local radius = vFireBaseRadius(fireState) * 2
+
+		for _, ply in ipairs(player.GetAll()) do
+			if IsValid(ply) and ply:Alive() and ply.organism then
+				local plyPos = ply:GetPos()
+				local dist = plyPos:Distance(firePos)
+
+				if dist <= radius then
+					local strength = (fireState / 7) * 30 * (1 - (dist / radius))
+					ply.organism.CO_source_strength = math.max(ply.organism.CO_source_strength or 0, strength)
+					ply.organism.lastCOBreathe = CurTime()
+				end
+			end
+		end
 	end
 
 	function ENT:FuelThink()

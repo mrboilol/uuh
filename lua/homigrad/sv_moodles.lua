@@ -194,6 +194,8 @@ local function SyncMoodles(ply)
         { threshold = 0.30, texture = "materials/moodels/Braindamage_Moodle_4_Crit.png" },
     }, org.brain or 0)
 
+
+
     -- Cardiac Arrest
     manageMoodleState(ply, "cardiac_arrest", org.heartstop, "materials/moodels/Cardiacarrest_Moodle.png")
 
@@ -290,12 +292,13 @@ local function SyncMoodles(ply)
     -- Encumbered
     local maxweight = 30 -- You might want to configure this value
     local weightmul = hg.CalculateWeight(ply, maxweight)
+    local encumbrance_value = (1 / weightmul) - 1
     manageHierarchicalMoodle(ply, "encumbered", {
-        { threshold = 0.6, texture = "materials/moodels/Encumbered_Moodle_1.png" },
-        { threshold = 0.4, texture = "materials/moodels/Encumbered_Moodle_2.png" },
-        { threshold = 0.2, texture = "materials/moodels/Encumbered_Moodle_3.png" },
-        { threshold = 0, texture = "materials/moodels/Encumbered_Moodle_4.png" },
-    }, 0.8 - weightmul) -- Inverted
+        { threshold = 0.4, texture = "materials/moodels/Encumbered_Moodle_1.png" },
+        { threshold = 0.6, texture = "materials/moodels/Encumbered_Moodle_2.png" },
+        { threshold = 0.8, texture = "materials/moodels/Encumbered_Moodle_3.png" },
+        { threshold = 0.95, texture = "materials/moodels/Encumbered_Moodle_4_Crit.png" },
+    }, encumbrance_value)
 
     -- Endurance
     local stamina = (org.stamina and org.stamina[1]) or 100
@@ -363,17 +366,21 @@ local function SyncMoodles(ply)
         { threshold = 1.25, texture = "materials/moodels/Overdose_Moodle_4.png" },
     }, overdose)
 
-    -- Oxygen
+    -- Oxygen (now includes CO poisoning, as CO2 is not implemented)
     local o2_val = org.o2 and org.o2[1]
-    local o2_range = org.o2 and org.o2.range
-    if o2_val and o2_range and o2_range > 0 then
-        local o2_pct = o2_val / o2_range
-        manageHierarchicalMoodle(ply, "oxygen", {
-            { threshold = 0.3, texture = "materials/moodels/Oxygen_Moodle_1.png" },
-            { threshold = 0.15, texture = "materials/moodels/Oxygen_Moodle_2.png" },
-            { threshold = 0, texture = "materials/moodels/Oxygen_Moodle_3.png" },
-        }, 0.5 - o2_pct) -- Inverted
-    end
+    local o2_range = (org.o2 and org.o2.range) or 30
+    local o2_pct = (o2_val and o2_range > 0) and (o2_val / o2_range) or 1
+    
+    local co_level = org.CO or 0
+    
+    -- A general "bad gas" level. Higher is worse.
+    local gas_badness = (1 - o2_pct) + (co_level / 25)
+
+    manageHierarchicalMoodle(ply, "oxygen", {
+        { threshold = 0.4, texture = "materials/moodels/Oxygen_Moodle_1.png" },
+        { threshold = 0.8, texture = "materials/moodels/Oxygen_Moodle_2.png" },
+        { threshold = 1.2, texture = "materials/moodels/Oxygen_Moodle_3.png" },
+    }, gas_badness)
 
     -- Pain
     local pain = org.pain or 0

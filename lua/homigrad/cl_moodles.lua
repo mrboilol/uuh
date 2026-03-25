@@ -19,6 +19,7 @@ local CRITICAL_MOODLES = {
     ["brain_damage_4"] = true,
     ["cardiac_arrest"] = true,
     ["cold_4"] = true,
+
     ["heat_4"] = true,
     ["depression_4"] = true,
     ["endurance_4"] = true,
@@ -58,6 +59,7 @@ local MOODLE_INFO = {
     ["cold_2"] = { title = "Cold", desc = "Is it that cold outside?" },
     ["cold_3"] = { title = "Very Cold", desc = "Its really, REALLY cold." },
     ["cold_4"] = { title = "Hypothermia", desc = "Its... So... Cold..." },
+
     ["concussion"] = { title = "Incapacitated", desc = "You need help to get up." },
     ["deaf_1"] = { title = "Tinnitus", desc = "Your sensitive ears are ringing." },
     ["deaf_2"] = { title = "Partial Deafness", desc = "You barely can hear." },
@@ -78,7 +80,10 @@ local MOODLE_INFO = {
     ["dislocated_jaw_and_fractured_skull"] = { title = "Jaw and Skull Trauma", desc = "Your jaw is dislocated and your skull is fractured." },
     ["fractured_skull"] = { title = "Fractured Skull", desc = "WHERES YO HEAD AT??????????" },
     ["dislocation"] = { title = "Dislocation", desc = "Its not really that bad, but its recommened to place it back." },
-    ["encumbered"] = { title = "Encumbered", desc = "You are carrying too much, making it hard to move." },
+    ["encumbered_1"] = { title = "Encumbered", desc = "You are carrying a bit too much." },
+    ["encumbered_2"] = { title = "Heavily Encumbered", desc = "Your movement is noticeably slower." },
+    ["encumbered_3"] = { title = "Over-Encumbered", desc = "You can barely move with all this weight." },
+    ["encumbered_4"] = { title = "Immobilized", desc = "You are carrying too much to move." },
     ["endurance_1"] = { title = "Tired", desc = "Lets take a break..." },
     ["endurance_2"] = { title = "Exhausted", desc = "Lets REALLY take a break..." },
     ["endurance_3"] = { title = "Severely Exhausted", desc = "I can barely go on..." },
@@ -115,7 +120,7 @@ local MOODLE_INFO = {
     ["overdose_2"] = { title = "Numb", desc = "This feels REALLY good..." },
     ["overdose_3"] = { title = "Drugged", desc = "I see sounds and hear colors..." },
     ["overdose_4"] = { title = "Overdosing", desc = "Okay, i think i took too much..." },
-    ["oxygen"] = { title = "Hypoxemic", desc = "My skin is all weird and rubbery..." },
+    ["oxygen_1"] = { title = "Hypoxemic", desc = "My skin is all weird and rubbery..." },
     ["oxygen_2"] = { title = "Hypoxemic", desc = "Air.. I need air..." },
     ["oxygen_3"] = { title = "Critical Hypoxemia", desc = "..." },
     ["pain_1"] = { title = "Minor Pain", desc = "Just some discomfort." },
@@ -212,7 +217,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     if table.IsEmpty(CLIENT_MOODLES) then return end
     
     -- Layout settings
-    local iconSize, pad = 48, 6
+    local iconSize, pad = 48, 10
     local screenW = ScrW() > 0 and ScrW() or 1920
     local screenH = ScrH()
     local baseX, baseY
@@ -324,10 +329,8 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         end
         
         draw.RoundedBox(6, tx - 6, ty - 6, tw, th, Color(0, 0, 0, 200))
-        if CRITICAL_MOODLES[hovered] then
-            surface.SetDrawColor(255, 0, 0, 200)
-            surface.DrawOutlinedRect(tx - 6, ty - 6, tw, th)
-        end
+        surface.SetDrawColor(255, 0, 0, 200)
+        surface.DrawOutlinedRect(tx - 6, ty - 6, tw, th)
         draw.SimpleText(info.title, "ZCity_Medium", tx, ty, color_white)
         draw.SimpleText(info.desc, "ZCity_Small", tx, ty + 22, Color(200, 200, 200))
         if info.desc2 then

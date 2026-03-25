@@ -4,6 +4,7 @@
 local DAMAGE_THRESHOLD = 95
 local DAMAGE_THRESHOLD_HANDS = 70
 local HIGH_VELOCITY_THRESHOLD = 175
+local DOOR_BREAK_THRESHOLD = 115
 
 -- Damage multipliers
 local MULTIPLIERS = {
@@ -89,15 +90,19 @@ local function RagdollBodyDamage()
                                 end
                             elseif hgIsDoor and hgIsDoor(tr.Entity) and not tr.Entity:GetNoDraw() then
                                 local door = tr.Entity
-                                door.HP = door.HP or 200
-                                door.HP = door.HP - damage
-                                door:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1,4) .. ".wav")
-
-                                if door.HP <= 0 then
-                                    hgBlastThatDoor(door, vel:GetNormalized() * 200)
+                                if speed > DOOR_BREAK_THRESHOLD then
+                                    hgBlastThatDoor(door, vel:GetNormalized() * speed * 0.5)
                                 else
-                                    if part.dislocation_limb and math.random() < FAILED_BREACH_DISLOCATION_CHANCE then
-                                        apply_dislocation(owner, part.dislocation_limb, part.limb_name)
+                                    door.HP = door.HP or 200
+                                    door.HP = door.HP - damage
+                                    door:EmitSound("physics/wood/wood_crate_impact_hard" .. math.random(1,4) .. ".wav")
+
+                                    if door.HP <= 0 then
+                                        hgBlastThatDoor(door, vel:GetNormalized() * 200)
+                                    else
+                                        if part.dislocation_limb and math.random() < FAILED_BREACH_DISLOCATION_CHANCE then
+                                            apply_dislocation(owner, part.dislocation_limb, part.limb_name)
+                                        end
                                     end
                                 end
                             end

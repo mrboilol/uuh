@@ -238,12 +238,13 @@ module[2] = function(owner, org, timeValue)
 	org.pneumothorax = pneumothorax and min(org.pneumothorax + timeValue / 180 * (org.lungsL[2] + org.lungsR[2]), (org.lungsL[2] + org.lungsR[2]) / 2) or max(org.pneumothorax - timeValue / 10, 0)
 	
 	if org.lastCOBreathe and org.lastCOBreathe + 1 > CurTime() then
-		org.COregen = math.Approach(org.COregen, 30, timeValue * 1)
+		org.COregen = math.Approach(org.COregen, (org.CO_source_strength or 0), timeValue * 1)
 	else
 		org.COregen = math.Approach(org.COregen, 0, timeValue * 0.5)
+		org.CO_source_strength = 0
 	end
 
-	org.CO = max(org.CO - timeValue, 0)
+	org.CO = max(org.CO - timeValue * (org.pulse / 70), 0)
 	if success then
 		local oxygenate = hg.organism.OxygenateBlood(org) * 0.5
 		local lerp = min(max(org.pulse - 20, 0) / 20, 1)
@@ -380,7 +381,8 @@ module[2] = function(owner, org, timeValue)
 	end
 
 	if o2[1] < 12 then
-		org.needfake = true
+			org.CO = org.CO + timeValue * 0.1
+			org.needfake = true
 
 		if org.isPly then
 			hg.LightStunPlayer(owner, 3)

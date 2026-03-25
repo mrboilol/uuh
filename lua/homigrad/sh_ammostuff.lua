@@ -3096,10 +3096,13 @@ if SERVER then
 
     timer.Simple(0, function()
         if not hg then hg = {} end
-        hg.ammoindextoname = {}
+        if not hg.ammoindextoname then hg.ammoindextoname = {} end
         local ammoTypes = game.GetAmmoTypes()
+        if not ammoTypes then return end
         for _, ammoData in pairs(ammoTypes) do
-            hg.ammoindextoname[ammoData.id] = ammoData.name
+            if ammoData and ammoData.id and ammoData.name then
+                 hg.ammoindextoname[ammoData.id] = ammoData.name
+            end
         end
     end)
 end

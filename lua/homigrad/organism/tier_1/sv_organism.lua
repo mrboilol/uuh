@@ -87,6 +87,7 @@ hook.Add("Org Clear", "Main", function(org)
 	module.metabolism[1](org)
 	module.random_events[1](org)
 	org.brain = 0
+	org.CO = 0
 	org.consciousness = 1
 	org.disorientation = 0
 	org.jaw = 0
@@ -1023,7 +1024,6 @@ local function fixlimb(org, key, fixer)
 			dmgInfo:SetDamageType(DMG_CLUB)
 			dmgInfo:SetAttacker(fixer)
 			hg.organism.input_list[key](org.owner.organism, 1, 10, dmgInfo, 0, vector_up)
-			fixer:Notify("You felt something snap horribly out of place! You may have made things worse...", 1, "spine_break_on_relocate", 10)
 			return
 		end
 

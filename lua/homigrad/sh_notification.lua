@@ -194,13 +194,9 @@ if CLIENT then
 
 		if msg == "" then return end
 
-        lply.notification_sound = "speech.mp3"
+    lply:EmitSound("speech.mp3", 75, 100, 0.75)
 
-        if lply.notification_sound ~= "" then
-            lply:EmitSound(lply.notification_sound, 75, 100, 0.75)
-        end
-
-		CreateNotification(msg, showtime, clr)
+    CreateNotification(msg, showtime, clr)
 	end)
 
 	net.Receive("HGNotificateBerserk",function()
@@ -209,7 +205,9 @@ if CLIENT then
 
 		if msg == "" then return end
 
-		CreateNotificationBerserk(msg, showtime, clr)
+    lply:EmitSound("speech.mp3", 75, 100, 0.75)
+
+    CreateNotificationBerserk(msg, showtime, clr)
 	end)
 
 	hg.CreateNotification = CreateNotification
