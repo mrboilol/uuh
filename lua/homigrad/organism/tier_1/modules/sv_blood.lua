@@ -1,9 +1,11 @@
 local CurTime = CurTime
 local time
-local max, min, Round = math.max, math.min, math.Round
+local max, min, Round = math.max, math.min, Round
 --local Organism = hg.organism
 hg.organism.module.blood = {}
 local module = hg.organism.module.blood
+
+local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
 
 hg.organism.bloodtypes = {
 	["o-"] = {["o-"] = true,["o+"] = true,["a-"] = true,["a+"] = true,["b-"] = true,["b+"] = true,["ab-"] = true,["ab+"] = true},
@@ -210,7 +212,7 @@ module[2] = function(owner, org, mulTime)
 	end
 	bleedoutspeed2 = bleedoutspeed2 / next_arterypump
 
-	if org.blood < (2400 / (adrenaline / 3 + 1)) * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) then org.needotrub = true end
+	if not homigrad_damage_convar:GetBool() and org.blood < (2400 / (adrenaline / 3 + 1)) * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) then org.needotrub = true end
 
 	local bleed = org.internalBleed / 14 -- + org.lungsR[3] + org.lungsL[3]
     org.internalBleed = math.Approach(org.internalBleed, 0, org.tranexamic_acid > 0 and mulTime / 2 or mulTime / 55)

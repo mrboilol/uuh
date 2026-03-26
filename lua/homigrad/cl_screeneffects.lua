@@ -1,4 +1,6 @@
 
+local homigrad_damage_convar = CreateClientConVar("homigrad_damage", "0", true, false)
+
 local concussion_effect_time = 0
 local concussion_dsp_set = false
 
@@ -568,6 +570,30 @@ local lerpblood = 0
 local addtime = CurTime()
 local hurtoverlay = Material("zcity/neurotrauma/damageOverlay.png", "smooth")
 hook.Add("Post Post Processing", "ItHurts", function()
+	if homigrad_damage_convar:GetBool() then 
+        local org = lply.organism
+        if org then
+            local pain = org.pain or 0
+            pain = math.max(pain - 15, 0)
+            local shock = (org.shock or 0) * 1 + (1 - org.consciousness) * 40
+            local shockLerp = LerpFT(0.01, shockLerp or 0, shock + (lply.suiciding and math.max(0, org.heartbeat - 90) or 0))
+
+            if (pain > 0.001 or shockLerp > 5) or org.otrub or blindness_intensity > 0 then
+                local strobe = math.ease.InOutSine(math.abs(math.cos(CurTime() * 2))) * pain / 2
+                pain = pain + strobe
+                shock = shockLerp
+                render.UpdateScreenEffectTexture()
+
+                vignetteMat:SetFloat("$c2_x", CurTime() + 10000) --Time
+                vignetteMat:SetFloat("$c0_z", ((org.otrub and 5 or (pain / 40 + math.max(shock - 5, 0) / 3)) + 0) * 0.2) --ColorIntensity
+                vignetteMat:SetFloat("$c1_y", ((org.otrub and 10 or (pain / 40 + math.max(shock - 5, 0) / 3)) + 0) * 0.2) --Vignette
+
+                render.SetMaterial(vignetteMat)
+                render.DrawScreenQuad()
+            end
+        end
+        return 
+    end
 	if damage_blur_time > 0 then
 		damage_blur_time = math.max(damage_blur_time - FrameTime(), 0)
 		DrawMotionBlur(0.2, 0.8, 0.05)

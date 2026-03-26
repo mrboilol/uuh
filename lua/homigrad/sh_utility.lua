@@ -872,6 +872,7 @@ local IsValid = IsValid
 --//
 --\\ Calculate Weight 
 	function hg.CalculateWeight(ply,maxweight)
+		if GetConVar("homigrad_damage"):GetBool() then return 1 end
 		local weight = 0
 
 		local weps = ply:GetWeapons()

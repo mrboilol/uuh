@@ -75,7 +75,10 @@ local function Run()
 	print("Loading zcity...") -- Loading homigrad :]
 	hg.loaded = false
 	if engine.ActiveGamemode() == "ixhl2rp" then return end
-	IncludeDir("homigrad")
+		IncludeDir("homigrad")
+		if CLIENT then
+			include("homigrad/client/cl_death_screen.lua")
+		end
 	hg.loaded = true
 	print("Loaded zcity, " .. tostring(math.Round(SysTime() - time, 5)) .. " seconds needed")
 	hook.Run("HomigradRun")

@@ -2,6 +2,8 @@ local max, min, Clamp, Approach = math.max, math.min, math.Clamp, math.Approach
 --local Organism = hg.organism
 hg.organism.module.pain = {}
 local module = hg.organism.module.pain
+
+local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
 module[1] = function(org)
 	org.shock = 0
 	org.pain = 0
@@ -82,16 +84,21 @@ module[2] = function(owner, org, timeValue)
 		org.shock = math.Approach(org.shock, 70, timeValue * 4)
 	end
 
+	local cons_loss_multiplier = 1
+	if homigrad_damage_convar:GetBool() then
+		cons_loss_multiplier = 0.5 -- Lose consciousness 50% slower
+	end
+
 	if (org.shock > (30 * analgesiaMul)) or org.otrub then
-		org.consciousness = math.Approach(org.consciousness, 0.1, timeValue / 5)
+		org.consciousness = math.Approach(org.consciousness, 0.1, timeValue / 5 * cons_loss_multiplier)
 	end
 
 	if org.tranquilizer > 0 then
 		org.tranquilizer = math.Approach(org.tranquilizer, 0, org.tranquilizer > 1 and timeValue / 5 or timeValue / 30)
 		--org.shock = math.Approach(org.shock, 50, timeValue * org.tranquilizer * 5)
-		org.consciousness = math.Approach(org.consciousness, 0, timeValue / 30 * org.tranquilizer)
+		org.consciousness = math.Approach(org.consciousness, 0, timeValue / 30 * org.tranquilizer * cons_loss_multiplier)
 	else
-		org.consciousness = math.Approach(org.consciousness, org.blood < 3000 and (org.blood - 2500) / 500 or 1, timeValue / 15)
+		org.consciousness = math.Approach(org.consciousness, org.blood < 3000 and (org.blood - 2500) / 500 or 1, timeValue / 15 * cons_loss_multiplier)
 	end
 
 	if org.consciousness < 0.1 then
@@ -122,7 +129,7 @@ module[2] = function(owner, org, timeValue)
 		if org.analgesia >= 2.0 then
 			org.needotrub = true
 		elseif org.analgesia >= 1.5 then
-			org.consciousness = math.Approach(org.consciousness, 0.25, timeValue * 0.5)
+			org.consciousness = math.Approach(org.consciousness, 0.25, timeValue * 0.5 * cons_loss_multiplier)
 		elseif org.analgesia >= 1.0 then
 			local impairment = (org.analgesia - 1.5) * 0.2 * timeValue
 			org.consciousness = math.max(org.consciousness - impairment, 0)

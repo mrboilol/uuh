@@ -1172,6 +1172,115 @@ hook.Add("PlayerPostThink", "Organism_ForceSuicide", function(ply)
     end
 end)
 
+local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
+
+local function OldHomigradDamage(ply, dmgInfo, hitgroup, ent)
+    local org = ply.organism
+    if not org then return end
+
+    dmgInfo:ScaleDamage(0.9)
+
+    if dmgInfo:GetAttacker():IsNPC() then
+        dmgInfo:SetDamage(dmgInfo:GetDamage() * 2)
+    end
+
+    if hitgroup == HITGROUP_HEAD then
+        dmgInfo:ScaleDamage(16)
+        ply:SetNWAngle("viewpunch", Angle(20, math.Rand(-5, 5), math.Rand(-5, 5)) / 2)
+        ply:EmitSound("homigrad/headshot" .. math.random(1,2) .. ".wav")
+    elseif hitgroup == HITGROUP_LEFTARM then
+        dmgInfo:ScaleDamage(0.9)
+        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
+    elseif hitgroup == HITGROUP_LEFTLEG then
+        dmgInfo:ScaleDamage(0.9)
+        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
+    elseif hitgroup == HITGROUP_RIGHTLEG then
+        dmgInfo:ScaleDamage(0.9)
+        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
+    elseif hitgroup == HITGROUP_RIGHTARM then
+        dmgInfo:ScaleDamage(0.9)
+        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
+    elseif hitgroup == HITGROUP_CHEST then
+        dmgInfo:ScaleDamage(0.95)
+        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-35, 15), math.Rand(-15, 15)) / 2)
+    elseif hitgroup == HITGROUP_STOMACH then
+        dmgInfo:ScaleDamage(0.85)
+        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
+    end
+
+    local dmg = dmgInfo:GetDamage()
+    if dmg < 1 then return end
+
+    if dmgInfo:IsDamageType(DMG_BLAST + DMG_SLASH + DMG_GENERIC + DMG_BULLET) then
+        dmg = dmg * 1.5
+    elseif dmgInfo:IsDamageType(DMG_VEHICLE + DMG_CRUSH) and dmg > 5 then
+        dmg = dmg * 0.015
+    elseif dmgInfo:IsDamageType(DMG_CLUB + DMG_BURN + DMG_DROWN + DMG_SHOCK + DMG_BUCKSHOT) then
+        dmg = dmg * 3
+    elseif not dmgInfo:IsDamageType(DMG_BLAST + DMG_NERVEGAS) then
+        dmg = dmg * 1.5
+    end
+
+    org.pain = (org.pain or 0) + dmg / 10
+    math.Clamp(org.pain, 0, 1000)
+
+    if (org.pain > (450 * (org.blood / 5000)) or org.blood < 3000) and not org.otrub then
+        hg.Fake(ply, nil, true)
+    end
+end
+
+hook.Add("HomigradDamage", "CombinedDamage", function(ply, dmgInfo, hitgroup, ent)
+    if homigrad_damage_convar:GetBool() then
+        OldHomigradDamage(ply, dmgInfo, hitgroup, ent)
+    else
+        -- Existing mood damage logic
+        if GetConVar("hg_mood_enabled"):GetBool() then
+            local org = ply.organism
+            if not org then return end
+
+            local mood = org.mood
+            if not mood then return end
+
+            local damage = dmgInfo:GetDamage()
+            local inertia = hg.organism.GetMoodInertiaMultiplier(ply)
+            local mood_loss = damage / 5 * inertia -- Lose 1 mood for every 5 damage
+
+            local new_mood = math.Clamp(mood - mood_loss, 0, 100)
+            org.mood = new_mood
+        end
+    end
+
+    -- Berserk logic (runs regardless of homigrad_damage)
+    local attacker, victim = dmgInfo:GetAttacker(), ply
+    if !attacker or !IsValid(attacker) or (IsValid(attacker) and !attacker:IsPlayer()) then
+        attacker = ply:GetPhysicsAttacker()
+    end
+
+    if not IsValid(attacker) or not attacker:IsPlayer() then return end
+    if not IsValid(victim) or not victim:IsPlayer() then return end
+    if attacker == victim then return end
+    if !attacker:IsBerserk() then return end
+
+    timer.Simple(0, function()
+        if IsValid(attacker) and IsValid(victim) and not victim:Alive() then
+            attacker.BerserkKills = (attacker.BerserkKills or 0) + 1
+            attacker:NotifyBerserk(numerical[attacker.BerserkKills] or (attacker.BerserkKills .. "."))
+
+            attacker.organism.berserk = attacker.organism.berserk + 0.5
+        end
+    end)
+end)
+
+hook.Add("PlayerDeath", "HomigradOldDeath", function(victim, infl, attacker)
+    if homigrad_damage_convar:GetBool() then
+        net.Start("death")
+        net.WriteString(attacker:GetName())
+        net.WriteString(attacker:GetActiveWeapon():GetPrintName())
+        net.WriteString("body") -- The old code doesn't seem to have a reliable way to get the bone, so I'll just use "body"
+        net.Send(victim)
+    end
+end)
+
 concommand.Add("hg_setmood", function(ply, cmd, args)
     if not ply:IsAdmin() then return end
 

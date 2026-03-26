@@ -91,6 +91,7 @@ local walkTime = 0
 
 local lerped_ang = Angle(0,0,0)
 function HGAddView(ply, origin, angles, velLen)
+	if GetConVar("homigrad_damage"):GetBool() then return origin, angles end
 	if ply:Alive() then
 		local ent = hg.GetCurrentCharacter(ply)
 		local org = ply.organism or {}

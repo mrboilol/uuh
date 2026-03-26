@@ -49,7 +49,10 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 	local hg_divejump = CreateConVar("hg_divejump", "0", {FCVAR_REPLICATED,FCVAR_ARCHIVE,FCVAR_NOTIFY}, "Toggle dive jumps on crouch jump", 0, 1)
 	
 	local vomitVPAng, vecZero = Angle(1, 0, 0), Vector()
-	hook.Add("SetupMove", "HG(StartCommand)", function(ply, mv, cmd)
+	local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
+
+hook.Add("SetupMove", "HG(StartCommand)", function(ply, mv, cmd)
+		if homigrad_damage_convar:GetBool() then return end
 		--\\ DeltaTime
 			ply.LastStartCommand = ply.LastStartCommand or SysTime()
 			local delta_time = SysTime() - ply.LastStartCommand--FrameTime()
