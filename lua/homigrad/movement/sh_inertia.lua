@@ -52,7 +52,7 @@ local Angle, Vector, AngleRand, VectorRand, math, hook, util, game = Angle, Vect
 	local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
 
 hook.Add("SetupMove", "HG(StartCommand)", function(ply, mv, cmd)
-		if homigrad_damage_convar:GetBool() then return end
+		if GetConVar("homigrad_damage"):GetBool() or GetConVar("hg_arcademovement"):GetBool() then return end
 		--\\ DeltaTime
 			ply.LastStartCommand = ply.LastStartCommand or SysTime()
 			local delta_time = SysTime() - ply.LastStartCommand--FrameTime()

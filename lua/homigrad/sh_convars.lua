@@ -5,4 +5,5 @@ if not use_homigrad_hud then
 end
 
 CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
+CreateConVar("hg_arcademovement", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable arcade movement")
 
