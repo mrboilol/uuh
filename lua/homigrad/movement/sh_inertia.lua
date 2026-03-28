@@ -446,39 +446,7 @@ hook.Add("SetupMove", "HG(StartCommand)", function(ply, mv, cmd)
 		move = move * k
 		ply.move = move
 
-		if SERVER and not IsValid(ply.FakeRagdoll) then
-			ply.eyeAnglesOld = ply.eyeAnglesOld or ply:EyeAngles()
-			local cosine = ply:EyeAngles():Forward():Dot(ply.eyeAnglesOld:Forward())
-			ply.eyeAnglesOld = ply:EyeAngles()
 
-			if (velLen > 200 and (math.random(150) == 1 or cosine <= 0.99)) then
-				local tr = {}
-				tr.start = ply:GetPos()
-				tr.endpos = tr.start - vector_up * 1
-				tr.filter = ply
-				tr = util.TraceLine(tr)
-
-				if tr.SurfaceProps and util.GetSurfaceData(tr.SurfaceProps) and util.GetSurfaceData(tr.SurfaceProps).friction < 0.2 then
-					local b1 = ply:TranslateBoneToPhysBone(ply:LookupBone("ValveBiped.Bip01_L_Calf"))
-					local phys1 = hg.IdealMassPlayer["ValveBiped.Bip01_L_Calf"]
-
-					local b2 = ply:TranslateBoneToPhysBone(ply:LookupBone("ValveBiped.Bip01_R_Calf"))
-					local phys2 = hg.IdealMassPlayer["ValveBiped.Bip01_R_Calf"]
-
-					local torso = ply:TranslateBoneToPhysBone(ply:LookupBone("ValveBiped.Bip01_Spine2"))
-					local phystorso = hg.IdealMassPlayer["ValveBiped.Bip01_Spine2"]
-					local force = vel:GetNormalized() * 150
-
-					hg.AddForceRag(ply, torso, -force * 5 * phystorso, 0.5)
-					hg.AddForceRag(ply, b1, (force * 5 - vector_up * 2) * phys1, 0.5)
-					hg.AddForceRag(ply, b2, (force * 5 - vector_up * 2) * phys2, 0.5)
-
-					timer.Simple(0,function()
-						hg.StunPlayer(ply)
-					end)
-				end
-			end
-		end
 
 		--// Dive jump
 		if hg_divejump:GetBool() then

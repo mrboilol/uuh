@@ -37,7 +37,21 @@ hook.Add("Think", "stanleytumbler", function()
             effectiveThreshold = effectiveThreshold * 0.8
         end
 
-        if speed < effectiveThreshold then continue end
+        ply.eyeAnglesOld = ply.eyeAnglesOld or ply:EyeAngles()
+        local cosine = ply:EyeAngles():Forward():Dot(ply.eyeAnglesOld:Forward())
+        ply.eyeAnglesOld = ply:EyeAngles()
+
+        local isSlipping = false
+        local tr = util.TraceLine({
+            start = ply:GetPos(),
+            endpos = ply:GetPos() - Vector(0,0,1),
+            filter = ply
+        })
+        if tr.Hit and tr.SurfaceProps and util.GetSurfaceData(tr.SurfaceProps) and util.GetSurfaceData(tr.SurfaceProps).friction < 0.2 then
+            isSlipping = true
+        end
+
+        if speed < effectiveThreshold and not isSlipping then continue end
 
 
         local speedExcess = math.max(0, speed - effectiveThreshold)
@@ -48,6 +62,12 @@ hook.Add("Think", "stanleytumbler", function()
         local shouldTrip = false
         local tripType = "none"
         local trHighHit = false
+
+        if isSlipping or (speed > 200 and (math.random(150) == 1 or cosine <= 0.99)) then
+            shouldTrip = true
+            tripType = "slip"
+            tripChance = tripChance + 0.5
+        end
 
         local forward = ply:GetAimVector()
         forward.z = 0
@@ -188,25 +208,38 @@ hook.Add("Think", "stanleytumbler", function()
                 
                 local ragdoll = ply.FakeRagdoll
                 if IsValid(ragdoll) then
-                    local phys = ragdoll:GetPhysicsObject()
-                    if IsValid(phys) then
-                        local impulseDir = velocity:GetNormalized()
-                        if tripType == "wall" then
-                             impulseDir = impulseDir + Vector(0,0,0.5)
-                             impulseDir:Normalize()
-                        elseif tripType == "gap" then
-                            impulseDir = impulseDir + Vector(0,0,-0.5)
-                            impulseDir:Normalize()
-                        end
-                        
-                        local forceMag = speed * 5 
-                        phys:ApplyForceCenter(impulseDir * forceMag)
-                        phys:AddAngleVelocity(Vector(math.random(-100,100), math.random(-100,100), math.random(-100,100)))
+                    local b1 = ply:TranslateBoneToPhysBone(ply:LookupBone("ValveBiped.Bip01_L_Calf"))
+                    local phys1 = (hg.IdealMassPlayer and hg.IdealMassPlayer["ValveBiped.Bip01_L_Calf"]) or 7
+                    local b2 = ply:TranslateBoneToPhysBone(ply:LookupBone("ValveBiped.Bip01_R_Calf"))
+                    local phys2 = (hg.IdealMassPlayer and hg.IdealMassPlayer["ValveBiped.Bip01_R_Calf"]) or 7
+                    local torso = ply:TranslateBoneToPhysBone(ply:LookupBone("ValveBiped.Bip01_Spine2"))
+                    local phystorso = (hg.IdealMassPlayer and hg.IdealMassPlayer["ValveBiped.Bip01_Spine2"]) or 20
+
+                    local force = velocity:GetNormalized() * 150
+                    
+                    local torsoForce = -force * 5 * phystorso
+                    local legForce = (force * 5 - Vector(0,0,2)) * phys1
+
+                    if tripType == "wall" then
+                        torsoForce = torsoForce * 1.2
+                        legForce = legForce * 0.8 
+                    elseif tripType == "gap" then
+                        legForce = legForce * 1.5
+                    elseif tripType == "ragdoll" then
+                         torsoForce = torsoForce * 0.5
                     end
+
+                    hg.AddForceRag(ply, torso, torsoForce, 0.5)
+                    hg.AddForceRag(ply, b1, legForce, 0.5)
+                    hg.AddForceRag(ply, b2, legForce, 0.5)
+
+                    timer.Simple(0, function()
+                        if IsValid(ply) then hg.StunPlayer(ply) end
+                    end)
+
                     local recoveryDelay = 2
                     if consciousness < 0.5 then recoveryDelay = 4 end
                     ply.fakecd = CurTime() + recoveryDelay
-                else
                 end
                 
                 ply.nextTumbleCheck = CurTime() + TUMBLE_COOLDOWN
