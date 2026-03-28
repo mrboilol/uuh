@@ -390,7 +390,8 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 24
+SWEP.Primary.DefaultClip = 3
+SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "Bomb"
 
@@ -457,25 +458,32 @@ function SWEP:PrimaryAttack()
                     angrybird:SetPhysicsAttacker(ply, 10)
                 end
 
-                -- Store the last thrown bird on the weapon so SecondaryAttack can detonate it
-                self.LastBird = angrybird
+                angrybird:SetCollisionGroup(COLLISION_GROUP_WEAPON)
 
-                -- Explode on collision
                 angrybird:AddCallback("PhysicsCollide", function(ent, data)
-                    ExplodeBird(ent, ply)
-                    if self.LastBird == ent then
-                        self.LastBird = nil
-                    end
-                end)
+                    if not IsValid(ent) then return end
 
-                -- Auto-remove after 10 seconds
-                timer.Simple(10, function()
-                    if IsValid(angrybird) then
-                        ExplodeBird(angrybird, ply)
+                    local time = CurTime()
+
+                    if ent.LastExplosion and time - ent.LastExplosion < 0.1 then return end
+                    ent.LastExplosion = time
+
+                    local attacker = ent:GetPhysicsAttacker()
+                    if not IsValid(attacker) then attacker = ent end
+
+                    local explosion = ents.Create("env_explosion")
+                    if IsValid(explosion) then
+                        explosion:SetPos(ent:GetPos())
+                        explosion:SetOwner(attacker)
+                        explosion:SetPhysicsAttacker(attacker)
+                        explosion:SetKeyValue("iMagnitude", "500")
+                        explosion:Spawn()
+                        explosion:Fire("Explode", 0, 0)
                     end
-                    if IsValid(self) and self.LastBird == angrybird then
-                        self.LastBird = nil
-                    end
+
+                    hg.Explosives.Sharpnel(ent, 500, 100)
+
+                    ent:Remove()
                 end)
             end)
 

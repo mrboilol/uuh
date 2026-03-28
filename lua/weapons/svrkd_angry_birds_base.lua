@@ -4,7 +4,7 @@ if SERVER then
 
         local phys = ent:GetPhysicsObject()
         if IsValid(phys) then
-            phys:SetMass(50)
+            phys:SetMass(200) -- Increased Mass
             phys:AddAngleVelocity(VectorRand() * 400)
         end
 
@@ -40,4 +40,10 @@ if SERVER then
             end
         end)
     end
+end
+
+function SWEP:CustomHolster(dev, wep, speed)
+    if wep:GetClass() == "weapon_physgun" or wep:GetClass() == "gmod_tool" or wep:GetClass() == "weapon_physcannon" then return end
+    speed.walk = speed.walk / 2
+    speed.run = speed.run / 2
 end

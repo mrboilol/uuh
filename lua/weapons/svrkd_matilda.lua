@@ -280,7 +280,8 @@ SWEP.ViewModelBoneMods = {
 
 SWEP.Spawnable = true
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 24
+SWEP.Primary.DefaultClip = 3
+SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "Matilda"
 SWEP.Secondary.Automatic = false
