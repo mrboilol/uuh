@@ -38,16 +38,16 @@ local tips = {
     "a cat has caught you",
     "a terrible spirit lives on hmcd_mansion..",
     "but the game is under development",
-    "crow's z city is for pussies"
-    "zgradians are dumb retards"
-    "Dont run into walls."
-    "Watch the floor! Running over bumps will sometimes trip you."
-    "Hitting the chest is sometimes a better idea than hitting the face."
-    "Lungs and heart have an 80% chance to be protected by ribs."
-    "Wheres your head at???"
-    "Go get yo knife go get yo knife..."
-    "sometimes i dream about cheese."
-    "RDM RDM RDM RDM RDM RDM RDM RDM"
+    "crow's z city is for pussies",
+    "zgradians are dumb retards",
+    "Dont run into walls.",
+    "Watch the floor! Running over bumps will sometimes trip you.",
+    "Hitting the chest is sometimes a better idea than hitting the face.",
+    "Lungs and heart have an 80% chance to be protected by ribs.",
+    "Wheres your head at???",
+    "Go get yo knife go get yo knife...",
+    "sometimes i dream about cheese.",
+    "RDM RDM RDM RDM RDM RDM RDM RDM",
     "go play terraria"
 }
 
