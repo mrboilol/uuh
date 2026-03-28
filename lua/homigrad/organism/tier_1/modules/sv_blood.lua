@@ -1,11 +1,9 @@
 local CurTime = CurTime
 local time
-local max, min, Round = math.max, math.min, Round
+local max, min, Round = math.max, math.min, math.Round
 --local Organism = hg.organism
 hg.organism.module.blood = {}
 local module = hg.organism.module.blood
-
-local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
 
 hg.organism.bloodtypes = {
 	["o-"] = {["o-"] = true,["o+"] = true,["a-"] = true,["a+"] = true,["b-"] = true,["b+"] = true,["ab-"] = true,["ab+"] = true},
@@ -34,8 +32,7 @@ module[1] = function(org)
 	org.wounds = {}
 	org.arterialwounds = {}
 	org.veinwounds = {}
-	org.vessel_o2_debuff = 0
-	org.vessel_co_debuff = 0
+	org.veins = 0
 	org.wantToVomit = 0
 	org.vomitInThroat = nil
 
@@ -46,7 +43,6 @@ module[1] = function(org)
 	end
 
 	org.hemotransfusionshock = 0
-    org.has_hemothorax = false
 
 	org.survivalchance = 1
 end
@@ -94,23 +90,16 @@ module[2] = function(owner, org, mulTime)
 	if org.isPly and not org.otrub and org.blood < 2900 then org.owner:Notify(math.random(2) == 1 and "I cant feel anything..." or (math.random(2) == 1 and "I think I'm gonna faint right now...") or "I dont feel so good...",60,"blood2",0) end
 
 	if org.internalBleed < 0.5 and org.bleed < 0.05 and org.pulse > 5 then
-        org.blood = min(org.blood + mulTime * 5 * (adrenaline * 1.5 + 1) * (org.satiety / 100 + 1) * org.pulse / 70 * (1 - org.liver), 5000)
-    end
+		org.blood = min(org.blood + mulTime * 5 * (adrenaline * 1.5 + 1) * (org.satiety / 100 + 1) * org.pulse / 70, 5000)
+	end
 
 	if org.hemotransfusionshock > 0 then
 		org.hemotransfusionshock = math.max(org.hemotransfusionshock - mulTime / 200,0)
 		org.internalBleed = org.internalBleed + mulTime / 30
 	end
 
-	if org.arteria == 1 or org.vessel_o2_debuff > 0 then
-        local debuff_amount = org.arteria == 1 and 5 or org.vessel_o2_debuff
-        org.o2[1] = math.max(org.o2[1] - mulTime * debuff_amount, 0)
-        org.vessel_o2_debuff = math.max(org.vessel_o2_debuff - mulTime * 0.05, 0)
-    end
-
-	if org.vessel_co_debuff > 0 then
-		org.CO = (org.CO or 0) + mulTime * org.vessel_co_debuff
-		org.vessel_co_debuff = math.max(org.vessel_co_debuff - mulTime * 0.05, 0)
+	if org.arteria == 1 then
+		org.o2[1] = math.max(org.o2[1] - mulTime * 5,0)
 	end
 
 	org.consciousness = math.min(org.consciousness, math.min(org.blood / 3000, 1) * math.Clamp(((org.temperature < 30 and org.temperature - 30 or 0) * 0.25 + 1), 0.25, 1))
@@ -126,8 +115,8 @@ module[2] = function(owner, org, mulTime)
 		for i, wound in pairs(org.wounds) do
 			local rand1 = math.Rand(4, 10) * 1
 			local rand2 = math.Rand(0.5, 1) * 1
-						local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.02 * (wound.vein and 2.5 or 1)
-			local coagulate = 2 * mulTime * rand2 * (adrenaline * 0.1 + 1) * 0.04 * (1 + org.tranexamic_acid * 2)-- / #org.wounds
+			local bleed = rand1 * wound[1] * mulTime * math.max(org.pulse, 20) / 70 * 2.0 * (1 - math.min(adrenaline / 6, 0.5)) * org.bleedingmul * 0.02
+			local coagulate = 2 * mulTime * rand2 * (adrenaline * 0.1 + 1) * 0.04-- / #org.wounds
 			bleedoutspeed = bleedoutspeed + bleed / rand1 * 3--we pray for the luck of it being in the center
 			coagulatespeed = coagulatespeed + coagulate / rand2 * 1
 			
@@ -152,9 +141,9 @@ module[2] = function(owner, org, mulTime)
 	end
 
 	if org.liver > 0.5 then
-        org.blood = math.max(org.blood - mulTime * 10 * org.pulse / 70 * org.liver,0)
-        bleedoutspeed = bleedoutspeed + mulTime * 10 * org.pulse / 70 * org.liver
-    end
+		//org.blood = math.max(org.blood - mulTime * 10 * org.pulse / 70 * org.liver,0)
+		//bleedoutspeed = bleedoutspeed + mulTime * 10 * org.pulse / 70 * org.liver
+	end
 
 	bleedoutspeed = bleedoutspeed / (beatsPerSecond + 2)
 
@@ -163,18 +152,17 @@ module[2] = function(owner, org, mulTime)
 	local ent = owner:IsPlayer() and IsValid(owner.FakeRagdoll) and owner.FakeRagdoll or owner
 	for i, wound in pairs(org.arterialwounds) do
 		bleedoutspeed2 = bleedoutspeed2 + wound[1] * mulTime * 0.2 * math.max(org.pulse, 20) / 80
-		org.vessel_o2_debuff = org.vessel_o2_debuff + wound[1] * mulTime * 0.01
 
 		if wound[5] + next_arterypump * 2 < time then
 			local pos, ang = ent:GetBonePosition(ent:LookupBone(wound[4]))
 			wound[5] = time
-			org.blood = max(org.blood - wound[1] * mulTime * 5.5 * math.max(org.pulse, 20) / 80, 1)
+			org.blood = max(org.blood - wound[1] * mulTime * 4.5 * math.max(org.pulse, 20) / 80, 1)
 			if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
 				local dir = wound[6]
 				local len = dir:Length()
 				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
 				dir = -dir:Forward() * len
-				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-10, 10) + dir, true)
+				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-25, 25) + dir * 1.5, true)
 			end
 
 			if wound[1] == 0 then
@@ -185,21 +173,20 @@ module[2] = function(owner, org, mulTime)
 			end
 		end
 	end
-
+	local bleedoutspeed3 = 0
 	for i, wound in pairs(org.veinwounds) do
-		bleedoutspeed2 = bleedoutspeed2 + wound[1] * mulTime * 0.1 * math.max(org.pulse, 20) / 80 -- Less bleeding than arteries
-		org.vessel_co_debuff = org.vessel_co_debuff + wound[1] * mulTime * 0.01
+		bleedoutspeed3 = bleedoutspeed3 + wound[1] * mulTime * 0.1 * math.max(org.pulse, 20) / 80
 
-		if wound[5] + next_arterypump * 2 < time then
+		if wound[5] + next_arterypump * 4 < time then
 			local pos, ang = ent:GetBonePosition(ent:LookupBone(wound[4]))
 			wound[5] = time
-			org.blood = max(org.blood - wound[1] * mulTime * 2.5 * math.max(org.pulse, 20) / 80, 1) -- Less blood loss than arteries
+			org.blood = max(org.blood - wound[1] * mulTime * 2.25 * math.max(org.pulse, 20) / 80, 1)
 			if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
 				local dir = wound[6]
 				local len = dir:Length()
 				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
 				dir = -dir:Forward() * len
-				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-10, 10) + dir, false) -- Not an artery
+				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-5, 5) + dir, false)
 			end
 
 			if wound[1] == 0 then
@@ -212,30 +199,22 @@ module[2] = function(owner, org, mulTime)
 	end
 	bleedoutspeed2 = bleedoutspeed2 / next_arterypump
 
-	if not homigrad_damage_convar:GetBool() and org.blood < (2400 / (adrenaline / 3 + 1)) * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) then org.needotrub = true end
+	if org.blood < (2400 / (adrenaline / 3 + 1)) * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) then org.needotrub = true end
 
 	local bleed = org.internalBleed / 14 -- + org.lungsR[3] + org.lungsL[3]
-    org.internalBleed = math.Approach(org.internalBleed, 0, org.tranexamic_acid > 0 and mulTime / 2 or mulTime / 55)
-    coagulatespeed = coagulatespeed + mulTime
+	org.internalBleed = math.Approach(org.internalBleed, 0, org.internalBleedHeal > 0 and mulTime / 2 or mulTime / 55)
+	coagulatespeed = coagulatespeed + mulTime
+	org.internalBleedHeal = math.Approach(org.internalBleedHeal, 0, mulTime / 2)
 	
-	if bleed > 0 then
-        org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1)
-        if not org.has_hemothorax and math.random() < bleed * 0.0005 then
-            org.has_hemothorax = true
-        end
-    end
-
-    if org.has_hemothorax then
-        org.pneumothorax = (org.pneumothorax or 0) + mulTime * 0.02
-    end
+	if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end
 	
 	if (org.internalBleed > 1 or org.pneumothorax > 0) and org.blood > 2000 and org.o2[1] > 0 then
 		org.wantToVomit = org.wantToVomit or 0
 
 		org.wantToVomit = org.wantToVomit + math.Rand(0, org.internalBleed / 1000 + org.pneumothorax / 200) * mulTime * 5
 		
-		if org.wantToVomit > 0.90 and org.isPly then
-			owner:Notify(about_to_puke[math.random(#about_to_puke)], 15, "internalbleed_pre")
+		if org.wantToVomit > 0.90 then
+			//owner:Notify(about_to_puke[math.random(#about_to_puke)], 15, "internalbleed_pre")
 		end
 	end
 
@@ -247,7 +226,7 @@ module[2] = function(owner, org, mulTime)
 		hg.organism.Vomit(owner)
 	end
 
-	org.bleed = (bleedoutspeed + bleedoutspeed2 + bleed)--в секунду
+	org.bleed = (bleedoutspeed + bleedoutspeed2 + bleedoutspeed3 + bleed)--в секунду
 	
 	local timetouncon = (org.blood - 2500) / org.bleed
 	
@@ -267,7 +246,7 @@ module[2] = function(owner, org, mulTime)
 		org.critical = false
 	end
 
-	org.bleed = (bleedoutspeed + bleedoutspeed2)
+	org.bleed = (bleedoutspeed + bleedoutspeed2 + bleedoutspeed3)
 end
 
 util.AddNetworkString("bloodsquirt2")
@@ -276,8 +255,7 @@ function hg.organism.Vomit(owner, snd)
 	if !hg.IsValidPlayer(owner) then return end
 	
 	local org = owner.organism
-	org.blood = math.max(org.blood - 300, 0)
-	org.internalBleed = math.max(org.internalBleed * math.Rand(0.8, 0.9), 0)
+	org.blood = math.max(org.blood - 200, 0)
 	local ent = hg.GetCurrentCharacter(owner)
 
 	local bon = "ValveBiped.Bip01_Head1"

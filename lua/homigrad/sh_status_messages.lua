@@ -410,6 +410,7 @@ end
 
 function hg.likely_to_phrase(ply)
 	local org = ply.organism
+	if not org then return -1 end
 	if ply.GetNetVar and ply:GetNetVar("HNS_Schizo", false) and zb and ((zb.CROUND_MAIN == "hideseek") or (zb.CROUND == "hideseek")) then
     return 3
 end

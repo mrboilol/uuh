@@ -216,7 +216,7 @@ local function SyncMoodles(ply)
     }, temperature)
 
     -- Concussion / Critical
-    manageMoodleState(ply, "concussion", org.incapacitated, "materials/moodels/Concussion_moodle.png")
+    manageMoodleState(ply, "concussion", org.incapacitated and not org.critical, "materials/moodels/Concussion_moodle.png")
     manageMoodleState(ply, "horrified", org.critical, "materials/moodels/HorrifiedMoodle.png")
 
     -- Tinnitus

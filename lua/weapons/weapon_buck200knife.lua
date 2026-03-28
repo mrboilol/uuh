@@ -1,7 +1,7 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
-SWEP.PrintName = "Buck 120 General"
-SWEP.Instructions = "Large hunting knife, has a blood drain, which allows you to make stabs with strong bleeding. Used in the movie Scream as the killer's primary weapon.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
+SWEP.PrintName = "boc 121 geniral"
+SWEP.Instructions = "A REALLY, REALLY big hunting knife, Stabs and slashes made with this are very serious however its geometry isnt tough so it wont damage so much. Used in the movie Scream as the killer's primary weapon.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -21,11 +21,11 @@ SWEP.SuicideTime = 0.5
 SWEP.CanSuicide = true
 SWEP.SuicidePunchAng = Angle(-5, -15, 0)
 
-SWEP.BleedMultiplier = 4.5
-SWEP.PainMultiplier = 1.8
+SWEP.BleedMultiplier = 5
+SWEP.PainMultiplier = 2
 
 SWEP.DamagePrimary = 20
-SWEP.DamageSecondary = 10
+SWEP.DamageSecondary = 9
 
 SWEP.setlh = false
 SWEP.setrh = true
@@ -53,9 +53,9 @@ if CLIENT then
 	SWEP.BounceWeaponIcon = false
 end
 
-SWEP.BreakBoneMul = 0.5
-SWEP.ImmobilizationMul = 0.45
-SWEP.StaminaMul = 0.5
+SWEP.BreakBoneMul = 0.45
+SWEP.ImmobilizationMul = 0.20
+SWEP.StaminaMul = 0.45
 SWEP.HadBackBonus = true
 
 SWEP.attack_ang = Angle(0,0,0)

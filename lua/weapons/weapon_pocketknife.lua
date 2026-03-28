@@ -1,7 +1,7 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
-SWEP.PrintName = "Pocket Knife"
-SWEP.Instructions = "A small knife which can be easily hidden in your pockets.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
+SWEP.PrintName = "esmit an weson something"
+SWEP.Instructions = "Small knife, stealthy and concealable but getting hurt by this feels like being tickled.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -50,8 +50,8 @@ SWEP.DeploySnd = "weapons/knife/knife_deploy1.wav"
 
 SWEP.AttackPos = Vector(0,0,0)
 SWEP.DamageType = DMG_SLASH
-SWEP.DamagePrimary = 8
-SWEP.DamageSecondary = 6
+SWEP.DamagePrimary = 15
+SWEP.DamageSecondary = 7
 
 SWEP.PenetrationPrimary = 5
 SWEP.PenetrationSecondary = 3

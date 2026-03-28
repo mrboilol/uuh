@@ -46,12 +46,12 @@ SWEP.supportTPIK = true
 SWEP.ismelee = true
 SWEP.ismelee2 = true
 
-SWEP.AttackTime = 0.2
+SWEP.AttackTime = 0.15
 SWEP.AnimTime1 = 0.7
 SWEP.WaitTime1 = 0.5
 SWEP.AttackLen1 = 55
 
-SWEP.Attack2Time = 0.1
+SWEP.Attack2Time = 0.08
 SWEP.AnimTime2 = 0.6
 SWEP.WaitTime2 = 0.4
 SWEP.AttackLen2 = 45

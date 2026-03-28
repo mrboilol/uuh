@@ -6,15 +6,15 @@
 if SERVER then
 	-- Limb sprites
 	local SPRITES = {
-		"materials/vgui/hud/health_head.png",
-		"materials/vgui/hud/health_torso.png",
-		"materials/vgui/hud/health_right_arm.png",
-		"materials/vgui/hud/health_left_arm.png",
-		"materials/vgui/hud/health_right_leg.png",
-		"materials/vgui/hud/health_left_leg.png",
+		"materials/vgui/hud/health_head",
+		"materials/vgui/hud/health_torso",
+		"materials/vgui/hud/health_right_arm",
+		"materials/vgui/hud/health_left_arm",
+		"materials/vgui/hud/health_right_leg",
+		"materials/vgui/hud/health_left_leg",
 	}
 	
-	for _, path in ipairs(SPRITES) do resource.AddFile(path) end
+	for _, path in ipairs(SPRITES) do resource.AddFile(path .. ".png") end
 	
 	-- Make sure to change this string to whatever you name this lua file in your autorun folder
 	AddCSLuaFile("homigrad/sh_limbshit.lua") 
@@ -52,12 +52,28 @@ local function getOrgTableVal(org, tbl, key, index, def)
 	return type(val) == "number" and val or (def or 0)
 end
 
--- Limb color scheme (Gray → Orange → Red)
-local function getLimbColor(damage)
-	local ratio = math_min(math_max(damage, 0), 1)
-	if ratio <= 0.3 then return Color(128, 128, 128, 255)    -- Gray = healthy
-	elseif ratio <= 0.6 then return Color(255, 165, 0, 255)  -- Orange = moderate
-	else return Color(255, 0, 0, 255) end                    -- Red = severe
+-- Limb color scheme (Gray > Orange > Red > Blinking Red)
+local function getLimbColor(limb, org)
+    -- Blinking Red for imminent death
+    if (org.heart and org.heart < 0.2 and org.heart ~= 0) or (org.blood and org.blood < 1000 and org.blood ~= 0) or limb.internal > 0.8 then
+        local r = 255
+        local g = 128 + math.sin(RealTime() * 10) * 127
+        local b = 0
+        return Color(r, g, b, 255)
+    end
+
+    -- Red for breakage or arterial bleeding/internal damage
+    if limb.dmg >= 1 or limb.artery > 0 or limb.internal > 0.5 then
+        return Color(255, 0, 0, 255)
+    end
+
+    -- Orange for dislocations or slight part damage
+    if limb.dislocation or limb.dmg > 0.2 then
+        return Color(255, 165, 0, 255)
+    end
+    
+    -- Gray for healthy
+    return Color(128, 128, 128, 255)
 end
 
 -- Check if any limb is damaged
@@ -82,12 +98,12 @@ local HUD = {
 	base_y = nil,
 	
 	limb_offsets = {
-		head =        { x = 55,   y = -15 },
-		torso =       { x = 54,   y = 33 },
-		right_arm =   { x = 83,   y = 36 },
-		left_arm =    { x = 24,   y = 38 },
-		right_leg =   { x = 66,   y = 92 },
-		left_leg =    { x = 35,   y = 106 },
+		head =        { x = 60,   y = 10 },
+		torso =       { x = 60,   y = 50 },
+		right_arm =   { x = 90,   y = 50 },
+		left_arm =    { x = 30,   y = 50 },
+		right_leg =   { x = 80,   y = 100 },
+		left_leg =    { x = 40,   y = 100 },
 	},
 	
 	limb_scale = {
@@ -148,23 +164,21 @@ local function draw_sprites()
 	if not debug_done then
 		debug_done = true
 		local paths = {
-			head = {"vgui/hud/health_head.png", "vgui/hud/health_head"},
-			torso = {"vgui/hud/health_torso.png", "vgui/hud/health_torso"},
-			right_arm = {"vgui/hud/health_right_arm.png", "vgui/hud/health_right_arm"},
-			left_arm = {"vgui/hud/health_left_arm.png", "vgui/hud/health_left_arm"},
-			right_leg = {"vgui/hud/health_right_leg.png", "vgui/hud/health_right_leg"},
-			left_leg = {"vgui/hud/health_left_leg.png", "vgui/hud/health_left_leg"},
+			head = "vgui/hud/health_head",
+			torso = "vgui/hud/health_torso",
+			right_arm = "vgui/hud/health_right_arm",
+			left_arm = "vgui/hud/health_left_arm",
+			right_leg = "vgui/hud/health_right_leg",
+			left_leg = "vgui/hud/health_left_leg",
 		}
 		
-		for name, tries in pairs(paths) do
-			for _, path in ipairs(tries) do
-				local mat = Material(path, "smooth")
-				if mat and not mat:IsError() then
-					sprites[name] = mat
-					break
-				end
+		for name, path in pairs(paths) do
+			local mat = Material(path, "smooth")
+			if mat and not mat:IsError() then
+				sprites[name] = mat
+			else
+				sprites[name] = false
 			end
-			if not sprites[name] then sprites[name] = false end
 		end
 	end
 	
@@ -180,12 +194,12 @@ local function draw_sprites()
 	
 	-- Define limbs with their damage values and amputation flags
 	local limbs = {
-		{name = "head", dmg = math_max(getOrgVal(org, "skull", 0), getOrgVal(org, "jaw", 0) * 0.7, getOrgVal(org, "arteria", 0), getOrgVal(org, "vein", 0), getOrgVal(org, "arteria_l", 0), getOrgVal(org, "arteria_r", 0), getOrgVal(org, "vein_l", 0), getOrgVal(org, "vein_r", 0)), amput = "headamputated", label = "H"},
-		{name = "torso", dmg = math_max(getOrgVal(org, "chest", 0), getOrgVal(org, "spine1", 0), getOrgVal(org, "spine2", 0), getOrgVal(org, "spine3", 0), getOrgVal(org, "pelvis", 0) * 0.9, getOrgVal(org, "heart", 0), getOrgTableVal(org, "lungsL", 1, nil, 0), getOrgTableVal(org, "lungsR", 1, nil, 0), getOrgVal(org, "trachea", 0), getOrgVal(org, "liver", 0), getOrgVal(org, "stomach", 0), getOrgVal(org, "intestines", 0)), amput = nil, label = "T"},
-		{name = "right_arm", dmg = math_max(getOrgVal(org, "rarm", 0), getOrgVal(org, "rarmartery", 0), getOrgVal(org, "rarmvein", 0), getOrgVal(org, "rarmartery_1", 0), getOrgVal(org, "rarmartery_2", 0)), amput = "rarmamputated", label = "RA"},
-		{name = "left_arm", dmg = math_max(getOrgVal(org, "larm", 0), getOrgVal(org, "larmartery", 0), getOrgVal(org, "larmvein", 0), getOrgVal(org, "larmartery_1", 0), getOrgVal(org, "larmartery_2", 0)), amput = "larmamputated", label = "LA"},
-		{name = "right_leg", dmg = math_max(getOrgVal(org, "rleg", 0), getOrgVal(org, "rlegartery", 0), getOrgVal(org, "rlegvein", 0)), amput = "rlegamputated", label = "RL"},
-		{name = "left_leg", dmg = math_max(getOrgVal(org, "lleg", 0), getOrgVal(org, "llegartery", 0), getOrgVal(org, "llegvein", 0)), amput = "llegamputated", label = "LL"},
+		{name = "head", dmg = math_max(getOrgVal(org, "skull", 0), getOrgVal(org, "jaw", 0) * 0.7), artery = getOrgVal(org, "arteria", 0), internal = 0, dislocation = org.jawdislocation, amput = "headamputated", label = "H"},
+		{name = "torso", dmg = math_max(getOrgVal(org, "chest", 0), getOrgVal(org, "spine1", 0), getOrgVal(org, "spine2", 0), getOrgVal(org, "spine3", 0), getOrgVal(org, "pelvis", 0) * 0.9), artery = 0, internal = math_max(getOrgVal(org, "heart", 0), getOrgTableVal(org, "lungsL", 1, nil, 0), getOrgTableVal(org, "lungsR", 1, nil, 0)), dislocation = (org.spine1dislocation or org.spine2dislocation or org.spine3dislocation), amput = nil, label = "T"},
+		{name = "right_arm", dmg = getOrgVal(org, "rarm", 0), artery = math_max(getOrgVal(org, "rarmartery", 0), getOrgVal(org, "rarmvein", 0)), internal = 0, dislocation = org.rarmdislocation, amput = "rarmamputated", label = "RA"},
+		{name = "left_arm", dmg = getOrgVal(org, "larm", 0), artery = math_max(getOrgVal(org, "larmartery", 0), getOrgVal(org, "larmvein", 0)), internal = 0, dislocation = org.larmdislocation, amput = "larmamputated", label = "LA"},
+		{name = "right_leg", dmg = getOrgVal(org, "rleg", 0), artery = math_max(getOrgVal(org, "rlegartery", 0), getOrgVal(org, "rlegvein", 0)), internal = 0, dislocation = org.rlegdislocation, amput = "rlegamputated", label = "RL"},
+		{name = "left_leg", dmg = getOrgVal(org, "lleg", 0), artery = math_max(getOrgVal(org, "llegartery", 0), getOrgVal(org, "llegvein", 0)), internal = 0, dislocation = org.llegdislocation, amput = "llegamputated", label = "LL"},
 	}
 	
 	-- Update fade states for each limb
@@ -225,7 +239,7 @@ local function draw_sprites()
 		local width = base_size * scale.w
 		local height = base_size * scale.h
 		
-		local col = getLimbColor(dmg)
+		local col = getLimbColor(limb, org)
 		local damage_boost = math_min(dmg * 150, 100)
 		local total_visibility = math_min(HUD.sprite_visibility + damage_boost, 100)
 		local alpha = math_floor(state.alpha * (total_visibility / 100))
@@ -236,6 +250,8 @@ local function draw_sprites()
 			surface_SetMaterial(mat)
 			surface_DrawTexturedRect(x - width * 0.5, y - height * 0.5, width, height)
 		else
+			-- Fallback: Draw colored blocks if sprites are missing
+			-- This indicates that the material files (e.g., vgui/hud/health_head.png) are not found.
 			surface_SetDrawColor(0, 0, 0, math_floor(alpha * 0.5))
 			surface_DrawRect(x - width * 0.5 + 2, y - height * 0.5 + 2, width - 4, height - 4)
 			surface_SetDrawColor(col.r, col.g, col.b, alpha)

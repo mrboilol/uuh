@@ -1,6 +1,8 @@
 local getBloodColor = FindMetaTable( "Entity" ).GetBloodColor
 local isBulletDamage = FindMetaTable( "CTakeDamageInfo" ).IsBulletDamage
 
+util.AddNetworkString("death")
+
 hg.ConVars = hg.ConVars or {}
 
 local hg_legacycam = ConVarExists("hg_legacycam") and GetConVar("hg_legacycam") or CreateConVar("hg_legacycam", 0, FCVAR_REPLICATED, "Toggle legacy first-person view camera", 0, 1)
@@ -362,6 +364,65 @@ hook.Add("EntityTakeDamage", "HL2Shit", function(target, dmginfo)
 
 		return false
 	end
+end)
+
+hook.Add("PlayerDeath", "HomigradDeathScreen", function(victim, inflictor, attacker, damage, dmginfo)
+    if not IsValid(victim) then return end
+
+    local killerName = "worldspawn"
+    if IsValid(attacker) then
+        if attacker:IsPlayer() then
+            killerName = attacker:Nick()
+        else
+            killerName = attacker:GetClass()
+        end
+    end
+
+    local weaponName = "world"
+    if IsValid(inflictor) then
+        if inflictor == attacker and inflictor:IsPlayer() and IsValid(inflictor:GetActiveWeapon()) then
+             weaponName = inflictor:GetActiveWeapon():GetClass()
+        else
+            weaponName = inflictor:GetClass()
+        end
+    end
+
+    local hitgroup_map = {
+        [HITGROUP_GENERIC] = "generic",
+        [HITGROUP_HEAD] = "head",
+        [HITGROUP_CHEST] = "chest",
+        [HITGROUP_STOMACH] = "stomach",
+        [HITGROUP_LEFTARM] = "left arm",
+        [HITGROUP_RIGHTARM] = "right arm",
+        [HITGROUP_LEFTLEG] = "left leg",
+        [HITGROUP_RIGHTLEG] = "right leg",
+        [HITGROUP_GEAR] = "gear",
+    }
+
+    local bone = "generic"
+    if dmginfo and dmginfo:IsValid() and hitgroup_map[dmginfo:GetHitGroup()] then
+        bone = hitgroup_map[dmginfo:GetHitGroup()]
+    elseif IsValid(victim) and victim:IsPlayer() and hitgroup_map[victim:GetLastHitGroup()] then
+        bone = hitgroup_map[victim:GetLastHitGroup()]
+    end
+
+    if victim.organism and victim.organism.heartstop then
+        killerName = "Something else"
+        weaponName = "Heart failure"
+        bone = "Heart"
+    end
+
+    if killerName == "worldspawn" then
+        killerName = "The world"
+        weaponName = "gravity"
+        bone = "body"
+    end
+
+    net.Start("death")
+    net.WriteString(killerName)
+    net.WriteString(weaponName)
+    net.WriteString(bone)
+    net.Send(victim)
 end)
 
 hook.Add("PlayerSilentDeath","removeragdollaswell",function(ply)

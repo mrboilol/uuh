@@ -194,8 +194,6 @@ if CLIENT then
 
 		if msg == "" then return end
 
-    lply:EmitSound("speech.mp3", 75, 100, 0.75)
-
     CreateNotification(msg, showtime, clr)
 	end)
 
@@ -204,8 +202,6 @@ if CLIENT then
 		local clr = net.ReadColor()
 
 		if msg == "" then return end
-
-    lply:EmitSound("speech.mp3", 75, 100, 0.75)
 
     CreateNotificationBerserk(msg, showtime, clr)
 	end)

@@ -193,7 +193,7 @@ net.Receive("bloodsquirt", function()
 		if not mat then timer.Remove(name) return end
 		local pos, dir = LocalToWorld(localPos, localDir, mat:GetTranslation(), mat:GetAngles())
 		dir = dir:Forward() * len
-		vechuy = vechuy + VectorRand(-amt * 15,amt * 15)
+		vechuy = vechuy + VectorRand(-amt * 5,amt * 5)
 		addBloodPart(pos, dir * amt * 90 + vechuy * amt, mat_huy, math.Rand(3,3), math.Rand(3,3), true, false)
 		i = i - 1
 	end)

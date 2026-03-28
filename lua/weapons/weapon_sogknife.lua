@@ -1,7 +1,7 @@
 if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
-SWEP.PrintName = "SOG SEAL 2000"
-SWEP.Instructions = "A serious big knife used by seals (special forces of the US Navy). A good choice for a melee weapon.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
+SWEP.PrintName = "esogi otter 9000"
+SWEP.Instructions = "A really big knife that was used by the mexican otters, Its clunky but its very good for damage. A good choice for a melee weapon.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -20,11 +20,11 @@ SWEP.SuicideCutAng = Angle(10, 0, 0)
 SWEP.SuicideTime = 0.5
 SWEP.CanSuicide = true
 
-SWEP.BleedMultiplier = 4.5
-SWEP.PainMultiplier = 1.8
+SWEP.BleedMultiplier = 5
+SWEP.PainMultiplier = 2.5
 
-SWEP.DamagePrimary = 20
-SWEP.DamageSecondary = 10
+SWEP.DamagePrimary = 55
+SWEP.DamageSecondary = 17
 
 SWEP.setlh = false
 SWEP.setrh = true
@@ -52,9 +52,9 @@ if CLIENT then
 	SWEP.BounceWeaponIcon = false
 end
 
-SWEP.BreakBoneMul = 0.5
-SWEP.ImmobilizationMul = 0.45
-SWEP.StaminaMul = 0.5
+SWEP.BreakBoneMul = 0.75
+SWEP.ImmobilizationMul = 0.6
+SWEP.StaminaMul = 1.1
 SWEP.HadBackBonus = true
 
 SWEP.attack_ang = Angle(0,0,0)

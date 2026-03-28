@@ -1,80 +1,8 @@
-include("homigrad/sh_status_messages.lua")
-include("homigrad/organism/tier_1/sh_mood.lua")
-
-local fear_hurt_ironic = {
-	"I bet there's a lesson in this... if I survive.",
-	"My future biographer won't believe this part.",
-	"Well, this is a stupid way to go.",
-	"At least my life wasn't boring.",
-	"Note to self: Never do this again.",
-	"This isn't the worst day to die.",
-}
-
-local near_death_positive = {
-	"I don't want to die.",
-	"I have to survive.",
-	"There's still a chance.",
-	"I can't let fear win.",
-	"Just one more try.",
-	"I refuse to die here.",
-	"Alright... think this through.",
-	"Just stay still. Moving makes it worse.",
-	"Breathe slow. Panic won't help.",
-	"It's not over until it's over.",
-	"Pain is just a signal. Ignore it.",
-	"If this is it... at least it's gonna be quick.",
-	"I've survived worse. Probably.",
-	"Need help, Need help...",
-	"I cant die like this. Not yet.",
-	"This isnt it. This cant be it.",
-	"Just.. dont throw up.",
-	"Keep breathing, just keep breathing...",
-	"Theres still people waiting for you at home.",
-	"This isn't how I pictured it.",
-	"Make it stop make it stop...",
-}
-
-local near_death_negative = {
-    "I want to die.",
-    "I can't survive this.",
-    "There's no chance.",
-    "Fear already won.",
-    "Why even try anymore.",
-    "I'm going to die here, aren't I?",
-    "It's over.",
-    "Pain is all there is. Let it end.",
-    "I've survived worse. But not this time.",
-    "Nobody can help me.",
-    "I'm going to die like this. It's my fault.",
-}
-
-local fear_hurt_sarcastic_sad = {
-    "I bet there's a lesson in this... not that it matters now.",
-    "My future biographer will have a very short chapter on me.",
-    "Well, this is a stupid way to go. Figures.",
-    "At least my life wasn't boring. It was just... short.",
-    "Note to self: it's too late for notes.",
-    "This is probably the worst day to die.",
-    "Of course this is happening to me.",
-}
-
 --local Organism = hg.organism
-
-
-function hg.organism.GetMoodInertiaMultiplier(ply)
-    if not IsValid(ply) or not ply.organism then return 1 end
-    local mood = ply.organism.mood
-    if mood and mood >= 80 then
-        return 0.5 -- Mood decreases at 50% of the normal rate
-    end
-    return 1
-end
 hg.organism.module = hg.organism.module or {}
 local module = hg.organism.module
 hg.organism.lastindex = hg.organism.lastindex or 1000000
-util.AddNetworkString("hg_play_client_sound")
 hook.Add("Org Clear", "Main", function(org)
-	org.mood = 100
 	org.alive = true
 	org.otrub = false
 	org.entindex = IsValid(org.owner) and org.owner:EntIndex() or hg.organism.lastindex + 1
@@ -87,7 +15,6 @@ hook.Add("Org Clear", "Main", function(org)
 	module.metabolism[1](org)
 	module.random_events[1](org)
 	org.brain = 0
-	org.CO = 0
 	org.consciousness = 1
 	org.disorientation = 0
 	org.jaw = 0
@@ -99,11 +26,6 @@ hook.Add("Org Clear", "Main", function(org)
 	org.skull = 0
 	org.stomach = 0
 	org.intestines = 0
-	org.righteye = 0
-	org.lefteye = 0
-	org.righteyedestroyed = false
-	org.lefteyedestroyed = false
-	org.nose = 0
 
 	org.thiamine = 0
 
@@ -116,9 +38,6 @@ hook.Add("Org Clear", "Main", function(org)
 	org.rarmdislocation = false
 	org.larmdislocation = false
 	org.jawdislocation = false
-	org.spine1dislocation = false
-	org.spine2dislocation = false
-	org.spine3dislocation = false
 
 	org.llegamputated = false
 	org.rlegamputated = false
@@ -195,10 +114,9 @@ local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") 
 local function send_organism(org, ply)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
-	sendtable.mood = org.mood
+
 	sendtable.alive = org.alive
 	sendtable.otrub = org.otrub
-	sendtable.uncon_timer = org.uncon_timer
 	sendtable.owner = org.owner
 	sendtable.stamina = org.stamina
 	sendtable.immobilization = org.immobilization
@@ -209,9 +127,6 @@ local function send_organism(org, ply)
 	sendtable.rleg = org.rleg
 	sendtable.rarm = org.rarm
 	sendtable.larm = org.larm
-	sendtable.righteye = org.righteye
-	sendtable.lefteye = org.lefteye
-	sendtable.nose = org.nose
 	sendtable.pelvis = org.pelvis
 	sendtable.disorientation = org.disorientation
 	sendtable.brain = org.brain
@@ -238,18 +153,10 @@ local function send_organism(org, ply)
 	sendtable.rarmdislocation = org.rarmdislocation
 	sendtable.larmdislocation = org.larmdislocation
 	sendtable.jawdislocation = org.jawdislocation
-	sendtable.spine1dislocation = org.spine1dislocation
-	sendtable.spine2dislocation = org.spine2dislocation
-	sendtable.spine3dislocation = org.spine3dislocation
-	sendtable.spine1dislocation = org.spine1dislocation
-	sendtable.spine2dislocation = org.spine2dislocation
-	sendtable.spine3dislocation = org.spine3dislocation
 	sendtable.llegamputated = org.llegamputated
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
 	sendtable.larmamputated = org.larmamputated
-	sendtable.righteyedestroyed = org.righteyedestroyed
-	sendtable.lefteyedestroyed = org.lefteyedestroyed
 	sendtable.headamputated = org.headamputated
 	sendtable.lungsfunction = org.lungsfunction
 	sendtable.consciousness = org.consciousness
@@ -285,7 +192,7 @@ end
 local function send_bareinfo(org)
 	if not IsValid(org.owner) then return end
 	local sendtable = {}
-    sendtable.mood = org.mood
+
 	sendtable.alive = org.alive
 	sendtable.otrub = org.otrub
 	sendtable.owner = org.owner
@@ -302,8 +209,6 @@ local function send_bareinfo(org)
 	sendtable.rleg = org.rleg
 	sendtable.rarm = org.rarm
 	sendtable.larm = org.larm
-	sendtable.righteye = org.righteye
-	sendtable.lefteye = org.lefteye
 	sendtable.llegdislocation = org.llegdislocation
 	sendtable.rlegdislocation = org.rlegdislocation
 	sendtable.rarmdislocation = org.rarmdislocation
@@ -313,8 +218,6 @@ local function send_bareinfo(org)
 	sendtable.rlegamputated = org.rlegamputated
 	sendtable.rarmamputated = org.rarmamputated
 	sendtable.larmamputated = org.larmamputated
-	sendtable.righteyedestroyed = org.righteyedestroyed
-	sendtable.lefteyedestroyed = org.lefteyedestroyed
 	sendtable.headamputated = org.headamputated
 	sendtable.LodgedEntities = org.LodgedEntities
 	sendtable.berserkActive2 = org.berserkActive2
@@ -326,16 +229,13 @@ local function send_bareinfo(org)
 	rf:AddPVS(org.owner:GetPos())
 	if org.owner:IsPlayer() then rf:RemovePlayer(org.owner) end
 
-	    timer.Create("send_bareinfo_timer" .. org.owner:EntIndex(), 0.1, 1, function()
-        if not IsValid(org.owner) then return end
-        net.Start("organism_send", hg_unreliable_nets:GetBool())
-        net.WriteTable(not hg_developer:GetBool() and sendtable or org)
-        net.WriteBool(org.owner.fullsend)
-        net.WriteBool(true)
-        net.WriteBool(false)
-        net.WriteBool(false)
-        net.Send(rf)
-    end)
+	net.Start("organism_send", hg_unreliable_nets:GetBool())
+	net.WriteTable(not hg_developer:GetBool() and sendtable or org)
+	net.WriteBool(org.owner.fullsend)
+	net.WriteBool(true)
+	net.WriteBool(false)
+	net.WriteBool(false)
+	net.Send(rf)
 end
 
 hg.send_organism = send_organism
@@ -411,22 +311,6 @@ hook.Add("HomigradDamage", "Berserk", function(ply, dmgInfo, hitgroup, ent)
 	end)
 end)
 
-hook.Add("HomigradDamage", "MoodDamage", function(ply, dmgInfo, hitgroup, ent)
-	if not GetConVar("hg_mood_enabled"):GetBool() then return end
-	local org = ply.organism
-	if not org then return end
-
-    local mood = org.mood
-	if not mood then return end
-
-	local damage = dmgInfo:GetDamage()
-    local inertia = hg.organism.GetMoodInertiaMultiplier(ply)
-    local mood_loss = damage / 5 * inertia -- Lose 1 mood for every 5 damage
-
-    local new_mood = math.Clamp(mood - mood_loss, 0, 100)
-	org.mood = new_mood
-end)
-
 hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if not IsValid(owner) then
 		hg.organism.list[owner] = nil
@@ -480,64 +364,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		module.random_events[2](owner, org, timeValue)
 	end
 	module.pulse[2](owner, org, timeValue)
-	hg.organism.UpdateSuicidalTendencies(owner, timeValue)
-
-    -- Mood update logic
-    local mood = org.mood
-    if mood and owner:IsPlayer() and GetConVar("hg_mood_enabled"):GetBool() then
-        local new_mood = mood
-
-        if GetConVar("hg_mood_always_happy"):GetBool() then
-            new_mood = 100
-        else
-            -- Mood loss from pain
-            if org.pain > 20 then
-                new_mood = new_mood - ((org.pain / 100) * timeValue * 2) * hg.organism.GetMoodInertiaMultiplier(owner)
-            end
-
-            -- Mood change from fear
-            if org.fear ~= 0 then
-                local fear_effect = org.fear * timeValue * 5 -- This will be a value between -5 and 5 per second
-                if fear_effect > 0 then
-                    fear_effect = fear_effect * hg.organism.GetMoodInertiaMultiplier(owner)
-                end
-                new_mood = new_mood - fear_effect
-            end
-
-            -- Mood slowly recovers when not in fear
-            if org.fear <= 0 then
-                new_mood = new_mood + timeValue * 0.5 -- Slow recovery
-            end
-
-            -- Mood loss from broken bones
-            if org.just_damaged_bone then
-                new_mood = new_mood - 15 * hg.organism.GetMoodInertiaMultiplier(owner)
-                org.just_damaged_bone = nil
-            end
-
-            -- Mood gain from analgesia
-            if org.analgesia > 0 then
-                new_mood = new_mood + org.analgesia * timeValue * 0.2
-            end
-
-            -- Mood gain from being healthy
-            if owner:Health() > 90 and org.pain < 10 and org.bleed < 1 and (org.hungry or 0) < 20 then
-                new_mood = new_mood + timeValue * 0.1
-            end
-        end
-
-        new_mood = math.Clamp(new_mood, 0, 100)
-        if new_mood ~= mood then
-            hg.Abnormalties.SetPlayerStat(owner, "mood", new_mood)
-        end
-
-        if mood > 70 then
-            local mood_bonus = (mood - 70) / 30
-            org.recoilmul = 1 - (mood_bonus * 0.1) -- Up to 10% recoil reduction
-        else
-            org.recoilmul = 1
-        end
-    end
 
 	if org.owner.PlayerClassName == "furry" then
 		org.assimilated = 0
@@ -596,7 +422,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		end
 	end
 
-	if isPly then
+	--[[if isPly then
 		local aimed = false
 
 		local entities = ents.FindInCone(owner:EyePos(), owner:GetAimVector(), 128, math.cos(math.rad(90)))
@@ -617,7 +443,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 			owner.aimed_at = owner.aimed_at or 0
 			owner.aimed_at = math.Approach(owner.aimed_at, 0, timeValue / 5)
 		end
-	end
+	end--]]
 	--bullshit
 
 	if org.otrub then
@@ -629,14 +455,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 	local just_went_uncon = not org.otrub and org.needotrub
 	local just_woke_up = not org.needotrub and org.otrub and (org.uncon_timer or 0) > 6
-	    if isPly and just_went_uncon then 
-        hook.Run("HG_OnOtrub", owner); 
-        hook.Run("PlayerDropWeapon", owner) 
-        net.Start("hg_play_client_sound")
-        net.WriteString("owfuck.ogg")
-        net.WriteFloat(1.0)
-        net.Send(owner)
-    end
+	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
 
 	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
@@ -672,13 +491,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.thiamine = math.Approach(org.thiamine, 0, timeValue / 240)
 		-- you'd need to give 1 thiamine each 4 minutes
 
-		if org.righteye < 1 and not org.righteyedestroyed then org.righteye = math.Approach(org.righteye, 0, naturalHeal) end
-		if org.lefteye < 1 and not org.lefteyedestroyed then org.lefteye = math.Approach(org.lefteye, 0, naturalHeal) end
-		if org.thiamine > 0 then
-			if org.righteyedestroyed then org.righteyedestroyed = false; org.righteye = 1 end
-			if org.lefteyedestroyed then org.lefteyedestroyed = false; org.lefteye = 1 end
-		end
-
 		if org.liver < 1 then org.liver = math.Approach(org.liver, 0, naturalHeal) end
 		if org.heart < 1 then org.heart = math.Approach(org.heart, 0, naturalHeal) end
 		if org.stomach < 1 then org.stomach = math.Approach(org.stomach, 0, naturalHeal) end
@@ -686,8 +498,6 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		if org.lungsR[1] < 1 then org.lungsR[1] = math.Approach(org.lungsR[1], 0, naturalHeal) end
 		if org.lungsL[1] < 1 then org.lungsL[1] = math.Approach(org.lungsL[1], 0, naturalHeal) end
 	end
-
-
 
 	if org.otrub and isPly and org.owner:Alive() then
 		//org.owner:ScreenFade(SCREENFADE.PURGE, color_black, 0.5, 0)
@@ -795,8 +605,6 @@ hook.Add("Org Think", "regenerationberserk", function(owner, org, timeValue)
 	org.rleg = math.max(org.rleg - regen, 0)
 	org.rarm = math.max(org.rarm - regen, 0)
 	org.larm = math.max(org.larm - regen, 0)
-	org.righteye = math.max(org.righteye - regen, 0)
-	org.lefteye = math.max(org.lefteye - regen, 0)
 	org.chest = math.max(org.chest - regen, 0)
 	org.pelvis = math.max(org.pelvis - regen, 0)
 	org.spine1 = math.max(org.spine1 - regen, 0)
@@ -905,23 +713,7 @@ concommand.Add("hg_organism_clear", function(ply, cmd, args)
 	end
 end)
 
-hook.Add("SetupMove", "hg-speed", function(ply, mv)
-	local org = ply.organism
-    if not org then return end
-    local spine_dmg_total = (org.spine1 or 0) + (org.spine2 or 0) + (org.spine3 or 0)
-	if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
-		spine_dmg_total = spine_dmg_total + 0.3
-	end
-
-	if spine_dmg_total > 0 then
-		local max_speed = mv:GetMaxSpeed()
-		local reduction_multiplier = 1 - (spine_dmg_total * 0.15)
-		local new_speed = max_speed * reduction_multiplier
-
-		mv:SetMaxSpeed(new_speed)
-		mv:SetMaxClientSpeed(new_speed)
-	end
-end) --mv:SetMaxClientSpeed(100) --mv:SetMaxSpeed(100)
+hook.Add("SetupMove", "hg-speed", function(ply, mv) end) --mv:SetMaxClientSpeed(100) --mv:SetMaxSpeed(100)
 
 hook.Add("StartCommand","hg_lol",function(ply,cmd)
 	if ply.organism.otrub and ply:Alive() then
@@ -965,8 +757,6 @@ hook.Add("HG_OnOtrub", "fearful", function( plya )// ЧЕ
 	end
 end)
 
-local hg_relocate_requires_bandage = CreateConVar("hg_relocate_requires_bandage", "1", FCVAR_ARCHIVE, "Require a bandage to be applied before a dislocated spine can be relocated.")
-
 local unlucky_dislocations = {
 	"Why can't I fix this goddamn dislocation...",
 	"Please... why is it so hard.",
@@ -982,22 +772,6 @@ local finally_fixed = {
 }
 
 local function fixlimb(org, key, fixer)
-	local is_spine = string.find(key, "spine")
-	if is_spine and org[key] >= (key == "spine3" and 0.75 or 1) then
-		fixer:Notify("This spine is completely broken and cannot be relocated.", 1, "cant_fix_broken_spine", 5)
-		return
-	end
-
-	if is_spine and hg_relocate_requires_bandage:GetBool() then
-        local body_part = "chest"
-        if key == "spine1" then body_part = "stomach" end
-
-        if not org.bandaged_parts or not org.bandaged_parts[body_part] then
-            fixer:Notify("The area must be bandaged before you can attempt to relocate the spine.", 1, "spine_needs_bandage", 5)
-            return
-        end
-    end
-
 	if math.random(100) > (97 + (fixer != org.owner and (fixer.organism and fixer.organism.pain or 0) or 0) - (org.analgesia * 50 + org.painkiller * 15) - (fixer != org.owner and 30 or 0) - (fixer.tries or 0) * 10 - (fixer.Profession == "doctor" and 100 or 0) - (org.owner == fixer and (IsValid(org.owner.FakeRagdoll) or (org.owner.Crouching and org.owner:Crouching())) and 10 or 0)) then
 		org[key.."dislocation"] = false
 		org.painadd = org.painadd + 5 * math.random(1, 3)
@@ -1018,15 +792,6 @@ local function fixlimb(org, key, fixer)
 
 		org.owner:EmitSound("physics/body/body_medium_impact_soft"..math.random(7)..".wav", 65)
 		
-		if is_spine and math.random(100) <= 2 then -- 2% chance to break the spine
-			local dmgInfo = DamageInfo()
-			dmgInfo:SetDamage(100)
-			dmgInfo:SetDamageType(DMG_CLUB)
-			dmgInfo:SetAttacker(fixer)
-			hg.organism.input_list[key](org.owner.organism, 1, 10, dmgInfo, 0, vector_up)
-			return
-		end
-
 		if fixer.Profession != "doctor" and math.random(5) == 1 then
 			local dmgInfo = DamageInfo()
 			dmgInfo:SetDamage(50)
@@ -1039,29 +804,6 @@ local function fixlimb(org, key, fixer)
 		end
 	end
 end
-
-hook.Add("Org Think", "my fucking liver hurts", function(owner, org, timeValue)
-    if not org.alive or org.hearstop then return end
-
-    local bleedChance = 0.05
-    local bleedAmount = 0
-
-    if org.liver and org.liver > 0.1 and math.random() < bleedChance then
-        bleedAmount = bleedAmount + org.liver * 0.1
-    end
-
-    if org.stomach and org.stomach > 0.1 and math.random() < bleedChance then
-        bleedAmount = bleedAmount + org.stomach * 0.1
-    end
-
-    if org.intestines and org.intestines > 0.1 and math.random() < bleedChance then
-        bleedAmount = bleedAmount + org.intestines * 0.1
-    end
-
-    if bleedAmount > 0 then
-        org.internalBleed = (org.internalBleed or 0) + bleedAmount
-    end
-end)
 
 concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	local fixer = ply
@@ -1096,14 +838,6 @@ concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 		if org.jawdislocation then
 			fixlimb(org, "jaw", fixer)
 		end
-	elseif math.Round(tonumber(args[1])) == 4 then
-		if org.spine1dislocation then
-			fixlimb(org, "spine1", fixer)
-		elseif org.spine2dislocation then
-			fixlimb(org, "spine2", fixer)
-		elseif org.spine3dislocation then
-			fixlimb(org, "spine3", fixer)
-		end
 	end
 end)
 
@@ -1112,199 +846,4 @@ hook.Add("OnEntityWaterLevelChanged", "ClearBlood", function(ent, old, new)
 		if ent:IsOnFire() then ent:Extinguish() end
 		ent:RemoveAllDecals()
 	end
-end)
-concommand.Add("hg_heal_eye", function(ply, cmd, args)
-	local target = ply:GetEyeTrace().Entity
-	if not IsValid(target) or not target:IsPlayer() or not target.organism then return end
-
-	local org = target:GetOrganism()
-	local eye = args[1]
-
-	if eye == "left" then
-		if org.lefteye > 0 and not org.lefteyedestroyed then
-			org.lefteye = 0
-			ply:ChatPrint("You healed the left eye.")
-		end
-	elseif eye == "right" then
-		if org.righteye > 0 and not org.righteyedestroyed then
-			org.righteye = 0
-			ply:ChatPrint("You healed the right eye.")
-		end
-	end
-end)
-
-
-
-
-
-hook.Add("StartCommand", "Organism_BlockInput_Suicide", function(ply, cmd)
-    if ply.IsSuiciding then
-        cmd:ClearMovement()
-		if not ply.canSuicide then
-			cmd:RemoveKey(IN_ATTACK)
-		end
-        cmd:RemoveKey(IN_ATTACK2)
-    end
-end)
-
-hook.Add("Org Think", "BrainDamageThink", function(owner, org, timeValue)
-    if org.critical or org.incapacitated then
-        local brainDamageRate = 0
-        if org.critical then
-            brainDamageRate = 0.005 -- Slightly more brain damage
-        elseif org.incapacitated then
-            brainDamageRate = 0.002 -- Very slight brain damage
-        end
-        org.brain = org.brain + brainDamageRate * timeValue
-    end
-end)
-
-hook.Add("PlayerDeath", "Organism_ClearSuicide", function(ply)
-    ply.IsSuiciding = false
-end)
-
-hook.Add("PlayerPostThink", "Organism_ForceSuicide", function(ply)
-    if not ply.IsSuiciding or not ply.canSuicide then return end
-
-    local wep = ply:GetActiveWeapon()
-    if IsValid(wep) then
-        wep:PrimaryAttack()
-    end
-end)
-
-local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
-
-local function OldHomigradDamage(ply, dmgInfo, hitgroup, ent)
-    local org = ply.organism
-    if not org then return end
-
-    dmgInfo:ScaleDamage(0.9)
-
-    if dmgInfo:GetAttacker():IsNPC() then
-        dmgInfo:SetDamage(dmgInfo:GetDamage() * 2)
-    end
-
-    if hitgroup == HITGROUP_HEAD then
-        dmgInfo:ScaleDamage(16)
-        ply:SetNWAngle("viewpunch", Angle(20, math.Rand(-5, 5), math.Rand(-5, 5)) / 2)
-        ply:EmitSound("homigrad/headshot" .. math.random(1,2) .. ".wav")
-    elseif hitgroup == HITGROUP_LEFTARM then
-        dmgInfo:ScaleDamage(0.9)
-        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
-    elseif hitgroup == HITGROUP_LEFTLEG then
-        dmgInfo:ScaleDamage(0.9)
-        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
-    elseif hitgroup == HITGROUP_RIGHTLEG then
-        dmgInfo:ScaleDamage(0.9)
-        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
-    elseif hitgroup == HITGROUP_RIGHTARM then
-        dmgInfo:ScaleDamage(0.9)
-        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
-    elseif hitgroup == HITGROUP_CHEST then
-        dmgInfo:ScaleDamage(0.95)
-        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-35, 15), math.Rand(-15, 15)) / 2)
-    elseif hitgroup == HITGROUP_STOMACH then
-        dmgInfo:ScaleDamage(0.85)
-        ply:SetNWAngle("viewpunch", Angle(10, math.Rand(-15, 15), math.Rand(-15, 15)) / 2)
-    end
-
-    local dmg = dmgInfo:GetDamage()
-    if dmg < 1 then return end
-
-    if dmgInfo:IsDamageType(DMG_BLAST + DMG_SLASH + DMG_GENERIC + DMG_BULLET) then
-        dmg = dmg * 1.5
-    elseif dmgInfo:IsDamageType(DMG_VEHICLE + DMG_CRUSH) and dmg > 5 then
-        dmg = dmg * 0.015
-    elseif dmgInfo:IsDamageType(DMG_CLUB + DMG_BURN + DMG_DROWN + DMG_SHOCK + DMG_BUCKSHOT) then
-        dmg = dmg * 3
-    elseif not dmgInfo:IsDamageType(DMG_BLAST + DMG_NERVEGAS) then
-        dmg = dmg * 1.5
-    end
-
-    org.pain = (org.pain or 0) + dmg / 10
-    math.Clamp(org.pain, 0, 1000)
-
-    if (org.pain > (450 * (org.blood / 5000)) or org.blood < 3000) and not org.otrub then
-        hg.Fake(ply, nil, true)
-    end
-end
-
-hook.Add("HomigradDamage", "CombinedDamage", function(ply, dmgInfo, hitgroup, ent)
-    if homigrad_damage_convar:GetBool() then
-        OldHomigradDamage(ply, dmgInfo, hitgroup, ent)
-    else
-        -- Existing mood damage logic
-        if GetConVar("hg_mood_enabled"):GetBool() then
-            local org = ply.organism
-            if not org then return end
-
-            local mood = org.mood
-            if not mood then return end
-
-            local damage = dmgInfo:GetDamage()
-            local inertia = hg.organism.GetMoodInertiaMultiplier(ply)
-            local mood_loss = damage / 5 * inertia -- Lose 1 mood for every 5 damage
-
-            local new_mood = math.Clamp(mood - mood_loss, 0, 100)
-            org.mood = new_mood
-        end
-    end
-
-    -- Berserk logic (runs regardless of homigrad_damage)
-    local attacker, victim = dmgInfo:GetAttacker(), ply
-    if !attacker or !IsValid(attacker) or (IsValid(attacker) and !attacker:IsPlayer()) then
-        attacker = ply:GetPhysicsAttacker()
-    end
-
-    if not IsValid(attacker) or not attacker:IsPlayer() then return end
-    if not IsValid(victim) or not victim:IsPlayer() then return end
-    if attacker == victim then return end
-    if !attacker:IsBerserk() then return end
-
-    timer.Simple(0, function()
-        if IsValid(attacker) and IsValid(victim) and not victim:Alive() then
-            attacker.BerserkKills = (attacker.BerserkKills or 0) + 1
-            attacker:NotifyBerserk(numerical[attacker.BerserkKills] or (attacker.BerserkKills .. "."))
-
-            attacker.organism.berserk = attacker.organism.berserk + 0.5
-        end
-    end)
-end)
-
-hook.Add("PlayerDeath", "HomigradOldDeath", function(victim, infl, attacker)
-    if homigrad_damage_convar:GetBool() then
-        net.Start("death")
-        net.WriteString(attacker:GetName())
-        net.WriteString(attacker:GetActiveWeapon():GetPrintName())
-        net.WriteString("body") -- The old code doesn't seem to have a reliable way to get the bone, so I'll just use "body"
-        net.Send(victim)
-    end
-end)
-
-concommand.Add("hg_setmood", function(ply, cmd, args)
-    if not ply:IsAdmin() then return end
-
-    local target = ply
-    if args[2] then
-        target = player.GetByName(args[2])[1]
-    end
-
-    if not IsValid(target) or not target:IsPlayer() then
-        ply:ChatPrint("Invalid target.")
-        return
-    end
-
-    local mood = tonumber(args[1])
-    if not mood then
-        ply:ChatPrint("Invalid mood value.")
-        return
-    end
-
-    if not target.organism then
-        ply:ChatPrint("Target does not have an organism.")
-        return
-    end
-
-    target.organism.mood = math.Clamp(mood, 0, 100)
-    ply:ChatPrint("Set " .. target:Name() .. "'s mood to " .. target.organism.mood)
 end)

@@ -762,6 +762,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     -- Critical condition sounds
     local is_critical = org.critical or org.incapacitated
     local has_pulse = org.pulse and org.pulse > 0
+    local last_sound_change = 0
 
     if is_critical and has_pulse and not org.heartstop and lply:Alive() then
         local volume = (org.incapacitated and not org.critical) and 0.4 or 1.0
@@ -772,13 +773,14 @@ hook.Add("Post Post Processing", "ItHurts", function()
             volume = 1.0
         end
 
-        if not criticalloop_sound or criticalloop_sound_name ~= sound_to_play then
+        if (not criticalloop_sound or criticalloop_sound_name ~= sound_to_play) and (last_sound_change == 0 or last_sound_change < CurTime() - 2) then
             if IsValid(criticalloop_sound) then criticalloop_sound:FadeOut(0.5) end
 
             criticalloop_sound = CreateSound(ply, sound_to_play)
             if criticalloop_sound then
                 criticalloop_sound:Play()
                 criticalloop_sound_name = sound_to_play
+                last_sound_change = CurTime()
             end
         end
 

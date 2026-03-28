@@ -616,12 +616,7 @@ if SERVER then
                     end
                 end
             else
-                for i, wound in ipairs(org.arterialwounds) do
-                    if wound[7] ~= "arteria" and wound[7] ~= "spineartery" then
-                        wound_to_heal_idx = i
-                        break
-                    end
-                end
+                wound_to_heal_idx = 1
             end
 
             if wound_to_heal_idx then
@@ -678,6 +673,36 @@ if SERVER then
 		end
 
 		return done
+	end
+
+	function SWEP:HealVeins(ent, bone)
+		local org = ent.organism
+		local owner = self:GetOwner()
+		if not org or #org.veinwounds == 0 then return end
+
+		local USAGE_COST_VEIN = 10
+		if self.modeValues[1] < USAGE_COST_VEIN then return end
+
+		local wound_to_heal_idx
+		if bone then
+			for i, wound in ipairs(org.veinwounds) do
+				if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
+					wound_to_heal_idx = i
+					break
+				end
+			end
+		else
+			wound_to_heal_idx = 1
+		end
+
+		if wound_to_heal_idx and org.veinwounds[wound_to_heal_idx] then
+			local wound = org.veinwounds[wound_to_heal_idx]
+			table.remove(org.veinwounds, wound_to_heal_idx)
+			org[wound[7]] = 0
+			self.modeValues[1] = self.modeValues[1] - USAGE_COST_VEIN
+			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
+			return true
+		end
 	end
 
 	function SWEP:Heal(ent, mode, bone)

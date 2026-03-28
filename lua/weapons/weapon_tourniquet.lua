@@ -85,7 +85,7 @@ function SWEP:Heal(ent, mode, bone)
     local org = ent.organism
     if not org then return false end
 
-    if self:Tourniquet(ent, bone) then
+    if self:Tourniquet(ent, bone) or self:HealVeins(ent, bone) then
         self.modeValues[1] = 0
         self:GetOwner():SelectWeapon("weapon_hands_sh")
         self:Remove()

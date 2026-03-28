@@ -2,8 +2,6 @@ local max, min, Clamp, Approach = math.max, math.min, math.Clamp, math.Approach
 --local Organism = hg.organism
 hg.organism.module.pain = {}
 local module = hg.organism.module.pain
-
-local homigrad_damage_convar = ConVarExists("homigrad_damage") and GetConVar("homigrad_damage") or CreateConVar("homigrad_damage", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Enable old homigrad damage system")
 module[1] = function(org)
 	org.shock = 0
 	org.pain = 0
@@ -40,9 +38,9 @@ module[2] = function(owner, org, timeValue)
 
 	org.shock_turn = 10 * (!org.otrub and 1 or 0.1)
 
-	--if org.shock > org.shock_turn * 2.5 * analgesiaMul * painkillerMul then
+	if org.shock > org.shock_turn * 1.5 * analgesiaMul * painkillerMul then
 		--org.needfake = true
-	--end
+	end
 
 	org.pain_turn = org.otrub and adrenalineMul * 80 or adrenalineMul * 90
 
@@ -50,11 +48,6 @@ module[2] = function(owner, org, timeValue)
 	
 	if !org.lasthit or org.lasthit + 1.5 < CurTime() then org.shock = max(org.shock - timeValue * 4 * (org.otrub and 1 or 0.5), 0) end
 	org.immobilization = max(org.immobilization - timeValue * 2 * adrenalineMul, 0)
-	if org.concussion_severity and org.concussion_severity > 0 then
-		org.concussion_severity = math.max(org.concussion_severity - timeValue * 0.5, 0)
-		local consciousness_reduction = org.concussion_severity * 0.1 * timeValue
-        org.consciousness = math.max(org.consciousness - consciousness_reduction, 0)
-	end
 
 	local shouldPainAdd = not (org.otrub or org.spine2 >= hg.organism.fake_spine2 or org.spine3 >= hg.organism.fake_spine3)
 	
@@ -84,21 +77,16 @@ module[2] = function(owner, org, timeValue)
 		org.shock = math.Approach(org.shock, 70, timeValue * 4)
 	end
 
-	local cons_loss_multiplier = 1
-	if homigrad_damage_convar:GetBool() then
-		cons_loss_multiplier = 0.5 -- Lose consciousness 50% slower
-	end
-
 	if (org.shock > (30 * analgesiaMul)) or org.otrub then
-		org.consciousness = math.Approach(org.consciousness, 0.1, timeValue / 5 * cons_loss_multiplier)
+		org.consciousness = math.Approach(org.consciousness, 0.1, timeValue / 5)
 	end
 
 	if org.tranquilizer > 0 then
 		org.tranquilizer = math.Approach(org.tranquilizer, 0, org.tranquilizer > 1 and timeValue / 5 or timeValue / 30)
 		--org.shock = math.Approach(org.shock, 50, timeValue * org.tranquilizer * 5)
-		org.consciousness = math.Approach(org.consciousness, 0, timeValue / 30 * org.tranquilizer * cons_loss_multiplier)
+		org.consciousness = math.Approach(org.consciousness, 0, timeValue / 30 * org.tranquilizer)
 	else
-		org.consciousness = math.Approach(org.consciousness, org.blood < 3000 and (org.blood - 2500) / 500 or 1, timeValue / 15 * cons_loss_multiplier)
+		org.consciousness = math.Approach(org.consciousness, org.blood < 3000 and (org.blood - 2500) / 500 or 1, timeValue / 15)
 	end
 
 	if org.consciousness < 0.1 then
@@ -124,55 +112,22 @@ module[2] = function(owner, org, timeValue)
 	end
 	
 	org.analgesia =  Approach(org.analgesia, 0, timeValue / 240 * (org.naloxone * 25 + 1))
-
-	if org.analgesia > 0 then
-		if org.analgesia >= 2.0 then
-			org.needotrub = true
-		elseif org.analgesia >= 1.5 then
-			org.consciousness = math.Approach(org.consciousness, 0.25, timeValue * 0.5 * cons_loss_multiplier)
-		elseif org.analgesia >= 1.0 then
-			local impairment = (org.analgesia - 1.5) * 0.2 * timeValue
-			org.consciousness = math.max(org.consciousness - impairment, 0)
-			if org.o2 and org.o2[1] then
-				org.o2[1] = math.max(org.o2[1] - impairment * 10, 0)
-			end
-			local brain_damage = (org.analgesia - 1.5) * timeValue * 0.01
-            org.brain = math.min(org.brain + brain_damage, 1)
-			local brain_damage = (org.analgesia - 0.75) * timeValue * 0.005
-			org.brain = math.min(org.brain + brain_damage, 1)
-		elseif org.analgesia >= 0.75 then
-			local impairment = (org.analgesia - 0.75) * 0.1 * timeValue
-			org.consciousness = math.max(org.consciousness - impairment, 0)
-			if org.o2 and org.o2[1] then
-				org.o2[1] = math.max(org.o2[1] - impairment * 10, 0)
-			end
-            local brain_damage = (org.analgesia - 0.75) * timeValue * 0.005
-			org.brain = math.min(org.brain + brain_damage, 1)
-		end
-	end
 	
 	if org.analgesiaAdd > 0 then
 		org.analgesia =  Approach(org.analgesia, 4, timeValue / 15)
 		org.analgesiaAdd = Approach(org.analgesiaAdd, 0, timeValue / 15)
 	end
 
-	if org.analgesia > 0.8 then
-		local brain_damage = (org.analgesia - 0.8) * timeValue * 0.005
-		org.brain = math.min(org.brain + brain_damage, 1)
-	end
-
 	org.naloxone = Approach(org.naloxone, org.naloxoneadd > 0 and 4 or 0, org.naloxoneadd > 0 and timeValue / 30 or timeValue / 60)
 	org.naloxoneadd = Approach(org.naloxoneadd, 0, timeValue / 15)
 	
-	if owner.suiciding and org.adrenaline < 1.5 then
-		org.adrenalineAdd = Approach(org.adrenalineAdd, 4, timeValue / 5)
-	end
+	--if owner.suiciding and org.adrenaline < 1.5 then
+	--	org.adrenalineAdd = Approach(org.adrenalineAdd, 4, timeValue / 5)
+	--end
 
-	if org.adrenalineAdd > 0 and (org.lastAdrenaline or 0) < CurTime() then
-        org.adrenaline = org.adrenaline + org.adrenalineAdd
-        org.adrenalineAdd = 0
-        org.lastAdrenaline = CurTime() + 1
-    end
+	if org.adrenalineAdd > 0 then
+		org.adrenaline = Approach(org.adrenaline, 4, timeValue / 5)
+	end
 
 	org.adrenalineAdd = Approach(org.adrenalineAdd, 0, org.adrenalineAdd < 0 and timeValue / 30 or timeValue / 5)
 
@@ -194,20 +149,8 @@ module[2] = function(owner, org, timeValue)
 		org.larm = max(org.larm - timeValue / 240, 0)
 	end
 
-	if org.spine1 < 1 then
-		org.spine1 = max(org.spine1 - timeValue / 300, 0)
-	end
-
-	if org.spine2 < 1 then
-		org.spine2 = max(org.spine2 - timeValue / 300, 0)
-	end
-
-	if org.spine3 < 1 then
-		org.spine3 = max(org.spine3 - timeValue / 300, 0)
-	end
-
-	if org.pain > 120 then
-		org.needfake = true
+	if org.pain > 100 then
+		--org.needfake = true
 	end
 
 	//local tempo = math.Clamp(5 - (org.temperature - 31), 0, 15)

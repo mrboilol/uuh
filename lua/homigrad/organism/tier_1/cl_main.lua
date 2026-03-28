@@ -48,50 +48,6 @@ hook.Add("ScalePlayerDamage", "remove-effects", function(ent, hitgroup, dmgInfo)
 	end
 end)
 
-net.Receive("hg_HeadTrauma", function()
-    local dir = net.ReadVector()
-    local lply = LocalPlayer()
-
-    if not IsValid(lply) then return end
-
-    lply:ViewPunch(Angle(dir.z * 5, dir.x * 5, 0))
-
-    lply.tinnitus = CurTime() + 1
-
-    if lply.organism then
-        lply.organism.disorientation = 20
-    end
-
-    local tab = {
-        -- sharpen
-        [ "$pp_colour_addr" ] = 0,
-        [ "$pp_colour_addg" ] = 0,
-        [ "$pp_colour_addb" ] = 0,
-        [ "$pp_colour_brightness" ] = -0.1,
-        [ "$pp_colour_contrast" ] = 2,
-        [ "$pp_colour_colour" ] = 0.1,
-        [ "$pp_colour_mulr" ] = 0,
-        [ "$pp_colour_mulg" ] = 0,
-        [ "$pp_colour_mulb" ] = 0
-    }
-
-    DrawColorModify(tab)
-
-    timer.Simple(0.1, function()
-        if not IsValid(lply) then return end
-        lply:SetDSP(0)
-    end)
-end)
-
-net.Receive("hg_SmallHeadHit", function()
-    local dir = net.ReadVector()
-    local lply = LocalPlayer()
-
-    if not IsValid(lply) then return end
-
-    lply:ViewPunch(Angle(dir.z, dir.x, 0))
-end)
-
 local min = math.min
 local pain_mat = Material("sprites/mat_jack_hmcd_narrow")
 
@@ -301,15 +257,6 @@ hook.Add("radialOptions", "DislocatedJaw", function()
             "Fix dislocation (jaw)"
         }
         hg.radialOptions[#hg.radialOptions + 1] = tbl
-	elseif org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
-        local tbl = {
-            function()
-				lply.tried_fixing_limb = CurTime() + 0.5
-				RunConsoleCommand("hg_fixdislocation", 4, 0)
-            end,
-            "Fix dislocation (spine)"
-        }
-        hg.radialOptions[#hg.radialOptions + 1] = tbl
 	else
 		local ent = hg.eyeTrace(lply).Entity
 
@@ -416,9 +363,6 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	if organism.owner == LocalPlayer() then
 		if new_organism.otrub and !old then
 			hook.Run("HG_OnOtrub", new_organism.owner)
-            if new_organism.owner == LocalPlayer() then
-                new_organism.owner:EmitSound("harmsting.ogg")
-            end
 		end
 		
 		old = new_organism.otrub
@@ -477,7 +421,8 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 			lply:SetDSP(normaldsp)
 			plyCommand(lply,"soundfade "..tinnitusSoundFactor2.." 25")
 		elseif lply:Alive() then
-			lply:SetDSP(45)
+			lply:SetDSP(17)
+			plyCommand(lply,"soundfade 100 25")
 		end
 	else
 		plyCommand(lply,"soundfade "..tinnitusSoundFactor2.." 25")

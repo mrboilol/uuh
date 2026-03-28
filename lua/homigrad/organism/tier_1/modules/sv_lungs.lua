@@ -165,34 +165,7 @@ local bit_band,util_PointContents = bit.band,util.PointContents
 local color_white, color_red, color_red2, color_red3 = Color(255, 255, 255), Color(255, 0, 0), Color(200, 55, 55), Color(255, 100, 100)
 module[2] = function(owner, org, timeValue)
 	local o2 = org.o2
-	local time = CurTime()
-
-	local chokingActive = false
-	if org.choking_until then
-		if org.choking_until > time then
-			chokingActive = true
-		else
-			org.choking_until = nil
-			org.choking = false
-		end
-	else
-		chokingActive = org.choking == true
-	end
-
-	if chokingActive then
-		org.choking_started_at = org.choking_started_at or time
-	else
-		org.choking_started_at = nil
-	end
-
-	local chokingEffective = chokingActive and (time - (org.choking_started_at or time)) >= 1
-
-	local losing_oxy
-	if chokingEffective then
-		losing_oxy = timeValue * 2.6
-	else
-		losing_oxy = timeValue * 1 * math.Clamp(org.o2[1] / 30, 0.25, 1)
-	end
+	local losing_oxy = timeValue * 1 * math.Clamp(org.o2[1] / 30, 0.25, 1)
 	org.losing_oxy = losing_oxy
 	o2[1] = max(o2[1] - losing_oxy, 0)
 	local ent = hg.GetCurrentCharacter(owner)
@@ -225,10 +198,10 @@ module[2] = function(owner, org, timeValue)
 	if not head then head = owner:GetPos() end
 	
 	local inwater = bit_band(util_PointContents(head),CONTENTS_WATER) == CONTENTS_WATER
-	
+	-- test
 	local success = owner:IsBerserk() or (not org.heartstop and org.alive and not (org.brain >= 0.4 and math.random(10 - (org.brain * 10)) < 4) and org.lungsfunction)
 	if success and owner:IsPlayer() and inwater then success = false end
-	if success and chokingEffective then org.needfake = true success = false end
+	if success and org.choking then org.needfake = true success = false end
 	if success and org.vomitInThroat then success = false end
 	org.choking = false
 	local pneumothorax = (org.lungsR[2] == 1 or org.lungsL[2] == 1) and org.needle == 0
@@ -238,13 +211,12 @@ module[2] = function(owner, org, timeValue)
 	org.pneumothorax = pneumothorax and min(org.pneumothorax + timeValue / 180 * (org.lungsL[2] + org.lungsR[2]), (org.lungsL[2] + org.lungsR[2]) / 2) or max(org.pneumothorax - timeValue / 10, 0)
 	
 	if org.lastCOBreathe and org.lastCOBreathe + 1 > CurTime() then
-		org.COregen = math.Approach(org.COregen, (org.CO_source_strength or 0), timeValue * 1)
+		org.COregen = math.Approach(org.COregen, 30, timeValue * 1)
 	else
 		org.COregen = math.Approach(org.COregen, 0, timeValue * 0.5)
-		org.CO_source_strength = 0
 	end
 
-	org.CO = max(org.CO - timeValue * (org.pulse / 70), 0)
+	org.CO = max(org.CO - timeValue, 0)
 	if success then
 		local oxygenate = hg.organism.OxygenateBlood(org) * 0.5
 		local lerp = min(max(org.pulse - 20, 0) / 20, 1)
@@ -259,14 +231,7 @@ module[2] = function(owner, org, timeValue)
 		local sprayed = org.is_sprayed_at
 		org.is_sprayed_at = nil
 
-    local mood = org.mood
-        local mood_bonus = 1
-        if GetConVar("hg_mood_enabled"):GetBool() and mood and mood >= 80 then
-            mood_bonus = 1.2 -- 20% bonus to O2 regeneration for high mood
-        end
-
-        local adrenaline_bonus = 1 + org.adrenaline * 0.25
-        local regenerate = regen * timeValue * 4 * (org.stamina[1] / org.stamina.max) * (mask_blevota and 0 or 1) * ((org.temperature > 38) and math.Clamp(math.Remap(org.temperature, 38, 41, 1, 0.1), 0.1, 1) or 1) * mood_bonus * adrenaline_bonus
+		local regenerate = regen * timeValue * 4 * (org.stamina[1] / org.stamina.max) * (mask_blevota and 0 or 1) * ((org.temperature > 38) and math.Clamp(math.Remap(org.temperature, 38, 41, 1, 0.1), 0.1, 1) or 1)
 		o2[1] = min(o2[1] + regenerate * math.Clamp(org.o2[1] / 30, 0.25, 1) * (org.holdingbreath and 0 or 1) * (sprayed and 0 or 1) * min((10 / max(org.CO,1)),1), o2.range * math.max(1 - org.pneumothorax * org.pneumothorax, 0.1) * math.min(org.blood / 4500, 1) * math.max(1 - (org.lungsL[1] + org.lungsR[1]) / 2, 0.5))
 
 		o2.curregen = regenerate
@@ -282,21 +247,8 @@ module[2] = function(owner, org, timeValue)
 	if owner:IsBerserk() then
 		o2[1] = math.max(5, o2[1])
 	end
-
-	org.choke_time = org.choke_time or 0
-	org.was_choking = org.was_choking or false
-	if chokingEffective then
-		org.choke_time = org.choke_time + timeValue
-	else
-		if org.was_choking then
-			local over = math.max(0, org.choke_time - 10)
-			org.choke_recovery_unlock = time + 15 + over * 5
-		end
-		org.choke_time = 0
-	end
-	org.was_choking = chokingEffective
 	
-	if org.isPly and not org.otrub and o2.curregen < losing_oxy and org.analgesia <= 1.5 then
+	if org.isPly and not org.otrub and o2.curregen < losing_oxy and org.analgesia <= 1.5 and !org.heartstop then
 		if mask_blevota then
 			if o2[1] < 15 then
 				org.owner:Notify("DROP THE FUCKING MASK", 25, "take_gasmask2", 0, nil, color_red2)
@@ -373,7 +325,7 @@ module[2] = function(owner, org, timeValue)
 	end
 
 	local k = halfValue2(o2[1], o2.range, o2.k)
-	
+
 	if o2[1] < 10 then
 		if org.isPly then
 			hg.StunPlayer(owner, 3)
@@ -381,8 +333,7 @@ module[2] = function(owner, org, timeValue)
 	end
 
 	if o2[1] < 12 then
-			org.CO = org.CO + timeValue * 0.1
-			org.needfake = true
+		org.needfake = true
 
 		if org.isPly then
 			hg.LightStunPlayer(owner, 3)
@@ -391,12 +342,6 @@ module[2] = function(owner, org, timeValue)
 
 	if o2[1] < 4 then
 		org.needotrub = true
-	end
-	
-	if not org.choking and org.choke_recovery_unlock and org.choke_recovery_unlock <= CurTime() then
-		org.needotrub = false
-		o2[1] = math.max(o2[1], 6)
-		org.choke_recovery_unlock = nil
 	end
 
 	if org.lungsR[1] < 0.5 then

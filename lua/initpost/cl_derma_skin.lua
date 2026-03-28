@@ -19,9 +19,9 @@ end)
 -- HG.DrawBlur находится в cl_pointshop.lua... простите за такое ГОВНО но это нужно чтобы оно везде грузилось нормально.
 
 --local hg_coolvetica = ConVarExists("hg_coolvetica") and GetConVar("hg_coolvetica") or CreateClientConVar("hg_coolvetica", "0", true, false, "changes every text to coolvetica because its good", 0, 1)
-local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", "Bahnschrift", true, false, "change every text font to selected because ui customization is cool")
-local font = function() -- hg_coolvetica:GetBool() and "Coolvetica" or "Bahnschrift"
-    local usefont = "Bahnschrift"
+local hg_font = ConVarExists("hg_font") and GetConVar("hg_font") or CreateClientConVar("hg_font", "Roboto", true, false, "change every text font to selected because ui customization is cool")
+local font = function() -- hg_coolvetica:GetBool() and "Coolvetica" or "Roboto"
+    local usefont = "Roboto"
 
     if hg_font:GetString() != "" then
         usefont = hg_font:GetString()
@@ -94,6 +94,12 @@ surface.CreateFont("ZCity_Fixed_Medium_Light", {
 	font = font(),
 	size = 25,
 	weight = 200
+})
+
+surface.CreateFont("ZCity_Moodle", {
+    font = font(),
+    size = 12,
+    weight = 200
 })
 
 surface.CreateFont("ZCity_Fixed_Medium_Light_Blur", {

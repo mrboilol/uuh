@@ -4,7 +4,7 @@
 SWEP.PrintName		= "Scripted Weapon" -- 'Nice' Weapon name (Shown on HUD)
 SWEP.Author			= ""
 SWEP.Contact		= ""
-SWEP.Purpose		= ""
+se		= ""
 SWEP.Instructions	= ""
 
 SWEP.ViewModelFOV	= 62

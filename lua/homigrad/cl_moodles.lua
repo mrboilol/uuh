@@ -145,7 +145,33 @@ local MOODLE_INFO = {
     ["horrified"] = { title = "Critically Injured", desc = "This is the end of you. Goodbye!" },
 }
 
--- Networking
+local color_white = Color(255, 255, 255)
+
+-- Word wrap function
+local function wrapText(text, font, maxWidth)
+    surface.SetFont(font)
+    local lines = {}
+    if not text or text == "" then return lines end
+
+    local words = string.Explode(" ", text)
+    local current_line = ""
+
+    for i, word in ipairs(words) do
+        local test_line = current_line .. (current_line == "" and "" or " ") .. word
+        local w, _ = surface.GetTextSize(test_line)
+
+        if w > maxWidth then
+            if current_line ~= "" then
+                table.insert(lines, current_line)
+            end
+            current_line = word
+        else
+            current_line = test_line
+        end
+    end
+    table.insert(lines, current_line)
+    return lines
+end
 net.Receive("Moodle_Add", function()
     local id = net.ReadString()
     local tex = net.ReadString()
@@ -255,11 +281,21 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         local drawW, drawH = iconSize * scale, iconSize * scale
         
         if GetConVar("hg_sidemoodles"):GetBool() then
+            if y + drawH + pad > screenH then
+                y = baseY
+                x = x - drawW - pad
+            end
             drawY = y
             y = y + drawH + pad
+            drawX = x
         else
+            if x + drawW + pad > screenW then
+                x = baseX
+                y = y + drawH + pad
+            end
             drawX = x
             x = x + drawW + pad
+            drawY = y
         end
 
         -- surface.SetDrawColor(255, 0, 0, alpha)
@@ -311,30 +347,51 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     -- Draw Tooltip
     if hovered and MOODLE_INFO[hovered] then
         local info = MOODLE_INFO[hovered]
-        local tw = 360
-        local th = 68
+        local titleFont = "ZCity_Medium"
+        local descFont = "ZCity_Moodle"
+        local maxWidth = 340
+        
+        -- Wrap description text
+        local descLines = wrapText(info.desc, descFont, maxWidth)
         if info.desc2 then
-            th = 88
-        end
-        
-        local tx = mx + 12
-        local ty = my + 12
-
-        if tx + tw > ScrW() then
-            tx = mx - tw - 12
+            local desc2Lines = wrapText(info.desc2, descFont, maxWidth)
+            for _, l in ipairs(desc2Lines) do
+                table.insert(descLines, l)
+            end
         end
 
-        if ty + th > ScrH() then
-            ty = my - th - 12
-        end
+        -- Calculate heights
+        surface.SetFont(titleFont)
+        local _, titleHeight = surface.GetTextSize(info.title)
+        surface.SetFont(descFont)
+        local _, descHeight = surface.GetTextSize("Tg") -- Get height of a line
+
+        local titlePadding = 15 -- More space between title and description
+        local linePadding = 5   -- Space between description lines
+
+        -- Calculate total tooltip height
+        local tw = 360
+        local th = 12 + titleHeight + titlePadding + (#descLines * descHeight) + math.max(0, #descLines - 1) * linePadding + 12
+
+        local tx = mx + 20
+        local ty = my + 20
+
+        if tx + tw > ScrW() then tx = mx - tw - 20 end
+        if ty + th > ScrH() then ty = my - th - 20 end
         
+        -- Draw background and border
         draw.RoundedBox(6, tx - 6, ty - 6, tw, th, Color(0, 0, 0, 200))
         surface.SetDrawColor(255, 0, 0, 200)
         surface.DrawOutlinedRect(tx - 6, ty - 6, tw, th)
-        draw.SimpleText(info.title, "ZCity_Medium", tx, ty, color_white)
-        draw.SimpleText(info.desc, "ZCity_Small", tx, ty + 22, Color(200, 200, 200))
-        if info.desc2 then
-            draw.SimpleText(info.desc2, "ZCity_Small", tx, ty + 42, Color(200, 200, 200))
+
+        -- Draw Title
+        draw.SimpleText(info.title, titleFont, tx, ty, color_white)
+
+        -- Draw Description
+        local currentY = ty + titleHeight + titlePadding
+        for _, line in ipairs(descLines) do
+            draw.SimpleText(line, descFont, tx, currentY, Color(200, 200, 200))
+            currentY = currentY + descHeight + linePadding
         end
     end
 end)
