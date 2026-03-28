@@ -316,6 +316,12 @@ local damage_indicator_time = 0
 local DAMAGE_INDICATOR_DURATION = 2 -- seconds
 
 
+local red_flash_time = 0
+
+net.Receive("PlayerTookDamage", function()
+	red_flash_time = 0.2
+end)
+
 net.Receive("headtrauma_flash", function()
     local pos = net.ReadVector()
     local time = net.ReadFloat()
@@ -341,6 +347,12 @@ net.Receive("hg_MeleeHeadViewpunch", function()
 end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
+    if red_flash_time > 0 then
+        red_flash_time = math.max(red_flash_time - FrameTime(), 0)
+        surface.SetDrawColor(255, 0, 0, 100 * (red_flash_time / 0.2))
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    end
+
     damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.3, 0)
     if show_red_trauma_time > 0 then -- normal damage
         show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)

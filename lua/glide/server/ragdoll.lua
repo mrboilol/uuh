@@ -191,6 +191,7 @@ function Glide.RagdollPlayer( ply, velocity, unragdollTime )
     -- Setup ragdoll, disable grabbing/duplication
     ragdoll:SetPos( ply.GlideRagdollStartPos )
     ragdoll:SetModel( ply:GetModel() )
+    ragdoll:SetCollisionGroup(COLLISION_GROUP_PUSHAWAY)
     ragdoll:Spawn()
     ragdoll:Activate()
 

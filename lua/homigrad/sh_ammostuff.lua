@@ -1154,6 +1154,105 @@ hg.ammotypes = {
 			Icon = matPistolAmmo
 		}
 	},
+	["jorf"] = {
+		name = "JORF",
+		allowed = true,
+		dmgtype = DMG_BULLET,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 150,
+		maxcarry = 80,
+		minsplash = 1,
+		maxsplash = 1,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 5,
+			TracerLength = 150,
+			TracerWidth = 2,
+			TracerColor = Color(0, 255, 255),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 25000
+		},
+		BulletSettings = {
+			Damage = 250,
+			Force = 80,
+			Penetration = 1,
+			Shell = "9x18",
+			Speed = 1500,
+			Diameter = 11.19,
+			Mass = 14,
+			Icon = matPistolAmmo
+		}
+	},
+	["reinforcedjorf"] = {
+		name = "Reinforced JORF",
+		allowed = true,
+		dmgtype = DMG_BULLET,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 120,
+		maxcarry = 80,
+		minsplash = 1,
+		maxsplash = 1,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 5,
+			TracerLength = 150,
+			TracerWidth = 2,
+			TracerColor = Color(255, 0, 0),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 25000
+		},
+		BulletSettings = {
+			Damage = 80,
+			Force = 25,
+			Penetration = 50,
+			Shell = "9x18",
+			Speed = 800,
+			Diameter = 11.19,
+			Mass = 14,
+			Icon = matPistolAmmo
+		}
+	},
+	["9mmripp"] = {
+		name = "9mm RIP",
+		allowed = true,
+		dmgtype = DMG_BULLET,
+		tracer = TRACER_LINE,
+		plydmg = 0,
+		npcdmg = 0,
+		force = 100,
+		maxcarry = 80,
+		minsplash = 1,
+		maxsplash = 1,
+		TracerSetings = {
+			TracerBody = Material("particle/fire"),
+			TracerTail = Material("effects/laser_tracer"),
+			TracerHeadSize = 1,
+			TracerLength = 45,
+			TracerWidth = 1,
+			TracerColor = Color(255, 237, 155),
+			TracerTPoint1 = 0.25,
+			TracerTPoint2 = 1,
+			TracerSpeed = 15000
+		},
+		BulletSettings = {
+			Damage = 250,
+			Force = 63,
+			Penetration = 0.5,
+			Shell = "9x19",
+			Speed = 352,
+			Diameter = 9,
+			Mass = 7,
+			Icon = matPistolAmmo
+		}
+	},
 	["9x17mm"] = {
 		name = "9x17 mm",
 		allowed = true,
@@ -2877,6 +2976,21 @@ local ammoents = {
 	},
 	["tranquilizerdarts"] = {
 		Icon = "vgui/hud/bullets/low_caliber.png",
+		Material = "models/hmcd_ammobox_9",
+		Scale = 0.8,
+	},
+	["jorf"] = {
+		Icon = "vgui/hud/jorf.png",
+		Material = "models/hmcd_ammobox_9",
+		Scale = 0.8,
+	},
+	["reinforcedjorf"] = {
+		Icon = "vgui/hud/reinforcedjorf.png",
+		Material = "models/hmcd_ammobox_9",
+		Scale = 0.8,
+	},
+	["9mmripp"] = {
+		Icon = "vgui/hud/9mmripp.png",
 		Material = "models/hmcd_ammobox_9",
 		Scale = 0.8,
 	},

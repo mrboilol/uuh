@@ -35,6 +35,7 @@ hook.Add("PlayerSpawn", "InitArteriesAndVeins", function(ply)
     end
 end)
 
+util.AddNetworkString("PlayerTookDamage")
 util.AddNetworkString("headtrauma_flash")
 util.AddNetworkString("hg_RedTrauma")
 util.AddNetworkString("hg_DamageIndicator")
@@ -496,6 +497,10 @@ local hg_bloodimpacts = ConVarExists("hg_bloodimpacts") and GetConVar("hg_bloodi
 local net, math, hg, IsValid = net, math, hg, IsValid
 local takeRagdollDamage
 hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
+	if ent:IsPlayer() and not ent.hasHeadTrauma and ent:Alive() and dmgInfo:GetDamage() > 1 then
+		net.Start("PlayerTookDamage")
+		net.Send(ent)
+	end
 	if dmgInfo:IsDamageType(DMG_DISSOLVE) then return end
 
 	local attacker = dmgInfo:GetAttacker()

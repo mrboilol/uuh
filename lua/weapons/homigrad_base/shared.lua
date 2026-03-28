@@ -37,8 +37,9 @@ SWEP.AmmoTypes2 = {
 	["9x19 mm Parabellum"] = {
 		[1] = {"9x19 mm Parabellum"},
 		[2] = {"9x19 mm Green Tracer"},
-		[3] = {"9x19 mm QuakeMaker"}
-	}, 
+		[3] = {"9x19 mm QuakeMaker"},
+		[4] = {"9mmripp"}
+	},
 	["5.56x45 mm"] = {
 		[1] = {"5.56x45 mm"},
 		[2] = {"5.56x45 mm M856"},
@@ -51,7 +52,9 @@ SWEP.AmmoTypes2 = {
 	},
 	["7.62x51 mm"] = {
 		[1] = {"7.62x51 mm"},
-		[2] = {"7.62x51 mm M993"}
+		[2] = {"7.62x51 mm M993"},
+		[3] = {"jorf"},
+		[4] = {"reinforcedjorf"}
 	},
 	["14.5x114mm B32"] = {
 		[1] = {"14.5x114mm B32"},
@@ -59,7 +62,7 @@ SWEP.AmmoTypes2 = {
 	},
 	[".45 ACP"] = {
 		[1] = {".45 ACP"},
-		[2] = {".45 ACP Hydro Shock"},
+		[2] = {".45 ACP Hydro Shock"}
 	},
 	[".50 Action Express"] = {
 		[1] = {".50 Action Express"},
@@ -69,10 +72,12 @@ SWEP.AmmoTypes2 = {
 	["9mm PAK Blank"] = {
 		[1] = {"9mm PAK Blank"},
 		[2] = {"9mm PAK Flash Defense"},
+		[3] = {"jorf"},
+		[4] = {"reinforcedjorf"}
 	},
 	["18x45mm Traumatic"] = {
 		[1] = {"18x45mm Traumatic"}, -- T
-		[2] = {"18x45mm Flash Defense"}, -- LAS
+		[2] = {"18x45mm Flash Defense"} -- LAS
 	},
 	["23x75 SH10"] = {
 		[1] = {"23x75 SH10"},
@@ -84,8 +89,18 @@ SWEP.AmmoTypes2 = {
 	["20/70 gauge"] = {
 		[1] = {"20/70 gauge"},
 		[2] = {"20/70 Slug"},
-		[3] = {"20/70 Flechette"},
+		[3] = {"20/70 Flechette"}
 	},
+	[".45 Rubber"] = {
+		[1] = {".45 Rubber"},
+		[2] = {"jorf"},
+		[3] = {"reinforcedjorf"}
+	},
+	["7.62x54 mm"] = {
+		[1] = {"7.62x54 mm"},
+		[2] = {"jorf"},
+		[3] = {"reinforcedjorf"}
+	}
 }
 
 function SWEP:OnReloaded()

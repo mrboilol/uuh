@@ -55,7 +55,7 @@ SWEP.DamageSecondary = 6
 
 SWEP.PenetrationPrimary = 5
 SWEP.PenetrationSecondary = 3
-SWEP.BleedMultiplier = 1.5
+SWEP.BleedMultiplier = 4.5
 
 SWEP.MaxPenLen = 3
 
@@ -109,13 +109,13 @@ end
 SWEP.AttackPos = Vector(0,0,0)
 SWEP.AttackingPos = Vector(0,0,0)
 
-SWEP.AttackTime = 0.2
-SWEP.AnimTime1 = 0.7
-SWEP.WaitTime1 = 0.5
+SWEP.AttackTime = 0.4
+SWEP.AnimTime1 = 0.9
+SWEP.WaitTime1 = 0.7
 
-SWEP.Attack2Time = 0.1
-SWEP.AnimTime2 = 0.5
-SWEP.WaitTime2 = 0.4
+SWEP.Attack2Time = 0.3
+SWEP.AnimTime2 = 0.7
+SWEP.WaitTime2 = 0.6
 
 SWEP.AttackTimeLength = 0.15
 SWEP.Attack2TimeLength = 0.1

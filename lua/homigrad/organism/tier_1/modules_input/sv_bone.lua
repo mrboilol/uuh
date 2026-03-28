@@ -478,6 +478,12 @@ hg.organism.ApplyConcussion = ApplyConcussion
 
 local function headTraumaFlash(targetPlayer, dmgInfo, flashType, severity)
 	if not (IsValid(targetPlayer) and targetPlayer:IsPlayer()) then return end
+	targetPlayer.hasHeadTrauma = true
+	timer.Simple(0, function()
+		if IsValid(targetPlayer) then
+			targetPlayer.hasHeadTrauma = false
+		end
+	end)
 
 	local flashTime, flashSize, sound
 	local worldPos
