@@ -163,10 +163,10 @@ local function SyncMoodles(ply)
         manageMoodleState(ply, "bleeding_4", true, "materials/moodels/Bleeding_4.png")
     else
         manageHierarchicalMoodle(ply, "bleeding", {
-            { threshold = 0.1, texture = "materials/moodels/Bleeding_1.png" },
-            { threshold = 1, texture = "materials/moodels/Bleeding_2.png" },
-            { threshold = 5, texture = "materials/moodels/Bleeding_3.png" },
-            { threshold = 15, texture = "materials/moodels/Bleeding_4.png" },
+            { threshold = 0.05, texture = "materials/moodels/Bleeding_1.png" },
+            { threshold = 0.5, texture = "materials/moodels/Bleeding_2.png" },
+            { threshold = 2.5, texture = "materials/moodels/Bleeding_3.png" },
+            { threshold = 7.5, texture = "materials/moodels/Bleeding_4.png" },
         }, bleedRate)
     end
 
@@ -294,10 +294,10 @@ local function SyncMoodles(ply)
     local weightmul = hg.CalculateWeight(ply, maxweight)
     local encumbrance_value = (1 / weightmul) - 1
     manageHierarchicalMoodle(ply, "encumbered", {
-        { threshold = 0.4, texture = "materials/moodels/Encumbered_Moodle_1.png" },
-        { threshold = 0.6, texture = "materials/moodels/Encumbered_Moodle_2.png" },
-        { threshold = 0.8, texture = "materials/moodels/Encumbered_Moodle_3.png" },
-        { threshold = 0.95, texture = "materials/moodels/Encumbered_Moodle_4_Crit.png" },
+        { threshold = 0.6, texture = "materials/moodels/Encumbered_Moodle_1.png" },
+        { threshold = 0.75, texture = "materials/moodels/Encumbered_Moodle_2.png" },
+        { threshold = 0.9, texture = "materials/moodels/Encumbered_Moodle_3.png" },
+        { threshold = 1, texture = "materials/moodels/Encumbered_Moodle_4_Crit.png" },
     }, encumbrance_value)
 
     -- Endurance

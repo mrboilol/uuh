@@ -77,7 +77,9 @@ SWEP.AmmoTypes2 = {
 	},
 	["18x45mm Traumatic"] = {
 		[1] = {"18x45mm Traumatic"}, -- T
-		[2] = {"18x45mm Flash Defense"} -- LAS
+		[2] = {"18x45mm Flash Defense"}, -- LAS
+		[3] = {"jorf"},
+		[4] = {"reinforcedjorf"}
 	},
 	["23x75 SH10"] = {
 		[1] = {"23x75 SH10"},
@@ -1949,6 +1951,37 @@ function SWEP:GetAdditionalValues()
 		walk = walk * 2
 	end
 
+	local sway_multiplier = 1
+	local weight_multiplier = 1
+	if ply.organism then
+		local rarm_broken = ply.organism.rarm and ply.organism.rarm > 0.99
+		local larm_broken = ply.organism.larm and ply.organism.larm > 0.99
+		local rarm_dislocated = ply.organism.rarmdislocation
+		local larm_dislocated = ply.organism.larmdislocation
+		local rarm_amputated = ply.organism.rarmamputated
+		local larm_amputated = ply.organism.larmamputated
+		
+		if (rarm_broken or larm_broken) and not self:IsPistolHoldType() then
+			sway_multiplier = sway_multiplier * 2
+			weight_multiplier = weight_multiplier * 1.5
+		end
+		
+		if (rarm_dislocated or larm_dislocated) and not self:IsPistolHoldType() then
+			sway_multiplier = sway_multiplier * 1.5
+			weight_multiplier = weight_multiplier * 1.2
+		end
+		
+		if rarm_amputated and self:IsPistolHoldType() then
+			sway_multiplier = sway_multiplier * 1.2
+			weight_multiplier = weight_multiplier * 1.1
+		end
+
+		if (larm_amputated or rarm_amputated) and not self:IsPistolHoldType() then
+			sway_multiplier = sway_multiplier * 3
+			weight_multiplier = weight_multiplier * 2
+		end
+	end
+
 	--print(self:IsSprinting())
 	
 	local huy = self.huytime
@@ -1959,7 +1992,7 @@ function SWEP:GetAdditionalValues()
 		self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] - 1 * walk * -1
 	end]]
 	
-	local lena = vellen / 150 * (ply:OnGround() and 1 or 0.1)
+	local lena = vellen / 150 * (ply:OnGround() and 1 or 0.1) * sway_multiplier
 	local x, y = math.cos(huy) * math.sin(huy) * walk * (antiMeta and 1 or 1) * 1.5, math.sin(huy) * walk * (antiMeta and 1 or 1) * 1.5
 	
 	if hg_gopro:GetBool() then
@@ -1968,12 +2001,14 @@ function SWEP:GetAdditionalValues()
 
 	self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] - walk * lena
 	self.AdditionalPosPreLerp[2] = self.AdditionalPosPreLerp[2] - x * 0.25 * (lena * 3)
-	self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - y * 0.25 * lena
+	self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - y * 0.5 * lena
 	self.AdditionalPosPreLerp[1] = self.AdditionalPosPreLerp[1] - math.sin(huy) * math.sin(huy) * walk * 1 * lena
 
 	self.AdditionalAngPreLerp[2] = self.AdditionalAngPreLerp[2] + x * 4 * lena
 	self.AdditionalAngPreLerp[1] = self.AdditionalAngPreLerp[1] - y * 2 * lena
-	self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] - y * 3 * lena
+	self.AdditionalAngPreLerp[3] = self.AdditionalAngPreLerp[3] - y * 6 * lena
+
+	self.AdditionalPosPreLerp[3] = self.AdditionalPosPreLerp[3] - (self.Weight / 5) * (weight_multiplier - 1)
 
 	--// Sprint anim
 	if CLIENT and self:IsLocal() and owner:IsOnGround() and not self.reload then

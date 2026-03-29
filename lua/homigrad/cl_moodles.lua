@@ -300,24 +300,86 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         baseY = 16
     end
     
-    local x = baseX
-    local y = baseY
+    local layout_x = baseX
+    local layout_y = baseY
     local hovered = nil
 
-    -- Animation helper
+    -- Animation helpers
     local function easeOutBack(t)
         local c1 = 1.70158
         local c3 = c1 + 1
         return 1 + c3 * (t - 1)^3 + c1 * (t - 1)^2
     end
 
+    local function easeOutQuint(t) return 1 - (1 - t)^5 end
+
     local is_otrub = ply:GetNWBool("otrub", false)
 
-    -- Draw Icons
+    -- Create a sorted list of moodles to ensure consistent layout
+    local sorted_moodles = {}
     for id, data in pairs(CLIENT_MOODLES) do
-        local drawX, drawY = baseX, baseY
-        local spawn = data.spawn or (CurTime() - 10) -- Default to old for moodles that existed before joining
-        local dt = CurTime() - spawn
+        table.insert(sorted_moodles, {id = id, data = data, spawn = data.spawn or 0})
+    end
+    table.sort(sorted_moodles, function(a, b) return a.spawn < b.spawn end)
+
+    -- Draw Icons
+    for _, moodle in ipairs(sorted_moodles) do
+        local id = moodle.id
+        local data = moodle.data
+        local dt = CurTime() - (data.spawn or (CurTime() - 10))
+
+        -- Animations
+        local scale = 1
+        local alpha = 255
+        if data.remove_time then
+            local remove_dt = CurTime() - data.remove_time
+            local animT = math.Clamp(remove_dt / 0.4, 0, 1)
+            scale = Lerp(easeOutQuint(animT), 1, 0.8)
+            alpha = Lerp(easeOutQuint(animT), 255, 0)
+
+            if remove_dt > 0.4 then
+                CLIENT_MOODLES[id] = nil
+                if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_REMOVE, "[M] - "..id.."\n") end
+                continue
+            end
+        else
+            local animT = math.Clamp(dt / 0.5, 0, 1)
+            scale = Lerp(easeOutBack(animT), 0.8, 1)
+            alpha = Lerp(animT, 0, 255)
+        end
+
+        local drawW, drawH = iconSize * scale, iconSize * scale
+
+        -- Initialize position if new
+        if not data.x then data.x = layout_x end
+        if not data.y then data.y = layout_y end
+
+        -- Calculate target position
+        local targetX, targetY
+        if GetConVar("hg_sidemoodles"):GetBool() then
+            if layout_y + drawH + pad > screenH then
+                layout_y = baseY
+                layout_x = layout_x - (iconSize + pad)
+            end
+            targetX = layout_x
+            targetY = layout_y
+            layout_y = layout_y + drawH + pad
+        else
+            if layout_x + drawW + pad > screenW then
+                layout_x = baseX
+                layout_y = layout_y + drawH + pad
+            end
+            targetX = layout_x
+            targetY = layout_y
+            layout_x = layout_x + drawW + pad
+        end
+        
+        -- Smoothly move to target position
+        data.x = Lerp(FrameTime() * 15, data.x, targetX)
+        data.y = Lerp(FrameTime() * 15, data.y, targetY)
+
+        local drawX = data.x + sway_offset
+        local drawY = data.y
 
         -- Shake animation for worsening moodles
         if data.worsen_time and (CurTime() - data.worsen_time) < 0.5 then
@@ -327,49 +389,6 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
             drawX = drawX + shake_amount
         end
         
-        -- Animations
-        local scale = 1
-        local alpha = 255
-        if data.remove_time then
-            local remove_dt = CurTime() - data.remove_time
-            scale = Lerp(remove_dt / 0.3, 1, 0.8)
-            alpha = Lerp(remove_dt / 0.3, 255, 0)
-
-            if remove_dt > 0.3 then
-                CLIENT_MOODLES[id] = nil
-                if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_REMOVE, "[M] - "..id.."\n") end
-                continue
-            end
-        else
-            local animT = math.Clamp(dt / 0.5, 0, 1)
-            scale = Lerp(animT, 0.8, 1)
-            alpha = Lerp(animT, 0, 255)
-        end
-
-        local drawW, drawH = iconSize * scale, iconSize * scale
-        drawX = drawX + sway_offset
-        
-        if GetConVar("hg_sidemoodles"):GetBool() then
-            if y + drawH + pad > screenH then
-                y = baseY
-                x = x - drawW - pad
-            end
-            drawY = y
-            y = y + drawH + pad
-            drawX = x
-        else
-            if x + drawW + pad > screenW then
-                x = baseX
-                y = y + drawH + pad
-            end
-            drawX = x
-            x = x + drawW + pad
-            drawY = y
-        end
-
-        -- surface.SetDrawColor(255, 0, 0, alpha)
-        -- surface.DrawOutlinedRect(drawX, drawY, drawW, drawH)
-
         -- Draw texture or fallback box
         if data.mat and not data.mat:IsError() then
             if is_otrub and not VITAL_MOODLES[id] then

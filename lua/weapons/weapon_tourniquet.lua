@@ -128,6 +128,52 @@ if SERVER then
         },
     }
 
+    function SWEP:HealVeins(ent, bone)
+        local org = ent.organism
+        if not org or #org.veinwounds == 0 then return false end
+
+        local ent = org.isPly and org.owner or ent
+        ent.tourniquets = ent.tourniquets or {}
+
+        local pw
+        if not bone then
+            for i, wound in ipairs(org.veinwounds) do
+                pw = i
+                break
+            end
+        else
+            for i, wound in ipairs(org.veinwounds) do
+                if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
+                    pw = i
+                    break
+                end
+            end
+        end
+
+        if not pw then return false end
+
+        local wound = org.veinwounds[pw]
+        if not wound then return false end
+
+        ent.tourniquets[#ent.tourniquets + 1] = {wound[2], wound[3], wound[4]}
+        org[wound[7]] = 0
+
+        table.remove(org.veinwounds, pw)
+        org.owner:SetNetVar("veinwounds", org.veinwounds)
+
+        ent:SetNetVar("Tourniquets", ent.tourniquets)
+        if IsValid(ent.FakeRagdoll) then
+            ent.FakeRagdoll:SetNetVar("Tourniquets", ent.tourniquets)
+        end
+
+        if not table.HasValue(hg.TourniquetGuys, ent) then
+            table.insert(hg.TourniquetGuys, ent)
+        end
+
+        self:GetOwner():EmitSound("snd_jack_hmcd_bandage.wav", 65, math.random(95, 105))
+        return true
+    end
+
     function SWEP:Tourniquet(ent, bone)
         local org = ent.organism
         if not org then return end

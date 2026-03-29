@@ -657,7 +657,7 @@ function ENTITY:FireLuaBullets(tInfo)
 			local pLagPlayer = Player(iHitNum)
 			
 			if (pLagPlayer:IsValid()) then
-				pLagPlayer:DrawHitBoxes(DEBUG_LENGTH)
+				--pLagPlayer:DrawHitBoxes(DEBUG_LENGTH)
 			end
 		end
 		
@@ -1058,7 +1058,7 @@ function PLAYER:FireCSSBullets(tInfo)
 			local pLagPlayer = Player(iHitNum)
 			
 			if (pLagPlayer:IsValid()) then
-				pLagPlayer:DrawHitBoxes(DEBUG_LENGTH)
+				--pLagPlayer:DrawHitBoxes(DEBUG_LENGTH)
 			end
 		end
 		

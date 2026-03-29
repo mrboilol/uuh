@@ -63,7 +63,7 @@ hook.Add("Think", "stanleytumbler", function()
         local tripType = "none"
         local trHighHit = false
 
-        if isSlipping or (speed > 200 and (math.random(150) == 1 or cosine <= 0.99)) then
+        if isSlipping or (speed > 200 and cosine <= 0.99) then
             shouldTrip = true
             tripType = "slip"
             tripChance = tripChance + 0.5

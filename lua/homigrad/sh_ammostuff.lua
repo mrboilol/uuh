@@ -1184,7 +1184,7 @@ hg.ammotypes = {
 			Speed = 352,
 			Diameter = 11.19,
 			Mass = 14,
-			Icon = matPistolAmmo
+			Icon = Material("jorfbullet.png")
 		}
 	},
 	["reinforcedjorf"] = {
@@ -1217,7 +1217,7 @@ hg.ammotypes = {
 			Speed = 800,
 			Diameter = 11.19,
 			Mass = 14,
-			Icon = matPistolAmmo
+			Icon = Material("rjorfbullet.png")
 		}
 	},
 	["9mmripp"] = {
@@ -2980,12 +2980,12 @@ local ammoents = {
 		Scale = 0.8,
 	},
 	["jorf"] = {
-		Icon = "vgui/hud/jorf.png",
+		Icon = "vgui/hud/jorfbullet.png",
 		Material = "models/hmcd_ammobox_9",
 		Scale = 0.8,
 	},
 	["reinforcedjorf"] = {
-		Icon = "vgui/hud/reinforcedjorf.png",
+		Icon = "vgui/hud/rjorfbullet.png",
 		Material = "models/hmcd_ammobox_9",
 		Scale = 0.8,
 	},
