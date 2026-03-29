@@ -1,4 +1,20 @@
 if SERVER then AddCSLuaFile() end
+if not hg.fear_thoughts then
+    hg.fear_thoughts = {
+        "I can't hold on!",
+        "My hands are shaking too much!",
+        "It slipped!",
+        "I'm losing my grip!",
+    }
+end
+if not hg.suicide_thoughts then
+    hg.suicide_thoughts = {
+        "There is no other way.",
+        "This is it.",
+        "Goodbye.",
+        "I'm sorry.",
+    }
+end
 SWEP.PrintName = "carlos duty knife"
 SWEP.Instructions = "A military grade combat knife designed to neutralize the enemy during combat operations and special operations."
 SWEP.Category = "Weapons - Melee"
@@ -794,6 +810,23 @@ function SWEP:MultiplyDMG(owner, ent, vellen, mul)
 end
 
 function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
+    local org = owner.organism
+    if org and (org.berserk or 0) == 0 then -- Don't drop if berserk
+        local stamina = org.stamina and org.stamina[1] or 100
+        local fear = org.fear or 0
+        local tired_threshold = 30 -- drop if stamina is below this
+        if stamina < tired_threshold then
+            local drop_chance = ((tired_threshold - stamina) / tired_threshold) * 0.05 -- max 5% chance when stamina is 0
+            drop_chance = drop_chance + (fear * 0.05) -- add up to 5% chance from fear
+            if math.random() < drop_chance then
+                owner:DropWeapon(self)
+                owner:Notify(hg.fear_thoughts[math.random(#hg.fear_thoughts)], 10, "melee_drop", 0, nil, Color(200, 200, 200, 255))
+                self:SetInAttack(false) -- Stop the attack
+                return
+            end
+        end
+    end
+
     //if SERVER then owner:SetNetVar("slowDown", owner:GetNetVar("slowDown", 0) + (attacktype and self.DamageSecondary or self.DamagePrimary)) end
     
     if not self.FirstAttackTick then 
@@ -1230,6 +1263,23 @@ function SWEP:CustomThink()
 
             local soft = self:IsEntSoft(ent)
             if !shouldhit then
+                if SERVER then
+                    for _, ply in ipairs(player.GetAll()) do
+                        if ply ~= owner and ply:Alive() and not ply:InVehicle() then
+                            local toPlayer = (ply:GetPos() - owner:GetPos()):GetNormalized()
+                            if owner:GetAimVector():Dot(toPlayer) > 0.8 then
+                                local dist = ply:GetPos():Distance(owner:GetPos())
+                                if dist < self:GetAttackLength() + 64 then
+                                    local severity = math.max(0, 1 - (dist / (self:GetAttackLength() + 64)))
+                                    net.Start("PlayerSuppressed")
+                                    net.WriteFloat(severity)
+                                    net.WriteFloat(self.DamagePrimary)
+                                    net.Send(ply)
+                                end
+                            end
+                        end
+                    end
+                end
                 goto meleeskip1
             end
 

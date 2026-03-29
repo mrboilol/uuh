@@ -42,6 +42,7 @@ module[2] = function(owner, org, timeValue)
 	
 	org.pulse = math.Approach(org.pulse, pulse, heart == 0 and timeValue * 10 or timeValue * 5)
 
+	org.fearadd = org.fearadd * (1 - (org.desensitized or 0))
 	org.fearadd = math.Clamp(org.fearadd, 0, 3)
 
 	local heartbeat = org.pulse < 70 and 70 + (70 - org.pulse) * 4 or org.pulse
@@ -69,6 +70,9 @@ module[2] = function(owner, org, timeValue)
 	end
 
 	org.fear = math.Approach(org.fear, (org.otrub and 0 or (org.fearadd > 0 and 1 or -1)), org.otrub and timeValue * 0.5 or (org.fearadd > 0 and (org.fear < 0 and timeValue * 5 * org.fearadd or timeValue / 5 * org.fearadd) or (org.fear <= 0 and timeValue / 240 or timeValue / 50)))
+	if org.fear > 0.5 then
+        org.desensitized = (org.desensitized or 0) + (org.fear - 0.5) * timeValue * 0.001 -- slowly increase desensitized when fear is high
+    end
 	-- less time to start fearing, more time to become calm again
 	-- if no fear, in 3 minutes become slightly talkative, so would say random phrases to calm themselves in a current situation
 	local gainfear = hg.organism.should_gain_fear(org)

@@ -202,9 +202,15 @@ function HGAddView(ply, origin, angles, velLen)
 	end
 
 	local ply_override, origin_override, angles_override = hook.Run("HGAddView", ply, origin, angles)
-	if origin_override ~= nil then
+	if ply_override ~= nil then
 		origin, angles = origin_override, angles_override
 	end
+
+    if _G.suppression_severity and _G.suppression_severity > 0 then
+        local curTime = CurTime()
+        local wobble = math.sin(curTime * (10 + 5 * _G.suppression_severity)) * (0.5 * _G.suppression_severity)
+        angles:Add(Angle(wobble, wobble, wobble))
+    end
 	
 	return origin, angles
 end

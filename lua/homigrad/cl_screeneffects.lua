@@ -1,7 +1,14 @@
 
+include("postprocess/scaf.lua")
+include("postprocess/sdle.lua")
+include("postprocess/merc_chromaticaberration.lua")
+include("postprocess/merc_vignette.lua")
+include("postprocess/merc_grayscale.lua")
+
 local homigrad_damage_convar = CreateClientConVar("homigrad_damage", "0", true, false)
 
 local concussion_effect_time = 0
+local suppression_effect_time = 0
 local concussion_dsp_set = false
 
 local tired_sound
@@ -16,6 +23,95 @@ hook.Add("PlayerDeath", "StopCriticalLoopOnDeath", function(victim, inflictor, a
         criticalloop_sound = nil
         criticalloop_sound_name = nil
     end
+hook.Add("PostDrawPlayerAppearance", "DesensitizedFaceEffect", function(ent, ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
+    if ply == LocalPlayer() then return end -- Don't draw on self
+
+    local lply = LocalPlayer()
+    local lply_org = lply.organism
+    if not lply_org or not lply_org.desensitized or lply_org.desensitized < 0.9 then return end
+
+    local org = ply.organism
+    if not org or not org.desensitized or org.desensitized < 0.9 then return end
+
+    local bone = ply:LookupBone("ValveBiped.Bip01_Head1")
+    if not bone then return end
+
+    local pos, ang = ply:GetBoneMatrix(bone)
+    if not pos then return end
+
+    cam.Start3D(EyePos(), EyeAngles())
+        render.SetMaterial(Material("sprites/black"))
+        for i = 1, 5 do
+            local size = math.random(5, 15)
+            local offset = Vector(math.Rand(-10, 10), math.Rand(-10, 10), math.Rand(-10, 10))
+            render.DrawQuad(pos + offset, ang:Up(), ang:Right(), size, size, color_white)
+        end
+    cam.End3D()
+end)
+
+local suicide_input_locked = false
+hook.Add("Think", "DesensitizedSuicideEffect", function()
+    local ply = LocalPlayer()
+    if not IsValid(ply) or not ply:Alive() then return end
+
+    if ply:GetNWFloat("willsuicide", 0) > 0 and (ply.organism and (ply.organism.desensitized or 0) > 0.9) then
+        if not suicide_input_locked then
+            -- Lock input
+            hook.Add("PlayerBindPress", "LockSuicideInput", function(ply, bind, pressed)
+                if bind ~= "+attack" then
+                    return true -- block all other binds
+                end
+            end)
+            suicide_input_locked = true
+        end
+
+        -- Grayscale effect
+        local saturation = 0.5
+        DrawColorModify({
+            ["$pp_colour_colour"] = saturation,
+        })
+
+        -- Show thought
+        if not ply.suicide_thought_shown then
+            ply:Notify(hg.suicide_thoughts[math.random(#hg.suicide_thoughts)], 10, "suicide_thought", 0, nil, Color(200, 200, 200, 255))
+            ply.suicide_thought_shown = true
+        end
+    else
+        if suicide_input_locked then
+            -- Unlock input
+            hook.Remove("PlayerBindPress", "LockSuicideInput")
+            suicide_input_locked = false
+        end
+        ply.suicide_thought_shown = false
+    end
+end)
+
+hook.Add("PostDrawPlayerAppearance", "DesensitizedFaceEffect", function(ent, ply)
+    if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
+    if ply == LocalPlayer() then return end -- Don't draw on self
+
+    local lply = LocalPlayer()
+    local lply_org = lply.organism
+    if not lply_org or not lply_org.desensitized or lply_org.desensitized < 0.9 then return end
+
+    local org = ply.organism
+    if not org or not org.desensitized or org.desensitized < 0.9 then return end
+
+    local bone = ply:LookupBone("ValveBiped.Bip01_Head1")
+    if not bone then return end
+
+    local pos, ang = ply:GetBoneMatrix(bone)
+    if not pos then return end
+
+    cam.Start3D(EyePos(), EyeAngles())
+        render.SetMaterial(Material("sprites/black"))
+        for i = 1, 5 do
+            local size = math.random(5, 15)
+            local offset = Vector(math.Rand(-10, 10), math.Rand(-10, 10), math.Rand(-10, 10))
+            render.DrawQuad(pos + offset, ang:Up(), ang:Right(), size, size, color_white)
+        end
+    cam.End3D()
 end)
 
 hook.Add("PlayerSpawn", "StopCriticalLoopOnSpawn", function(ply)
@@ -323,11 +419,54 @@ local damage_indicator_dir = Vector(0,0,0)
 local damage_indicator_time = 0
 local DAMAGE_INDICATOR_DURATION = 2 -- seconds
 
+local suppression_fade_time = 0
+local suppression_severity = 0
+local suppression_chromatic_aberration = 0
+local suppression_dof = 0
+local suppression_vignette = 0
+local suppression_dirt = 0
+_G.suppression_severity = 0
+
+local dirtMat = Material("overlays/dirt_overlay.png", "noclamp")
+local chromaticMat = Material("effects/shaders/zb_chromatic")
+
+
 
 local red_flash_time = 0
+local damage_fade_time = 0
+
+net.Receive("PlayerSuppressed", function()
+    _G.suppression_severity = net.ReadFloat()
+    local wep_damage = net.ReadFloat()
+    suppression_fade_time = 1.0 * suppression_severity
+    suppression_effect_time = 1.5 * suppression_severity
+
+    -- New effects
+    suppression_chromatic_aberration = suppression_severity
+
+    suppression_dof = suppression_severity * 8
+    suppression_vignette = suppression_severity * 15
+
+    if suppression_severity > 0.6 then
+        suppression_dirt = 1
+    end
+
+    damage_blur_time = suppression_dof
+
+    -- Flinching
+    local punch = Angle(math.Rand(-5, 5) * suppression_severity, math.Rand(-5, 5) * suppression_severity, math.Rand(-2, 2) * suppression_severity)
+    ViewPunch(punch)
+
+    -- Ragdoll on high suppression and damage
+    if suppression_severity > 0.8 and wep_damage > 50 then
+        net.Start("RequestRagdoll")
+        net.SendToServer()
+    end
+end)
 
 net.Receive("PlayerTookDamage", function()
 	red_flash_time = 0.2
+    damage_fade_time = 1
 end)
 
 net.Receive("headtrauma_flash", function()
@@ -358,6 +497,23 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     if red_flash_time > 0 then
         red_flash_time = math.max(red_flash_time - FrameTime(), 0)
         surface.SetDrawColor(255, 0, 0, 100 * (red_flash_time / 0.2))
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    end
+
+    if damage_fade_time > 0 then
+        damage_fade_time = math.max(damage_fade_time - FrameTime(), 0)
+        local fade_alpha = 255 * (damage_fade_time / 1)
+        surface.SetDrawColor(0, 0, 0, fade_alpha)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+
+        surface.SetDrawColor(255, 0, 0, fade_alpha * 0.3)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+    end
+
+    if suppression_fade_time > 0 then
+        suppression_fade_time = math.max(suppression_fade_time - FrameTime(), 0)
+        local fade_alpha = 255 * (suppression_fade_time / (1.0 * suppression_severity))
+        surface.SetDrawColor(0, 0, 0, fade_alpha)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
@@ -590,6 +746,133 @@ local lerpblood = 0
 local addtime = CurTime()
 local hurtoverlay = Material("zcity/neurotrauma/damageOverlay.png", "smooth")
 hook.Add("Post Post Processing", "ItHurts", function()
+    local ply = LocalPlayer()
+    if not IsValid(ply) or not ply:Alive() then return end
+
+    local org = ply.organism
+    if not org then return end
+
+    -- Get player state
+    local pain = org.pain or 0
+    local shock = org.shock or 0
+    local fear = org.fear or 0
+    local adrenaline = org.adrenaline or 0
+    local suppression = _G.suppression_severity or 0
+    local blood = org.blood or 5000
+
+    -- Chromatic Aberration
+    local c-intensity = 0
+    c-intensity = c-intensity + (pain / 100)
+    c-intensity = c-intensity + (suppression * 0.5)
+    c-intensity = c-intensity + (adrenaline * 0.3)
+    c-intensity = c-intensity + (fear * 0.2)
+    if c-intensity > 0 then
+        local args = {
+            aberration = c-intensity
+        }
+        merc_chromaticaberration(args)
+    end
+
+    -- Vignette
+    local vignette_intensity = 0
+    vignette_intensity = vignette_intensity + (fear * 10)
+    vignette_intensity = vignette_intensity + (suppression * 5)
+    if vignette_intensity > 0 then
+        local args = {
+            vignette_intensity = vignette_intensity
+        }
+        merc_vignette(args)
+    end
+
+    -- Desaturation
+    local desaturation_intensity = 0
+    if blood < 4000 then
+        desaturation_intensity = math.max(desaturation_intensity, 1 - (blood / 4000))
+    end
+    desaturation_intensity = math.max(desaturation_intensity, fear * 0.5)
+    if pain > 50 then
+        desaturation_intensity = math.max(desaturation_intensity, (pain - 50) / 50)
+    end
+    if desaturation_intensity > 0 then
+        local args = {
+            grayscale = desaturation_intensity
+        }
+        merc_grayscale(args)
+    end
+
+    -- Desaturation
+    local desaturation_intensity = 0
+    if blood < 4000 then
+        desaturation_intensity = math.max(desaturation_intensity, 1 - (blood / 4000))
+    end
+    desaturation_intensity = math.max(desaturation_intensity, fear * 0.5)
+    if pain > 50 then
+        desaturation_intensity = math.max(desaturation_intensity, (pain - 50) / 50)
+    end
+    if desaturation_intensity > 0 then
+        local args = {
+            grayscale = desaturation_intensity
+        }
+        merc_grayscale(args)
+    end
+
+    -- Dirty Lens
+    if suppression > 0.6 then
+        sdle.Damage(suppression * 2, math.Rand(0.5, 1), true, true)
+    end
+
+    -- Flinching
+    if suppression > 0.1 or pain > 10 then
+        local punch = Angle(math.Rand(-5, 5) * suppression, math.Rand(-5, 5) * suppression, math.Rand(-2, 2) * suppression)
+        punch = punch + Angle(math.Rand(-2, 2) * (pain / 20), math.Rand(-2, 2) * (pain / 20), 0)
+        ViewPunch(punch)
+    end
+
+    -- Flinching
+    if suppression > 0.1 or pain > 10 then
+        local punch = Angle(math.Rand(-5, 5) * suppression, math.Rand(-5, 5) * suppression, math.Rand(-2, 2) * suppression)
+        punch = punch + Angle(math.Rand(-2, 2) * (pain / 20), math.Rand(-2, 2) * (pain / 20), 0)
+        ViewPunch(punch)
+    end
+    if suppression_effect_time > 0 then
+        -- Chromatic Aberration
+        if suppression_chromatic_aberration > 0 then
+            render.UpdateScreenEffectTexture()
+            chromaticMat:SetFloat("$c0_x", suppression_chromatic_aberration * 0.1)
+            render.SetMaterial(chromaticMat)
+            render.DrawScreenQuad()
+        end
+
+
+
+        -- Dirt
+        if suppression_dirt > 0 then
+            surface.SetDrawColor(255, 255, 255, suppression_dirt * 150)
+            surface.SetMaterial(dirtMat)
+            surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+        end
+
+        -- Grain/Pixelation
+        if _G.suppression_severity > 0.5 then
+            local grain_intensity = (_G.suppression_severity - 0.5) * 2 -- scale from 0 to 1
+            render.UpdateScreenEffectTexture()
+            render.UpdateFullScreenDepthTexture()
+            
+            grainMat:SetFloat("$c0_x", CurTime()) -- time
+            grainMat:SetFloat("$c0_y", 0.5) -- gate
+            grainMat:SetFloat("$c0_z", grain_intensity * 2) -- Pixelize
+            grainMat:SetFloat("$c1_x", grain_intensity) -- lerp
+            grainMat:SetFloat("$c1_y", grain_intensity * 5) -- vignette intensity
+            grainMat:SetFloat("$c1_z", grain_intensity) -- BlurIntensity
+            grainMat:SetFloat("$c2_x", 0) -- r
+            grainMat:SetFloat("$c2_y", 0) -- g
+            grainMat:SetFloat("$c2_z", 0) -- b
+            grainMat:SetFloat("$c3_x", 0) -- ImageIntensity
+        
+            render.SetMaterial(grainMat)
+            render.DrawScreenQuad()
+        end
+    end
 	if homigrad_damage_convar:GetBool() then 
         local org = lply.organism
         if org then
@@ -605,10 +888,10 @@ hook.Add("Post Post Processing", "ItHurts", function()
                 render.UpdateScreenEffectTexture()
 
                 vignetteMat:SetFloat("$c2_x", CurTime() + 10000) --Time
-                vignetteMat:SetFloat("$c0_z", ((org.otrub and 5 or (pain / 40 + math.max(shock - 5, 0) / 3)) + 0) * 0.2) --ColorIntensity
-                vignetteMat:SetFloat("$c1_y", ((org.otrub and 10 or (pain / 40 + math.max(shock - 5, 0) / 3)) + 0) * 0.2) --Vignette
+                vignetteMat:SetFloat("$c0_z", (org.otrub and 5 or (pain / 40 + math.max(shock - 5, 0) / 3)) + blindness_intensity) //ColorIntensity
+		vignetteMat:SetFloat("$c1_y", ((org.otrub and 10 or (pain / 40 + math.max(shock - 5, 0) / 3)) + blindness_intensity) + suppression_vignette) //Vignette
 
-                render.SetMaterial(vignetteMat)
+		render.SetMaterial(vignetteMat)
                 render.DrawScreenQuad()
             end
         end
@@ -648,6 +931,15 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			lply:SetDSP(0)
 			concussion_dsp_set = false
 		end
+	end
+
+	if suppression_effect_time > 0 then
+		suppression_effect_time = math.max(suppression_effect_time - FrameTime(), 0)
+		local severity_multiplier = suppression_severity
+		DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
+		local curTime = CurTime()
+		local wobble = math.sin(curTime * (10 + 5 * severity_multiplier)) * (0.5 * severity_multiplier)
+		ViewPunch(Angle(wobble, wobble, wobble))
 	end
 
 	if org.blindness or amtflashed >= 0.8 then
@@ -973,7 +1265,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 		vignetteMat:SetFloat("$c2_x", CurTime() + 10000) //Time
 		vignetteMat:SetFloat("$c0_z", (org.otrub and 5 or (pain / 40 + math.max(shock - 5, 0) / 3)) + blindness_intensity) //ColorIntensity
-		vignetteMat:SetFloat("$c1_y", (org.otrub and 10 or (pain / 40 + math.max(shock - 5, 0) / 3)) + blindness_intensity) //Vignette
+		vignetteMat:SetFloat("$c1_y", ((org.otrub and 10 or (pain / 40 + math.max(shock - 5, 0) / 3)) + blindness_intensity) + suppression_vignette) //Vignette
 
 		render.SetMaterial(vignetteMat)
 		render.DrawScreenQuad()
@@ -1282,19 +1574,38 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     local vomit_vignette = org.wantToVomit and org.wantToVomit > 0.95
 
     -- Fear effects
-    local fear_vignette = org.fear and org.fear > 0.8
-    wave_effect_active = fear_vignette
+    local fear = org.fear or 0
+    local fear_intensity = math.Clamp(fear, 0, 1)
 
-    -- Low mood and fear vignette
-    local low_mood_fear_vignette = (org.mood and org.mood < 40) and (org.fear and org.fear > 0.1)
+    if fear_intensity > 0.01 then
+        -- Vignette
+        vignette_intensity = vignette_intensity + (fear_intensity * 25) -- max 25 intensity from fear
+
+        -- Grayscale
+        local fear_saturation = 1 - (fear_intensity * 0.7) -- max 70% desaturation from fear
+        saturation = math.min(saturation, fear_saturation)
+
+        -- Wave effect for high fear
+        if fear_intensity > 0.8 then
+            wave_effect_active = true
+        end
+    end
+
+    local desensitized = org.desensitized or 0
+    if desensitized > 0.5 then
+        local desensitized_saturation = 1 - (desensitized - 0.5) * 0.5 -- max 25% desaturation from desensitized
+        saturation = math.min(saturation, desensitized_saturation)
+    end
+
+    -- Low mood vignette
+    local low_mood_vignette = (org.mood and org.mood < 40)
 
     -- Suicidal vignette
     local suicidal_vignette = org.mood and org.mood < 10
 
     local vignette_intensity = 0
     if vomit_vignette then vignette_intensity = vignette_intensity + 5 end
-    if fear_vignette then vignette_intensity = vignette_intensity + 20 end
-    if low_mood_fear_vignette then vignette_intensity = vignette_intensity + 7 end
+    if low_mood_vignette then vignette_intensity = vignette_intensity + 7 end
     if suicidal_vignette then vignette_intensity = vignette_intensity + 12 end
 
     if wave_effect_active then
@@ -1304,22 +1615,36 @@ hook.Add("Post Post Processing", "CustomEffects", function()
         render.DrawScreenQuad()
     end
 
-    -- Low blood/mood grayscale
-    local blood_val = org.blood or 5000
-    local mood_val = org.mood or 100
-    
     local saturation = 1
 
-    -- Only calculate if one of the conditions is met
-    if blood_val < 4500 or mood_val < 40 then
+    -- Fear effects
+    local fear = org.fear or 0
+    local fear_intensity = math.Clamp(fear, 0, 1)
+
+    if fear_intensity > 0.01 then
+        -- Vignette
+        vignette_intensity = vignette_intensity + (fear_intensity * 25) -- max 25 intensity from fear
+
+        -- Grayscale
+        local fear_saturation = 1 - (fear_intensity * 0.7) -- max 70% desaturation from fear
+        saturation = math.min(saturation, fear_saturation)
+
+        -- Wave effect for high fear
+        if fear_intensity > 0.8 then
+            wave_effect_active = true
+        end
+    end
+
+    -- Low blood grayscale
+    local blood_val = org.blood or 5000
+    
+    -- Only calculate if the condition is met
+    if blood_val < 4500 then
         -- Calculate saturation based on blood, defaults to 1 if blood is not low
         local blood_saturation = (blood_val < 4500) and math.Clamp(math.Remap(blood_val, 1000, 4500, 0, 1), 0, 1) or 1
         
-        -- Calculate saturation based on mood, defaults to 1 if mood is not low
-        local mood_saturation = (mood_val < 40) and math.Clamp(math.Remap(mood_val, 0, 40, 0, 1), 0, 1) or 1
-        
         -- The final saturation is the minimum of the two, so the strongest effect applies
-        saturation = math.min(blood_saturation, mood_saturation)
+        saturation = math.min(saturation, blood_saturation)
     end
     
     -- Only draw if the effect is active

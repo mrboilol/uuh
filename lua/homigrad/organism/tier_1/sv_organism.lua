@@ -69,6 +69,7 @@ hook.Add("Org Clear", "Main", function(org)
 
 	org.fear = 0
 	org.fearadd = 0
+	org.desensitized = 0
 	--//
 
 	org.assimilated = 0
@@ -148,6 +149,7 @@ local function send_organism(org, ply)
 	sendtable.temperature = org.temperature
 	sendtable.canmove = org.canmove
 	sendtable.fear = org.fear
+	sendtable.desensitized = org.desensitized
 	sendtable.llegdislocation = org.llegdislocation
 	sendtable.rlegdislocation = org.rlegdislocation
 	sendtable.rarmdislocation = org.rarmdislocation
@@ -364,6 +366,8 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		module.random_events[2](owner, org, timeValue)
 	end
 	module.pulse[2](owner, org, timeValue)
+	org.recoilmul = 1 * (1 - (org.desensitized or 0) * 0.5) -- reduce recoil by up to 50%
+	org.platelets = 0.01 + (org.desensitized or 0) * 0.04 -- base platelets is 0.01, increase by up to 0.04
 
 	if org.owner.PlayerClassName == "furry" then
 		org.assimilated = 0

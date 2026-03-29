@@ -215,6 +215,16 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 	elseif ApproachAngle < MaxRicAngle * 0.7 then --previosly 0.2, made 1 for fun
 		--if CLIENT then return end
 		-- ping whiiiizzzz
+		for _, ply in ipairs(player.GetAll()) do
+			if ply ~= self:GetOwner() and ply:GetPos():Distance(hitPos) < 512 then
+				local dist = ply:GetPos():Distance(hitPos)
+				local severity = math.max(0, 1 - (dist / 512))
+				net.Start("PlayerSuppressed")
+				net.WriteFloat(severity)
+				net.Send(ply)
+			end
+		end
+
 		if math.random(5) == 1 then -- 20% chance for custom ricochet sound
 			local customRicSounds = {
 				"bullet/ricochet1.ogg", "bullet/ricochet2.ogg", "bullet/ricochet3.ogg", "bullet/ricochet4.ogg"
@@ -797,6 +807,28 @@ function SWEP:FireBullet()
 		bullet.MaxPenLen = 100
 		bullet.Penetration = (ammotype.Penetration or (-(-self.Penetration))) * (self.PenetrationMultiplier or 1)
 		bullet.Diameter = ammotype.Diameter or 1
+
+		-- Suppression for near misses
+		for _, ply in ipairs(player.GetAll()) do
+			if ply ~= owner and ply:Alive() and not ply:InVehicle() then
+				local eyePos = ply:EyePos()
+				local aimDir = bullet.Dir
+				local toPlayer = (eyePos - bullet.Src):GetNormalized()
+				local dot = aimDir:Dot(toPlayer)
+
+				if dot > 0.98 then -- Player is in the path of the bullet
+					local distToPath = (eyePos - bullet.Src):Cross(aimDir).Length
+					                    local suppression_range = 128 + (bullet.Diameter or 1) * 10
+					if distToPath < suppression_range then -- Bullet is close to the player
+						local severity = math.max(0, 1 - (distToPath / suppression_range))
+						net.Start("PlayerSuppressed")
+						net.WriteFloat(severity)
+                        net.WriteFloat(bullet.Damage)
+						net.Send(ply)
+					end
+				end
+			end
+		end
 
 		if SERVER and owner.suiciding and willsuicidereal then
 			local dmginfo = DamageInfo()

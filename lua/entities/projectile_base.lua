@@ -121,6 +121,22 @@ if SERVER then
 		
 		local trace = util.TraceLine(tr)
 
+				for _, ply in ipairs(player.GetAll()) do
+		    if ply ~= self.owner and ply:Alive() and not ply:InVehicle() then
+		        local toPlayer = (ply:GetPos() - self:GetPos()):GetNormalized()
+		        if self:GetAngles():Forward():Dot(toPlayer) > 0.9 then
+		            local dist = ply:GetPos():Distance(self:GetPos())
+		            if dist < 256 then
+		                local severity = math.max(0, 1 - (dist / 256))
+		                net.Start("PlayerSuppressed")
+		                net.WriteFloat(severity)
+		                net.WriteFloat(self.BlastDamage)
+		                net.Send(ply)
+		            end
+		        end
+		    end
+		end
+
 		self:AboutToHit(trace)
 
 		return true
@@ -264,6 +280,27 @@ if SERVER then
 								self = Entity(1)
 							end
 							--bullet.Spread = vecCone * i / self.Fragmentation
+
+							for _, ply in ipairs(player.GetAll()) do
+							    if ply ~= selfowner and ply:Alive() and not ply:InVehicle() then
+							        local eyePos = ply:EyePos()
+							        local aimDir = bullet.Dir
+							        local toPlayer = (eyePos - bullet.Src):GetNormalized()
+							        local dot = aimDir:Dot(toPlayer)
+
+							        if dot > 0.98 then -- Player is in the path of the bullet
+							            local distToPath = (eyePos - bullet.Src):Cross(aimDir).Length
+							            if distToPath < 128 then -- Bullet is close to the player
+							                local severity = math.max(0, 1 - (distToPath / 128))
+							                net.Start("PlayerSuppressed")
+							                net.WriteFloat(severity)
+							                net.WriteFloat(bullet.Damage)
+							                net.Send(ply)
+							            end
+							        end
+							    end
+							end
+
 							self:FireLuaBullets(bullet, true)
 						end
 

@@ -5,6 +5,14 @@ function SWEP:Reload(time)
 	if self.reload then return end
 	if IsValid(self:GetOwner().FakeRagdoll) and self:GetOwner().FakeRagdoll.ConsLH then return end
 	if not self:CanUse() or not self:CanReload() then self:OnCantReload() return end
+
+	local org = self:GetOwner().organism
+    if org and (org.fear or 0) > 0.25 and math.random() < ((org.fear - 0.25) / 0.75) * 0.05 then -- 5% chance at max fear
+        self:GetOwner():DropWeapon(self)
+        self:GetOwner():Notify(randomgovno[math.random(#randomgovno)], 10, "fear_drop", 0, nil, Color(200, 200, 200, 255))
+        return
+    end
+
 	self.LastReload = CurTime()
 	self:ReloadStart()
 	self:ReloadStartPost()

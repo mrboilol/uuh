@@ -874,6 +874,12 @@ local IsValid = IsValid
 --\\ Calculate Weight 
 	function hg.CalculateWeight(ply,maxweight)
 		if GetConVar("homigrad_damage"):GetBool() then return 1 end
+
+		local org = ply.organism
+		if org and (org.desensitized or 0) > 0 then
+			maxweight = maxweight * (1 + (org.desensitized or 0) * 0.5) -- increase max weight by up to 50%
+		end
+
 		local weight = 0
 
 		local weps = ply:GetWeapons()

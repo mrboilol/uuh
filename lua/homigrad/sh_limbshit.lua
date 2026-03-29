@@ -139,6 +139,11 @@ local function draw_sprites()
 	local ply = LocalPlayer()
 	if not IsValid(ply) or not ply.organism then return end
 
+    local org = ply.organism
+    if org and (org.desensitized or 0) > 0.8 then -- Hide if desensitized level is above 0.8
+        return
+    end
+
 	-- Sway effect
     local current_view_angles = ply:EyeAngles()
     local angle_diff_y = current_view_angles.y - prev_view_angles.y

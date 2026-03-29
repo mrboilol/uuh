@@ -5,6 +5,13 @@ util.AddNetworkString("HGNotificateBerserk")
 --local hg_old_notificate = ConVarExists("hg_old_notificate") and GetConVar("hg_old_notificate") or CreateConVar("hg_old_notificate",0,FCVAR_SERVER_CAN_EXECUTE,"enable old notifications (chatprints)",0,1)
 local hev_color = Color(255,125,0)
 local function CreateNotification(ply, msg, delay, msgKey, showTime, func, clr)
+    local org = ply.organism
+    if org and (org.desensitized or 0) > 0 then
+        if math.random() < org.desensitized then
+            return false -- suppress the thought
+        end
+    end
+
     if ply.organism and ply.organism.otrub then return end
     if ply.PlayerClassName and ply.PlayerClassName == "Gordon" and clr != hev_color then return end
     if msg == "" then return end

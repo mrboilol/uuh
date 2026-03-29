@@ -21,41 +21,27 @@ end
 
 -- Core function to handle state changes and networking
 -- Only sends net messages when a state actually changes
-local function manageMoodleState(ply, moodleID, isActive, texturePath, count, bypassCooldown)
-    if not IsValid(ply) then return end
-    ply.MoodleStates = ply.MoodleStates or {}
-    ply.MoodleCooldowns = ply.MoodleCooldowns or {}
-
-    if ply.organism and (ply.organism.brain or 0) > 0.3 and math.random() < (ply.organism.brain - 0.3) * 0.5 then
-        return
-    end
-    
-    if isActive then
-        count = count or 1
-        if ply.MoodleStates[moodleID] ~= count then
-            ply.MoodleStates[moodleID] = count
-            ply.MoodleCooldowns[moodleID] = nil -- Remove cooldown when it becomes active again
-            net.Start("Moodle_Add")
-                net.WriteString(moodleID)
-                net.WriteString(texturePath or "")
-                net.WriteInt(count, 8)
-            net.Send(ply)
-            if MOODLE_DEBUG then MsgC(DEBUG_COLOR_SV, "[Moodle] ADD -> "..moodleID.." (x"..tostring(count)..")\n") end
-        end
-    elseif ply.MoodleStates[moodleID] then
-        if not ply.MoodleCooldowns[moodleID] and not bypassCooldown then
-            ply.MoodleCooldowns[moodleID] = CurTime() + 2 -- 2 second cooldown
-        end
-
-        if bypassCooldown or (ply.MoodleCooldowns[moodleID] and CurTime() >= ply.MoodleCooldowns[moodleID]) then
-            ply.MoodleStates[moodleID] = nil
-            ply.MoodleCooldowns[moodleID] = nil
-            net.Start("Moodle_Remove")
-                net.WriteString(moodleID)
-            net.Send(ply)
-            if MOODLE_DEBUG then MsgC(DEBUG_COLOR_SV, "[Moodle] REMOVE -> "..moodleID.."\n") end
+local function manageMoodleState(ply, moodle, active, material, name, description, color, noSound)
+    local org = ply.organism
+    if org and (org.desensitized or 0) > 0 then
+        local desensitized_moodles = {
+            ["bleeding"] = 0.2,
+            ["hurt"] = 0.3,
+            ["pain"] = 0.4,
+            ["trauma"] = 0.5,
+            ["stimulated"] = 0.6,
+            ["encumbered"] = 0.7,
+            ["amputation"] = 0.8,
+            ["dislocation"] = 0.8,
+            ["fracture"] = 0.8,
+        }
+        local base_id = (moodle:match("(.+)_%d+$") or moodle)
+        if desensitized_moodles[base_id] and org.desensitized > desensitized_moodles[base_id] then
+            active = false
         end
     end
+
+    local current_state = ply.moodles[moodle]
 end
 
 local function manageHierarchicalMoodle(ply, baseID, levels, value)
@@ -164,9 +150,9 @@ local function SyncMoodles(ply)
     else
         manageHierarchicalMoodle(ply, "bleeding", {
             { threshold = 0.05, texture = "materials/moodels/Bleeding_1.png" },
-            { threshold = 0.5, texture = "materials/moodels/Bleeding_2.png" },
-            { threshold = 2.5, texture = "materials/moodels/Bleeding_3.png" },
-            { threshold = 7.5, texture = "materials/moodels/Bleeding_4.png" },
+            { threshold = 0.1, texture = "materials/moodels/Bleeding_2.png" },
+            { threshold = 0.15, texture = "materials/moodels/Bleeding_3.png" },
+            { threshold = 0.2, texture = "materials/moodels/Bleeding_4.png" },
         }, bleedRate)
     end
 
@@ -290,13 +276,13 @@ local function SyncMoodles(ply)
     manageMoodleState(ply, "dislocation", dislocCount > 0, "materials/moodels/Dislocation_4.png", dislocCount)
 
     -- Encumbered
-    local maxweight = 30 -- You might want to configure this value
+    local maxweight = 75 -- You might want to configure this value
     local weightmul = hg.CalculateWeight(ply, maxweight)
     local encumbrance_value = (1 / weightmul) - 1
     manageHierarchicalMoodle(ply, "encumbered", {
-        { threshold = 0.6, texture = "materials/moodels/Encumbered_Moodle_1.png" },
-        { threshold = 0.75, texture = "materials/moodels/Encumbered_Moodle_2.png" },
-        { threshold = 0.9, texture = "materials/moodels/Encumbered_Moodle_3.png" },
+        { threshold = 0.25, texture = "materials/moodels/Encumbered_Moodle_1.png" },
+        { threshold = 0.5, texture = "materials/moodels/Encumbered_Moodle_2.png" },
+        { threshold = 0.75, texture = "materials/moodels/Encumbered_Moodle_3.png" },
         { threshold = 1, texture = "materials/moodels/Encumbered_Moodle_4_Crit.png" },
     }, encumbrance_value)
 

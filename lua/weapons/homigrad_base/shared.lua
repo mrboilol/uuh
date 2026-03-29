@@ -1953,6 +1953,18 @@ function SWEP:GetAdditionalValues()
 
 	local sway_multiplier = 1
 	local weight_multiplier = 1
+
+	if ply.organism then
+		local fear = ply.organism.fear or 0
+		local suppression = _G.suppression_severity or 0
+
+		sway_multiplier = sway_multiplier + (fear * 0.1)
+		sway_multiplier = sway_multiplier + (suppression * 0.2)
+
+		weight_multiplier = weight_multiplier + (fear * 0.05)
+		weight_multiplier = weight_multiplier + (suppression * 0.1)
+	end
+
 	if ply.organism then
 		local rarm_broken = ply.organism.rarm and ply.organism.rarm > 0.99
 		local larm_broken = ply.organism.larm and ply.organism.larm > 0.99
@@ -1994,6 +2006,12 @@ function SWEP:GetAdditionalValues()
 	
 	local lena = vellen / 150 * (ply:OnGround() and 1 or 0.1) * sway_multiplier
 	local x, y = math.cos(huy) * math.sin(huy) * walk * (antiMeta and 1 or 1) * 1.5, math.sin(huy) * walk * (antiMeta and 1 or 1) * 1.5
+
+	if ply.organism and ply.organism.fear and ply.organism.fear > 0 then
+		local fear_sway = ply.organism.fear * 0.01
+		x = x + math.Rand(-fear_sway, fear_sway)
+		y = y + math.Rand(-fear_sway, fear_sway)
+	end
 	
 	if hg_gopro:GetBool() then
 		x = x * 2

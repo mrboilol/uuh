@@ -50,6 +50,7 @@ module[2] = function(owner, org, timeValue)
 	org.immobilization = max(org.immobilization - timeValue * 2 * adrenalineMul, 0)
 
 	local shouldPainAdd = not (org.otrub or org.spine2 >= hg.organism.fake_spine2 or org.spine3 >= hg.organism.fake_spine3)
+	org.painadd = org.painadd * (1 - (org.desensitized or 0) * 0.5) -- reduce pain gain by up to 50%
 	
 	local add = math.min(timeValue * 20, org.painadd)
 	local sub = (add <= 0.2) and (timeValue * 2 * (org.otrub and 2 or 1) + timeValue * (org.painkiller * 2) + timeValue * (org.analgesia * 4)) or (0)
@@ -126,7 +127,7 @@ module[2] = function(owner, org, timeValue)
 	--end
 
 	if org.adrenalineAdd > 0 then
-		org.adrenaline = Approach(org.adrenaline, 4, timeValue / 5)
+		org.adrenaline = Approach(org.adrenaline, 4 * (1 - (org.desensitized or 0)), timeValue / 5)
 	end
 
 	org.adrenalineAdd = Approach(org.adrenalineAdd, 0, org.adrenalineAdd < 0 and timeValue / 30 or timeValue / 5)
