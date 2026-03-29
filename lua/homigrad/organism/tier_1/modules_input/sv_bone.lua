@@ -364,7 +364,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 		end--]]
 	end
 
-	org.disorientation = org.disorientation + (isCrush(dmgInfo) and dmg * 1 or dmg * 1)
+	org.disorientation = org.disorientation + (isCrush(dmgInfo) and dmg * 2 or dmg * 2)
 
 	return result,vecrand
 end

@@ -209,32 +209,20 @@ local function SyncMoodles(ply)
     local tinnitus_active = (org.tinnitus_end_time or 0) > CurTime()
     manageMoodleState(ply, "deaf_1", tinnitus_active, "materials/moodels/Deaf_2.png")
 
-    -- Depression / Happy
-    if GetConVar("hg_mood_enabled"):GetBool() then
-        local mood = org.mood or 50
-        manageHierarchicalMoodle(ply, "depression", {
-            { threshold = 30, texture = "materials/moodels/Depression_1.png" },
-            { threshold = 20, texture = "materials/moodels/Depression_2.png" },
-            { threshold = 10, texture = "materials/moodels/Depression_3.png" },
-            { threshold = 0, texture = "materials/moodels/Depression_4.png" },
-        }, 40 - mood) -- Inverted for depression
+    -- Depression (Desensitized)
+    local desensitized = org.desensitized or 0
+    manageHierarchicalMoodle(ply, "depression", {
+        { threshold = 0.25, texture = "materials/moodels/Depression_1.png" },
+        { threshold = 0.50, texture = "materials/moodels/Depression_2.png" },
+        { threshold = 0.75, texture = "materials/moodels/Depression_3.png" },
+        { threshold = 0.95, texture = "materials/moodels/Depression_4.png" },
+    }, desensitized)
 
-        manageHierarchicalMoodle(ply, "happy", {
-            { threshold = 60, texture = "materials/moodels/Happy_1.png" },
-            { threshold = 70, texture = "materials/moodels/Happy_2.png" },
-            { threshold = 80, texture = "materials/moodels/Happy_3.png" },
-            { threshold = 90, texture = "materials/moodels/Happy_4.png" },
-        }, mood)
-    else
-        manageMoodleState(ply, "depression_1", false, nil, nil, true)
-        manageMoodleState(ply, "depression_2", false, nil, nil, true)
-        manageMoodleState(ply, "depression_3", false, nil, nil, true)
-        manageMoodleState(ply, "depression_4", false, nil, nil, true)
-        manageMoodleState(ply, "happy_1", false, nil, nil, true)
-        manageMoodleState(ply, "happy_2", false, nil, nil, true)
-        manageMoodleState(ply, "happy_3", false, nil, nil, true)
-        manageMoodleState(ply, "happy_4", false, nil, nil, true)
-    end
+    -- Clear happy moodles, as they are no longer driven by the mood system
+    manageMoodleState(ply, "happy_1", false, nil, nil, true)
+    manageMoodleState(ply, "happy_2", false, nil, nil, true)
+    manageMoodleState(ply, "happy_3", false, nil, nil, true)
+    manageMoodleState(ply, "happy_4", false, nil, nil, true)
 
     -- Dislocated Spine
     local dislocated_spine_1_2 = (org.spine1dislocation or org.spine2dislocation) or ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
@@ -335,6 +323,8 @@ local function SyncMoodles(ply)
     -- Hunger
     local hunger = org.hungry or 0
     manageHierarchicalMoodle(ply, "hunger", {
+        { threshold = 1, texture = "materials/moodels/Hunger_1.png" },
+        { threshold = 30, texture = "materials/moodels/Hunger_2.png" },
         { threshold = 60, texture = "materials/moodels/Hunger_3.png" },
         { threshold = 80, texture = "materials/moodels/Hunger_4.png" },
         { threshold = 100, texture = "materials/moodels/Hunger_5.png" },

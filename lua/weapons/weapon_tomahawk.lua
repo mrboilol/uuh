@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Tomahawk"
 SWEP.Instructions = "A single-handed striking tool designed to be used as a melee weapon by military personnel or as a hunting tool. Can break down doors.\n\nLMB to attack.\nRMB to block.\nRMB + LMB to throw."
@@ -99,7 +99,8 @@ function SWEP:CustomAttack2()
     ent.wep = self:GetClass()
     ent.owner = ply
     ent.localshit = Vector(4,6,0)
-    ent.damage = 25
+    ent.damage = 40
+    ent.MaxSpeed = 1200
     ent.penetration = 5
     ent.shouldntlodge = true
 

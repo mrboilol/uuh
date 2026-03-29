@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Spear"
 SWEP.Instructions = "A spear is an effective weapon to attack at a distance.\n\nLMB to attack.\nRMB to block.\nRMB + LMB to throw."
@@ -118,7 +118,8 @@ if SERVER then
         ent.localshit = Vector(50,0,0)
         ent.wep = self:GetClass()
         ent.owner = ply
-        ent.damage = 45
+        ent.damage = 65
+        ent.MaxSpeed = 1600
         ent.uglublenie = 30
         ent.returndamage = 30
         ent.returnblood = 100

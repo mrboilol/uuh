@@ -791,7 +791,12 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	--print(dmg_before, 2)
 	local dmgBlood, dmgHurt, instaPain, immobilization = hg.organism.DamageTypeAffliction(dmg_before / 12, dmgInfo, ent, org)
 	if hitgroup == HITGROUP_HEAD and dmgInfo:IsDamageType(DMG_SLASH + DMG_CLUB + DMG_BULLET + DMG_BUCKSHOT) then
-		dmgBlood = math.max(dmgBlood, 1) * 1.75
+		dmgBlood = math.max(dmgBlood, 1) * 2.5 -- Increased bleeding from head wounds
+	end
+
+	if hitgroup == HITGROUP_HEAD and dmgInfo:IsDamageType(DMG_CLUB) and math.random(1, 100) < 30 then -- 30% chance to bleed from blunt damage to the head
+		dmgBlood = (dmgBlood + 1) * 1.5
+		org.bleed_clot = (org.bleed_clot or 0) + 20 -- makes it harder to clot
 	end
 	
 	local hitbody = #inputHole > 0 or not dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT)
@@ -949,7 +954,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
 
 	local mat = ent:GetBoneMatrix(ent:TranslatePhysBoneToBone(bone))
-	local hitgroup_max = hitgroup == HITGROUP_HEAD and 25 or 100
+	local hitgroup_max = hitgroup == HITGROUP_HEAD and 45 or 100
 	local instant = org.dmgstack[hitgroup][1] > hitgroup_max
 	--print(damageStack, org.dmgstack[hitgroup][1], org.dmgstack[hitgroup][3])
 	local blast = dmgInfo:IsDamageType(DMG_BLAST)
@@ -1020,8 +1025,17 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 					net.WriteString(bonename)
 					net.WriteMatrix(mat)
 					net.WriteVector(dmgPos + dirCool * 2)
-					net.WriteVector(-dirCool * 2)
+					net.WriteVector(dirCool * 2)
 					net.Broadcast()
+
+					if org.skull == 1 then
+						local effectdata = EffectData()
+						effectdata:SetOrigin(dmgPos)
+						effectdata:SetScale(2)
+						util.Effect("BloodImpact", effectdata, true, true)
+						rag:EmitSound("owfuck"..math.random(1,4)..".ogg")
+						rag:EmitSound("flesh"..math.random(1,10)..".wav")
+					end
 
 					if outputHole and #outputHole > 0 then
 						net.Start("bloodsquirt")
@@ -1424,9 +1438,9 @@ local function velocityDamage(ent, data)
 
 	local traceResult = GetTraceDamage(ent, data.HitPos, -(data.OurOldVelocity - data.TheirOldVelocity))
 	
-	if not bone then
-		bone = tr.PhysicsBone
-	end
+	if not bone and traceResult then
+        bone = traceResult.PhysicsBone
+    end
 
 	if IsValid(att) and att:IsPlayer() and att.organism and att.organism.fear and att.organism.fear < 0 then
 		att.organism.fear = 0

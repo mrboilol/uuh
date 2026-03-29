@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.PrintName = "Shuriken"
 SWEP.Category = "ZCity Other"
 SWEP.Instructions = "Shuriken, also called throwing stars, or ninja stars, are a Japanese concealed weapon used by samurai or ninja or in martial arts as a hidden dagger to distract or misdirect."
@@ -170,7 +170,8 @@ function SWEP:PrimaryAttack()
 		ent.bombowner.HaveTheBomb = ent
 	end
 
-	ent.damage = 15
+	ent.damage = 25
+    ent.MaxSpeed = 1800
 	ent.AttackHitFlesh = "snd_jack_hmcd_knifestab.wav"
 	ent.AttackHit = "snd_jack_hmcd_knifehit.wav"
 	ent.dont_account_for_placement = true

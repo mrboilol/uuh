@@ -107,7 +107,8 @@ if SERVER then
         ent.localshit = Vector(50,0,0)
         ent.wep = self:GetClass()
         ent.owner = ply
-        ent.damage = 50
+        ent.damage = 70
+        ent.MaxSpeed = 1800
         ent.uglublenie = 35
         ent.returndamage = 35
         ent.returnblood = 100

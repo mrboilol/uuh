@@ -93,7 +93,7 @@ function SWEP:CustomAttack2()
     ent.localshit = Vector(0,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
-    ent.damage = self.DamagePrimary * 0.7
+    ent.damage = self.DamagePrimary * 1.5
     ent.MaxSpeed = 1200
     ent.DamageType = self.DamageType
     ent.AttackHitFlesh = "snd_jack_hmcd_knifestab.wav"

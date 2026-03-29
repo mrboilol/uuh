@@ -80,10 +80,10 @@ local MOODLE_INFO = {
     ["deaf_2"] = { title = "Partial Deafness", desc = "You barely can hear." },
     ["deaf_3"] = { title = "Deaf", desc = "You cannot hear anything." },
     ["deceased"] = { title = "Critical", desc = "This is the end of you. Goodbye." },
-    ["depression_1"] = { title = "Sad", desc = "Find things that are good for you!" },
-    ["depression_2"] = { title = "Depressed", desc = "Maybe you didnt eat enough?" },
-    ["depression_3"] = { title = "Severely Depressed", desc = "Life stopped making sense." },
-    ["depression_4"] = { title = "Suicidal", desc = "You will soon leave this world without a care." },
+    ["depression_1"] = { title = "Shaken", desc = "You dont want to keep experiencing this." },
+    ["depression_2"] = { title = "Traumatized", desc = "Your body saw something it didnt want to see." },
+    ["depression_3"] = { title = "Depressed", desc = "Life isnt fair." },
+    ["depression_4"] = { title = "Desensitized", desc = "Life stopped making sense." },
 
     ["spine_damage_3"] = { title = "Severe Spine Damage", desc = "You can barely move, breathe, or even think straight." },
     ["spine_damage_4"] = { title = "Broken Spine", desc = "You are paralyzed from the neck down." },
@@ -466,7 +466,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         local info = MOODLE_INFO[hovered]
         local titleFont = "ZCity_Medium"
         local descFont = "ZCity_Moodle"
-        local maxWidth = 340
+        local maxWidth = 200 -- Reduced from 340 to encourage wrapping
         
         -- Wrap description text
         local descLines = wrapText(info.desc, descFont, maxWidth)

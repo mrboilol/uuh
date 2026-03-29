@@ -239,4 +239,15 @@ if SERVER then
     
         ply.organism.blindness_end_time = CurTime() + duration
     end)
+
+    concommand.Add("hg_set_desensitized", function(ply, cmd, args)
+        if not IsValid(ply) or not ply:IsPlayer() or not ply.organism then return end
+        if not ply:IsAdmin() then return end
+
+        local value = tonumber(args[1])
+        if not value then return end
+
+        ply.organism.desensitized = math.Clamp(value, 0, 1)
+        ply:Notify("Desensitized level set to " .. ply.organism.desensitized)
+    end)
 end

@@ -1,4 +1,4 @@
-﻿hg.bloodparticles1 = hg.bloodparticles1 or {}
+hg.bloodparticles1 = hg.bloodparticles1 or {}
 bloodparticles_hook = bloodparticles_hook or {}
 
 local tr = {
@@ -101,7 +101,9 @@ local function decalBlood(pos, normal, tr, artery, owner)
 			//timer.Simple(0.1, function()
 				hg.bloodpositions[vec] = (hg.bloodpositions[vec] or 0) + 1
 				if hg.bloodpositions[vec] < 6 then
-					util.Decal("Arterial.Blood2"..math.Clamp(hg.bloodpositions[vec], 1, 5), pos + normal, pos - normal, owner)
+					for i = 1, 3 do
+						util.Decal("Arterial.Blood2"..math.Clamp(hg.bloodpositions[vec], 1, 5), pos + normal * i, pos - normal * i, owner)
+					end
 				end
 				sound.Play("homigrad/blooddrip" .. math_random(1, 4) .. ".wav", pos, math.random(10, 60), tr.MatType == MAT_METAL and math.random(100, 120) or math.random(80, 120))
 				if tr.MatType == MAT_METAL then

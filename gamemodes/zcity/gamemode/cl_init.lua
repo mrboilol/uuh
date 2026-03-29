@@ -326,35 +326,35 @@ end
 
 surface.CreateFont("ZB_InterfaceSmall", {
     font = font(),
-    size = ScreenScale(6),
+    size = ScreenScale(7),
     weight = 400,
     antialias = true
 })
 
 surface.CreateFont("ZB_InterfaceMedium", {
     font = font(),
-    size = ScreenScale(10),
+    size = ScreenScale(12),
     weight = 400,
     antialias = true
 })
 
 surface.CreateFont("ZB_ScrappersMedium", {
     font = font(),
-    size = ScreenScale(10),
+    size = ScreenScale(12),
     weight = 400,
     antialias = true
 })
 
 surface.CreateFont("ZB_InterfaceMediumLarge", {
     font = font(),
-    size = 35,
+    size = 42,
     weight = 400,
     antialias = true
 })
 
 surface.CreateFont("ZB_InterfaceLarge", {
     font = font(),
-    size = ScreenScale(20),
+    size = ScreenScale(24),
     weight = 400,
     antialias = true
 })

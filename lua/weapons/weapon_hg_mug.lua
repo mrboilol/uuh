@@ -96,8 +96,8 @@ function SWEP:CustomAttack2()
     ent.localshit = Vector(0,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
-    ent.damage = self.DamagePrimary * 0.7
-    ent.MaxSpeed = 1100
+    ent.damage = self.DamagePrimary * 1.5
+    ent.MaxSpeed = 1400
     ent.DamageType = self.DamageType
     ent.AttackHit = "GlassBottle.ImpactHard"
     ent.AttackHitFlesh = "Flesh.ImpactHard"

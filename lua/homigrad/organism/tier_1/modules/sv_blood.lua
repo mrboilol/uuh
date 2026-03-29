@@ -27,7 +27,7 @@ module[1] = function(org)
 	org.larmartery = 0
 	org.rlegartery = 0
 	org.llegartery = 0
-	org.spineartery = 1
+	org.spineartery = 0
 	org.bleedStart = 0
 	org.wounds = {}
 	org.arterialwounds = {}
@@ -171,7 +171,7 @@ module[2] = function(owner, org, mulTime)
 				local len = dir:Length()
 				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
 				dir = -dir:Forward() * len
-				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-25, 25) + dir * 1.5, true)
+				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-50, 50) + dir * 2.5, true)
 			end
 
 			if wound[1] == 0 then
@@ -195,7 +195,7 @@ module[2] = function(owner, org, mulTime)
 				local len = dir:Length()
 				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
 				dir = -dir:Forward() * len
-				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-5, 5) + dir, false)
+				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-15, 15) + dir * 1.2, false)
 			end
 
 			if wound[1] == 0 then

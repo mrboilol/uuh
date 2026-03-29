@@ -14,6 +14,12 @@ function hg.organism.Add(ent)
 end
 
 function hg.organism.Clear(org)
+    for k, v in pairs(org) do
+        if isstring(k) and string.match(k, "artery") or string.match(k, "vein") then
+            org[k] = 0
+        end
+    end
+
 	hook_Run("Org Clear", org)//.owner.organism_internal)
 	if IsValid(org.owner) then org.owner.fullsend = true end
 	hg.send_organism(org)

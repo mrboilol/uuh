@@ -245,7 +245,7 @@ hook.Add("Think", "stanleytumbler", function()
                 ply.nextTumbleCheck = CurTime() + TUMBLE_COOLDOWN
             else
                 -- why not
-                ply:ViewPunch(Angle(10, 0, 0))
+                ply:ViewPunch(Angle(2, 0, 0))
                 ply.nextTumbleCheck = CurTime() + 1 
             end
         end

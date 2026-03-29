@@ -54,7 +54,7 @@ if (CLIENT) then
     end
 
     local original_draw_simpletext = draw.SimpleText
-    local scramble_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}\|;:'\",./<>?"
+    local scramble_chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:'\",./<>?"
 
     local function scramble_text(text, brain_damage)
         if not text or text == '' or brain_damage <= 0 then return text end

@@ -378,6 +378,7 @@ SWEP.ViewModelBoneMods = {
 
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
+SWEP.WorkWithFake = true
 
 SWEP.Primary.ClipSize = -1
 SWEP.Primary.DefaultClip = 1

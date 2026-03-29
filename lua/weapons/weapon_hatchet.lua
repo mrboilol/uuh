@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Hatchet"
 SWEP.Instructions = "A single-handed striking tool with a sharp blade on one side used to cut and split wood, and a hammerhead on the other side.\n\nLMB to attack.\nRMB to block.\nRMB + LMB to throw."
@@ -124,7 +124,8 @@ function SWEP:CustomAttack2()
     ent.localshit = Vector(4,6,0)
     ent.wep = self:GetClass()
     ent.owner = ply
-    ent.damage = 25
+    ent.damage = 45
+    ent.MaxSpeed = 1400
     ent.penetration = 5
     ent.shouldntlodge = true
 

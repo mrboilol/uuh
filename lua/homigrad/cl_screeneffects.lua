@@ -23,32 +23,8 @@ hook.Add("PlayerDeath", "StopCriticalLoopOnDeath", function(victim, inflictor, a
         criticalloop_sound = nil
         criticalloop_sound_name = nil
     end
-hook.Add("PostDrawPlayerAppearance", "DesensitizedFaceEffect", function(ent, ply)
-    if not IsValid(ply) or not ply:IsPlayer() or not ply:Alive() then return end
-    if ply == LocalPlayer() then return end -- Don't draw on self
-
-    local lply = LocalPlayer()
-    local lply_org = lply.organism
-    if not lply_org or not lply_org.desensitized or lply_org.desensitized < 0.9 then return end
-
-    local org = ply.organism
-    if not org or not org.desensitized or org.desensitized < 0.9 then return end
-
-    local bone = ply:LookupBone("ValveBiped.Bip01_Head1")
-    if not bone then return end
-
-    local pos, ang = ply:GetBoneMatrix(bone)
-    if not pos then return end
-
-    cam.Start3D(EyePos(), EyeAngles())
-        render.SetMaterial(Material("sprites/black"))
-        for i = 1, 5 do
-            local size = math.random(5, 15)
-            local offset = Vector(math.Rand(-10, 10), math.Rand(-10, 10), math.Rand(-10, 10))
-            render.DrawQuad(pos + offset, ang:Up(), ang:Right(), size, size, color_white)
-        end
-    cam.End3D()
 end)
+
 
 local suicide_input_locked = false
 hook.Add("Think", "DesensitizedSuicideEffect", function()
@@ -436,29 +412,33 @@ local red_flash_time = 0
 local damage_fade_time = 0
 
 net.Receive("PlayerSuppressed", function()
-    _G.suppression_severity = net.ReadFloat()
+    local severity = net.ReadFloat()
+    _G.suppression_severity = math.min((_G.suppression_severity or 0) + severity, 2.0)
+
     local wep_damage = net.ReadFloat()
-    suppression_fade_time = 1.0 * suppression_severity
-    suppression_effect_time = 1.5 * suppression_severity
+    suppression_fade_time = math.min((suppression_fade_time or 0) + 1.0 * severity, 3.0)
+    suppression_effect_time = math.min((suppression_effect_time or 0) + 1.5 * severity, 4.0)
 
-    -- New effects
-    suppression_chromatic_aberration = suppression_severity
+    -- New effects are now based on the total accumulated suppression
+    suppression_chromatic_aberration = _G.suppression_severity
 
-    suppression_dof = suppression_severity * 8
-    suppression_vignette = suppression_severity * 15
+    suppression_dof = _G.suppression_severity * 8
+    suppression_vignette = _G.suppression_severity * 15
 
-    if suppression_severity > 0.6 then
-        suppression_dirt = 1
+    if _G.suppression_severity > 0.6 then
+        suppression_dirt = (_G.suppression_severity - 0.6) / 1.4 -- Scaled dirt effect
+    else
+        suppression_dirt = 0
     end
 
     damage_blur_time = suppression_dof
 
-    -- Flinching
-    local punch = Angle(math.Rand(-5, 5) * suppression_severity, math.Rand(-5, 5) * suppression_severity, math.Rand(-2, 2) * suppression_severity)
+    -- Flinching based on incoming severity to avoid excessive shake
+    local punch = Angle(math.Rand(-5, 5) * severity, math.Rand(-5, 5) * severity, math.Rand(-2, 2) * severity)
     ViewPunch(punch)
 
     -- Ragdoll on high suppression and damage
-    if suppression_severity > 0.8 and wep_damage > 50 then
+    if _G.suppression_severity > 0.8 and wep_damage > 50 then
         net.Start("RequestRagdoll")
         net.SendToServer()
     end
@@ -494,6 +474,10 @@ net.Receive("hg_MeleeHeadViewpunch", function()
 end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
+    if _G.suppression_severity and _G.suppression_severity > 0 then
+        _G.suppression_severity = math.max(0, _G.suppression_severity - FrameTime() * 0.75)
+    end
+
     if red_flash_time > 0 then
         red_flash_time = math.max(red_flash_time - FrameTime(), 0)
         surface.SetDrawColor(255, 0, 0, 100 * (red_flash_time / 0.2))
@@ -761,14 +745,14 @@ hook.Add("Post Post Processing", "ItHurts", function()
     local blood = org.blood or 5000
 
     -- Chromatic Aberration
-    local c-intensity = 0
-    c-intensity = c-intensity + (pain / 100)
-    c-intensity = c-intensity + (suppression * 0.5)
-    c-intensity = c-intensity + (adrenaline * 0.3)
-    c-intensity = c-intensity + (fear * 0.2)
-    if c-intensity > 0 then
+    local c_intensity = 0
+    c_intensity = c_intensity + (pain / 100)
+    c_intensity = c_intensity + (suppression * 0.5)
+    c_intensity = c_intensity + (adrenaline * 0.3)
+    c_intensity = c_intensity + (fear * 0.2)
+    if c_intensity > 0 then
         local args = {
-            aberration = c-intensity
+            aberration = c_intensity
         }
         merc_chromaticaberration(args)
     end
@@ -1222,7 +1206,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				local ang = lply:EyeAngles()
 				local diffP = math.NormalizeAngle(ang.p - lastViewAngles.p)
 				local diffY = math.NormalizeAngle(ang.y - lastViewAngles.y)
-				local sway = 15
+				local sway = 5
 				local targetX = math.Clamp(diffY * sway, -30, 30)
 				local targetY = math.Clamp(-diffP * sway, -20, 20)
 				eyeOffsetX = Lerp(FrameTime() * 8, eyeOffsetX, targetX) * 0.95

@@ -1,4 +1,4 @@
-﻿if SERVER then AddCSLuaFile() end
+if SERVER then AddCSLuaFile() end
 SWEP.Base = "weapon_melee"
 SWEP.PrintName = "Brick"
 SWEP.Instructions = "A heavy construction brick, that can be used as a deadly weapon.\n\nLMB to attack.\nRMB to block.\nRMB + LMB to throw."
@@ -88,8 +88,8 @@ function SWEP:CustomAttack2()
     ent.localshit = Vector(0,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
-    ent.damage = 9
-    ent.MaxSpeed = 700
+    ent.damage = 15
+    ent.MaxSpeed = 1200
     ent.DamageType = DMG_CLUB
     ent.AttackHit = "Concrete.ImpactHard"
     ent.AttackHitFlesh = "Flesh.ImpactHard"

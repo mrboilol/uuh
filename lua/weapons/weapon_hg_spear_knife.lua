@@ -115,7 +115,8 @@ function SWEP:CustomAttack2()
     ent.localshit = Vector(50,0,0)
     ent.wep = self:GetClass()
     ent.owner = ply
-    ent.damage = 45
+    ent.damage = 75
+    ent.MaxSpeed = 1700
     ent.uglublenie = 30
     ent.returndamage = 30
     ent.returnblood = 100

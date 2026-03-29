@@ -295,21 +295,21 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 		if CLIENT then return end
 		local matType = tr.MatType
 		local impactSounds = {
-			[MAT_FLESH] = {"bullet/ric_flesh1.ogg", "bullet/ric_flesh2.ogg", "bullet/ric_flesh3.ogg", "bullet/ric_flesh4.ogg"},
+			[MAT_FLESH] = {"physics/flesh/flesh1.wav", "physics/flesh/flesh2.wav", "physics/flesh/flesh3.wav", "physics/flesh/flesh4.wav", "physics/flesh/flesh5.wav", "physics/flesh/flesh6.wav", "physics/flesh/flesh7.wav", "physics/flesh/flesh8.wav", "physics/flesh/flesh9.wav", "physics/flesh/flesh10.wav", "zbattle/zclassic/owfuck1.ogg", "zbattle/zclassic/owfuck2.ogg", "zbattle/zclassic/owfuck3.ogg", "zbattle/zclassic/owfuck4.ogg"},
 			[MAT_ALIENFLESH] = {"bullet/ric_flesh1.ogg", "bullet/ric_flesh2.ogg", "bullet/ric_flesh3.ogg", "bullet/ric_flesh4.ogg"},
 			[MAT_DIRT] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
-			[MAT_SAND] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
-			[MAT_CONCRETE] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
-			[MAT_TILE] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
+			[MAT_SAND] = {"bullet/ric_sand1.ogg", "bullet/ric_sand2.ogg", "bullet/ric_sand3.ogg"},
+			[MAT_CONCRETE] = {"bullet/ric_conc1.ogg", "bullet/ric_conc2.ogg", "bullet/ric_conc3.ogg"},
+			[MAT_TILE] = {"bullet/ric_conc1.ogg", "bullet/ric_conc2.ogg", "bullet/ric_conc3.ogg"},
 			[MAT_METAL] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
 			[MAT_VENT] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
 			[MAT_GRATE] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
 			[MAT_COMPUTER] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
 			[MAT_WOOD] = {"bullet/ric_wood1.ogg", "bullet/ric_wood2.ogg", "bullet/ric_wood3.ogg", "bullet/ric_wood4.ogg"},
 			[MAT_FOLIAGE] = {"bullet/ric_wood1.ogg", "bullet/ric_wood2.ogg", "bullet/ric_wood3.ogg", "bullet/ric_wood4.ogg"},
-			[MAT_GLASS] = {"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"},
-			[MAT_PLASTIC] = {"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"},
-			[MAT_SLOSH] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"} -- Fallback
+			[MAT_GLASS] = {"bullet/ric_glass1.ogg", "bullet/ric_glass2.ogg", "bullet/ric_glass3.ogg"},
+			[MAT_PLASTIC] = {"bullet/ric_plastic1.ogg", "bullet/ric_plastic2.ogg", "bullet/ric_plastic3.ogg"},
+			[MAT_SLOSH] = {"bullet/ric_water1.ogg", "bullet/ric_water2.ogg", "bullet/ric_water3.ogg"} -- Fallback
 		}
 		local sounds = impactSounds[matType] or {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg"}
 		local rndImpactSound = sounds[math.random(#sounds)]
@@ -819,13 +819,13 @@ function SWEP:FireBullet()
 				if dot > 0.98 then -- Player is in the path of the bullet
 					local distToPath = (eyePos - bullet.Src):Cross(aimDir).Length
 					                    local suppression_range = 128 + (bullet.Diameter or 1) * 10
-					if distToPath < suppression_range then -- Bullet is close to the player
-						local severity = math.max(0, 1 - (distToPath / suppression_range))
-						net.Start("PlayerSuppressed")
-						net.WriteFloat(severity)
+                    if distToPath < suppression_range then -- Bullet is close to the player
+                        local severity = math.max(0, 1 - (distToPath / suppression_range))
+                        net.Start("PlayerSuppressed")
+                        net.WriteFloat(severity)
                         net.WriteFloat(bullet.Damage)
-						net.Send(ply)
-					end
+                        net.Send(ply)
+                    end
 				end
 			end
 		end
