@@ -512,16 +512,6 @@ SWEP.WElements = {
 	["element_name"] = { type = "Model", model = "models/svrkdstuff/bubbles.mdl", bone = "ValveBiped.Bip01_R_Hand", rel = "", pos = Vector(6.282, 4.764, -1.736), angle = Angle(-8.926, -137.655, -115.852), size = Vector(0.616, 0.616, 0.616), color = Color(255, 255, 255, 255), surpresslightning = false, material = "", skin = 0, bodygroup = {} }
 }
 
-game.AddAmmoType({
-    name = "Bubbles",
-    dmgtype = DMG_CRUSH,
-    tracer = TRACER_LINE,
-    plydmg = 0,
-    npcdmg = 0,
-    force = 2000,
-    minsplash = 10,
-    maxsplash = 20
-})
 
 SWEP.PrintName = "air bird"
 SWEP.Instructions = "it inflates \nSecondary Fire: make bird floaty"
@@ -545,7 +535,7 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 3
+SWEP.Primary.DefaultClip = 1
 SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "Bubbles"
@@ -558,7 +548,7 @@ SWEP.AutoSwitchFrom = false
 
 SWEP.Slot = 4
 SWEP.SlotPos = 3
-SWEP.DrawAmmo = true
+SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
 function SWEP:PrimaryAttack()

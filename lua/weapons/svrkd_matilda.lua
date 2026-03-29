@@ -261,7 +261,6 @@ SWEP.WElements = {
 	["element_name"] = { type = "Model", model = "models/svrkdstuff/matilda.mdl", bone = "ValveBiped.Bip01_R_Hand", rel = "", pos = Vector(4.14, -0.459, 2.298), angle = Angle(-177.109, 69.543, 36.81), size = Vector(0.852, 0.852, 0.852), color = Color(255, 255, 255, 255), surpresslightning = false, material = "", skin = 0, bodygroup = {} }
 }
 
-game.AddAmmoType({ name = "Matilda", dmgtype = DMG_CRUSH, force = 2000 })
 
 SWEP.PrintName = "milkshake or sum lik that"
 SWEP.Instructions = "drop eggs \nSecondary Fire: Drop an egg bomb."
@@ -280,7 +279,7 @@ SWEP.ViewModelBoneMods = {
 
 SWEP.Spawnable = true
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 3
+SWEP.Primary.DefaultClip = 1
 SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = false
 SWEP.Primary.Ammo = "Matilda"
@@ -313,6 +312,11 @@ function SWEP:PrimaryAttack()
             angrybird:SetModel("models/svrkdstuff/matilda.mdl")
             angrybird:SetAngles(ply:EyeAngles())
             angrybird:Spawn()
+
+            local phys = angrybird:GetPhysicsObject()
+            if IsValid(phys) then
+                phys:SetVelocity(ply:GetAimVector() * 3500)
+            end
             
             self.LastBird = angrybird
             angrybird.CanDropEgg = true
@@ -321,6 +325,10 @@ function SWEP:PrimaryAttack()
 
             timer.Simple(10, function() if IsValid(angrybird) then angrybird:Remove() end end)
             timer.Simple(0.4, function() if IsValid(self) then self:SendWeaponAnim(ACT_VM_DRAW) end end)
+
+            if self:Ammo1() <= 0 then
+                ply:StripWeapon(self:GetClass())
+            end
         end)
     end
 end

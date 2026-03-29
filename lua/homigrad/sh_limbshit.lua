@@ -4,18 +4,6 @@
 --================================================================================
 
 if SERVER then
-	-- Limb sprites
-	local SPRITES = {
-		"materials/vgui/hud/health_head",
-		"materials/vgui/hud/health_torso",
-		"materials/vgui/hud/health_right_arm",
-		"materials/vgui/hud/health_left_arm",
-		"materials/vgui/hud/health_right_leg",
-		"materials/vgui/hud/health_left_leg",
-	}
-	
-	for _, path in ipairs(SPRITES) do resource.AddFile(path .. ".png") end
-	
 	-- Make sure to change this string to whatever you name this lua file in your autorun folder
 	AddCSLuaFile("homigrad/sh_limbshit.lua") 
 	
@@ -26,7 +14,7 @@ end
 -- CLIENT SIDE 
 --================================================================================
 
-local math_min, math_max, math_floor, Lerp = math.min, math.max, math.floor, Lerp
+local math_min, math_max, math_floor, Lerp, sin, rad, cos = math.min, math.max, math.floor, Lerp, math.sin, math.rad, math.cos
 local Color = Color
 local draw_SimpleText = draw.SimpleText
 local surface_SetDrawColor = surface.SetDrawColor
@@ -35,9 +23,12 @@ local surface_SetMaterial = surface.SetMaterial
 local surface_DrawTexturedRect = surface.DrawTexturedRect
 local ScrW, ScrH = ScrW, ScrH
 local FrameTime = FrameTime
+local RealTime = RealTime
 
 local prev_view_angles = Angle(0,0,0)
-local sway_offset = 0
+local sway_offset_x = 0
+local sway_offset_y = 0
+local sway_rotation = 0
 
 -- Safe value getter
 local function getOrgVal(org, key, def)
@@ -55,35 +46,32 @@ local function getOrgTableVal(org, tbl, key, index, def)
 	return type(val) == "number" and val or (def or 0)
 end
 
--- Limb color scheme (Gray > Orange > Red > Blinking Red)
+-- Limb color scheme (Gray > Red, Orange for specific conditions)
 local function getLimbColor(limb, org, is_otrub)
-    local is_critical = (org.heart and org.heart < 0.2 and org.heart ~= 0) or (org.blood and org.blood < 1000 and org.blood ~= 0) or limb.internal > 0.8
-
-    if is_otrub and not is_critical then
-        return Color(128, 128, 128, 150) -- Grayscale for non-critical limbs when unconscious
+    if is_otrub then
+        local dmg = math.min(limb.dmg, 1)
+        local intensity = 128 - (120 * dmg)
+        return Color(intensity, intensity, intensity, 255)
     end
 
-    -- Blinking Red for imminent death
-    if is_critical then
-        local r = 255
-        local g = 128 + math.sin(RealTime() * 10) * 127
-        local b = 0
-        return Color(r, g, b, 255)
-    end
-
-    -- Red for breakage or arterial bleeding/internal damage
-    if limb.dmg >= 1 or limb.artery > 0 or limb.internal > 0.5 then
-        return Color(255, 0, 0, 255)
-    end
-
-    -- Orange for dislocations or slight part damage
-    if limb.dislocation or limb.dmg > 0.2 then
+    -- Orange for dislocations, arterial bleeding, or near-breaking
+    if limb.dislocation or limb.artery > 0 or (limb.dmg > 0.8 and limb.dmg < 1) then
         return Color(255, 165, 0, 255)
     end
+
+    -- Red if broken or severely damaged
+    if limb.dmg >= 1 then
+        return Color(255, 0, 0, 255)
+    end
     
-    -- Gray for healthy
-    return Color(128, 128, 128, 255)
+    -- Smooth transition from gray to red
+    local r = 128 + (127 * limb.dmg)
+    local g = 128 - (128 * limb.dmg)
+    local b = 128 - (128 * limb.dmg)
+    
+    return Color(r, g, b, 255)
 end
+
 
 -- Check if any limb is damaged
 local function hasAnyLimbDamage(org)
@@ -107,21 +95,21 @@ local HUD = {
 	base_y = nil,
 	
 	limb_offsets = {
-		head =        { x = 60,   y = 10 },
-		torso =       { x = 60,   y = 50 },
-		right_arm =   { x = 90,   y = 50 },
-		left_arm =    { x = 30,   y = 50 },
-		right_leg =   { x = 80,   y = 100 },
-		left_leg =    { x = 40,   y = 100 },
+		head =        { x = 0,   y = -80 },
+		torso =       { x = 0,   y = 0 },
+		right_arm =   { x = 60,   y = 0 },
+		left_arm =    { x = -60,   y = 0 },
+		right_leg =   { x = 40,   y = 80 },
+		left_leg =    { x = -40,   y = 80 },
 	},
 	
 	limb_scale = {
-		head =        { w = 1, h = 1 },
-		torso =       { w = 1.4, h = 1.8 },
-		right_arm =   { w = 1, h = 2 },
-		left_arm =    { w = 1, h = 2 },
-		right_leg =   { w = 1.2, h = 3.5 },
-		left_leg =    { w = 1.2, h = 2.7 },
+		head =        { w = 40, h = 40 },
+		torso =       { w = 50, h = 70 },
+		right_arm =   { w = 20, h = 60 },
+		left_arm =    { w = 20, h = 60 },
+		right_leg =   { w = 25, h = 70 },
+		left_leg =    { w = 25, h = 70 },
 	},
 	
 	sprite_visibility = 100,
@@ -129,10 +117,6 @@ local HUD = {
 	show_damage_percent = false,
 	limb_fade_speed = 3.0,
 }
-
--- Material cache
-local sprites = {}
-local debug_done = false
 
 -- Limb fade states for smooth transitions
 local limbFadeStates = {
@@ -157,46 +141,28 @@ local function draw_sprites()
 
 	-- Sway effect
     local current_view_angles = ply:EyeAngles()
-    local angle_diff = current_view_angles.y - prev_view_angles.y
+    local angle_diff_y = current_view_angles.y - prev_view_angles.y
+    local angle_diff_p = current_view_angles.p - prev_view_angles.p
     prev_view_angles = current_view_angles
-    sway_offset = Lerp(FrameTime() * 5, sway_offset, -angle_diff * 2)
+
+    sway_offset_x = Lerp(FrameTime() * 5, sway_offset_x, -angle_diff_y * 2)
+    sway_offset_y = Lerp(FrameTime() * 5, sway_offset_y, angle_diff_p * 2)
+    sway_rotation = Lerp(FrameTime() * 5, sway_rotation, -angle_diff_y * 1)
 	
 	local sideMoodles = GetConVar("hg_sidemoodles"):GetBool()
 
 	if sideMoodles then
-		HUD.base_x = 16
-		HUD.base_y = 60
+		HUD.base_x = 100
+		HUD.base_y = ScrH() / 2
 	else
-		if HUD.base_x == nil then HUD.base_x = ScrW() - 120 end
-		HUD.base_y = 60
+		if HUD.base_x == nil then HUD.base_x = ScrW() - 150 end
+		HUD.base_y = ScrH() / 2
 	end
 	
 	local org = ply.organism
-	local is_otrub = ply:GetNWBool("otrub", false)
 	local base_x = HUD.base_x
 	local base_y = HUD.base_y
 	local dt = FrameTime() * HUD.limb_fade_speed
-	
-	if not debug_done then
-		debug_done = true
-		local paths = {
-			head = "vgui/hud/health_head",
-			torso = "vgui/hud/health_torso",
-			right_arm = "vgui/hud/health_right_arm",
-			left_arm = "vgui/hud/health_left_arm",
-			right_leg = "vgui/hud/health_right_leg",
-			left_leg = "vgui/hud/health_left_leg",
-		}
-		
-		for name, path in pairs(paths) do
-			local mat = Material(path, "smooth")
-			if mat and not mat:IsError() then
-				sprites[name] = mat
-			else
-				sprites[name] = false
-			end
-		end
-	end
 	
 	-- Check if any limb is damaged
 	local anyDamage = hasAnyLimbDamage(org)
@@ -217,6 +183,17 @@ local function draw_sprites()
 		{name = "right_leg", dmg = getOrgVal(org, "rleg", 0), artery = math_max(getOrgVal(org, "rlegartery", 0), getOrgVal(org, "rlegvein", 0)), internal = 0, dislocation = org.rlegdislocation, amput = "rlegamputated", label = "RL"},
 		{name = "left_leg", dmg = getOrgVal(org, "lleg", 0), artery = math_max(getOrgVal(org, "llegartery", 0), getOrgVal(org, "llegvein", 0)), internal = 0, dislocation = org.llegdislocation, amput = "llegamputated", label = "LL"},
 	}
+
+    -- Find the limb with the most pain
+    local max_pain = 0
+    local pain_source_limb = nil
+    for _, limb in ipairs(limbs) do
+        local pain = limb.dmg + (limb.dislocation and 0.5 or 0) + (limb.artery > 0 and 0.8 or 0)
+        if pain > max_pain then
+            max_pain = pain
+            pain_source_limb = limb.name
+        end
+    end
 	
 	-- Update fade states for each limb
 	for _, limb in ipairs(limbs) do
@@ -246,34 +223,50 @@ local function draw_sprites()
 		
 		local dmg = limb.dmg
 		local ofs = HUD.limb_offsets[limb.name] or {x = 0, y = 0}
-		local scale = HUD.limb_scale[limb.name] or {w = 1.0, h = 1.0}
+		local scale = HUD.limb_scale[limb.name] or {w = 40, h = 40}
 		
-		local x = base_x + ofs.x + sway_offset
-		local y = base_y + ofs.y
+		local x = base_x + ofs.x + sway_offset_x
+		local y = base_y + ofs.y + sway_offset_y
+
+        if limb.name == pain_source_limb and max_pain > 0.5 then
+            local shake_intensity = math.min(max_pain * 5, 10)
+            x = x + math.random(-shake_intensity, shake_intensity)
+            y = y + math.random(-shake_intensity, shake_intensity)
+        end
 		
-		local base_size = 40
-		local width = base_size * scale.w
-		local height = base_size * scale.h
+		local width = scale.w
+		local height = scale.h
 		
-		local col = getLimbColor(limb, org, is_otrub)
-		local damage_boost = math_min(dmg * 150, 100)
-		local total_visibility = math_min(HUD.sprite_visibility + damage_boost, 100)
-		local alpha = math_floor(state.alpha * (total_visibility / 100))
-		
-		local mat = sprites[limb.name]
-		if mat and not mat:IsError() then
-			surface_SetDrawColor(col.r, col.g, col.b, alpha)
-			surface_SetMaterial(mat)
-			surface_DrawTexturedRect(x - width * 0.5, y - height * 0.5, width, height)
-		else
-			-- Fallback: Draw colored blocks if sprites are missing
-			-- This indicates that the material files (e.g., vgui/hud/health_head.png) are not found.
-			surface_SetDrawColor(0, 0, 0, math_floor(alpha * 0.5))
-			surface_DrawRect(x - width * 0.5 + 2, y - height * 0.5 + 2, width - 4, height - 4)
-			surface_SetDrawColor(col.r, col.g, col.b, alpha)
-			surface_DrawRect(x - width * 0.5 + 4, y - height * 0.5 + 4, width - 8, height - 8)
-			draw_SimpleText(limb.label, "TargetID", x, y, Color(255, 255, 255, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-		end
+		local col = getLimbColor(limb, org)
+		local alpha = math_floor(state.alpha * (HUD.sprite_visibility / 100))
+
+        surface.SetDrawColor(col.r, col.g, col.b, alpha)
+        
+        -- Draw rotated rectangle
+        local cx, cy = x + width/2, y + height/2
+        local angle = rad(sway_rotation)
+        local c, s = cos(angle), sin(angle)
+
+        local x1 = -width/2
+        local y1 = -height/2
+        
+        local x2 = width/2
+        local y2 = -height/2
+        
+        local x3 = width/2
+        local y3 = height/2
+        
+        local x4 = -width/2
+        local y4 = height/2
+
+        local poly = {
+            { x = cx + x1 * c - y1 * s, y = cy + x1 * s + y1 * c },
+            { x = cx + x2 * c - y2 * s, y = cy + x2 * s + y2 * c },
+            { x = cx + x3 * c - y3 * s, y = cy + x3 * s + y3 * c },
+            { x = cx + x4 * c - y4 * s, y = cy + x4 * s + y4 * c }
+        }
+        surface.DrawPoly(poly)
+
 	end
 end
 

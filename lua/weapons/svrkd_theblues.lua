@@ -512,16 +512,6 @@ SWEP.WElements = {
 	["element_name"] = { type = "Model", model = "models/svrkdstuff/blue.mdl", bone = "ValveBiped.Bip01_R_Hand", rel = "", pos = Vector(2.22, 2.813, -0.686), angle = Angle(-4.436, -77.82, -87.506), size = Vector(0.544, 0.544, 0.544), color = Color(255, 255, 255, 255), surpresslightning = false, material = "", skin = 0, bodygroup = {} }
 }
 
-game.AddAmmoType({
-    name = "theblues",
-    dmgtype = DMG_CRUSH,
-    tracer = TRACER_LINE,
-    plydmg = 0,
-    npcdmg = 0,
-    force = 2000,
-    minsplash = 10,
-    maxsplash = 20
-})
 
 SWEP.PrintName = "the beetles"
 SWEP.Instructions = "oh god he decapitated mid air\nSecondary Fire: Split the bird into three."
@@ -544,7 +534,7 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 3
+SWEP.Primary.DefaultClip = 1
 SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "theblues"
@@ -557,7 +547,7 @@ SWEP.AutoSwitchFrom = false
 
 SWEP.Slot = 4
 SWEP.SlotPos = 3
-SWEP.DrawAmmo = true
+SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
 function SWEP:PrimaryAttack()

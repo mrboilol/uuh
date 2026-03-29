@@ -512,16 +512,6 @@ SWEP.WElements = {
 	["element_name"] = { type = "Model", model = "models/svrkdstuff/sardinecan.mdl", bone = "ValveBiped.Bip01_R_Hand", rel = "", pos = Vector(4.459, 3.221, -0.602), angle = Angle(0, -58.505, 82.851), size = Vector(0.5, 0.5, 0.5), color = Color(255, 255, 255, 255), surpresslightning = false, material = "", skin = 0, bodygroup = {} }
 }
 
-game.AddAmmoType({
-    name = "Mighty Eagle",
-    dmgtype = DMG_CRUSH,
-    tracer = TRACER_LINE,
-    plydmg = 0,
-    npcdmg = 0,
-    force = 2000,
-    minsplash = 10,
-    maxsplash = 20
-})
 
 SWEP.PrintName = "usa bird"
 SWEP.Instructions = "usa usa!!\nSecondary Fire: Call the Mighty Eagle."
@@ -544,7 +534,7 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 3
+SWEP.Primary.DefaultClip = 1
 SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "Mighty Eagle"
@@ -557,7 +547,7 @@ SWEP.AutoSwitchFrom = false
 
 SWEP.Slot = 4
 SWEP.SlotPos = 3
-SWEP.DrawAmmo = true
+SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
 SWEP.Activemightyeagle = nil

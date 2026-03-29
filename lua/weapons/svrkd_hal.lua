@@ -512,16 +512,6 @@ SWEP.WElements = {
 	["element_name"] = { type = "Model", model = "models/svrkdstuff/hal.mdl", bone = "ValveBiped.Bip01_R_Hand", rel = "", pos = Vector(1.034, -0.348, -2.533), angle = Angle(-94.654, -21.657, 11.029), size = Vector(0.667, 0.667, 0.667), color = Color(255, 255, 255, 255), surpresslightning = false, material = "", skin = 0, bodygroup = {} }
 }
 
-game.AddAmmoType({
-    name = "hal",
-    dmgtype = DMG_CRUSH,
-    tracer = TRACER_LINE,
-    plydmg = 0,
-    npcdmg = 0,
-    force = 2000,
-    minsplash = 10,
-    maxsplash = 20
-})
 
 SWEP.PrintName = "uhh"
 SWEP.Instructions = "who the actual fuck is this ni \nSecondary Fire: Make the bird boomerang back."
@@ -544,7 +534,7 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 3
+SWEP.Primary.DefaultClip = 1
 SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "hal"
@@ -557,7 +547,7 @@ SWEP.AutoSwitchFrom = false
 
 SWEP.Slot = 4
 SWEP.SlotPos = 3
-SWEP.DrawAmmo = true
+SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
 function SWEP:PrimaryAttack()

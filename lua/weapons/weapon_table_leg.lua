@@ -2,8 +2,8 @@ if SERVER then
     AddCSLuaFile()
 end
 SWEP.Base = "weapon_melee"
-SWEP.PrintName = "Table leg"
-SWEP.Instructions = "Someone's savagely ripped out table leg, quite suitable as a cold weapon. Better than nothing i guess.\n\nLMB to attack.\nRMB to block."
+SWEP.PrintName = "tung tung tung sahur"
+SWEP.Instructions = "There was a man named Tung Tung. He was always nice and kind and played with his friends, One day someone named -------- killed tung's parents. Tung tung was filled with anger, so he savagely ripped out a table leg out of his dining table and beat him up merciless until he was braindead. To this day we still dont know where tung tung remained, and the table leg remains as tung's favoured weapon. \n\nLMB to attack.\nRMB to block."
 SWEP.Category = "Weapons - Melee"
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
@@ -36,16 +36,16 @@ SWEP.HoldAng = Angle(0,0,0)
 SWEP.AttackPos = Vector(0, 0, 0)
 SWEP.HoldType = "melee"
 SWEP.DamageType = DMG_CLUB
-SWEP.DamagePrimary = 9
-SWEP.DamageSecondary = 8
+SWEP.DamagePrimary = 35
+SWEP.DamageSecondary = 15
 SWEP.PenetrationPrimary = 1.1
 SWEP.PenetrationSecondary = 0.9
 SWEP.MaxPenLen = 4
-SWEP.PainMultiplier = .4
+SWEP.PainMultiplier = 2.5
 SWEP.PenetrationSizePrimary = 1
 SWEP.PenetrationSizeSecondary = 2
-SWEP.StaminaPrimary = 8
-SWEP.StaminaSecondary = 7
+SWEP.StaminaPrimary = 25
+SWEP.StaminaSecondary = 10
 SWEP.AttackLen1 = 35
 SWEP.AttackLen2 = 30
 SWEP.AttackHit = "Wood.ImpactHard"
@@ -59,8 +59,8 @@ function SWEP:CanSecondaryAttack()
     return false
 end
 
-SWEP.AttackTimeLength = 0.15
-SWEP.Attack2TimeLength = 0.1
+SWEP.AttackTimeLength = 0.25
+SWEP.Attack2TimeLength = 0.15
 
 SWEP.AttackRads = 65
 SWEP.AttackRads2 = 65

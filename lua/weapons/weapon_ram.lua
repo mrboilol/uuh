@@ -20,7 +20,7 @@ SWEP.HoldPos = Vector(-13,0,0)
 SWEP.HoldAng = Angle(0,0,0)
 
 SWEP.DamageType = DMG_CLUB
-SWEP.DamagePrimary = 48
+SWEP.DamagePrimary = 65
 
 SWEP.PenetrationPrimary = 7
 

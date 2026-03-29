@@ -512,16 +512,6 @@ SWEP.WElements = {
 	["redbird"] = { type = "Model", model = "models/svrkdstuff/redbird.mdl", bone = "ValveBiped.Bip01_R_Hand", rel = "", pos = Vector(0.861, 3.142, -0.613), angle = Angle(-30.673, -85.434, -62.891), size = Vector(0.5, 0.5, 0.5), color = Color(255, 255, 255, 255), surpresslightning = false, material = "", skin = 0, bodygroup = {} }
 }
 
-game.AddAmmoType({
-    name = "Red",
-    dmgtype = DMG_CRUSH,
-    tracer = TRACER_LINE,
-    plydmg = 0,
-    npcdmg = 0,
-    force = 2000,
-    minsplash = 10,
-    maxsplash = 20
-})
 
 SWEP.PrintName = "cranberry juice"
 SWEP.Instructions = "aaa heniga\nSecondary Fire: Squeak."
@@ -544,7 +534,7 @@ SWEP.Spawnable = true
 SWEP.AdminOnly = false
 
 SWEP.Primary.ClipSize = -1
-SWEP.Primary.DefaultClip = 3
+SWEP.Primary.DefaultClip = 1
 SWEP.DrawAmmo = false
 SWEP.Primary.Automatic = true
 SWEP.Primary.Ammo = "Red"
@@ -557,7 +547,7 @@ SWEP.AutoSwitchFrom = false
 
 SWEP.Slot = 4
 SWEP.SlotPos = 3
-SWEP.DrawAmmo = true
+SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
 SWEP.ActiveRed = nil
@@ -591,6 +581,11 @@ function SWEP:PrimaryAttack()
                 angrybird:SetModel("models/svrkdstuff/redbird.mdl")
                 angrybird:SetAngles(ply:EyeAngles())
                 angrybird:Spawn()
+
+                local phys = angrybird:GetPhysicsObject()
+                if IsValid(phys) then
+                    phys:SetVelocity(ply:GetAimVector() * 3500)
+                end
 				
 				self.ActiveRed = angrybird
 
@@ -617,11 +612,11 @@ function SWEP:PrimaryAttack()
 end
 
 function SWEP:SecondaryAttack()
+    self:SetNextSecondaryFire(CurTime() + 0.5)
+    self:EmitSound("svrkdstuff/red_squeak.mp3")
     if SERVER then
         local bird = self.ActiveRed
         if not IsValid(bird) then return end
-        self:SetNextSecondaryFire(CurTime() + 0.5)
-        self:EmitSound("svrkdstuff/red_squeak.mp3")
         self.ActiveRed = nil
     end
 end

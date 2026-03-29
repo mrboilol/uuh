@@ -357,16 +357,6 @@ SWEP.WElements = {
 	["element_name"] = { type = "Model", model = "models/svrkdstuff/bomb.mdl", bone = "ValveBiped.Bip01_R_Hand", rel = "", pos = Vector(-0.35, 0.046, 4.76), angle = Angle(-11.513, -126.95, -143.693), size = Vector(0.892, 0.892, 0.892), color = Color(255, 255, 255, 255), surpresslightning = false, material = "", skin = 0, bodygroup = {} }
 }
 
-game.AddAmmoType({
-    name = "Bomb",
-    dmgtype = DMG_CRUSH,
-    tracer = TRACER_LINE,
-    plydmg = 0,
-    npcdmg = 0,
-    force = 2000,
-    minsplash = 10,
-    maxsplash = 20
-})
 
 SWEP.PrintName = "big fat ni"
 SWEP.Instructions = "huuuy!!"
@@ -414,10 +404,10 @@ local function ExplodeBird(ent, ply)
     explosion:SetPos(ent:GetPos())
     explosion:SetOwner(ply)
     explosion:Spawn()
-    explosion:SetKeyValue("iMagnitude", "500")
+    explosion:SetKeyValue("iMagnitude", "100")
     explosion:Fire("Explode", 0, 0)
 
-    util.BlastDamage(ent, ply, ent:GetPos(), 250, 300)
+    util.BlastDamage(ent, ply, ent:GetPos(), 50, 100)
     ent:EmitSound("BaseExplosionEffect.Sound")
     ent:Remove()
 end
@@ -476,7 +466,7 @@ function SWEP:PrimaryAttack()
                         explosion:SetPos(ent:GetPos())
                         explosion:SetOwner(attacker)
                         explosion:SetPhysicsAttacker(attacker)
-                        explosion:SetKeyValue("iMagnitude", "500")
+                        explosion:SetKeyValue("iMagnitude", "100")
                         explosion:Spawn()
                         explosion:Fire("Explode", 0, 0)
                     end

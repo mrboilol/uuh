@@ -15,7 +15,8 @@ local function IsDebugDrawEnabled() return GetConVar("moodle_debug_draw"):GetInt
 local CLIENT_MOODLES = {}
 local last_removed_moodle = {}
 local prev_view_angles = Angle(0,0,0)
-local sway_offset = 0
+local sway_offset_x = 0
+local sway_offset_y = 0
 
 local CRITICAL_MOODLES = {
     ["bleeding_4"] = true,
@@ -48,6 +49,10 @@ local VITAL_MOODLES = {
     ["oxygen_1"] = true,
     ["oxygen_2"] = true,
     ["oxygen_3"] = true,
+    ["hypoxemia_1"] = true,
+    ["hypoxemia_2"] = true,
+    ["hypoxemia_3"] = true,
+    ["cardiac_arrest"] = true, -- Added for otrub visibility
 }
 
 -- =======================================================
@@ -188,21 +193,23 @@ net.Receive("Moodle_Add", function()
     local cnt = net.ReadInt(8)
 
     local ply = LocalPlayer()
-    if IsValid(ply) and ply:GetNWBool("otrub", false) and not VITAL_MOODLES[id] then 
+    if IsValid(ply) and ply:GetNWBool("otrub", false) and not VITAL_MOODLES[id] and not CRITICAL_MOODLES[id] then 
         if CLIENT_MOODLES[id] then
             CLIENT_MOODLES[id].updating = false
         end
-        -- We still need to read the rest of the network message to avoid errors.
         return 
     end
     
     local existing = CLIENT_MOODLES[id]
-    CLIENT_MOODLES[id] = existing or { texture = tex, count = cnt, mat = Material(tex) }
-    CLIENT_MOODLES[id].texture = tex
-    CLIENT_MOODLES[id].count = cnt
-    CLIENT_MOODLES[id].mat = CLIENT_MOODLES[id].mat or Material(tex)
-    CLIENT_MOODLES[id].spawn = CurTime() -- Mark for popup animation
+    if not existing then
+        CLIENT_MOODLES[id] = { texture = tex, count = cnt, mat = Material(tex), spawn = CurTime() }
+    else
+        CLIENT_MOODLES[id].texture = tex
+        CLIENT_MOODLES[id].count = cnt
+        CLIENT_MOODLES[id].mat = CLIENT_MOODLES[id].mat or Material(tex)
+    end
     CLIENT_MOODLES[id].updating = true
+    CLIENT_MOODLES[id].remove_time = nil
 
     if last_removed_moodle.id and (CurTime() - last_removed_moodle.time) < 0.1 then
         local old_base, old_level = last_removed_moodle.id:match("(.+)_([%d+])")
@@ -255,10 +262,12 @@ end)
 net.Receive("Moodle_Remove", function()
     local id = net.ReadString()
     local ply = LocalPlayer()
-    if IsValid(ply) and ply:GetNWBool("otrub", false) and not VITAL_MOODLES[id] then return end
+    if IsValid(ply) and ply:GetNWBool("otrub", false) and not VITAL_MOODLES[id] and not CRITICAL_MOODLES[id] then return end
 
     if id == "*" then 
-        CLIENT_MOODLES = {} 
+        for k, v in pairs(CLIENT_MOODLES) do
+            v.remove_time = CurTime()
+        end
         return 
     end
     
@@ -280,9 +289,11 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
 
     -- Sway effect
     local current_view_angles = ply:EyeAngles()
-    local angle_diff = current_view_angles.y - prev_view_angles.y
+    local angle_diff_y = current_view_angles.y - prev_view_angles.y
+    local angle_diff_p = current_view_angles.p - prev_view_angles.p
     prev_view_angles = current_view_angles
-    sway_offset = Lerp(FrameTime() * 5, sway_offset, -angle_diff * 2)
+    sway_offset_x = Lerp(FrameTime() * 5, sway_offset_x, -angle_diff_y * 2)
+    sway_offset_y = Lerp(FrameTime() * 5, sway_offset_y, angle_diff_p * 2)
 
     if table.IsEmpty(CLIENT_MOODLES) then return end
     
@@ -300,8 +311,6 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         baseY = 16
     end
     
-    local layout_x = baseX
-    local layout_y = baseY
     local hovered = nil
 
     -- Animation helpers
@@ -322,10 +331,46 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
     end
     table.sort(sorted_moodles, function(a, b) return a.spawn < b.spawn end)
 
+    local layout_x = baseX
+    local layout_y = baseY
+
+    -- First, calculate target positions for all visible moodles
+    for _, moodle in ipairs(sorted_moodles) do
+        local data = moodle.data
+
+        if not data.remove_time then
+            local targetX, targetY
+            if GetConVar("hg_sidemoodles"):GetBool() then
+                if layout_y + iconSize + pad > screenH then
+                    layout_y = baseY
+                    layout_x = layout_x - (iconSize + pad)
+                end
+                targetX = layout_x
+                targetY = layout_y
+                layout_y = layout_y + iconSize + pad
+            else
+                if layout_x + iconSize + pad > screenW then
+                    layout_x = baseX
+                    layout_y = layout_y + iconSize + pad
+                end
+                targetX = layout_x
+                targetY = layout_y
+                layout_x = layout_x + iconSize + pad
+            end
+            data.target_x = targetX
+            data.target_y = targetY
+        end
+    end
+
     -- Draw Icons
     for _, moodle in ipairs(sorted_moodles) do
         local id = moodle.id
         local data = moodle.data
+
+        if is_otrub and not VITAL_MOODLES[id] and not CRITICAL_MOODLES[id] then
+            if not data.remove_time then data.remove_time = CurTime() end
+        end
+
         local dt = CurTime() - (data.spawn or (CurTime() - 10))
 
         -- Animations
@@ -351,35 +396,15 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         local drawW, drawH = iconSize * scale, iconSize * scale
 
         -- Initialize position if new
-        if not data.x then data.x = layout_x end
-        if not data.y then data.y = layout_y end
-
-        -- Calculate target position
-        local targetX, targetY
-        if GetConVar("hg_sidemoodles"):GetBool() then
-            if layout_y + drawH + pad > screenH then
-                layout_y = baseY
-                layout_x = layout_x - (iconSize + pad)
-            end
-            targetX = layout_x
-            targetY = layout_y
-            layout_y = layout_y + drawH + pad
-        else
-            if layout_x + drawW + pad > screenW then
-                layout_x = baseX
-                layout_y = layout_y + drawH + pad
-            end
-            targetX = layout_x
-            targetY = layout_y
-            layout_x = layout_x + drawW + pad
-        end
+        if not data.x then data.x = data.target_x or baseX end
+        if not data.y then data.y = data.target_y or baseY end
         
         -- Smoothly move to target position
-        data.x = Lerp(FrameTime() * 15, data.x, targetX)
-        data.y = Lerp(FrameTime() * 15, data.y, targetY)
+        data.x = Lerp(FrameTime() * 15, data.x, data.target_x or data.x)
+        data.y = Lerp(FrameTime() * 15, data.y, data.target_y or data.y)
 
-        local drawX = data.x + sway_offset
-        local drawY = data.y
+        local drawX = data.x + sway_offset_x
+        local drawY = data.y + sway_offset_y
 
         -- Shake animation for worsening moodles
         if data.worsen_time and (CurTime() - data.worsen_time) < 0.5 then
@@ -391,7 +416,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         
         -- Draw texture or fallback box
         if data.mat and not data.mat:IsError() then
-            if is_otrub and not VITAL_MOODLES[id] then
+            if is_otrub then
                 surface.SetDrawColor(128, 128, 128, alpha)
             else
                 surface.SetDrawColor(255, 255, 255, alpha)

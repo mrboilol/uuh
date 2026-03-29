@@ -1250,7 +1250,7 @@ hg.ammotypes = {
 			Speed = 352,
 			Diameter = 9,
 			Mass = 7,
-			Icon = matPistolAmmo
+			Icon = Material("rbullet.png")
 		}
 	},
 	["9x17mm"] = {

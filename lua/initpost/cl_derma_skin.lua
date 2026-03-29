@@ -32,79 +32,79 @@ end
 
 surface.CreateFont("ZCity_VerySuperTiny", {
 	font = font(),
-	size = ScreenScale(5),
+	size = ScreenScale(6.25),
 	weight = 200
 })
 
 surface.CreateFont("ZCity_SuperTiny", {
 	font = font(),
-	size = ScreenScale(5),
+	size = ScreenScale(6.25),
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Fixed_SuperTiny", {
 	font = font(),
-	size = 18,
+	size = 22,
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Tiny", {
 	font = font(),
-	size = ScreenScale(7),
+	size = ScreenScale(8.75),
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Fixed_Tiny", {
 	font = font(),
-	size = 25,
+	size = 31,
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Small", {
 	font = font(),
-	size = ScreenScale(8),
+	size = ScreenScale(10),
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Medium", {
 	font = font(),
-	size = ScreenScale(12),
+	size = ScreenScale(15),
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Fixed_Medium", {
 	font = font(),
-	size = 55,
+	size = 69,
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Big", {
 	font = font(),
-	size = ScreenScale(35),
+	size = ScreenScale(43.75),
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Fixed_Big", {
 	font = font(),
-	size = 300,
+	size = 375,
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Fixed_Medium_Light", {
 	font = font(),
-	size = 25,
+	size = 31,
 	weight = 200
 })
 
 surface.CreateFont("ZCity_Moodle", {
     font = font(),
-    size = 12,
+    size = 15,
     weight = 200
 })
 
 surface.CreateFont("ZCity_Fixed_Medium_Light_Blur", {
 	font = font(),
-	size = 25,
+	size = 31,
 	weight = 200,
 	blursize = 4
 })
@@ -477,12 +477,12 @@ function SKIN:PaintScrollBarGrip(panel, width, height)
 	local downButtonHeight = parent.btnDown:GetTall()
 
 	DisableClipping(true)
-		if is3d2d then 
-			surface.SetDrawColor(255, 255, 255, 200)
-		else
-			surface.SetDrawColor(30, 30, 30, 200)
-		end
-		surface.DrawRect(4, -upButtonHeight, width - 8, height + upButtonHeight + downButtonHeight)
+	if is3d2d then 
+		surface.SetDrawColor(255, 255, 255, 200)
+	else
+		surface.SetDrawColor(30, 30, 30, 200)
+	end
+	surface.DrawRect(4, -upButtonHeight, width - 8, height + upButtonHeight + downButtonHeight)
 	DisableClipping(false)
 end
 
@@ -509,7 +509,7 @@ function SKIN:PaintComboDownArrow(panel, width, height)
 	surface.DrawText("r")
 end
 
-function SKIN:PaintPropertySheet( panel, width, height )
+function SKIN:PaintPropertySheet( panel, w, h )
 
 	-- TODO: Tabs at bottom, left, right
 
@@ -522,10 +522,10 @@ function SKIN:PaintPropertySheet( panel, width, height )
 	hg.DrawBlur(panel)
 
 	surface.SetDrawColor(30, 30, 30, 150)
-	surface.DrawRect(0, 0, width, height)
+	surface.DrawRect(0, 0, w, h)
 
 	surface.SetDrawColor(255, 0, 0, 150)
-	surface.DrawOutlinedRect(0, 0, width, height)
+	surface.DrawOutlinedRect(0, 0, w, h)
 end
 
 function SKIN:PaintTab( panel, w, h )
