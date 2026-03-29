@@ -38,8 +38,8 @@ SWEP.basebone = 94
 SWEP.weaponPos = Vector(0,0,0)
 SWEP.weaponAng = Angle(0,-90,0)
 
-SWEP.DamagePrimary = 74
-SWEP.DamageSecondary = 34
+SWEP.DamagePrimary = 80
+SWEP.DamageSecondary = 40
 
 SWEP.BackHeadDamageMul = 1.6
 SWEP.BehindAttackMul = 1

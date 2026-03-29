@@ -13,6 +13,9 @@ CreateClientConVar("moodle_debug_draw", 0, true, false, "Toggle client-side mood
 local function IsDebugDrawEnabled() return GetConVar("moodle_debug_draw"):GetInt() == 1 end
 
 local CLIENT_MOODLES = {}
+local last_removed_moodle = {}
+local prev_view_angles = Angle(0,0,0)
+local sway_offset = 0
 
 local CRITICAL_MOODLES = {
     ["bleeding_4"] = true,
@@ -38,6 +41,13 @@ local CRITICAL_MOODLES = {
     ["sepsis"] = true,
     ["horrified"] = true,
     ["deceased"] = true,
+}
+
+local VITAL_MOODLES = {
+    ["bradycardia"] = true,
+    ["oxygen_1"] = true,
+    ["oxygen_2"] = true,
+    ["oxygen_3"] = true,
 }
 
 -- =======================================================
@@ -92,7 +102,7 @@ local MOODLE_INFO = {
     ["faint_1"] = { title = "Dizzy", desc = "Feeling a litle sleepy..." },
     ["faint_2"] = { title = "Disoriented", desc = "My eyes are starting to close..." },
     ["faint_3"] = { title = "Faint", desc = "Its hard to stay balanced..." },
-    ["faint_4"] = { title = "Low Consciousness", desc = "I think im about to fall asleep right about now..." },
+    ["faint_4"] = { title = "Syncope", desc = "I think im about to fall asleep right about now..." },
     ["fight_or_flight"] = { title = "Fight or Flight", desc = "Alert, Pain is numbed for now..." },
     ["fracture"] = { title = "Fracture", desc = "One of your limbs is broken, you should get it fixed..." },
     ["fractured_neck"] = { title = "Fractured Neck", desc = "I cant move..." },
@@ -140,7 +150,7 @@ local MOODLE_INFO = {
     ["trauma_2"] = { title = "Scared", desc = "You dont want to continue experiencing this." },
     ["trauma_3"] = { title = "Terrified", desc = "You are REALLY scared." },
     ["trauma_4"] = { title = "Really fucking scared", desc = "You cant even comprehend your emotions." },
-    ["unconscious"] = { title = "Syncope", desc = "Unresponsive to stimuli, lights out!" },
+    ["unconscious"] = { title = "Unconscious", desc = "Unresponsive to stimuli, lights out!" },
     ["sepsis"] = { title = "Sepsis", desc = "Not so fun now is it?" },
     ["horrified"] = { title = "Critically Injured", desc = "This is the end of you. Goodbye!" },
 }
@@ -176,6 +186,15 @@ net.Receive("Moodle_Add", function()
     local id = net.ReadString()
     local tex = net.ReadString()
     local cnt = net.ReadInt(8)
+
+    local ply = LocalPlayer()
+    if IsValid(ply) and ply:GetNWBool("otrub", false) and not VITAL_MOODLES[id] then 
+        if CLIENT_MOODLES[id] then
+            CLIENT_MOODLES[id].updating = false
+        end
+        -- We still need to read the rest of the network message to avoid errors.
+        return 
+    end
     
     local existing = CLIENT_MOODLES[id]
     CLIENT_MOODLES[id] = existing or { texture = tex, count = cnt, mat = Material(tex) }
@@ -183,6 +202,17 @@ net.Receive("Moodle_Add", function()
     CLIENT_MOODLES[id].count = cnt
     CLIENT_MOODLES[id].mat = CLIENT_MOODLES[id].mat or Material(tex)
     CLIENT_MOODLES[id].spawn = CurTime() -- Mark for popup animation
+    CLIENT_MOODLES[id].updating = true
+
+    if last_removed_moodle.id and (CurTime() - last_removed_moodle.time) < 0.1 then
+        local old_base, old_level = last_removed_moodle.id:match("(.+)_([%d+])")
+        local new_base, new_level = id:match("(.+)_([%d+])")
+
+        if old_base and new_base and old_base == new_base and tonumber(new_level) > tonumber(old_level) then
+            CLIENT_MOODLES[id].worsen_time = CurTime()
+            util.ScreenShake(Vector(0,0,0), 5, 0.5, 0.5, 0.5)
+        end
+    end
     
     if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_ADD, "[M] + "..id.."\n") end
 end)
@@ -224,12 +254,19 @@ end)
 
 net.Receive("Moodle_Remove", function()
     local id = net.ReadString()
+    local ply = LocalPlayer()
+    if IsValid(ply) and ply:GetNWBool("otrub", false) and not VITAL_MOODLES[id] then return end
+
     if id == "*" then 
         CLIENT_MOODLES = {} 
         return 
     end
     
-    CLIENT_MOODLES[id] = nil
+    last_removed_moodle = {id = id, time = CurTime()}
+    if CLIENT_MOODLES[id] then
+        CLIENT_MOODLES[id].remove_time = CurTime()
+    end
+
     if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_REMOVE, "[MM] - "..id.."\n") end
 end)
 
@@ -240,6 +277,13 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         CLIENT_MOODLES = {} 
         return 
     end
+
+    -- Sway effect
+    local current_view_angles = ply:EyeAngles()
+    local angle_diff = current_view_angles.y - prev_view_angles.y
+    prev_view_angles = current_view_angles
+    sway_offset = Lerp(FrameTime() * 5, sway_offset, -angle_diff * 2)
+
     if table.IsEmpty(CLIENT_MOODLES) then return end
     
     -- Layout settings
@@ -267,18 +311,43 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         return 1 + c3 * (t - 1)^3 + c1 * (t - 1)^2
     end
 
+    local is_otrub = ply:GetNWBool("otrub", false)
+
     -- Draw Icons
     for id, data in pairs(CLIENT_MOODLES) do
         local drawX, drawY = baseX, baseY
         local spawn = data.spawn or (CurTime() - 10) -- Default to old for moodles that existed before joining
         local dt = CurTime() - spawn
+
+        -- Shake animation for worsening moodles
+        if data.worsen_time and (CurTime() - data.worsen_time) < 0.5 then
+            local shake_intensity = 5
+            local shake_t = (CurTime() - data.worsen_time) / 0.5
+            local shake_amount = shake_intensity * (1 - shake_t) * math.sin(shake_t * 20)
+            drawX = drawX + shake_amount
+        end
         
         -- Animations
-        local animT = math.Clamp(dt / 0.275, 0, 1)
-        local scale = 0.2 + easeOutBack(animT) * 0.8
-        local alpha = math.Clamp(dt / 0.125, 0, 1) * 255
+        local scale = 1
+        local alpha = 255
+        if data.remove_time then
+            local remove_dt = CurTime() - data.remove_time
+            scale = Lerp(remove_dt / 0.3, 1, 0.8)
+            alpha = Lerp(remove_dt / 0.3, 255, 0)
+
+            if remove_dt > 0.3 then
+                CLIENT_MOODLES[id] = nil
+                if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_REMOVE, "[M] - "..id.."\n") end
+                continue
+            end
+        else
+            local animT = math.Clamp(dt / 0.5, 0, 1)
+            scale = Lerp(animT, 0.8, 1)
+            alpha = Lerp(animT, 0, 255)
+        end
 
         local drawW, drawH = iconSize * scale, iconSize * scale
+        drawX = drawX + sway_offset
         
         if GetConVar("hg_sidemoodles"):GetBool() then
             if y + drawH + pad > screenH then
@@ -303,7 +372,11 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
 
         -- Draw texture or fallback box
         if data.mat and not data.mat:IsError() then
-            surface.SetDrawColor(255, 255, 255, alpha)
+            if is_otrub and not VITAL_MOODLES[id] then
+                surface.SetDrawColor(128, 128, 128, alpha)
+            else
+                surface.SetDrawColor(255, 255, 255, alpha)
+            end
             surface.SetMaterial(data.mat)
             surface.DrawTexturedRect(drawX, drawY, drawW, drawH)
         else
@@ -312,7 +385,7 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         end
 
         -- Draw stack count if > 1
-        if data.count and data.count > 1 then
+        if data.count and data.count > 1 and data.updating then
             draw.SimpleText(tostring(data.count), "ZCity_Small", drawX + drawW - 4, drawY + drawH - 4, color_black, TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM)
         end
 

@@ -167,11 +167,6 @@ if SERVER then
             local wound = org.arterialwounds[pw]
             if not wound then return false end
 
-            if wound[7] == "spineartery" or wound[7] == "arteria" then
-                self:GetOwner():Notify("You cannot apply a tourniquet here!", 1)
-                return false
-            end
-
             ent.tourniquets[#ent.tourniquets + 1] = {wound[2], wound[3], wound[4]}
             org[wound[7]] = 0
 

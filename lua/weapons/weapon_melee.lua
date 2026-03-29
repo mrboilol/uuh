@@ -1,8 +1,8 @@
 if SERVER then AddCSLuaFile() end
-SWEP.PrintName = "Combat Knife"
+SWEP.PrintName = "carlos duty knife"
 SWEP.Instructions = "A military grade combat knife designed to neutralize the enemy during combat operations and special operations."
 SWEP.Category = "Weapons - Melee"
-SWEP.Instructions = "This is your trusty carbon-steel fixed-blade knife.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
+SWEP.Instructions = "This is your trusty carbon-steel fixed-blade knife, very fast and decent damage.\n\nLMB to attack.\nR + LMB to change attack mode.\nRMB to block."
 SWEP.Spawnable = true
 SWEP.AdminOnly = false
 SWEP.Slot = 1
@@ -46,19 +46,19 @@ SWEP.supportTPIK = true
 SWEP.ismelee = true
 SWEP.ismelee2 = true
 
-SWEP.AttackTime = 0.15
-SWEP.AnimTime1 = 0.7
-SWEP.WaitTime1 = 0.5
+SWEP.AttackTime = 0.10
+SWEP.AnimTime1 = 0.6
+SWEP.WaitTime1 = 0.45
 SWEP.AttackLen1 = 55
 
 SWEP.Attack2Time = 0.08
-SWEP.AnimTime2 = 0.6
+SWEP.AnimTime2 = 0.5
 SWEP.WaitTime2 = 0.4
 SWEP.AttackLen2 = 45
 
 SWEP.DamageType = DMG_SLASH
-SWEP.DamagePrimary = 15
-SWEP.DamageSecondary = 8
+SWEP.DamagePrimary = 30
+SWEP.DamageSecondary = 13
 
 SWEP.PenetrationPrimary = 8
 SWEP.PenetrationSecondary = 4

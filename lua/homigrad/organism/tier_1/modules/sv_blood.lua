@@ -27,7 +27,7 @@ module[1] = function(org)
 	org.larmartery = 0
 	org.rlegartery = 0
 	org.llegartery = 0
-	org.spineartery = 0
+	org.spineartery = 1
 	org.bleedStart = 0
 	org.wounds = {}
 	org.arterialwounds = {}
@@ -95,8 +95,16 @@ module[2] = function(owner, org, mulTime)
 	end
 
 	if org.hemotransfusionshock > 0 then
-		org.hemotransfusionshock = math.max(org.hemotransfusionshock - mulTime / 200,0)
-		org.internalBleed = org.internalBleed + mulTime / 30
+		local liver_health = 1 - org.liver
+		org.hemotransfusionshock = math.max(org.hemotransfusionshock - (mulTime / (200 / (liver_health * 2))),0)
+		if liver_health > 0.5 then
+			org.internalBleed = org.internalBleed + mulTime / 30
+		else
+			org.o2[1] = math.max(org.o2[1] - mulTime * 2,0)
+			if math.random(1,100) < 2 then
+				org.heartstop = true
+			end
+		end
 	end
 
 	if org.arteria == 1 then

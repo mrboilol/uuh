@@ -36,6 +36,9 @@ local surface_DrawTexturedRect = surface.DrawTexturedRect
 local ScrW, ScrH = ScrW, ScrH
 local FrameTime = FrameTime
 
+local prev_view_angles = Angle(0,0,0)
+local sway_offset = 0
+
 -- Safe value getter
 local function getOrgVal(org, key, def)
 	local v = org[key]
@@ -53,9 +56,15 @@ local function getOrgTableVal(org, tbl, key, index, def)
 end
 
 -- Limb color scheme (Gray > Orange > Red > Blinking Red)
-local function getLimbColor(limb, org)
+local function getLimbColor(limb, org, is_otrub)
+    local is_critical = (org.heart and org.heart < 0.2 and org.heart ~= 0) or (org.blood and org.blood < 1000 and org.blood ~= 0) or limb.internal > 0.8
+
+    if is_otrub and not is_critical then
+        return Color(128, 128, 128, 150) -- Grayscale for non-critical limbs when unconscious
+    end
+
     -- Blinking Red for imminent death
-    if (org.heart and org.heart < 0.2 and org.heart ~= 0) or (org.blood and org.blood < 1000 and org.blood ~= 0) or limb.internal > 0.8 then
+    if is_critical then
         local r = 255
         local g = 128 + math.sin(RealTime() * 10) * 127
         local b = 0
@@ -145,6 +154,12 @@ local function draw_sprites()
 	
 	local ply = LocalPlayer()
 	if not IsValid(ply) or not ply.organism then return end
+
+	-- Sway effect
+    local current_view_angles = ply:EyeAngles()
+    local angle_diff = current_view_angles.y - prev_view_angles.y
+    prev_view_angles = current_view_angles
+    sway_offset = Lerp(FrameTime() * 5, sway_offset, -angle_diff * 2)
 	
 	local sideMoodles = GetConVar("hg_sidemoodles"):GetBool()
 
@@ -157,6 +172,7 @@ local function draw_sprites()
 	end
 	
 	local org = ply.organism
+	local is_otrub = ply:GetNWBool("otrub", false)
 	local base_x = HUD.base_x
 	local base_y = HUD.base_y
 	local dt = FrameTime() * HUD.limb_fade_speed
@@ -232,14 +248,14 @@ local function draw_sprites()
 		local ofs = HUD.limb_offsets[limb.name] or {x = 0, y = 0}
 		local scale = HUD.limb_scale[limb.name] or {w = 1.0, h = 1.0}
 		
-		local x = base_x + ofs.x
+		local x = base_x + ofs.x + sway_offset
 		local y = base_y + ofs.y
 		
 		local base_size = 40
 		local width = base_size * scale.w
 		local height = base_size * scale.h
 		
-		local col = getLimbColor(limb, org)
+		local col = getLimbColor(limb, org, is_otrub)
 		local damage_boost = math_min(dmg * 150, 100)
 		local total_visibility = math_min(HUD.sprite_visibility + damage_boost, 100)
 		local alpha = math_floor(state.alpha * (total_visibility / 100))

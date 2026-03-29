@@ -20,10 +20,10 @@ SWEP.SuicideCutAng = Angle(10, 0, 0)
 SWEP.SuicideTime = 0.5
 SWEP.CanSuicide = true
 
-SWEP.BleedMultiplier = 5
-SWEP.PainMultiplier = 2.5
+SWEP.BleedMultiplier = 4
+SWEP.PainMultiplier = 3
 
-SWEP.DamagePrimary = 55
+SWEP.DamagePrimary = 27
 SWEP.DamageSecondary = 17
 
 SWEP.setlh = false
@@ -54,7 +54,7 @@ end
 
 SWEP.BreakBoneMul = 0.75
 SWEP.ImmobilizationMul = 0.6
-SWEP.StaminaMul = 1.1
+SWEP.StaminaMul = 2.5
 SWEP.HadBackBonus = true
 
 SWEP.attack_ang = Angle(0,0,0)
@@ -72,12 +72,12 @@ function SWEP:Initialize()
     self:InitAdd()
 end
 
-SWEP.AttackTime = 0.4
-SWEP.AnimTime1 = 0.9
-SWEP.WaitTime1 = 0.8
+SWEP.AttackTime = 0.75
+SWEP.AnimTime1 = 1.50
+SWEP.WaitTime1 = 1
 
-SWEP.AnimTime2 = 1.2
-SWEP.WaitTime2 = 0.6
+SWEP.AnimTime2 = 1.75
+SWEP.WaitTime2 = 1
 
 SWEP.AnimList = {
     ["idle"] = "idle",

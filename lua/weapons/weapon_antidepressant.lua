@@ -44,14 +44,15 @@ local mood = org.mood
 			owner:Notify("Good for me...", 10, "antidepressant_effect", 0, nil, Color(200, 200, 255, 255))
 
 			timer.Simple(120, function()
-				if not IsValid(owner) then return end
-org.mood = new_mood
-				if current_mood then
-					local mood_drop = 20 * hg.organism.GetMoodInertiaMultiplier(ply)
-                    local mood_after_effect = math.Clamp(current_mood - mood_drop, 0, 100)
-                    org.mood = mood_after_effect
-					owner:Notify("The world seems a little colder now.", 10, "antidepressant_wore_off", 0, nil, Color(200, 200, 200, 255))
-				end
+				if not IsValid(owner) or not owner.organism then return end
+                if not GetConVar("hg_mood_enabled"):GetBool() then return end
+
+				local current_mood = owner.organism.mood or 50
+				local mood_drop = 20 * hg.organism.GetMoodInertiaMultiplier(owner)
+                local mood_after_effect = math.Clamp(current_mood - mood_drop, 0, 100)
+                
+                hg.Abnormalties.SetPlayerStat(owner, "mood", mood_after_effect)
+				owner:Notify("The world seems a little colder now.", 10, "antidepressant_wore_off", 0, nil, Color(200, 200, 200, 255))
 			end)
 		end
 

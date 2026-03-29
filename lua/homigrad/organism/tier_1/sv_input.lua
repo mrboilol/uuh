@@ -790,6 +790,9 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 
 	--print(dmg_before, 2)
 	local dmgBlood, dmgHurt, instaPain, immobilization = hg.organism.DamageTypeAffliction(dmg_before / 12, dmgInfo, ent, org)
+	if hitgroup == HITGROUP_HEAD and dmgInfo:IsDamageType(DMG_SLASH + DMG_CLUB + DMG_BULLET + DMG_BUCKSHOT) then
+		dmgBlood = math.max(dmgBlood, 1) * 1.75
+	end
 	
 	local hitbody = #inputHole > 0 or not dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT)
 	

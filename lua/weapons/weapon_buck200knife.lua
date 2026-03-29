@@ -21,8 +21,8 @@ SWEP.SuicideTime = 0.5
 SWEP.CanSuicide = true
 SWEP.SuicidePunchAng = Angle(-5, -15, 0)
 
-SWEP.BleedMultiplier = 5
-SWEP.PainMultiplier = 2
+SWEP.BleedMultiplier = 7.5
+SWEP.PainMultiplier = 2.5
 
 SWEP.DamagePrimary = 20
 SWEP.DamageSecondary = 9

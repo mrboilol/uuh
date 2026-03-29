@@ -56,8 +56,8 @@ SWEP.AnimList = {
 }
 
 SWEP.DamageType = DMG_SLASH
-SWEP.DamagePrimary = 42
-SWEP.DamageSecondary = 14
+SWEP.DamagePrimary = 50
+SWEP.DamageSecondary = 20
 
 SWEP.PenetrationPrimary = 10
 SWEP.PenetrationSecondary = 3
