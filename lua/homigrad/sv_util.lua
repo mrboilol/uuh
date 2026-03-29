@@ -402,8 +402,11 @@ hook.Add("PlayerDeath", "HomigradDeathScreen", function(victim, inflictor, attac
     local bone = "generic"
     if dmginfo and dmginfo:IsValid() and hitgroup_map[dmginfo:GetHitGroup()] then
         bone = hitgroup_map[dmginfo:GetHitGroup()]
-    elseif IsValid(victim) and victim:IsPlayer() and victim:GetLastHitGroup() and hitgroup_map[victim:GetLastHitGroup()] then
-        bone = hitgroup_map[victim:GetLastHitGroup()]
+    elseif IsValid(victim) and victim:IsPlayer() and isfunction(victim.GetLastHitGroup) then
+        local last_hitgroup = victim:GetLastHitGroup()
+        if last_hitgroup and hitgroup_map[last_hitgroup] then
+            bone = hitgroup_map[last_hitgroup]
+        end
     end
 
     if victim.organism and victim.organism.heartstop then

@@ -949,7 +949,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
 
 	local mat = ent:GetBoneMatrix(ent:TranslatePhysBoneToBone(bone))
-	local hitgroup_max = hitgroup == HITGROUP_HEAD and 50 or 100
+	local hitgroup_max = hitgroup == HITGROUP_HEAD and 25 or 100
 	local instant = org.dmgstack[hitgroup][1] > hitgroup_max
 	--print(damageStack, org.dmgstack[hitgroup][1], org.dmgstack[hitgroup][3])
 	local blast = dmgInfo:IsDamageType(DMG_BLAST)
@@ -1438,6 +1438,23 @@ local function velocityDamage(ent, data)
 	
 	if bonetohitgroup[bonename] ~= nil then hitgroup = bonetohitgroup[bonename] end
 	if RagdollDamageBoneMul[hitgroup] then dmgInfo:ScaleDamage(RagdollDamageBoneMul[hitgroup]) end
+
+    local damageStack = dmg * 20
+    if hitgroup then
+        org.dmgstack = org.dmgstack or {}
+        org.dmgstack[hitgroup] = org.dmgstack[hitgroup] or {}
+        local mul = (org.dmgstack[hitgroup][3] or 0) + 1
+        org.dmgstack[hitgroup][1] = ((org.dmgstack[hitgroup][2] and (ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) > CurTime()) and ent.organism.dmgstack[hitgroup][1] * ((ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) - CurTime()) / (0.05 * mul) or 0) + damageStack * mul
+        org.dmgstack[hitgroup][2] = CurTime()
+        org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
+
+        local hitgroup_max = hitgroup == HITGROUP_HEAD and 25 or 100
+        if org.dmgstack[hitgroup][1] > hitgroup_max then
+            if hitgroup == HITGROUP_HEAD then
+                hg.ExplodeHead(ent)
+            end
+        end
+    end
 
 	local org = ent.organism
 	if org.godmode then return end
