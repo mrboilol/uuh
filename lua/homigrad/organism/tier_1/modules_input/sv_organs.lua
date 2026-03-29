@@ -115,7 +115,7 @@ input_list.brain = function(org, bone, dmg, dmgInfo)
 
 			if IsValid(rag) and rag:IsRagdoll() then
 				hg.applyFencingToPlayer(org.owner, org) -- looks more appealing anyways
-				local stype = math.random(2) == 1 and "decorticate" or "decerebrate"--hg.getRandomSpasm()
+				local stype = hg.getRandomSpasm()
 				hg.applySpasm(rag, stype)
 				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
 			end

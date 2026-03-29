@@ -219,7 +219,7 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 		if math.random(3) == 1 then
 			local rag = hg.GetCurrentCharacter(org.owner)
 			if IsValid(rag) then
-				local stype = math.random(2) == 1 and "decorticate" or "decerebrate"
+				local stype = hg.getRandomSpasm()
 				hg.applySpasm(rag, stype)
 				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
 			end
@@ -332,7 +332,7 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 
 			if IsValid(rag) and rag:IsRagdoll() then
 				hg.applyFencingToPlayer(org.owner, org)
-				local stype = math.random(2) == 1 and "decorticate" or "decerebrate"--hg.getRandomSpasm()
+				local stype = hg.getRandomSpasm()
 				hg.applySpasm(rag, stype)
 				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
 			end
