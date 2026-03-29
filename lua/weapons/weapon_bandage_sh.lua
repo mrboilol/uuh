@@ -187,14 +187,8 @@ function SWEP:Think()
 end
 SWEP.net_cooldown2 = 0
 function SWEP:PrimaryAttack()
-    if GetConVar("use_homigrad_hud"):GetBool() then
-        if CLIENT then
-            RunConsoleCommand("homigrad_show_hud")
-        end
-        return
-    end
+	if SERVER then--and not self.modeValuesdef[self.mode][2] then
 
-	if SERVER then
 		self.healbuddy = self:GetOwner()
 		local done = self:Heal(self.healbuddy, self.mode)
 		
@@ -355,12 +349,11 @@ function SWEP:SecondaryAttack()
 	--self:SetHolding(math.min(self:GetHolding() + 9, 100))
 	if SERVER then
 		if IsValid(self:GetNWEntity("fakeGun")) then return end
-		local trace = hg.eyeTrace(self:GetOwner())
-		local ent = trace.Entity
+		local ent = hg.eyeTrace(self:GetOwner()).Entity
 		self.healbuddy = ent
 		if !IsValid(self.healbuddy) then return end
 		if hg.GetCurrentCharacter(self.healbuddy) == hg.GetCurrentCharacter(self:GetOwner()) then return end
-		local done = self:Heal(self.healbuddy, self.mode, trace.PhysicsBone)
+		local done = self:Heal(self.healbuddy, self.mode)
 		if(done and self.PostHeal)then
 			self:PostHeal(self.healbuddy, self.mode)
 		end		
@@ -603,66 +596,7 @@ if SERVER then
 			done = true
 		end
 
-		local USAGE_COST_ARTERIAL = 20
-        local USAGE_COST_VEIN = 10
-
-        if #org.arterialwounds > 0 and self.modeValues[1] >= USAGE_COST_ARTERIAL then
-            local wound_to_heal_idx
-            if bone then
-                for i, wound in ipairs(org.arterialwounds) do
-                    if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
-                        wound_to_heal_idx = i
-                        break
-                    end
-                end
-            else
-                wound_to_heal_idx = 1
-            end
-
-            if wound_to_heal_idx then
-                local wound = org.arterialwounds[wound_to_heal_idx]
-                table.remove(org.arterialwounds, wound_to_heal_idx)
-                org[wound[7]] = 0
-                self.modeValues[1] = self.modeValues[1] - USAGE_COST_ARTERIAL
-                done = true
-                bandaged = true
-                ent.bandaged_limbs = ent.bandaged_limbs or {}
-                local bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
-                if not ent.bandaged_limbs[bone_name] then
-                    ent.bandaged_limbs[bone_name] = true
-                end
-            end
-        end
-
-        if #org.veinwounds > 0 and self.modeValues[1] >= USAGE_COST_VEIN then
-            local wound_to_heal_idx
-            if bone then
-                for i, wound in ipairs(org.veinwounds) do
-                    if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
-                        wound_to_heal_idx = i
-                        break
-                    end
-                end
-            else
-                wound_to_heal_idx = 1
-            end
-
-            if wound_to_heal_idx and org.veinwounds[wound_to_heal_idx] then
-                local wound = org.veinwounds[wound_to_heal_idx]
-                table.remove(org.veinwounds, wound_to_heal_idx)
-                org[wound[7]] = 0
-                self.modeValues[1] = self.modeValues[1] - USAGE_COST_VEIN
-                done = true
-                bandaged = true
-                ent.bandaged_limbs = ent.bandaged_limbs or {}
-                local bone_name = ent:GetBoneName(ent:LookupBone(wound[4]))
-                if not ent.bandaged_limbs[bone_name] then
-                    ent.bandaged_limbs[bone_name] = true
-                end
-            end
-        end
-
-        if done then
+		if done then
 			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
 
 			if self.poisoned2 then
@@ -673,36 +607,6 @@ if SERVER then
 		end
 
 		return done
-	end
-
-	function SWEP:HealVeins(ent, bone)
-		local org = ent.organism
-		local owner = self:GetOwner()
-		if not org or #org.veinwounds == 0 then return end
-
-		local USAGE_COST_VEIN = 10
-		if self.modeValues[1] < USAGE_COST_VEIN then return end
-
-		local wound_to_heal_idx
-		if bone then
-			for i, wound in ipairs(org.veinwounds) do
-				if ent:GetBoneName(ent:LookupBone(wound[4])) == bone then
-					wound_to_heal_idx = i
-					break
-				end
-			end
-		else
-			wound_to_heal_idx = 1
-		end
-
-		if wound_to_heal_idx and org.veinwounds[wound_to_heal_idx] then
-			local wound = org.veinwounds[wound_to_heal_idx]
-			table.remove(org.veinwounds, wound_to_heal_idx)
-			org[wound[7]] = 0
-			self.modeValues[1] = self.modeValues[1] - USAGE_COST_VEIN
-			owner:EmitSound("snd_jack_hmcd_bandage.wav", 60, math.random(95, 105))
-			return true
-		end
 	end
 
 	function SWEP:Heal(ent, mode, bone)
