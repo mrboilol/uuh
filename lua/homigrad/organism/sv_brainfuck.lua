@@ -3,10 +3,10 @@ local math_min, math_clamp, math_rand, math_random, math_sin = math.min, math.Cl
 local VectorRand = VectorRand
 
 local CHANCE, FORCE, VIBRATION = 0.95, 1200, 150
-local extendDur, rigorDur, flexionDur = {4, 10}, {10, 20}, {6, 12}
+local extendDur, rigorDur, flexionDur, decorticateDur, decerebrateDur = {4, 10}, {60, 120}, {6, 12}, {8, 15}, {8, 15}
 local RIGOR_DAMP, FLEXION_FORCE = 8, 400
 
-local spasmTypes = {[1] = {35, "extend"}, [2] = {25, "rigor"}, [3] = {15,"flexion"}} --;; Че хотите добавляйте изменяйте
+local spasmTypes = {[1] = {35, "extend"}, [2] = {25, "rigor"}, [3] = {15,"flexion"}, [4] = {50, "decorticate"}, [5] = {50, "decerebrate"}} --;; Че хотите добавляйте изменяйте
 
 local extendBones = {
 	["ValveBiped.Bip01_R_Hand"] = true, ["ValveBiped.Bip01_L_Hand"] = true,
@@ -23,6 +23,30 @@ local flexionBones = {
 	{"ValveBiped.Bip01_R_Forearm", "ValveBiped.Bip01_Spine2", 1.0},
 	{"ValveBiped.Bip01_L_Forearm", "ValveBiped.Bip01_Spine2", 1.0},
 	{"ValveBiped.Bip01_Head1", "ValveBiped.Bip01_Spine2", 0.6},
+}
+
+local decorticateBones = {
+	flexion = {
+		{"ValveBiped.Bip01_R_Hand", "ValveBiped.Bip01_Spine2", 1.2},
+		{"ValveBiped.Bip01_L_Hand", "ValveBiped.Bip01_Spine2", 1.2},
+		{"ValveBiped.Bip01_R_Forearm", "ValveBiped.Bip01_Spine2", 1.0},
+		{"ValveBiped.Bip01_L_Forearm", "ValveBiped.Bip01_Spine2", 1.0},
+	},
+	extension = {
+		["ValveBiped.Bip01_R_Foot"] = true, ["ValveBiped.Bip01_L_Foot"] = true,
+		["ValveBiped.Bip01_R_Calf"] = true, ["ValveBiped.Bip01_L_Calf"] = true,
+		["ValveBiped.Bip01_R_Thigh"] = true, ["ValveBiped.Bip01_L_Thigh"] = true,
+	}
+}
+
+-- Decerebrate: Extension of arms and legs.
+local decerebrateBones = {
+	["ValveBiped.Bip01_R_Hand"] = true, ["ValveBiped.Bip01_L_Hand"] = true,
+	["ValveBiped.Bip01_R_Foot"] = true, ["ValveBiped.Bip01_L_Foot"] = true,
+	["ValveBiped.Bip01_R_Forearm"] = true, ["ValveBiped.Bip01_L_Forearm"] = true,
+	["ValveBiped.Bip01_R_Calf"] = true, ["ValveBiped.Bip01_L_Calf"] = true,
+	["ValveBiped.Bip01_R_UpperArm"] = true, ["ValveBiped.Bip01_L_UpperArm"] = true,
+	["ValveBiped.Bip01_R_Thigh"] = true, ["ValveBiped.Bip01_L_Thigh"] = true,
 }
 
 local rigorBones = {
@@ -60,7 +84,7 @@ hg.getRandomSpasm = getRandomSpasm
 
 local function applySpasm(rag, stype)
 	if not IsValid(rag) then return end
-	local dur = stype == "extend" and extendDur or stype == "rigor" and rigorDur or flexionDur
+	local dur = stype == "extend" and extendDur or stype == "rigor" and rigorDur or stype == "flexion" and flexionDur or stype == "decorticate" and decorticateDur or stype == "decerebrate" and decerebrateDur
 	dur = math_rand(dur[1], dur[2])
 	
 	rag.spasm, rag.spasmType, rag.spasmDur, rag.spasmForce = true, stype, dur, FORCE
@@ -114,6 +138,51 @@ local function processFlexion(rag, fade)
 		if not IsValid(phys) then continue end
 		local dir = (rag:GetBonePosition(targetBone) - rag:GetBonePosition(bone)):GetNormalized()
 		phys:ApplyForceCenter((dir * force * d[3] * fade * pulse) + VectorRand(-30, 30) * fade)
+	end
+end
+
+local function processDecorticate(rag, fade)
+	-- Flexion for arms
+	local force, pulse = FLEXION_FORCE, 0.8 + math_sin(CurTime() * 5) * 0.2
+	for i = 1, #decorticateBones.flexion do
+		local d = decorticateBones.flexion[i]
+		local bone, targetBone = rag:LookupBone(d[1]), rag:LookupBone(d[2])
+		if not bone or not targetBone then continue end
+		local phys = rag:GetPhysicsObjectNum(rag:TranslateBoneToPhysBone(bone))
+		if not IsValid(phys) then continue end
+		local dir = (rag:GetBonePosition(targetBone) - rag:GetBonePosition(bone)):GetNormalized()
+		phys:ApplyForceCenter((dir * force * d[3] * fade * pulse) + VectorRand(-30, 30) * fade)
+	end
+
+	-- Extension for legs
+	local force, pulse = rag.spasmForce or FORCE, 0.7 + math_sin(CurTime() * 8) * 0.3
+	local pelvis = rag:LookupBone("ValveBiped.Bip01_Pelvis")
+	if not pelvis then return end
+	local pelvisPos = rag:GetBonePosition(pelvis)
+	
+	for name in pairs(decorticateBones.extension) do
+		local bone = rag:LookupBone(name)
+		if not bone then continue end
+		local phys = rag:GetPhysicsObjectNum(rag:TranslateBoneToPhysBone(bone))
+		if not IsValid(phys) then continue end
+		local dir = (rag:GetBonePosition(bone) - pelvisPos):GetNormalized()
+		phys:ApplyForceCenter((dir * force * fade * pulse) + VectorRand(-VIBRATION, VIBRATION) * fade)
+	end
+end
+
+local function processDecerebrate(rag, fade)
+	local force, pulse = rag.spasmForce or FORCE, 0.7 + math_sin(CurTime() * 8) * 0.3
+	local pelvis = rag:LookupBone("ValveBiped.Bip01_Pelvis")
+	if not pelvis then return end
+	local pelvisPos = rag:GetBonePosition(pelvis)
+	
+	for name in pairs(decerebrateBones) do
+		local bone = rag:LookupBone(name)
+		if not bone then continue end
+		local phys = rag:GetPhysicsObjectNum(rag:TranslateBoneToPhysBone(bone))
+		if not IsValid(phys) then continue end
+		local dir = (rag:GetBonePosition(bone) - pelvisPos):GetNormalized()
+		phys:ApplyForceCenter((dir * force * fade * pulse) + VectorRand(-VIBRATION, VIBRATION) * fade)
 	end
 end
 
@@ -174,6 +243,63 @@ local function clearFencing(rag)
 	rag.fencing, rag.fencingEnd, rag.fencingDur = nil, nil, nil
 end
 
+local seizuremsgs = {
+    "bllllhlhmmmbmmmmbmbmb",
+    "bbb b-bbbbbb bllmbmmbb",
+    "ddgdgg-d bbbglgggg",
+    "mmmmammmm aaghbgbblllb",
+    "hhel-bbbphphpppph",
+    "zzzzblzzzmzzzzz",
+}
+
+local function processGuiltSeizure(owner, org)
+    if not owner or not owner:IsPlayer() or org.otrub or not org.isPly then return end
+    if not owner:Alive() then return end
+
+    local ply = owner
+    local karma = ply.Karma
+    local hasKarma = karma ~= nil
+
+    local shouldSeize = false
+    if hasKarma and karma < 50 then
+        shouldSeize = math.random(math.Clamp(karma, 20, 100) * 300) == 1
+    elseif org.brain > 0.2 and math.random(1000) == 1 then -- Probabilistic trigger on brain damage
+        shouldSeize = true
+    end
+
+    if shouldSeize or org.start_shaking then
+        hg.StunPlayer(ply)
+        local time = 15
+        
+        ply:Notify(seizuremsgs[math.random(#seizuremsgs)], 16, "seizure", 1, function()
+            if !IsValid(ply) then return end
+            
+            ply:ChatPrint("You are experiencing an epileptic seizure.")
+        end)
+
+        org.start_shaking = org.start_shaking or (CurTime() + time)
+        local ent = hg.GetCurrentCharacter(owner)
+        local mul = ((org.start_shaking) - CurTime()) / time
+        
+        if mul > 0 then
+            local phys = ent:GetPhysicsObjectNum(math.random(ent:GetPhysicsObjectCount()) - 1)
+            if IsValid(phys) then
+                phys:ApplyForceCenter(VectorRand(-750 * mul, 750 * mul))
+            end
+        else
+            org.start_shaking = nil
+        end
+    else
+        org.start_shaking = nil
+    end
+
+    if hasKarma and karma < 35 then
+        if math.random(2000) == 1 then
+            hg.organism.Vomit(owner)
+        end
+    end
+end
+
 local function clearSpasm(rag)
 	if rag.spasmType == "rigor" and rag.rigorActive then
 		for i = 1, #rigorBones do
@@ -204,22 +330,16 @@ hook.Add("RagdollDeath", "BrainfuckStart", function(ply, rag)
 		if not org then return end
 		if rag.noHead or org.noHead or ply.noHead then return end
 		
-		local hadBrainDamage = org.brain and org.brain > 0
-		local hadSkullDamage = org.skull and org.skull > 0
-		local hadHeadDamage = org.dmgstack and org.dmgstack[HITGROUP_HEAD] and (org.dmgstack[HITGROUP_HEAD][1] or 0) > 0
-		local headshot = hadBrainDamage or hadSkullDamage or hadHeadDamage
-		
-		if headshot and math_random() < CHANCE then
-			local stype = "rigor"--getRandomSpasm()
-			applySpasm(rag, stype)
-			if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
-		end
+		local stype = "rigor"
+		applySpasm(rag, stype)
+		if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
 	end)
 end)
 
 hook.Add("Org Think", "BrainfuckThink", function(owner)
 	if not IsValid(owner) then return end
 	local org = owner.organism or owner
+	processGuiltSeizure(owner, org)
 	
 	if org.fencing and org.fencingEnd then
 		local rag = owner.FakeRagdoll
@@ -244,7 +364,9 @@ hook.Add("Org Think", "BrainfuckThink", function(owner)
 
 			if stype == "extend" then processExtend(deathRag, fade)
 			elseif stype == "rigor" then processRigor(deathRag, fade)
-			elseif stype == "flexion" then processFlexion(deathRag, fade) end
+			elseif stype == "flexion" then processFlexion(deathRag, fade)
+			elseif stype == "decorticate" then processDecorticate(deathRag, fade)
+			elseif stype == "decerebrate" then processDecerebrate(deathRag, fade) end
 		end
 	end
 end)

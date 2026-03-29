@@ -216,6 +216,14 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 			org.owner:Notify(huyasd[name], true, name, 2)
 		end
 		org.painadd = org.painadd + 25
+		if math.random(3) == 1 then
+			local rag = hg.GetCurrentCharacter(org.owner)
+			if IsValid(rag) then
+				local stype = math.random(2) == 1 and "decorticate" or "decerebrate"
+				hg.applySpasm(rag, stype)
+				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
+			end
+		end
 	end
 	
 	if dmg > 0.2 then
@@ -324,9 +332,9 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 
 			if IsValid(rag) and rag:IsRagdoll() then
 				hg.applyFencingToPlayer(org.owner, org)
-				--local stype = "rigor"--hg.getRandomSpasm()
-				--hg.applySpasm(rag, stype)
-				--if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
+				local stype = math.random(2) == 1 and "decorticate" or "decerebrate"--hg.getRandomSpasm()
+				hg.applySpasm(rag, stype)
+				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
 			end
 		end)
 	end
