@@ -402,7 +402,7 @@ hook.Add("PlayerDeath", "HomigradDeathScreen", function(victim, inflictor, attac
     local bone = "generic"
     if dmginfo and dmginfo:IsValid() and hitgroup_map[dmginfo:GetHitGroup()] then
         bone = hitgroup_map[dmginfo:GetHitGroup()]
-    elseif IsValid(victim) and victim:IsPlayer() and hitgroup_map[victim:GetLastHitGroup()] then
+    elseif IsValid(victim) and victim:IsPlayer() and victim:GetLastHitGroup() and hitgroup_map[victim:GetLastHitGroup()] then
         bone = hitgroup_map[victim:GetLastHitGroup()]
     end
 
@@ -576,7 +576,7 @@ hook.Add("ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
         if not org then return end
 
         local damage = dmginfo:GetDamage()
-        org.mood = math.max(org.mood - damage * 0.2, 0)
+        org.mood = math.max((org.mood or 100) - damage * 0.2, 0)
         local will_bleed = (org.bleed or 0) > 0
         local took_bone_damage = (org.just_damaged_bone or false)
 

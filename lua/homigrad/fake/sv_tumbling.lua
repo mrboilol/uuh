@@ -85,7 +85,7 @@ hook.Add("Think", "stanleytumbler", function()
         })
 
         if trWall.Hit then
-             if trWall.HitNormal.z < 0.7 then
+             if trWall.HitNormal.z < 0.3 then
                  local ent = trWall.Entity
                  local isEntity = IsValid(ent) and (ent:IsPlayer() or ent:IsNPC() or ent:IsRagdoll())
                  

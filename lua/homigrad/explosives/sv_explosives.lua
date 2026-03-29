@@ -25,7 +25,7 @@ local DebrisSounds = {
 local hg, util, ParticleEffect, IsValid, timer, coroutine, Vector = hg, util, ParticleEffect, IsValid, timer, coroutine, Vector
 
 local vecCone = Vector(5, 5, 0)
-local ExpTypes = {
+hg.Explosives = {
     Fire = function(Ent, Force, Mass)
 		local multi = math.min(Mass / 10,20)
 		Force = Force * multi
@@ -325,7 +325,7 @@ function hg.PropExplosion(Ent, ExpType, Force, Mass)
 	if Ent.HasExploded then return end
 	Ent.HasExploded = true
 	
-    ExpTypes[ExpType](Ent,Force, Mass)
+    hg.Explosives[ExpType](Ent,Force, Mass)
 end
 
 local expItems = {

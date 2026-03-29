@@ -18,6 +18,14 @@ hook.Add("PlayerDeath", "StopCriticalLoopOnDeath", function(victim, inflictor, a
     end
 end)
 
+hook.Add("PlayerSpawn", "StopCriticalLoopOnSpawn", function(ply)
+    if ply == LocalPlayer() and IsValid(criticalloop_sound) then
+        criticalloop_sound:Stop()
+        criticalloop_sound = nil
+        criticalloop_sound_name = nil
+    end
+end)
+
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
 	if not sun then return end

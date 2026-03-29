@@ -9,5 +9,11 @@ end
 module[2] = function(owner, org, mulTime)
 	if not org.alive or org.hearstop then return end
 
-	--fuckass
+	local liver_health = 1 - org.liver
+
+	org.coagulation_multiplier = 0.5 + liver_health * 1.0
+
+	if org.liver > 0.9 then
+		org.internalBleedHeal = 0
+	end
 end

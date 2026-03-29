@@ -1168,20 +1168,20 @@ hg.ammotypes = {
 		TracerSetings = {
 			TracerBody = Material("particle/fire"),
 			TracerTail = Material("effects/laser_tracer"),
-			TracerHeadSize = 5,
-			TracerLength = 150,
-			TracerWidth = 2,
+			TracerHeadSize = 1,
+			TracerLength = 45,
+			TracerWidth = 1,
 			TracerColor = Color(0, 255, 255),
 			TracerTPoint1 = 0.25,
 			TracerTPoint2 = 1,
-			TracerSpeed = 25000
+			TracerSpeed = 15000
 		},
 		BulletSettings = {
 			Damage = 250,
 			Force = 80,
 			Penetration = 1,
 			Shell = "9x18",
-			Speed = 1500,
+			Speed = 352,
 			Diameter = 11.19,
 			Mass = 14,
 			Icon = matPistolAmmo
@@ -3040,8 +3040,12 @@ end
 
 local ammotypeshuy = {}
 for i,tbl in pairs(table.Copy(ammotypes)) do
-	ammotypeshuy[tbl.name] = tbl
-	ammotypeshuy[tbl.name].name = i
+    if ammotypeshuy[tbl.name] then
+        print("[AMMO WARNING] Duplicate ammo name, ignoring new entry: " .. tbl.name)
+    else
+	    ammotypeshuy[tbl.name] = tbl
+	    ammotypeshuy[tbl.name].name = i
+    end
 end
 
 hg.ammotypeshuy = ammotypeshuy
