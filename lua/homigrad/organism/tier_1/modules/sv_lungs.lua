@@ -208,7 +208,7 @@ module[2] = function(owner, org, timeValue)
 	
 	org.needle = math.Approach(org.needle, 0, timeValue / 1200)
 
-	org.pneumothorax = pneumothorax and min(org.pneumothorax + timeValue / 180 * (org.lungsL[2] + org.lungsR[2]), (org.lungsL[2] + org.lungsR[2]) / 2) or max(org.pneumothorax - timeValue / 10, 0)
+	org.pneumothorax = pneumothorax and min(org.pneumothorax + timeValue / 90 * (org.lungsL[2] + org.lungsR[2]), (org.lungsL[2] + org.lungsR[2]) / 2) or max(org.pneumothorax - timeValue / 10, 0)
 	
 	if org.lastCOBreathe and org.lastCOBreathe + 1 > CurTime() then
 		org.COregen = math.Approach(org.COregen, 30, timeValue * 1)

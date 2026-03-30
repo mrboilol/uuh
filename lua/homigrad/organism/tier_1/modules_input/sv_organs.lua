@@ -236,10 +236,10 @@ input_list.lungsL = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (dmg * 0.25), "Lung left damage harm")
 
-	org.lungsL[1] = math.min(org.lungsL[1] + dmg / 4, 1)
-	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsL[2] = math.min(org.lungsL[2] + dmg * 1, 1) end
+	org.lungsL[1] = math.min(org.lungsL[1] + dmg / 2, 1)
+	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsL[2] = math.min(org.lungsL[2] + dmg * 2, 1) end
 
-	org.internalBleed = org.internalBleed + (org.lungsL[1] - oldval) * 2
+	org.internalBleed = org.internalBleed + (org.lungsL[1] - oldval) * 4
 	
 	dmgInfo:ScaleDamage(0.8)
 
@@ -251,10 +251,10 @@ input_list.lungsR = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (dmg * 0.25), "Lung right damage harm")
 
-	org.lungsR[1] = math.min(org.lungsR[1] + dmg / 4, 1)
-	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsR[2] = math.min(org.lungsR[2] + dmg * 1, 1) end
+	org.lungsR[1] = math.min(org.lungsR[1] + dmg / 2, 1)
+	if (dmgInfo:IsDamageType(DMG_BULLET+DMG_SLASH+DMG_BUCKSHOT)) or (math.random(3) == 1) then org.lungsR[2] = math.min(org.lungsR[2] + dmg * 2, 1) end
 
-	org.internalBleed = org.internalBleed + (org.lungsR[1] - oldval) * 2
+	org.internalBleed = org.internalBleed + (org.lungsR[1] - oldval) * 4
 
 	dmgInfo:ScaleDamage(0.8)
 

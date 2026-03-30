@@ -208,7 +208,7 @@ function HGAddView(ply, origin, angles, velLen)
 
     if _G.suppression_severity and _G.suppression_severity > 0 then
         local curTime = CurTime()
-        local wobble = math.sin(curTime * (10 + 5 * _G.suppression_severity)) * (0.5 * _G.suppression_severity)
+        local wobble = math.sin(curTime * (10 + 5 * _G.suppression_severity)) * (1.5 * _G.suppression_severity) -- Increased sway
         angles:Add(Angle(wobble, wobble, wobble))
     end
 	

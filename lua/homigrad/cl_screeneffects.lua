@@ -200,7 +200,7 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
     if damage_blur_time > 0 then
-        DrawToyTown(damage_blur_time * 4, ScrH())
+        DrawToyTown(damage_blur_time * 4, 0.6)
     end
 	//DrawToyTown(addtiveLayer.toytown, addtiveLayer.toytown_h * ScrH())
 	tab["$pp_colour_brightness"] = addtiveLayer.brightness
@@ -423,17 +423,17 @@ net.Receive("PlayerSuppressed", function()
     -- New effects are now based on the total accumulated suppression
     suppression_chromatic_aberration = _G.suppression_severity
 
-    suppression_dof = _G.suppression_severity * 2 -- Reduced intensity
-    suppression_vignette = _G.suppression_severity * 15
+    suppression_dof = _G.suppression_severity * 0.5 -- Reduced intensity
+    suppression_vignette = _G.suppression_severity * 25
 
     if severity > 0.5 then
-        suppression_dirt = math.min(severity * 1.5, 1.0) -- Apply dirty lens effect if the shot is close
+        suppression_dirt = math.min(severity * 2.5, 1.0) -- Apply dirty lens effect if the shot is close
     else
         suppression_dirt = 0
     end
 
     damage_blur_time = suppression_dof
-	_G.suppression_shake = severity
+    --_G.suppression_shake = severity
 
     -- Flinching based on incoming severity to avoid excessive shake
 	local eye_angles = LocalPlayer():EyeAngles()
@@ -847,7 +847,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
         -- Chromatic Aberration
         if suppression_chromatic_aberration > 0 then
             render.UpdateScreenEffectTexture()
-            chromaticMat:SetFloat("$c0_x", suppression_chromatic_aberration * 0.1)
+            chromaticMat:SetFloat("$c0_x", suppression_chromatic_aberration * 0.2)
             render.SetMaterial(chromaticMat)
             render.DrawScreenQuad()
         end
@@ -856,7 +856,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
         -- Dirt
         if suppression_dirt > 0 then
-            surface.SetDrawColor(255, 255, 255, suppression_dirt * 150)
+            surface.SetDrawColor(255, 255, 255, suppression_dirt * 200)
             surface.SetMaterial(dirtMat)
             surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
         end
@@ -1552,6 +1552,10 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     local org = ply.organism
     if not org then return end
 
+	local vignette_intensity = 0
+	local saturation = 1
+	local wave_effect_active = false
+
     -- Lobotomy Flash
     if (org.brain or 0) > 0.1 and math.random(1, 800) == 1 then
         if (ply.lastLobotomyFlash or 0) + 15 > CurTime() then return end
@@ -1586,14 +1590,14 @@ hook.Add("Post Post Processing", "CustomEffects", function()
 
     if fear_intensity > 0.01 then
         -- Vignette
-        vignette_intensity = vignette_intensity + (fear_intensity * 25) -- max 25 intensity from fear
+        vignette_intensity = vignette_intensity + (fear_intensity * 40) -- max 40 intensity from fear
 
         -- Grayscale
-        local fear_saturation = 1 - (fear_intensity * 0.7) -- max 70% desaturation from fear
+        local fear_saturation = 1 - (fear_intensity * 0.9) -- max 90% desaturation from fear
         saturation = math.min(saturation, fear_saturation)
 
         -- Wave effect for high fear
-        if fear_intensity > 0.8 then
+        if fear_intensity > 0.6 then
             wave_effect_active = true
         end
     end
@@ -1610,7 +1614,6 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     -- Suicidal vignette
     local suicidal_vignette = org.mood and org.mood < 10
 
-    local vignette_intensity = 0
     if vomit_vignette then vignette_intensity = vignette_intensity + 5 end
     if low_mood_vignette then vignette_intensity = vignette_intensity + 7 end
     if suicidal_vignette then vignette_intensity = vignette_intensity + 12 end

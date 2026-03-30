@@ -92,7 +92,7 @@ surface.SetDrawColor( 10, 10, 10, math.max(200,15 * elapsed) )
 surface.SetMaterial( Material("vgui/gradient_down", "noclamp") )
 surface.DrawTexturedRect(0,0,w,h / 1.5)
         draw.SimpleText("DEATH", "dead font", x + math.Rand(-2,2), y + math.Rand(-2,2), Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
-        draw.SimpleText(kiler == "worldspawn" and "You died from a fall" or "You were killed by " .. kiler .. " using " .. wep .. " in " .. bone, "dead font2", x, y * 1.075, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+
         draw.SimpleText("Hint: " .. tip,"dead font2", x, y * 1.14, Color(255, 255, 255), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
     else
         dead = 0
