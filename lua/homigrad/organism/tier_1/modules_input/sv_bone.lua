@@ -287,6 +287,59 @@ input_list.jaw = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet
 		if org.isPly then timer.Simple(0, function() hg.LightStunPlayer(org.owner,1 + dmg) end) end
 	end
 
+    local ply = org.owner
+    if not IsValid(ply) then return result, vecrand end
+
+    local brain_damage = org.brain or 0
+    local skull_damage = org.skull or 0
+    local jaw_damage = org.jaw or 0
+
+    local is_concussion = (brain_damage > 0.03 or skull_damage > 0.45 or jaw_damage > 0.45)
+    local is_headtrauma = (brain_damage > 0.01 or skull_damage > 0.25 or jaw_damage > 0.25)
+
+    if is_concussion then
+        net.Start("hg_CancelScreenEffects")
+        net.Send(ply)
+
+        net.Start("headtrauma_flash")
+        net.WriteVector(ply:EyePos())
+        net.WriteFloat(2.5) -- More serious flash
+        net.WriteInt(30, 20)
+        net.WriteString("concussion" .. math.random(1, 4) .. ".mp3")
+        net.Send(ply)
+
+        org.disorientation = (org.disorientation or 0) + 5
+        if org.consciousness > 0.75 then
+            org.consciousness = 0.75
+        end
+        org.consciousness = org.consciousness - 0.1
+
+        net.Start("hg_PlayTinnitus")
+        net.WriteString("tinnituslong.wav")
+        net.Send(ply)
+
+    elseif is_headtrauma then
+        net.Start("hg_CancelScreenEffects")
+        net.Send(ply)
+
+        net.Start("headtrauma_flash")
+        net.WriteVector(ply:EyePos())
+        net.WriteFloat(1.5)
+        net.WriteInt(20, 20)
+        net.WriteString("headhit.mp3")
+        net.Send(ply)
+
+        if brain_damage > 0.01 or skull_damage > 0.1 or jaw_damage > 0.1 then
+             net.Start("hg_PlayTinnitus")
+            net.WriteString("tinnituslong.wav")
+            net.Send(ply)
+        else
+            net.Start("hg_PlayTinnitus")
+            net.WriteString("tinnitus.wav")
+            net.Send(ply)
+        end
+    end
+
 	return result, vecrand
 end
 
@@ -362,6 +415,59 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
     end
 
 	org.disorientation = org.disorientation + (isCrush(dmgInfo) and dmg * 2 or dmg * 2)
+
+    local ply = org.owner
+    if not IsValid(ply) then return result, vecrand end
+
+    local brain_damage = org.brain or 0
+    local skull_damage = org.skull or 0
+    local jaw_damage = org.jaw or 0
+
+    local is_concussion = (brain_damage > 0.03 or skull_damage > 0.45 or jaw_damage > 0.45)
+    local is_headtrauma = (brain_damage > 0.01 or skull_damage > 0.25 or jaw_damage > 0.25)
+
+    if is_concussion then
+        net.Start("hg_CancelScreenEffects")
+        net.Send(ply)
+
+        net.Start("headtrauma_flash")
+        net.WriteVector(ply:EyePos())
+        net.WriteFloat(2.5) -- More serious flash
+        net.WriteInt(30, 20)
+        net.WriteString("concussion" .. math.random(1, 4) .. ".mp3")
+        net.Send(ply)
+
+        org.disorientation = (org.disorientation or 0) + 5
+        if org.consciousness > 0.75 then
+            org.consciousness = 0.75
+        end
+        org.consciousness = org.consciousness - 0.1
+
+        net.Start("hg_PlayTinnitus")
+        net.WriteString("tinnituslong.wav")
+        net.Send(ply)
+
+    elseif is_headtrauma then
+        net.Start("hg_CancelScreenEffects")
+        net.Send(ply)
+
+        net.Start("headtrauma_flash")
+        net.WriteVector(ply:EyePos())
+        net.WriteFloat(1.5)
+        net.WriteInt(20, 20)
+        net.WriteString("headhit.mp3")
+        net.Send(ply)
+
+        if brain_damage > 0.01 or skull_damage > 0.1 or jaw_damage > 0.1 then
+             net.Start("hg_PlayTinnitus")
+            net.WriteString("tinnituslong.wav")
+            net.Send(ply)
+        else
+            net.Start("hg_PlayTinnitus")
+            net.WriteString("tinnitus.wav")
+            net.Send(ply)
+        end
+    end
 
 	return result,vecrand
 end

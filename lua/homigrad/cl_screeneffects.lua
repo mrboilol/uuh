@@ -461,8 +461,7 @@ net.Receive("PlayerSuppressed", function()
 end)
 
 net.Receive("PlayerTookDamage", function()
-	red_flash_time = 0.2
-    damage_fade_time = 1
+    damage_fade_time = 1 -- Time for the red fade
 end)
 
 net.Receive("headtrauma_flash", function()
@@ -489,6 +488,26 @@ net.Receive("hg_MeleeHeadViewpunch", function()
     ViewPunch(punch)
 end)
 
+net.Receive("hg_CancelScreenEffects", function()
+    suppression_fade_time = 0
+    damage_fade_time = 0
+end)
+
+local tinnitus_sound
+
+net.Receive("hg_PlayTinnitus", function()
+    local sound_name = net.ReadString()
+
+    if IsValid(tinnitus_sound) then
+        tinnitus_sound:Stop()
+    end
+
+    tinnitus_sound = CreateSound(LocalPlayer(), sound_name)
+    if IsValid(tinnitus_sound) then
+        tinnitus_sound:Play()
+    end
+end)
+
 hook.Add("Think", "hg_suppression_shake_decay", function()
     if _G.suppression_shake and _G.suppression_shake > 0 then
         _G.suppression_shake = math.max(0, _G.suppression_shake - FrameTime() * 2.0)
@@ -508,26 +527,17 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.5)
     end
 
-    if red_flash_time > 0 then
-        red_flash_time = math.max(red_flash_time - FrameTime(), 0)
-        surface.SetDrawColor(255, 0, 0, 100 * (red_flash_time / 0.2))
+    if suppression_fade_time > 0 then
+        suppression_fade_time = math.max(suppression_fade_time - FrameTime() / math.max(1, _G.suppression_severity or 1), 0)
+        local fade_alpha = 255 * suppression_fade_time
+        surface.SetDrawColor(0, 0, 0, fade_alpha)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
     if damage_fade_time > 0 then
-        damage_fade_time = math.max(damage_fade_time - FrameTime(), 0)
-        local fade_alpha = 255 * (damage_fade_time / 1)
-        surface.SetDrawColor(0, 0, 0, fade_alpha)
-        surface.DrawRect(0, 0, ScrW(), ScrH())
-
-        surface.SetDrawColor(255, 0, 0, fade_alpha * 0.3)
-        surface.DrawRect(0, 0, ScrW(), ScrH())
-    end
-
-    if suppression_fade_time > 0 then
-        suppression_fade_time = math.max(suppression_fade_time - FrameTime(), 0)
-        local fade_alpha = 255 * (suppression_fade_time / (1.0 * suppression_severity))
-        surface.SetDrawColor(0, 0, 0, fade_alpha)
+        damage_fade_time = math.max(damage_fade_time - FrameTime() * 2, 0) -- Faster fade
+        local fade_alpha = 150 * damage_fade_time
+        surface.SetDrawColor(255, 0, 0, fade_alpha)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 

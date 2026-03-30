@@ -547,6 +547,7 @@ function hg.Fake(ply, huyragdoll, no_freemove, force)
 		hook_Run("Ragdoll_Create", ply, ragdoll)
 	end
 	if !IsValid(ragdoll) then return end
+	ragdoll:SetCollisionGroup(COLLISION_GROUP_PLAYER)
 	ragdoll:CallOnRemove("Fake", RemoveRag, ply)
 	ply.fakecd = CurTime() + 1// + ply.organism.shock / 10
 	NET_Fake(ragdoll, ply)

@@ -572,6 +572,8 @@ end)
 
 util.AddNetworkString( "DoPlayerFlinch" )
 util.AddNetworkString("hg_HeadTrauma")
+util.AddNetworkString("hg_CancelScreenEffects")
+util.AddNetworkString("hg_PlayTinnitus")
 
 hook.Add("ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
     if ply:IsPlayer() then

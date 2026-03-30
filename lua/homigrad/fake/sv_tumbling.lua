@@ -37,43 +37,12 @@ hook.Add("Think", "stanleytumbler", function()
             effectiveThreshold = effectiveThreshold * 0.8
         end
 
-        ply.eyeAnglesOld = ply.eyeAnglesOld or ply:EyeAngles()
-        local cosine = ply:EyeAngles():Forward():Dot(ply.eyeAnglesOld:Forward())
-        ply.eyeAnglesOld = ply:EyeAngles()
+        if speed < effectiveThreshold then continue end
 
-        local isSlipping = false
-        local tr = util.TraceLine({
-            start = ply:GetPos(),
-            endpos = ply:GetPos() - Vector(0,0,1),
-            filter = ply
-        })
-        if tr.Hit and tr.SurfaceProps and util.GetSurfaceData(tr.SurfaceProps) and util.GetSurfaceData(tr.SurfaceProps).friction < 0.2 then
-            isSlipping = true
-        end
-
-        if speed < effectiveThreshold and not isSlipping then continue end
-
-
-        local speedExcess = math.max(0, speed - effectiveThreshold)
-        local tripChance = BASE_TRIP_CHANCE + (speedExcess * 0.005)
-        tripChance = tripChance + (1 - consciousness) * 0.5
-        tripChance = tripChance + (math.Clamp(fear, 0, 100) / 100) * 0.2
-        
+        local tripChance = 0
         local shouldTrip = false
         local tripType = "none"
         local trHighHit = false
-
-        if isSlipping then
-            shouldTrip = true
-            tripType = "slip"
-            tripChance = tripChance + 0.5
-        end
-
-        if speed > 200 and cosine <= 0.95 then
-            shouldTrip = true
-            tripType = "slip"
-            tripChance = tripChance + 0.5
-        end
 
         local forward = ply:GetAimVector()
         forward.z = 0
