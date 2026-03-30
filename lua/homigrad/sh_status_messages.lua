@@ -380,6 +380,19 @@ local heatvomit_phraselist = {
 	"Fuuck.. Oughhh.. I dont feel-"
 }
 
+local desensitized_phrases = {
+    "What's the point?",
+    "It doesn't matter.",
+    "Nothing feels real anymore.",
+    "I'm just so tired of everything.",
+    "Why bother?",
+    "It's all meaningless.",
+    "I don't feel anything.",
+    "Is this all there is?",
+    "I'm empty inside.",
+    "The world is just a blur.",
+}
+
 local hg_showthoughts = ConVarExists("hg_showthoughts") and GetConVar("hg_showthoughts") or CreateClientConVar("hg_showthoughts", "1", true, true, "Show the thoughts of your character", 0, 1)
 
 function string.Random(length)
@@ -515,6 +528,8 @@ end
 		end
 	elseif hg.fearful(ply) then
 		most_wanted_phraselist = ((IsAimedAt(ply) > 0.9) and is_aimed_at_phrases or (math.random(10) == 1 and fear_hurt_ironic or fear_phrases))
+	elseif (org.desensitized or 0) > 0.75 then
+		most_wanted_phraselist = desensitized_phrases
 	end
 
 	if temperature < 35 then

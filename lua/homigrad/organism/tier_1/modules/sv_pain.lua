@@ -31,6 +31,10 @@ function hg.organism.paincheck(org)
 end
 
 module[2] = function(owner, org, timeValue)
+	if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
+		org.painadd = org.painadd + 30
+	end
+
 	local adrenalineMul = min(max(1 + org.adrenaline, 1), 1.2)
 	local adrenaline = org.adrenaline
 	local analgesiaMul = (org.analgesia * 4 + 1)
@@ -68,7 +72,8 @@ module[2] = function(owner, org, timeValue)
 			sub = sub / 5
 		end
 
-		org.disorientation = math.max(org.pain / 50, org.disorientation)//org.disorientation + add
+		org.disorientation = math.max(org.pain / 40, org.disorientation)//org.disorientation + add
+		org.immobilization = math.min(org.immobilization + (org.pain - 60) / 5 * timeValue, 30)
 		org.fearadd = 1
 	end
 

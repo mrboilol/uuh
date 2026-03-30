@@ -1,4 +1,4 @@
-﻿local PLAYER = FindMetaTable("Player")
+local PLAYER = FindMetaTable("Player")
 if not HookGetRagdollEntity then HookGetRagdollEntity = PLAYER.GetRagdollEntity end
 function PLAYER:GetRagdollEntity()
 	local ent = self:GetNWEntity("RagdollDeath")
@@ -103,7 +103,7 @@ function hg.Ragdoll_Create(ply)
 	ragdoll.CurAppearance = table.Copy(ply.CurAppearance)
 
 	local bodygroups = ply:GetBodyGroups()
-	ragdoll:SetCollisionGroup(COLLISION_GROUP_WEAPON)
+	ragdoll:SetCollisionGroup(COLLISION_GROUP_PUSHAWAY)
 	ragdoll:Spawn()
 	ragdoll:Activate()
 	ragdoll:AddEFlags(EFL_NO_DAMAGE_FORCES + EFL_DONTBLOCKLOS)

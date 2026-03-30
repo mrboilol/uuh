@@ -462,7 +462,26 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
 
-	org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
+	if org.partially_broken_spine_treated then
+		local heal_amount = timeValue / 120 -- heal over 2 minutes
+		if org.spine1 > 0.75 and org.spine1 < 1 then
+			org.spine1 = math.max(org.spine1 - heal_amount, 0)
+		end
+		if org.spine2 > 0.75 and org.spine2 < 1 then
+			org.spine2 = math.max(org.spine2 - heal_amount, 0)
+		end
+
+		if not ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1)) then
+			org.partially_broken_spine_treated = nil
+		end
+	end
+
+	local is_partially_broken = ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
+	if is_partially_broken and not org.partially_broken_spine_treated then
+		org.canmove = false
+	else
+		org.canmove = (org.spine2 < hg.organism.fake_spine2 and org.spine3 < hg.organism.fake_spine3) and not org.otrub
+	end
 	org.canmovehead = (org.spine3 < hg.organism.fake_spine3) and not org.otrub
 	
 	if not (org.canmove and org.canmovehead and (org.stun - CurTime()) < 0) then org.needfake = true end
@@ -539,7 +558,7 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 	org.health = owner:Health()
 	local rag = owner:IsPlayer() and owner.FakeRagdoll or owner
-	if IsValid(rag) and rag:IsRagdoll() and (not owner.lastFake or owner.lastFake == 0) then rag:SetCollisionGroup((rag:GetVelocity():LengthSqr() > (200*200)) and COLLISION_GROUP_NONE or COLLISION_GROUP_WEAPON) end
+	if IsValid(rag) and rag:IsRagdoll() and (not owner.lastFake or owner.lastFake == 0) then rag:SetCollisionGroup((rag:GetVelocity():LengthSqr() > (200*200)) and COLLISION_GROUP_NONE or COLLISION_GROUP_PUSHAWAY) end
 	if isPly then
 		if org.otrub or org.fake then hg.Fake(owner,nil,true) end
 		if not org.alive and owner:Alive() then owner:Kill() end

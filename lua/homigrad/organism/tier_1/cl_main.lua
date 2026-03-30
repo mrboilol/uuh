@@ -118,10 +118,38 @@ hook.Add("HUDShouldDraw", "hg.HUDShouldDraw", function(id)
 	end
 end)
 
-hook.Add("HG_OnOtrub", "adsadsadhuy!!", function(ply)	
+local otrub_vignette = Material("effects/shaders/zb_vignette")
+
+local function DrawOtrubVignette()
+    local ply = LocalPlayer()
+    if not IsValid(ply) or not ply.organism or not ply.organism.otrub then
+        hook.Remove("PostDrawHUD", "DrawOtrubVignette")
+        return
+    end
+
+    local lerp = 10
+    render.UpdateScreenEffectTexture()
+    otrub_vignette:SetFloat("$c2_x", CurTime() + 10000)
+    otrub_vignette:SetFloat("$c0_z", lerp / 3)
+    otrub_vignette:SetFloat("$c1_y", lerp / 12)
+    render.SetMaterial(otrub_vignette)
+    render.DrawScreenQuad()
+end
+
+local function StartOtrubEffect()
+    surface.PlaySound("owfuck.ogg")
+    hook.Add("PostDrawHUD", "DrawOtrubVignette", DrawOtrubVignette)
+end
+
+local function StopOtrubEffect()
+    hook.Remove("PostDrawHUD", "DrawOtrubVignette")
+end
+
+hook.Add("HG_OnOtrub", "adsadsadhuy!!", function(ply)
 	if ply == LocalPlayer() then
 		lply:SetDSP(17)
 		plyCommand(lply,"soundfade 100 99999")
+        StartOtrubEffect()
 	end
 end)
 
@@ -170,6 +198,8 @@ hook.Add("Player Spawn", "screenshot_game", function(ply)
 		end
 
 		remove_imgs()
+        StopOtrubEffect()
+        if _G.stopthings then _G.stopthings() end
 	end
 end)
 

@@ -90,12 +90,12 @@ local HUD = {
 	base_y = 150, -- Top-left position
 	
 	limb_offsets = {
-		head =        { x = 0,   y = -75 },
-		torso =       { x = 0,   y = 0 },
-		right_arm =   { x = 50,  y = 0 },
-		left_arm =    { x = -50, y = 0 },
-		right_leg =   { x = 15,  y = 95 },
-		left_leg =    { x = -15, y = 95 },
+		head =        { x = 10,   y = -75 },
+		torso =       { x = 10,   y = 0 },
+		right_arm =   { x = 60,  y = 0 },
+		left_arm =    { x = -40, y = 0 },
+		right_leg =   { x = 25,  y = 105 },
+		left_leg =    { x = -5, y = 105 },
 	},
 	
 	limb_scale = {

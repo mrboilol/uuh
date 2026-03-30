@@ -553,6 +553,14 @@ if SERVER then
 		local who = (self:GetOwner() == org.owner) and "You" or ((owner.Profession == "doctor") and "A doctor" or "Someone")
 		local mul = ((owner.Profession == "doctor") and 0.2 or 1)
 		local amt = 25 * mul
+
+		local is_partially_broken = ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
+		if is_partially_broken and self.modeValues[1] >= amt then
+			org.partially_broken_spine_treated = true
+			self.modeValues[1] = self.modeValues[1] - amt
+			done = true
+		end
+
 		if org.skull >= 0.6 and self.modeValues[1] >= amt then
 			org.skull = 0.59
 			self.modeValues[1] = self.modeValues[1] - amt

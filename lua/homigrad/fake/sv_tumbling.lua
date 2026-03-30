@@ -63,7 +63,13 @@ hook.Add("Think", "stanleytumbler", function()
         local tripType = "none"
         local trHighHit = false
 
-        if isSlipping or (speed > 200 and cosine <= 0.99) then
+        if isSlipping then
+            shouldTrip = true
+            tripType = "slip"
+            tripChance = tripChance + 0.5
+        end
+
+        if speed > 200 and cosine <= 0.95 then
             shouldTrip = true
             tripType = "slip"
             tripChance = tripChance + 0.5
@@ -156,8 +162,8 @@ hook.Add("Think", "stanleytumbler", function()
                 hg.Fake(ply)
                 --mcity reference?
                 if not org.superfighter then
-                    local breakChance = 0.05
-                    local dislocationChance = 0.2
+                    local breakChance = 0.25
+                    local dislocationChance = 0.5
 
                     if math.random() < breakChance then
                         -- Limb break
@@ -180,6 +186,8 @@ hook.Add("Think", "stanleytumbler", function()
                             else
                                 org.larm = 1 -- Break left arm
                             end
+                        else
+                            ply:EmitSound("physics/body/body_medium_break"..math.random(2,4)..".wav")
                         end
                     elseif math.random() < dislocationChance then
                         -- Limb dislocation

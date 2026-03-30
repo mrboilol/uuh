@@ -71,9 +71,6 @@ hook.Add("PostDrawPlayerAppearance", "DesensitizedFaceEffect", function(ent, ply
     local lply_org = lply.organism
     if not lply_org or not lply_org.desensitized or lply_org.desensitized < 0.9 then return end
 
-    local org = ply.organism
-    if not org or not org.desensitized or org.desensitized < 0.9 then return end
-
     local bone = ply:LookupBone("ValveBiped.Bip01_Head1")
     if not bone then return end
 
@@ -352,12 +349,12 @@ end )
 --that one furry game
 
 
-local painMat = Material("effects/shaders/merc_filmgrain")
+local painMat = Material("effects/shaders/zb_pain")
 local noiseMat = Material("effects/shaders/zb_grainwhite")
 local vignetteMat = Material("effects/shaders/merc_vignette")
 local assimilationMat = Material("effects/shaders/zb_assimilation")
 local coldMat = Material("effects/shaders/zb_colda")
-local grainMat = Material("effects/shaders/merc_filmgrain")
+local grainMat = Material("effects/shaders/zb_grainwhite")
 local heatMat = Material("effects/shaders/zb_heat")
 local blindMat = Material("effects/shaders/zb_blind")
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
@@ -421,12 +418,12 @@ net.Receive("PlayerSuppressed", function()
     suppression_effect_time = math.min((suppression_effect_time or 0) + 1.5 * severity, 4.0)
 
     -- New effects are now based on the total accumulated suppression
-    suppression_chromatic_aberration = _G.suppression_severity
+    suppression_chromatic_aberration = _G.suppression_severity * 0.5 -- Reduced
 
-    suppression_dof = _G.suppression_severity * 0.5 -- Reduced intensity
-    suppression_vignette = _G.suppression_severity * 25
+    suppression_dof = _G.suppression_severity * 0.75 -- Increased
+    suppression_vignette = _G.suppression_severity * 50
 
-    if severity > 0.5 then
+    if severity > 0.8 then -- Only for close bullets
         suppression_dirt = math.min(severity * 2.5, 1.0) -- Apply dirty lens effect if the shot is close
     else
         suppression_dirt = 0
@@ -500,7 +497,15 @@ end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
     if _G.suppression_severity and _G.suppression_severity > 0 then
-        _G.suppression_severity = math.max(0, _G.suppression_severity - FrameTime() * 0.75)
+        _G.suppression_severity = math.max(0, _G.suppression_severity - FrameTime() * 0.5)
+    end
+
+    if suppression_chromatic_aberration > 0 then
+        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.5)
+    end
+
+    if suppression_dirt > 0 then
+        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.5)
     end
 
     if red_flash_time > 0 then
@@ -672,10 +677,10 @@ local vignette_end_time = 0
 local wave_effect_active = false
 local wave_effect_end_time = 0
 
-local grayscale_active = false
-local grayscale_end_time = 0
+local vignette_intensity_lerped = 0
+local grayscale_intensity_lerped = 0
 
-local function stopthings()
+_G.stopthings = function()
 	PainLerp = 0
 	O2Lerp = 0
 	shockLerp = 0
@@ -740,8 +745,9 @@ local function stopthings()
 	end
 
     if IsValid(criticalloop_sound) then
-        criticalloop_sound:FadeOut(0.5)
+        criticalloop_sound:Stop()
         criticalloop_sound = nil
+		criticalloop_sound_name = nil
     end
 
 	if IsValid(AssimilationStation) then
@@ -782,8 +788,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
     local c_intensity = 0
     c_intensity = c_intensity + (pain / 100)
     c_intensity = c_intensity + (suppression * 2.5) -- Increased intensity
-    c_intensity = c_intensity + (adrenaline * 1.2) -- Increased intensity
-    c_intensity = c_intensity + (fear * 1.0) -- Increased intensity
+    c_intensity = c_intensity + (adrenaline * 2.0) -- Increased intensity
+    c_intensity = c_intensity + (fear * 1.5) -- Increased intensity
     if c_intensity > 0 then
         local args = {
             aberration = c_intensity
@@ -792,44 +798,32 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
 
     -- Vignette
-    local vignette_intensity = 0
-    vignette_intensity = vignette_intensity + (fear * 10)
-    vignette_intensity = vignette_intensity + (suppression * 5)
-    if vignette_intensity > 0 then
+    local vignette_intensity_target = 0
+    vignette_intensity_target = vignette_intensity_target + (fear * 5)
+    vignette_intensity_target = vignette_intensity_target + (suppression * 15)
+    vignette_intensity_lerped = Lerp(FrameTime() * 2, vignette_intensity_lerped, vignette_intensity_target)
+
+    if vignette_intensity_lerped > 0.01 then
         local args = {
-            vignette_intensity = vignette_intensity
+            vignette_intensity = vignette_intensity_lerped
         }
         merc_vignette(args)
     end
 
     -- Desaturation
-    local desaturation_intensity = 0
+    local desaturation_intensity_target = 0
     if blood < 4000 then
-        desaturation_intensity = math.max(desaturation_intensity, 1 - (blood / 4000))
+        desaturation_intensity_target = math.max(desaturation_intensity_target, 1 - (blood / 4000))
     end
-    desaturation_intensity = math.max(desaturation_intensity, fear * 2.0) -- Increased intensity
+    desaturation_intensity_target = math.max(desaturation_intensity_target, fear * 0.5)
     if pain > 50 then
-        desaturation_intensity = math.max(desaturation_intensity, (pain - 50) / 50)
+        desaturation_intensity_target = math.max(desaturation_intensity_target, (pain - 50) / 50)
     end
-    if desaturation_intensity > 0 then
-        local args = {
-            grayscale = desaturation_intensity
-        }
-        merc_grayscale(args)
-    end
+    grayscale_intensity_lerped = Lerp(FrameTime() * 2, grayscale_intensity_lerped, desaturation_intensity_target)
 
-    -- Desaturation
-    local desaturation_intensity = 0
-    if blood < 4000 then
-        desaturation_intensity = math.max(desaturation_intensity, 1 - (blood / 4000))
-    end
-    desaturation_intensity = math.max(desaturation_intensity, fear * 0.5)
-    if pain > 50 then
-        desaturation_intensity = math.max(desaturation_intensity, (pain - 50) / 50)
-    end
-    if desaturation_intensity > 0 then
+    if grayscale_intensity_lerped > 0.01 then
         local args = {
-            grayscale = desaturation_intensity
+            grayscale = grayscale_intensity_lerped
         }
         merc_grayscale(args)
     end
@@ -841,15 +835,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
     -- Flinching
     if suppression > 0.1 or pain > 10 then
-        local punch = Angle(math.Rand(-5, 5) * suppression, math.Rand(-5, 5) * suppression, math.Rand(-2, 2) * suppression)
-        punch = punch + Angle(math.Rand(-2, 2) * (pain / 20), math.Rand(-2, 2) * (pain / 20), 0)
-        ViewPunch(punch)
-    end
-
-    -- Flinching
-    if suppression > 0.1 or pain > 10 then
-        local punch = Angle(math.Rand(-5, 5) * suppression, math.Rand(-5, 5) * suppression, math.Rand(-2, 2) * suppression)
-        punch = punch + Angle(math.Rand(-2, 2) * (pain / 20), math.Rand(-2, 2) * (pain / 20), 0)
+        local punch = Angle(math.Rand(-2, 2) * suppression, math.Rand(-2, 2) * suppression, math.Rand(-1, 1) * suppression) -- Reduced intensity
+        punch = punch + Angle(math.Rand(-1, 1) * (pain / 80), math.Rand(-1, 1) * (pain / 80), 0) -- Reduced intensity
         ViewPunch(punch)
     end
     if suppression_effect_time > 0 then
