@@ -665,7 +665,9 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		ent.bloodamt = ent.bloodamt or 0
 		ent.bloodamt = ent.bloodamt + 1
 		
-		timer.Simple(0,function()
+		timer.Simple(0, function()
+			if !IsValid(ent) then return end
+
 			/*if IsValid(ent) then
 				timer.Create("Blood_burst"..ent:EntIndex(),0.02,1,function()
 					if IsValid(ent) and ent.bloodamt then
@@ -679,7 +681,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 					end
 				end)
 			end*/
-
+			
 			if bullet and true then
 				local mul = distance / pen
 				bullet.Src = outputHole[#outputHole]
@@ -691,7 +693,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 				bullet.Tracer = 0
 				bullet.TracerName = "nil"
 				bullet.IgnoreEntity = ent
-				bullet.Filter = {ent}
+				bullet.Filter = {ent, ply and ply:InVehicle() and ply:GetVehicle() or nil}
 				bullet.penetrated = bullet.penetrated or 0
 				bullet.limit_ricochet = bullet.limit_ricochet or 0
 				bullet.penetrated = bullet.penetrated + 1
