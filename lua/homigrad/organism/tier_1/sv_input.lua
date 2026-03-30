@@ -955,7 +955,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
 
 	local mat = ent:GetBoneMatrix(ent:TranslatePhysBoneToBone(bone))
-	local hitgroup_max = hitgroup == HITGROUP_HEAD and 45 or 100
+	local hitgroup_max = hitgroup == HITGROUP_HEAD and 120 or 100
 	local instant = org.dmgstack[hitgroup][1] > hitgroup_max
 	--print(damageStack, org.dmgstack[hitgroup][1], org.dmgstack[hitgroup][3])
 	local blast = dmgInfo:IsDamageType(DMG_BLAST)
@@ -1464,7 +1464,7 @@ local function velocityDamage(ent, data)
         org.dmgstack[hitgroup][2] = CurTime()
         org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
 
-        local hitgroup_max = hitgroup == HITGROUP_HEAD and 25 or 100
+        local hitgroup_max = hitgroup == HITGROUP_HEAD and 120 or 100
         if org.dmgstack[hitgroup][1] > hitgroup_max then
             if hitgroup == HITGROUP_HEAD then
                 hg.ExplodeHead(ent)

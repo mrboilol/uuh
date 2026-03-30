@@ -54,11 +54,6 @@ local function getLimbColor(limb, org, is_otrub)
         return Color(intensity, intensity, intensity, 255)
     end
 
-    -- Orange for dislocations, arterial bleeding, or near-breaking
-    if limb.dislocation or limb.artery > 0 then
-        return Color(255, 165, 0, 255)
-    end
-
     -- Red if broken or severely damaged
     if limb.dmg >= 1 then
         return Color(255, 0, 0, 255)
@@ -91,7 +86,7 @@ end
 -- ===== CONFIGURATION =====
 local HUD = {
 	enabled = true,
-	base_x = 150, -- Top-left position
+	base_x = 170, -- Top-left position
 	base_y = 150, -- Top-left position
 	
 	limb_offsets = {
@@ -104,12 +99,12 @@ local HUD = {
 	},
 	
 	limb_scale = {
-		head =        { w = 60, h = 60 },
-		torso =       { w = 70, h = 95 },
-		right_arm =   { w = 30, h = 90 },
-		left_arm =    { w = 30, h = 90 },
-		right_leg =   { w = 35, h = 100 },
-		left_leg =    { w = 35, h = 100 },
+		head =        { w = 66, h = 66 },
+		torso =       { w = 77, h = 105 },
+		right_arm =   { w = 33, h = 99 },
+		left_arm =    { w = 33, h = 99 },
+		right_leg =   { w = 39, h = 110 },
+		left_leg =    { w = 39, h = 110 },
 	},
 	
 	sprite_visibility = 100,

@@ -21,7 +21,8 @@ end
 
 -- Core function to handle state changes and networking
 -- Only sends net messages when a state actually changes
-local function manageMoodleState(ply, moodle, active, material, name, description, color, noSound)
+local function manageMoodleState(ply, moodle, active, material, count, bypass_cooldown)
+    ply.MoodleStates = ply.MoodleStates or {}
     local org = ply.organism
     if org and (org.desensitized or 0) > 0 then
         local desensitized_moodles = {
@@ -41,7 +42,25 @@ local function manageMoodleState(ply, moodle, active, material, name, descriptio
         end
     end
 
-    local current_state = ply.moodles[moodle]
+    local current_moodle = ply.MoodleStates[moodle]
+    local changed = (current_moodle == nil) ~= active
+    local count_changed = active and current_moodle and current_moodle.count ~= (count or 1)
+
+    if changed or count_changed then
+        if active then
+            ply.MoodleStates[moodle] = { mat = material, count = count or 1 }
+            net.Start("Moodle_Add")
+            net.WriteString(moodle)
+            net.WriteString(material or "")
+            net.WriteInt(count or 1, 8)
+            net.Send(ply)
+        else
+            ply.MoodleStates[moodle] = nil
+            net.Start("Moodle_Remove")
+            net.WriteString(moodle)
+            net.Send(ply)
+        end
+    end
 end
 
 local function manageHierarchicalMoodle(ply, baseID, levels, value)
@@ -57,7 +76,6 @@ local function manageHierarchicalMoodle(ply, baseID, levels, value)
     for i = 1, #levels do
         local level_info = levels[i]
         local moodleID = baseID .. "_" .. i
-        local should_be_active = (i == active_level)
         local should_be_active = (i == active_level)
         -- When a moodle is being deactivated as part of a hierarchy change, bypass the cooldown to prevent flickering.
         local bypass_cooldown = (not should_be_active and active_level > 0)

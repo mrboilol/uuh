@@ -11,7 +11,7 @@ local GAP_CHECK_DIST = 50
 local WALL_CHECK_DIST = 20
 local WALL_CHECK_HEIGHT = 10 
 
-local BASE_TRIP_CHANCE = 0.1
+local BASE_TRIP_CHANCE = 0.05
 local MAX_TRIP_CHANCE = 0.8
 
 hook.Add("Think", "stanleytumbler", function()
@@ -76,8 +76,8 @@ hook.Add("Think", "stanleytumbler", function()
         local pos = ply:GetPos()
 
         local trWall = util_TraceHull({
-            start = pos + Vector(0,0,5),
-            endpos = pos + Vector(0,0,5) + forward * 20,
+            start = pos + Vector(0,0,8),
+            endpos = pos + Vector(0,0,8) + forward * 20,
             mins = ply:OBBMins(),
             maxs = ply:OBBMaxs(),
             filter = ply,

@@ -352,12 +352,12 @@ end )
 --that one furry game
 
 
-local painMat = Material("effects/shaders/zb_grain")
+local painMat = Material("effects/shaders/merc_filmgrain")
 local noiseMat = Material("effects/shaders/zb_grainwhite")
-local vignetteMat = Material("effects/shaders/zb_vignette")
+local vignetteMat = Material("effects/shaders/merc_vignette")
 local assimilationMat = Material("effects/shaders/zb_assimilation")
 local coldMat = Material("effects/shaders/zb_colda")
-local grainMat = Material("effects/shaders/zb_grain2")
+local grainMat = Material("effects/shaders/merc_filmgrain")
 local heatMat = Material("effects/shaders/zb_heat")
 local blindMat = Material("effects/shaders/zb_blind")
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
@@ -403,8 +403,8 @@ local suppression_vignette = 0
 local suppression_dirt = 0
 _G.suppression_severity = 0
 
-local dirtMat = Material("overlays/dirt_overlay.png", "noclamp")
-local chromaticMat = Material("effects/shaders/zb_chromatic")
+local dirtMat = Material("dlenstexture/dlensmat", "noclamp")
+local chromaticMat = Material("effects/shaders/merc_chromaticaberration")
 
 
 
@@ -448,7 +448,16 @@ net.Receive("PlayerSuppressed", function()
     ViewPunch(punch)
 
     -- Ragdoll on high suppression and damage
-    if _G.suppression_severity > 0.8 and wep_damage > 50 then
+    local should_ragdoll = false
+    if severity > 0.9 then -- a single, very suppressive shot
+        should_ragdoll = true
+    elseif wep_damage > 100 then -- a high-damage bullet whizzing by
+        should_ragdoll = true
+    elseif _G.suppression_severity > 1.5 and wep_damage > 30 then -- high accumulated suppression and a decent hit
+        should_ragdoll = true
+    end
+
+    if should_ragdoll then
         net.Start("RequestRagdoll")
         net.SendToServer()
     end
