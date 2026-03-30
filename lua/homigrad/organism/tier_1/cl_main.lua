@@ -147,10 +147,10 @@ end
 
 hook.Add("HG_OnOtrub", "adsadsadhuy!!", function(ply)
 	if ply == LocalPlayer() then
-		lply:SetDSP(17)
-		plyCommand(lply,"soundfade 100 99999")
-        StartOtrubEffect()
-	end
+			lply:SetDSP(17)
+			--plyCommand(lply,"soundfade 100 99999")
+			StartOtrubEffect()
+		end
 end)
 
 hook.Add("Player_Death", "adsadsadhuy!!", function(ply)	

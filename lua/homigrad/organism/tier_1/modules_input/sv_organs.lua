@@ -25,7 +25,12 @@ input_list.heart = function(org, bone, dmg, dmgInfo)
 	hg.AddHarmToAttacker(dmgInfo, (org.heart - oldDmg) * 10, "Heart damage harm")
 	
 	org.shock = org.shock + dmg * 20
-	org.internalBleed = org.internalBleed + (org.heart - oldDmg) * 10
+	org.painadd = org.painadd + dmg * 10
+	if dmgInfo:IsDamageType(DMG_SLASH) then
+		org.bleed = org.bleed + (org.heart - oldDmg) * 10
+	else
+		org.internalBleed = org.internalBleed + (org.heart - oldDmg) * 10
+	end
 
 	return result
 end
@@ -51,7 +56,11 @@ input_list.liver = function(org, bone, dmg, dmgInfo)
 		end)
 	end
 
-	org.internalBleed = org.internalBleed + harmed * 4
+	if dmgInfo:IsDamageType(DMG_SLASH) then
+		org.bleed = org.bleed + harmed * 4
+	else
+		org.internalBleed = org.internalBleed + harmed * 4
+	end
 	
 	dmgInfo:ScaleDamage(0.8)
 
@@ -65,7 +74,14 @@ input_list.stomach = function(org, bone, dmg, dmgInfo)
 
 	hg.AddHarmToAttacker(dmgInfo, (org.stomach - oldDmg) * 2, "Stomach damage harm")
 	
-	org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 2
+		
+	org.shock = org.shock + (org.stomach - oldDmg) * 10
+	org.hungry = math.max(org.hungry - (org.stomach - oldDmg) * 50, 0)
+	if dmgInfo:IsDamageType(DMG_SLASH) then
+		org.bleed = org.bleed + (org.stomach - oldDmg) * 2
+	else
+		org.internalBleed = org.internalBleed + (org.stomach - oldDmg) * 2
+	end
 	return result
 end
 
@@ -74,9 +90,15 @@ input_list.intestines = function(org, bone, dmg, dmgInfo)
 
 	local result = damageOrgan(org, dmg, dmgInfo, "intestines")
 
-	hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
+		hg.AddHarmToAttacker(dmgInfo, (org.intestines - oldDmg) * 2, "Intestines damage harm")
 
-	org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 2
+	org.shock = org.shock + (org.intestines - oldDmg) * 10
+	org.hungry = math.max(org.hungry - (org.intestines - oldDmg) * 50, 0)
+	if dmgInfo:IsDamageType(DMG_SLASH) then
+		org.bleed = org.bleed + (org.intestines - oldDmg) * 2
+	else
+		org.internalBleed = org.internalBleed + (org.intestines - oldDmg) * 2
+	end
 	return result
 end
 

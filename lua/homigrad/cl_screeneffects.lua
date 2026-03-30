@@ -418,15 +418,17 @@ net.Receive("PlayerSuppressed", function()
     suppression_effect_time = math.min((suppression_effect_time or 0) + 1.5 * severity, 4.0)
 
     -- New effects are now based on the total accumulated suppression
-    suppression_chromatic_aberration = _G.suppression_severity * 0.5 -- Reduced
+    suppression_chromatic_aberration = _G.suppression_severity * 0.1 -- Reduced
 
     suppression_dof = _G.suppression_severity * 0.75 -- Increased
     suppression_vignette = _G.suppression_severity * 50
 
     if severity > 0.8 then -- Only for close bullets
-        suppression_dirt = math.min(severity * 2.5, 1.0) -- Apply dirty lens effect if the shot is close
+        suppression_dirt = math.min(severity * 0.5, 1.0) -- Apply dirty lens effect if the shot is close
     else
         suppression_dirt = 0
+    damage_blur_time = 0
+    damage_blur_time = 0
     end
 
     damage_blur_time = suppression_dof
@@ -460,9 +462,7 @@ net.Receive("PlayerSuppressed", function()
     end
 end)
 
-net.Receive("PlayerTookDamage", function()
-    damage_fade_time = 1 -- Time for the red fade
-end)
+
 
 net.Receive("headtrauma_flash", function()
     local pos = net.ReadVector()
@@ -490,7 +490,6 @@ end)
 
 net.Receive("hg_CancelScreenEffects", function()
     suppression_fade_time = 0
-    damage_fade_time = 0
 end)
 
 local tinnitus_sound
@@ -520,26 +519,25 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_chromatic_aberration > 0 then
-        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.5)
+        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.1)
     end
 
     if suppression_dirt > 0 then
-        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.5)
+        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.1)
     end
 
     if suppression_fade_time > 0 then
-        suppression_fade_time = math.max(suppression_fade_time - FrameTime() / math.max(1, _G.suppression_severity or 1), 0)
-        local fade_alpha = 255 * suppression_fade_time
-        surface.SetDrawColor(0, 0, 0, fade_alpha)
+        suppression_fade_time = math.max(suppression_fade_time - FrameTime() * 1.5, 0)
+        local fade_alpha = 150 * suppression_fade_time
+        surface.SetDrawColor(255, 0, 0, fade_alpha)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
+
+		local black_fade_alpha = 255 * suppression_fade_time
+        surface.SetDrawColor(0, 0, 0, black_fade_alpha)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
-    if damage_fade_time > 0 then
-        damage_fade_time = math.max(damage_fade_time - FrameTime() * 2, 0) -- Faster fade
-        local fade_alpha = 150 * damage_fade_time
-        surface.SetDrawColor(255, 0, 0, fade_alpha)
-        surface.DrawRect(0, 0, ScrW(), ScrH())
-    end
+
 
     damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.3, 0)
     if show_red_trauma_time > 0 then -- normal damage
@@ -705,7 +703,6 @@ _G.stopthings = function()
     suppression_dof = 0
     suppression_vignette = 0
     suppression_dirt = 0
-    damage_blur_time = 0
 
 	lply.tinnitus = 0
 	
@@ -798,7 +795,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     local c_intensity = 0
     c_intensity = c_intensity + (pain / 100)
     c_intensity = c_intensity + (suppression * 2.5) -- Increased intensity
-    c_intensity = c_intensity + (adrenaline * 2.0) -- Increased intensity
+    c_intensity = c_intensity + (adrenaline * 5.0) -- Increased intensity
     c_intensity = c_intensity + (fear * 1.5) -- Increased intensity
     if c_intensity > 0 then
         local args = {
@@ -808,7 +805,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
 
     -- Vignette
-    local vignette_intensity_target = 0
     vignette_intensity_target = vignette_intensity_target + (fear * 5)
     vignette_intensity_target = vignette_intensity_target + (suppression * 15)
     vignette_intensity_lerped = Lerp(FrameTime() * 2, vignette_intensity_lerped, vignette_intensity_target)
@@ -844,9 +840,8 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
 
     -- Flinching
-    if suppression > 0.1 or pain > 10 then
-        local punch = Angle(math.Rand(-2, 2) * suppression, math.Rand(-2, 2) * suppression, math.Rand(-1, 1) * suppression) -- Reduced intensity
-        punch = punch + Angle(math.Rand(-1, 1) * (pain / 80), math.Rand(-1, 1) * (pain / 80), 0) -- Reduced intensity
+    if pain > 10 then
+        local punch = Angle(math.Rand(-1, 1) * (pain / 320), math.Rand(-1, 1) * (pain / 320), 0) -- Reduced intensity
         ViewPunch(punch)
     end
     if suppression_effect_time > 0 then
@@ -867,7 +862,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
             surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
         end
 
-        -- Grain/Pixelation
+        --[[ Grain/Pixelation
         if _G.suppression_severity > 0.5 then
             local grain_intensity = (_G.suppression_severity - 0.5) * 2 -- scale from 0 to 1
             render.UpdateScreenEffectTexture()
@@ -886,7 +881,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
         
             render.SetMaterial(grainMat)
             render.DrawScreenQuad()
-        end
+        end]]
     end
 	if homigrad_damage_convar:GetBool() then 
         local org = lply.organism
@@ -948,11 +943,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 	end
 
-	if suppression_effect_time > 0 then
+	--[[if suppression_effect_time > 0 then
 		suppression_effect_time = math.max(suppression_effect_time - FrameTime(), 0)
 		local severity_multiplier = suppression_severity
 		DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
-	end
+	end]]
 
 	if org.blindness or amtflashed >= 0.8 then
 		local blindness = ((org.blindness and math.Round(org.blindness) == 0) or amtflashed >= 0.8) and 0 or (org.blindness)
@@ -1076,7 +1071,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     local has_pulse = org.pulse and org.pulse > 0
     local last_sound_change = 0
 
-    if is_critical and has_pulse and not org.heartstop and lply:Alive() then
+        if is_critical and has_pulse and not org.heartstop and (lply:Alive() or org.otrub) then
         local volume = (org.incapacitated and not org.critical) and 0.4 or 1.0
         local sound_to_play = (org.consciousness or 1) > 0.4 and "criticalloop.ogg" or "criticalloop-unconscious.ogg"
 
@@ -1558,7 +1553,7 @@ hook.Add("Post Post Processing", "CustomEffects", function()
     local org = ply.organism
     if not org then return end
 
-	local vignette_intensity = 0
+	vignette_intensity = vignette_intensity or 0
 	local saturation = 1
 	local wave_effect_active = false
 

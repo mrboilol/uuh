@@ -316,7 +316,7 @@ end)
 util.AddNetworkString("hg_bloodimpact")
 --util.AddNetworkString("blood particle explode")
 util.AddNetworkString("bloodsquirt")
-util.AddNetworkString("hg_skull_destroyed_effect")
+--util.AddNetworkString("hg_skull_destroyed_effect")
 
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"Toggle developer mode (enables damage traces)",0,1)
 

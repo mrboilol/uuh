@@ -18,8 +18,8 @@ module[2] = function(owner, org, timeValue)
         org.hungryDmgCd = org.hungryDmgCd or 0
         if org.alive and org.hungryDmgCd < CurTime() and org.hungry > 45 then
             //org.owner:Notify(table.Random(veryPharse),20,"hungry",6,nil,colorRed)
-            org.painadd = org.painadd + 25 * (org.hungry/45)
-            org.hungryDmgCd = CurTime() + (math.random(40,55) - (org.hungry/5.5))
+                        org.painadd = org.painadd + 25 * (org.hungry/45) * (1 - (org.stomach + org.intestines) * 0.4)
+            org.hungryDmgCd = CurTime() + (math.random(120,180) - (org.hungry/5.5))
             //owner:TakeDamage(5,owner,owner)
             if org.hungry > 80 then
                 org.stomach = math.min(org.stomach + 0.1,1)
@@ -48,8 +48,11 @@ module[2] = function(owner, org, timeValue)
 
     if org.satiety == 0 then return end
 
-    org.satiety = min(max(org.satiety - timeValue * 0.5, 0), 100)
-    org.blood = min(org.blood + timeValue * (org.satiety/10) , 5000)
-    org.regeneratehp = (!((org.regeneratehp or 0) >= 1) and min( (org.regeneratehp or 0) + timeValue * (org.satiety/100), 1)) or 0
+    local stomach_multiplier = org.stomach >= 1 and 0.1 or 1
+    local intestine_multiplier = org.intestines >= 1 and 2 or 1
+
+    org.satiety = min(max(org.satiety - timeValue * 0.5 * intestine_multiplier, 0), 100)
+    org.blood = min(org.blood + timeValue * (org.satiety/10) * stomach_multiplier, 5000)
+    org.regeneratehp = (!((org.regeneratehp or 0) >= 1) and min( (org.regeneratehp or 0) + timeValue * (org.satiety/100) * stomach_multiplier, 1)) or 0
     owner:SetHealth(min(owner:Health() + org.regeneratehp,100))
 end

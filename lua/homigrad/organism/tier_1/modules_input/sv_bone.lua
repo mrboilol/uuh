@@ -90,7 +90,10 @@ local function legs(org, bone, dmg, dmgInfo, key, boneindex, dir, hit, ricochet)
 	if dmg < 0.7 then return 0 end
 	if dmg < 1 and !dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) then return 0 end
 
-	if org.isPly and !org[key.."amputated"] then org.just_damaged_bone = CurTime() end
+	    if org.isPly and !org[key.."amputated"] then org.just_damaged_bone = CurTime() end
+	
+	org.bleed = org.bleed + (org[key] - oldDmg) * 0.5
+	org.painadd = org.painadd + (org[key] - oldDmg) * 20
 	
 	if dmg >= 1 and (!dmgInfo:IsDamageType(DMG_CLUB+DMG_CRUSH+DMG_FALL) or math.random(3) != 1) then
 		org[key] = 1

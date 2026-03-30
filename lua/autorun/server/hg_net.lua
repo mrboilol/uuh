@@ -1,1 +1,5 @@
 util.AddNetworkString("PlayerSuppressed")
+util.AddNetworkString("hg_CancelScreenEffects")
+util.AddNetworkString("headtrauma_flash")
+util.AddNetworkString("hg_PlayTinnitus")
+util.AddNetworkString("hg_skull_destroyed_effect")
