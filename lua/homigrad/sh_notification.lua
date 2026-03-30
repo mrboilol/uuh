@@ -295,9 +295,10 @@ if CLIENT then
 
 				local txt = utf8.sub(utf8.force(msg), 1, click)
 
+				if not clr or not clr.g then clr = Color(255,255,255) end
 				coloruse.r = clr.r
 				coloruse.g = math.min(math.Clamp(((90 - org.pain) / 90) * 255, 0, 255), clr.g)
-				coloruse.b = math.min(math.Clamp(((90 - org.pain) / 90) * 255, 0, 255), clr.g)
+				coloruse.b = math.min(math.Clamp(((90 - org.pain) / 90) * 255, 0, 255), clr.b)
 
 				if (org.otrub or !lply:Alive()) then
 					if not last_message then

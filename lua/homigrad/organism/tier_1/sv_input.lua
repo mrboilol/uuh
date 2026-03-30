@@ -1453,12 +1453,13 @@ local function velocityDamage(ent, data)
 	if bonetohitgroup[bonename] ~= nil then hitgroup = bonetohitgroup[bonename] end
 	if RagdollDamageBoneMul[hitgroup] then dmgInfo:ScaleDamage(RagdollDamageBoneMul[hitgroup]) end
 
+    local org = ent.organism
     local damageStack = dmg * 20
     if hitgroup then
         org.dmgstack = org.dmgstack or {}
         org.dmgstack[hitgroup] = org.dmgstack[hitgroup] or {}
         local mul = (org.dmgstack[hitgroup][3] or 0) + 1
-        org.dmgstack[hitgroup][1] = ((org.dmgstack[hitgroup][2] and (ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) > CurTime()) and ent.organism.dmgstack[hitgroup][1] * ((ent.organism.dmgstack[hitgroup][2] + 0.05 * mul) - CurTime()) / (0.05 * mul) or 0) + damageStack * mul
+        org.dmgstack[hitgroup][1] = ((org.dmgstack[hitgroup][2] and (org.dmgstack[hitgroup][2] + 0.05 * mul) > CurTime()) and org.dmgstack[hitgroup][1] * ((org.dmgstack[hitgroup][2] + 0.05 * mul) - CurTime()) / (0.05 * mul) or 0) + damageStack * mul
         org.dmgstack[hitgroup][2] = CurTime()
         org.dmgstack[hitgroup][3] = (org.dmgstack[hitgroup][3] or 0) + damageStack / 500
 
@@ -1469,8 +1470,6 @@ local function velocityDamage(ent, data)
             end
         end
     end
-
-	local org = ent.organism
 	if org.godmode then return end
 	org.fearadd = org.fearadd + dmg * 0.5
 

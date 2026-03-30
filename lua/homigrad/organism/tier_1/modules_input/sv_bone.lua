@@ -349,20 +349,17 @@ input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricoch
 	
 	org.shock = org.shock + (dmg > 1 and 50 or dmg * 10)
 
-	if org.skull == 1 then
-		if org.isPly then
-			//org.owner:Notify(huyasd["skull"],true,"skull",4)
-		end
+	    if org.skull == 1 and oldDmg < 1 then
+        org.owner:EmitSound("physics/flesh/flesh_squash.wav", 100, 100)
 
-		--[[if dir then
-			net.Start("hg_bloodimpact")
-			net.WriteVector(dmgInfo:GetDamagePosition())
-			net.WriteVector(dir / 10)
-			net.WriteFloat(3)
-			net.WriteInt(1,8)
-			net.Broadcast()
-		end--]]
-	end
+        if dir then
+            net.Start("hg_skull_destroyed_effect")
+            net.WriteVector(dmgInfo:GetDamagePosition())
+            net.WriteVector(dir)
+            net.WriteEntity(org.owner)
+            net.SendPVS(dmgInfo:GetDamagePosition())
+        end
+    end
 
 	org.disorientation = org.disorientation + (isCrush(dmgInfo) and dmg * 2 or dmg * 2)
 

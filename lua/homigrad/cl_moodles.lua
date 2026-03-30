@@ -280,6 +280,7 @@ net.Receive("Moodle_Remove", function()
 end)
 
 hook.Add("HUDPaint", "Moodle_Draw", function()
+    if not GetConVar("hg_sidemoodles"):GetBool() then return end
     local mx, my = gui.MouseX(), gui.MouseY()
     local ply = LocalPlayer()
     if not IsValid(ply) or not ply:Alive() then 

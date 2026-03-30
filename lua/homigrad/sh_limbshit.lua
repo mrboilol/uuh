@@ -91,30 +91,30 @@ end
 -- ===== CONFIGURATION =====
 local HUD = {
 	enabled = true,
-	base_x = nil,
-	base_y = nil,
+	base_x = 150, -- Top-left position
+	base_y = 150, -- Top-left position
 	
 	limb_offsets = {
-		head =        { x = 0,   y = -80 },
+		head =        { x = 0,   y = -55 },
 		torso =       { x = 0,   y = 0 },
-		right_arm =   { x = 60,   y = 0 },
-		left_arm =    { x = -60,   y = 0 },
-		right_leg =   { x = 40,   y = 80 },
-		left_leg =    { x = -40,   y = 80 },
+		right_arm =   { x = 45,  y = -5 },
+		left_arm =    { x = -45, y = -5 },
+		right_leg =   { x = 25,  y = 65 },
+		left_leg =    { x = -25, y = 65 },
 	},
 	
 	limb_scale = {
-		head =        { w = 40, h = 40 },
-		torso =       { w = 50, h = 70 },
-		right_arm =   { w = 20, h = 60 },
-		left_arm =    { w = 20, h = 60 },
-		right_leg =   { w = 25, h = 70 },
-		left_leg =    { w = 25, h = 70 },
+		head =        { w = 50, h = 50 },
+		torso =       { w = 60, h = 80 },
+		right_arm =   { w = 25, h = 75 },
+		left_arm =    { w = 25, h = 75 },
+		right_leg =   { w = 30, h = 85 },
+		left_leg =    { w = 30, h = 85 },
 	},
 	
 	sprite_visibility = 100,
 	always_show_limbs = false,
-	show_damage_percent = false,
+	show_damage_percent = true, -- Changed to true
 	limb_fade_speed = 3.0,
 }
 
@@ -154,15 +154,7 @@ local function draw_sprites()
     sway_offset_y = Lerp(FrameTime() * 5, sway_offset_y, angle_diff_p * 2)
     sway_rotation = Lerp(FrameTime() * 5, sway_rotation, -angle_diff_y * 1)
 	
-	local sideMoodles = GetConVar("hg_sidemoodles"):GetBool()
-
-	if sideMoodles then
-		HUD.base_x = 100
-		HUD.base_y = ScrH() / 2
-	else
-		if HUD.base_x == nil then HUD.base_x = ScrW() - 150 end
-		HUD.base_y = ScrH() / 2
-	end
+	
 	
 	local org = ply.organism
 	local base_x = HUD.base_x
@@ -233,8 +225,8 @@ local function draw_sprites()
 		local x = base_x + ofs.x + sway_offset_x
 		local y = base_y + ofs.y + sway_offset_y
 
-        if limb.name == pain_source_limb and max_pain > 0.5 then
-            local shake_intensity = math.min(max_pain * 5, 10)
+        if limb.name == pain_source_limb and max_pain > 0.1 then -- Lowered threshold
+            local shake_intensity = math.min(max_pain * 10, 15) -- Increased intensity and cap
             x = x + math.random(-shake_intensity, shake_intensity)
             y = y + math.random(-shake_intensity, shake_intensity)
         end
@@ -271,6 +263,15 @@ local function draw_sprites()
             { x = cx + x4 * c - y4 * s, y = cy + x4 * s + y4 * c }
         }
         surface.DrawPoly(poly)
+
+		if HUD.show_damage_percent then
+			local dmg_percent = math_floor(dmg * 100)
+			local label = limb.label
+			
+			-- Draw label and damage percentage
+			local text = label .. "\n" .. dmg_percent .. "%"
+			draw_SimpleText(text, "Default", x + width / 2, y + height / 2, Color(255, 255, 255, alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
+		end
 
 	end
 end

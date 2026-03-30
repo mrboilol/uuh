@@ -1,10 +1,10 @@
 if SERVER then AddCSLuaFile() end
 if not hg.fear_thoughts then
     hg.fear_thoughts = {
-        "I can't hold on!",
-        "My hands are shaking too much!",
-        "It slipped!",
-        "I'm losing my grip!",
+        "Fuck fuck fuck fuck!",
+        "Fuck it slipped!",
+        "Shit- I let it go...",
+        "Damn it!",
     }
 end
 if not hg.suicide_thoughts then
@@ -814,10 +814,10 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
     if org and (org.berserk or 0) == 0 then -- Don't drop if berserk
         local stamina = org.stamina and org.stamina[1] or 100
         local fear = org.fear or 0
-        local tired_threshold = 30 -- drop if stamina is below this
+        local tired_threshold = 20 -- Lowered threshold
         if stamina < tired_threshold then
-            local drop_chance = ((tired_threshold - stamina) / tired_threshold) * 0.05 -- max 5% chance when stamina is 0
-            drop_chance = drop_chance + (fear * 0.05) -- add up to 5% chance from fear
+            local drop_chance = ((tired_threshold - stamina) / tired_threshold) * 0.02 -- max 2% chance when stamina is 0
+            drop_chance = drop_chance + (fear * 0.10) -- add up to 10% chance from fear
             if math.random() < drop_chance then
                 owner:DropWeapon(self)
                 owner:Notify(hg.fear_thoughts[math.random(#hg.fear_thoughts)], 10, "melee_drop", 0, nil, Color(200, 200, 200, 255))

@@ -48,7 +48,7 @@ local tips = {
     "Go get yo knife go get yo knife...",
     "sometimes i dream about cheese.",
     "RDM RDM RDM RDM RDM RDM RDM RDM",
-    "go play terraria"
+    "go play terraria",
     "Mannitol can bring back braindead people, unless their brains were blown out."
 }
 

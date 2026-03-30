@@ -817,7 +817,7 @@ function SWEP:FireBullet()
 				local dot = aimDir:Dot(toPlayer)
 
 				if dot > 0.98 then -- Player is in the path of the bullet
-					local distToPath = (eyePos - bullet.Src):Cross(aimDir).Length
+					local distToPath = (eyePos - bullet.Src):Cross(aimDir):Length()
 					                    local suppression_range = 128 + (bullet.Diameter or 1) * 10
                     if distToPath < suppression_range then -- Bullet is close to the player
                         local severity = math.max(0, 1 - (distToPath / suppression_range))

@@ -1599,24 +1599,7 @@ hook.Add("Post Post Processing", "CustomEffects", function()
         render.DrawScreenQuad()
     end
 
-    local saturation = 1
 
-    -- Fear effects
-    local fear = org.fear or 0
-    local fear_intensity = math.Clamp(fear, 0, 1)
-
-    if fear_intensity > 0.01 then
-        -- Vignette
-        vignette_intensity = vignette_intensity + (fear_intensity * 25) -- max 25 intensity from fear
-
-        -- Grayscale
-        local fear_saturation = 1 - (fear_intensity * 0.7) -- max 70% desaturation from fear
-        saturation = math.min(saturation, fear_saturation)
-
-        -- Wave effect for high fear
-        if fear_intensity > 0.8 then
-            wave_effect_active = true
-        end
     end
 
     -- Low blood grayscale
