@@ -349,12 +349,12 @@ end )
 --that one furry game
 
 
-local painMat = Material("effects/shaders/zb_pain")
+local painMat = Material("effects/shaders/zb_grain")
 local noiseMat = Material("effects/shaders/zb_grainwhite")
-local vignetteMat = Material("effects/shaders/merc_vignette")
+local vignetteMat = Material("effects/shaders/zb_vignette")
 local assimilationMat = Material("effects/shaders/zb_assimilation")
 local coldMat = Material("effects/shaders/zb_colda")
-local grainMat = Material("effects/shaders/zb_grainwhite")
+local grainMat = Material("effects/shaders/zb_grain2")
 local heatMat = Material("effects/shaders/zb_heat")
 local blindMat = Material("effects/shaders/zb_blind")
 local tunnelWaveMat = Material("effects/shaders/zb_tunnelwave")
