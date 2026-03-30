@@ -227,7 +227,7 @@ local function getTextTable(org)
 				end
 			end
 
-			text2 = isnumber(value) and string.sub(string.format("%f", value),1,-5) or value
+			text2 = isnumber(value) and string.sub(string.format("%f", value),1,-5) or tostring(value)
 		elseif v == 0 then
 
 		else

@@ -1599,9 +1599,6 @@ hook.Add("Post Post Processing", "CustomEffects", function()
         render.DrawScreenQuad()
     end
 
-
-    end
-
     -- Low blood grayscale
     local blood_val = org.blood or 5000
     
