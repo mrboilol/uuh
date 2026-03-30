@@ -76,7 +76,7 @@ if (CLIENT) then
         return scrambled_text
     end
 
-    draw.SimpleText = function(text, font, x, y, color, xalign, yalign)
+    --[[    draw.SimpleText = function(text, font, x, y, color, xalign, yalign)
         local ply = LocalPlayer()
         local brain_damage = 0
         if IsValid(ply) and ply.organism and ply.organism.brain then
@@ -85,5 +85,5 @@ if (CLIENT) then
 
         local modified_text = scramble_text(text, brain_damage)
         original_draw_simpletext(modified_text, font, x, y, color, xalign, yalign)
-    end
+    end--]]
 end

@@ -672,7 +672,7 @@ function SWEP:SecondaryAttack()
     SpawnBalloons( self.CurrentAngryBird:GetPos(), ply, tr.Entity )
 end
 
-function SWEP:PrimaryAttack()
+function SWEP:PrimaryShoot()
     if self:Ammo1() < 1 then return end
 
     self:SetNextPrimaryFire( CurTime() + 2 )

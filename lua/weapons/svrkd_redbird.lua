@@ -553,14 +553,7 @@ SWEP.DrawCrosshair = true
 
 SWEP.ActiveRed = nil
 
-function SWEP:PrimaryAttack()
-    if self:Ammo1() < 1 then
-        return
-    end
-
-    self:SetNextPrimaryFire(CurTime() + 2)
-    self:TakePrimaryAmmo(1)
-
+function SWEP:PrimaryShoot()
     self:EmitSound("svrkdstuff/red_ready.wav")
 
     if SERVER then

@@ -416,25 +416,35 @@ net.Receive("PlayerSuppressed", function()
     _G.suppression_severity = math.min((_G.suppression_severity or 0) + severity, 2.0)
 
     local wep_damage = net.ReadFloat()
+	local dir_to_bullet = net.ReadVector()
     suppression_fade_time = math.min((suppression_fade_time or 0) + 1.0 * severity, 3.0)
     suppression_effect_time = math.min((suppression_effect_time or 0) + 1.5 * severity, 4.0)
 
     -- New effects are now based on the total accumulated suppression
     suppression_chromatic_aberration = _G.suppression_severity
 
-    suppression_dof = _G.suppression_severity * 8
+    suppression_dof = _G.suppression_severity * 2 -- Reduced intensity
     suppression_vignette = _G.suppression_severity * 15
 
-    if _G.suppression_severity > 0.6 then
-        suppression_dirt = (_G.suppression_severity - 0.6) / 1.4 -- Scaled dirt effect
+    if severity > 0.5 then
+        suppression_dirt = math.min(severity * 1.5, 1.0) -- Apply dirty lens effect if the shot is close
     else
         suppression_dirt = 0
     end
 
     damage_blur_time = suppression_dof
+	_G.suppression_shake = severity
 
     -- Flinching based on incoming severity to avoid excessive shake
-    local punch = Angle(math.Rand(-5, 5) * severity, math.Rand(-5, 5) * severity, math.Rand(-2, 2) * severity)
+	local eye_angles = LocalPlayer():EyeAngles()
+	local forward = eye_angles:Forward()
+	local right = eye_angles:Right()
+	local up = eye_angles:Up()
+
+	local pitch = -dir_to_bullet:Dot(up) * 10 * severity
+	local yaw = -dir_to_bullet:Dot(right) * 10 * severity
+
+    local punch = Angle(pitch, yaw, math.Rand(-2, 2) * severity)
     ViewPunch(punch)
 
     -- Ragdoll on high suppression and damage
@@ -471,6 +481,12 @@ net.Receive("hg_MeleeHeadViewpunch", function()
     local dir = net.ReadVector()
     local punch = Angle(dir.y * 10, dir.x * -10, 0)
     ViewPunch(punch)
+end)
+
+hook.Add("Think", "hg_suppression_shake_decay", function()
+    if _G.suppression_shake and _G.suppression_shake > 0 then
+        _G.suppression_shake = math.max(0, _G.suppression_shake - FrameTime() * 2.0)
+    end
 end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
@@ -658,6 +674,15 @@ local function stopthings()
 	tempLerp = 36.6
 	consciousnessLerp = 1
 
+    suppression_fade_time = 0
+    suppression_effect_time = 0
+    _G.suppression_severity = 0
+    suppression_chromatic_aberration = 0
+    suppression_dof = 0
+    suppression_vignette = 0
+    suppression_dirt = 0
+    damage_blur_time = 0
+
 	lply.tinnitus = 0
 	
 	--[[if IsValid(PainStation) then
@@ -747,9 +772,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
     -- Chromatic Aberration
     local c_intensity = 0
     c_intensity = c_intensity + (pain / 100)
-    c_intensity = c_intensity + (suppression * 0.5)
-    c_intensity = c_intensity + (adrenaline * 0.3)
-    c_intensity = c_intensity + (fear * 0.2)
+    c_intensity = c_intensity + (suppression * 2.5) -- Increased intensity
+    c_intensity = c_intensity + (adrenaline * 1.2) -- Increased intensity
+    c_intensity = c_intensity + (fear * 1.0) -- Increased intensity
     if c_intensity > 0 then
         local args = {
             aberration = c_intensity
@@ -773,7 +798,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     if blood < 4000 then
         desaturation_intensity = math.max(desaturation_intensity, 1 - (blood / 4000))
     end
-    desaturation_intensity = math.max(desaturation_intensity, fear * 0.5)
+    desaturation_intensity = math.max(desaturation_intensity, fear * 2.0) -- Increased intensity
     if pain > 50 then
         desaturation_intensity = math.max(desaturation_intensity, (pain - 50) / 50)
     end
@@ -921,9 +946,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		suppression_effect_time = math.max(suppression_effect_time - FrameTime(), 0)
 		local severity_multiplier = suppression_severity
 		DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
-		local curTime = CurTime()
-		local wobble = math.sin(curTime * (10 + 5 * severity_multiplier)) * (0.5 * severity_multiplier)
-		ViewPunch(Angle(wobble, wobble, wobble))
 	end
 
 	if org.blindness or amtflashed >= 0.8 then
@@ -1523,6 +1545,7 @@ local fatman = {
 }
 
 hook.Add("Post Post Processing", "CustomEffects", function()
+    local suppression_vignette = 0
     local ply = lply
     if not IsValid(ply) or not ply:Alive() then return end
 

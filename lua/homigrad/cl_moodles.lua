@@ -3,7 +3,7 @@
 if not CLIENT then return end
 
 CreateConVar("hg_showothermoodle", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Show moodles of other players above their head", 0, 1)
-CreateConVar("hg_sidemoodles", "1", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Show moodles on the side of the screen", 0, 1)
+CreateConVar("hg_sidemoodles", "0", {FCVAR_ARCHIVE, FCVAR_REPLICATED}, "Show moodles on the side of the screen", 0, 1)
 
 local DEBUG_COLOR_CL_ADD = Color(0, 255, 0)
 local DEBUG_COLOR_CL_REMOVE = Color(255, 0, 0)

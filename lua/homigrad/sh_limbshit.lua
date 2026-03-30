@@ -55,7 +55,7 @@ local function getLimbColor(limb, org, is_otrub)
     end
 
     -- Orange for dislocations, arterial bleeding, or near-breaking
-    if limb.dislocation or limb.artery > 0 or (limb.dmg > 0.8 and limb.dmg < 1) then
+    if limb.dislocation or limb.artery > 0 then
         return Color(255, 165, 0, 255)
     end
 
@@ -95,21 +95,21 @@ local HUD = {
 	base_y = 150, -- Top-left position
 	
 	limb_offsets = {
-		head =        { x = 0,   y = -55 },
+		head =        { x = 0,   y = -75 },
 		torso =       { x = 0,   y = 0 },
-		right_arm =   { x = 45,  y = -5 },
-		left_arm =    { x = -45, y = -5 },
-		right_leg =   { x = 25,  y = 65 },
-		left_leg =    { x = -25, y = 65 },
+		right_arm =   { x = 50,  y = 0 },
+		left_arm =    { x = -50, y = 0 },
+		right_leg =   { x = 15,  y = 95 },
+		left_leg =    { x = -15, y = 95 },
 	},
 	
 	limb_scale = {
-		head =        { w = 50, h = 50 },
-		torso =       { w = 60, h = 80 },
-		right_arm =   { w = 25, h = 75 },
-		left_arm =    { w = 25, h = 75 },
-		right_leg =   { w = 30, h = 85 },
-		left_leg =    { w = 30, h = 85 },
+		head =        { w = 60, h = 60 },
+		torso =       { w = 70, h = 95 },
+		right_arm =   { w = 30, h = 90 },
+		left_arm =    { w = 30, h = 90 },
+		right_leg =   { w = 35, h = 100 },
+		left_leg =    { w = 35, h = 100 },
 	},
 	
 	sprite_visibility = 100,
@@ -225,11 +225,7 @@ local function draw_sprites()
 		local x = base_x + ofs.x + sway_offset_x
 		local y = base_y + ofs.y + sway_offset_y
 
-        if limb.name == pain_source_limb and max_pain > 0.1 then -- Lowered threshold
-            local shake_intensity = math.min(max_pain * 10, 15) -- Increased intensity and cap
-            x = x + math.random(-shake_intensity, shake_intensity)
-            y = y + math.random(-shake_intensity, shake_intensity)
-        end
+
 		
 		local width = scale.w
 		local height = scale.h

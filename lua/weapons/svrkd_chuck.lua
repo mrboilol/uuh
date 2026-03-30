@@ -552,7 +552,7 @@ SWEP.SlotPos = 3
 SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
-function SWEP:PrimaryAttack()
+function SWEP:PrimaryShoot()
     if self:Ammo1() < 1 then
         return
     end

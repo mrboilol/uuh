@@ -291,7 +291,7 @@ SWEP.Weight = 50
 -- Tracking variable
 SWEP.LastBird = nil
 
-function SWEP:PrimaryAttack()
+function SWEP:PrimaryShoot()
     if self:Ammo1() < 1 then return end
     self:SetNextPrimaryFire(CurTime() + 1.2)
     self:TakePrimaryAmmo(1)

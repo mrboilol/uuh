@@ -316,6 +316,7 @@ end)
 util.AddNetworkString("hg_bloodimpact")
 --util.AddNetworkString("blood particle explode")
 util.AddNetworkString("bloodsquirt")
+util.AddNetworkString("hg_skull_destroyed_effect")
 
 local hg_developer = ConVarExists("hg_developer") and GetConVar("hg_developer") or CreateConVar("hg_developer",0,FCVAR_SERVER_CAN_EXECUTE,"Toggle developer mode (enables damage traces)",0,1)
 
@@ -770,7 +771,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 		end
 	--end
 
-	if inputHole and #inputHole > 0 and dmgInfo:IsDamageType(DMG_BULLET+DMG_BUCKSHOT) then
+	if inputHole and #inputHole > 0 then
 		ent.bloodamt2 = ent.bloodamt2 or 0
 		ent.bloodamt2 = ent.bloodamt2 + 1
 
@@ -1017,7 +1018,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			end
 			
 			if IsValid(rag) then
-				if !rag.bloodsquirted and !rag.headexploded and (hitgroup == HITGROUP_HEAD) and (bit.band(dmgtype, DMG_BULLET + DMG_BUCKSHOT) > 0) and math.random(4) == 1 and org.pulse > 30 then
+				if !rag.bloodsquirted and !rag.headexploded and (hitgroup == HITGROUP_HEAD) and math.random(4) == 1 and org.pulse > 30 then
 					rag.bloodsquirted = true
 
 					net.Start("bloodsquirt")

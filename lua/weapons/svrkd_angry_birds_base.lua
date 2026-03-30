@@ -1,3 +1,5 @@
+SWEP.Base = "homigrad_base"
+
 if SERVER then
     function MakeHeavyThrowable(ent, owner, damage, force)
         if not IsValid(ent) or not IsValid(owner) then return end

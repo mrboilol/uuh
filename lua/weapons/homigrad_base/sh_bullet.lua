@@ -821,9 +821,13 @@ function SWEP:FireBullet()
 					                    local suppression_range = 128 + (bullet.Diameter or 1) * 10
                     if distToPath < suppression_range then -- Bullet is close to the player
                         local severity = math.max(0, 1 - (distToPath / suppression_range))
+						local closest_point = bullet.Src + aimDir * ((eyePos - bullet.Src):Dot(aimDir))
+						local dir_to_bullet = (closest_point - eyePos):GetNormalized()
+
                         net.Start("PlayerSuppressed")
                         net.WriteFloat(severity)
                         net.WriteFloat(bullet.Damage)
+						net.WriteVector(dir_to_bullet)
                         net.Send(ply)
                     end
 				end

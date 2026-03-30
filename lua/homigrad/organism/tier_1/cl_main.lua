@@ -152,6 +152,7 @@ local function remove_imgs()
 end
 
 local disorientationLerp = 0
+local lerpedToyTownHeight = 0
 
 hook.Add("Player Spawn", "screenshot_game", function(ply)
 	if OverrideSpawn then return end
@@ -497,7 +498,9 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local potato = hg_potatopc:GetBool()
 	if (k1 > 0) or (k2 > 0) or (k3 > 0) or brain > 0 then
 		if !potato then
-			DrawToyTown(2, (k3 * 3 + k2 * 1 + brain * 10) * ScrH() / 2)
+			local targetToyTownHeight = (k3 * 1.5 + k2 * 0.5 + brain * 5) * ScrH() / 2
+			lerpedToyTownHeight = Lerp(FrameTime() * 2, lerpedToyTownHeight, targetToyTownHeight)
+			DrawToyTown(2, lerpedToyTownHeight)
 		else
 
 		end
