@@ -97,6 +97,7 @@ local bonetohitgroup = {
 }
 
 local hitgrouptolimb = {
+	[HITGROUP_HEAD] = "head",
 	[HITGROUP_LEFTLEG] = "lleg",
 	[HITGROUP_RIGHTLEG] = "rleg",
 	[HITGROUP_LEFTARM] = "larm",
@@ -457,6 +458,7 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 	end
 
 	if not org then return end
+	local oldConsciousness = org.consciousness
 
 	if dmgInfo:GetAttacker():GetClass() == "npc_zombie" then
 		--if not org then return end 
@@ -1144,6 +1146,21 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 			ply:AddHeadcrab(headcrabsmodels[class])
 			
 			dmgInfo:GetAttacker():Remove()
+		end
+	end
+
+	if oldConsciousness then
+		local newConsciousness = org.consciousness
+		if (oldConsciousness - newConsciousness) > 0.5 then
+			local ply = org.owner
+			if IsValid(ply) then
+				net.Start("headtrauma_flash")
+				net.WriteVector(ply:EyePos())
+				net.WriteFloat(2.5) -- More serious flash
+				net.WriteInt(30, 20)
+				net.WriteString("concussion" .. math.random(1, 4) .. ".mp3")
+				net.Send(ply)
+			end
 		end
 	end
 	

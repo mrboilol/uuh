@@ -10,6 +10,7 @@ local homigrad_damage_convar = CreateClientConVar("homigrad_damage", "0", true, 
 local concussion_effect_time = 0
 local suppression_effect_time = 0
 local concussion_dsp_set = false
+local BrainTraumaStation_name = nil
 
 local tired_sound
 local sleepy_sound
@@ -23,6 +24,19 @@ hook.Add("PlayerDeath", "StopCriticalLoopOnDeath", function(victim, inflictor, a
         criticalloop_sound = nil
         criticalloop_sound_name = nil
     end
+end)
+
+net.Receive("PlayerFlinchDirectional", function()
+    local dir = net.ReadVector()
+    local eye_angles = LocalPlayer():EyeAngles()
+    local right = eye_angles:Right()
+    local up = eye_angles:Up()
+
+    local pitch = dir:Dot(up) * 5
+    local yaw = dir:Dot(right) * 5
+
+    local punch = Angle(pitch, yaw, math.Rand(-1, 1))
+    ViewPunch(punch)
 end)
 
 
@@ -418,13 +432,13 @@ net.Receive("PlayerSuppressed", function()
     suppression_effect_time = math.min((suppression_effect_time or 0) + 7.5 * severity, 15.0) -- Longer effect time
 
     -- New effects are now based on the total accumulated suppression
-    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.01, 0.5) -- Less severe start
+    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.02, 0.7) -- More severe start, longer lasting
 
     suppression_dof = _G.suppression_severity * 1.5 -- Increased
     suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
 
     if severity > 0.5 then -- Only for close bullets
-        suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.05, 0.7) -- Less severe, apply more often
+        suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.025, 0.5) -- Less severe, apply more often
     else
         --suppression_dirt = 0
     damage_blur_time = 0
@@ -500,6 +514,7 @@ local tinnitus_sound
 
 net.Receive("hg_PlayTinnitus", function()
     local sound_name = net.ReadString()
+    local duration = net.ReadFloat()
 
     if IsValid(tinnitus_sound) then
         tinnitus_sound:Stop()
@@ -548,11 +563,11 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_chromatic_aberration > 0 then
-        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.01) -- Slower fade
+        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.005) -- Slower fade
     end
 
     if suppression_dirt > 0 then
-        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.01) -- Slower fade
+        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.5) -- Faster fade
     end
 
     if suppression_vignette > 0 then
@@ -560,7 +575,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_fade_time > 0 then
-        suppression_fade_time = math.max(suppression_fade_time - FrameTime() * 0.5, 0)
+        suppression_fade_time = math.max(suppression_fade_time - FrameTime() * 0.25, 0)
         local black_fade_alpha = 255 * suppression_fade_time
         surface.SetDrawColor(0, 0, 0, black_fade_alpha)
         surface.DrawRect(0, 0, ScrW(), ScrH())
@@ -762,6 +777,7 @@ _G.stopthings = function()
 	if IsValid(BrainTraumaStation) then
 		BrainTraumaStation:Stop()
 		BrainTraumaStation = nil
+		BrainTraumaStation_name = nil
 	end
 
 	if IsValid(BrainTraumaStation2) then
@@ -947,7 +963,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
 	if damage_blur_time > 0 then
 		damage_blur_time = math.max(damage_blur_time - FrameTime(), 0)
-		DrawMotionBlur(0.2, 0.8, 0.05)
+		-- DrawMotionBlur(0.2, 0.8, 0.05)
 	end
 	local spect = IsValid(lply:GetNWEntity("spect")) and lply:GetNWEntity("spect")
 	local ply = lply:Alive() and lply or spect
@@ -973,7 +989,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		DrawMotionBlur(0.2 * severity_multiplier, 0.8 * severity_multiplier, 0.05)
 		local curTime = CurTime()
 		local wobble = math.sin(curTime * (10 + 5 * severity_multiplier)) * (0.5 * severity_multiplier)
-		ViewPunch(Angle(wobble, wobble, wobble))
+		-- ViewPunch(Angle(wobble * 0.2, wobble * 0.2, wobble * 0.2))
 	else
 		if concussion_dsp_set then
 			lply:SetDSP(0)
@@ -1016,7 +1032,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
         end
         local curTime = CurTime()
         local wobble = math.sin(curTime * (10 + 15 * severity_multiplier)) * (0.5 * severity_multiplier) -- More intense wobble
-        ViewPunch(Angle(wobble * 2, wobble, wobble * 0.5))
+        -- ViewPunch(Angle(wobble * 0.2, wobble * 0.1, wobble * 0.1))
     end
 
 	if (org.consciousness < 0.7) then
@@ -1222,8 +1238,12 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		end
 	end
 
-	if (org.consciousness or 0) < 1 then
+	if (org.consciousness or 0) < 1 or (org.concussion_severity or 0) > 0 then
 		local consciousness = 1 - consciousnessLerp
+		if (org.brain or 0) > 0.055 then consciousness = consciousness * 2 end
+        if (org.concussion_severity or 0) > 0 then
+            consciousness = consciousness + (org.concussion_severity or 0) / 5
+        end
 		render.UpdateScreenEffectTexture()
 		render.UpdateFullScreenDepthTexture()
 		
@@ -1351,7 +1371,28 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//end
 	end
 
-	if brain > 0.01 then
+	if brain > 0.055 then
+		local sound_name = "sound/robotomy.ogg"
+		if not IsValid(BrainTraumaStation) or BrainTraumaStation_name ~= sound_name then
+			if IsValid(BrainTraumaStation) then
+				BrainTraumaStation:Stop()
+			end
+			sound.PlayFile(sound_name, "noblock noplay", function(station, err)
+				if IsValid(station) then
+					station:SetVolume(1)
+					station:Play()
+					BrainTraumaStation = station
+					BrainTraumaStation_name = sound_name
+					station:EnableLooping(true)
+				end
+			end)
+		end
+		-- Apply a more severe long term concussion
+		org.concussion_severity = (org.concussion_severity or 0) + 5
+		concussion_effect_time = math.max(concussion_effect_time, 30)
+		-- More visuals
+		show_some_images_time = 500
+	elseif brain > 0.01 then
 		local chooser = 1
 		for i, choose in ipairs(stations) do
 			if choose < brain then
@@ -1359,17 +1400,20 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			end
 		end
 	
-		if !IsValid(BrainTraumaStation) or choosera != chooser or BrainTraumaStation:GetState() != GMOD_CHANNEL_PLAYING then
+		local sound_name = "sound/zcitysnd/real_sonar/brainhemorrhagestage"..chooser..".mp3"
+		if !IsValid(BrainTraumaStation) or choosera != chooser or BrainTraumaStation:GetState() != GMOD_CHANNEL_PLAYING or BrainTraumaStation_name != sound_name then
 			if IsValid(BrainTraumaStation) then
-				BrainTraumaStation:Stop()
-				BrainTraumaStation = nil
-			end
+		BrainTraumaStation:Stop()
+		BrainTraumaStation = nil
+		BrainTraumaStation_name = nil
+	end
 
-			sound.PlayFile("sound/zcitysnd/real_sonar/brainhemorrhagestage"..chooser..".mp3", "noblock noplay", function(station, err)
+			sound.PlayFile(sound_name, "noblock noplay", function(station, err)
 				if IsValid(station) then
 					station:SetVolume(0)
 					station:Play()
 					BrainTraumaStation = station
+					BrainTraumaStation_name = sound_name
 					station:EnableLooping(true)
 				end
 			end)
@@ -1383,6 +1427,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		if IsValid(BrainTraumaStation) then
 			BrainTraumaStation:Stop()
 			BrainTraumaStation = nil
+			BrainTraumaStation_name = nil
 		end
 	end
 
@@ -1595,30 +1640,7 @@ hook.Add("Post Post Processing", "CustomEffects", function()
 	local saturation = 1
 	local wave_effect_active = false
 
-    -- Lobotomy Flash
-    if (org.brain or 0) > 0.1 and math.random(1, 800) == 1 then
-        if (ply.lastLobotomyFlash or 0) + 15 > CurTime() then return end
-        ply.lastLobotomyFlash = CurTime()
-        ply.lobotomyFlash = CurTime() + 0.5
-        ply.lobotomyBlur = 1
-        surface.PlaySound("lobotomy.ogg")
 
-        local random_duration = math.Rand(2.5, 5)
-        RunConsoleCommand("hg_set_blindness", tostring(random_duration))
-    end
-
-    if ply.lobotomyFlash and ply.lobotomyFlash > CurTime() then
-        local frac = (ply.lobotomyFlash - CurTime()) / 0.5
-        frac = frac * frac
-
-        local motion_blur_val = math.min(frac * (ply.lobotomyBlur or 0) * 2, 0.8)
-        DrawMotionBlur(0.4, motion_blur_val, 0.01)
-
-        ply.lobotomyBlur = math.Approach(ply.lobotomyBlur or 0, 0, FrameTime() * 2)
-
-        surface.SetDrawColor(255, 255, 255, frac * 255)
-        surface.DrawRect(0, 0, ScrW(), ScrH())
-    end
 
     -- Vomit vignette
     local vomit_vignette = org.wantToVomit and org.wantToVomit > 0.95
@@ -1689,6 +1711,37 @@ hook.Add("Post Post Processing", "CustomEffects", function()
         render.SetMaterial(vignetteMat)
         render.DrawScreenQuad()
     end
+end)
+
+local suppression_sway_intensity = 0
+local concussion_disorientation = 0
+
+hook.Add("CalcView", "SuppressionSway", function(ply, pos, angles, fov)
+    if not IsValid(ply) or not ply:Alive() then return end
+
+    local suppression = _G.suppression_severity or 0
+    suppression_sway_intensity = Lerp(FrameTime() * 1, suppression_sway_intensity, suppression)
+
+    local org = ply.organism
+    if org and (org.concussion_severity or 0) > 0 then
+        concussion_disorientation = Lerp(FrameTime() * 0.5, concussion_disorientation, org.concussion_severity / 10)
+    else
+        concussion_disorientation = Lerp(FrameTime() * 1, concussion_disorientation, 0)
+    end
+
+    if suppression_sway_intensity > 0.01 or concussion_disorientation > 0.01 then
+        local curTime = CurTime()
+        local sway_amount = (suppression_sway_intensity * 2) + (concussion_disorientation * 3)
+        angles.p = angles.p + math.sin(curTime * 0.7 + math.cos(curTime * 0.2) * 0.5) * sway_amount * 0.5
+        angles.y = angles.y + math.cos(curTime * 0.5 + math.sin(curTime * 0.3) * 0.5) * sway_amount
+        angles.r = angles.r + math.sin(curTime * 0.3) * sway_amount * 1.5
+    end
+
+    return {
+        origin = pos,
+        angles = angles,
+        fov = fov
+    }
 end)
 
 hook.Add("Think", "hg-aprilfools-fatman", function()

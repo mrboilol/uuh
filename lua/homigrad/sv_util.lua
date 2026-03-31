@@ -571,6 +571,7 @@ hook.Add("Player Think", "homigrad-dropholstered", function(ply)
 end)
 
 util.AddNetworkString( "DoPlayerFlinch" )
+util.AddNetworkString( "PlayerFlinchDirectional" )
 util.AddNetworkString("hg_HeadTrauma")
 util.AddNetworkString("hg_CancelScreenEffects")
 util.AddNetworkString("hg_PlayTinnitus")
@@ -614,29 +615,10 @@ hook.Add("ScalePlayerDamage", "FlinchPlayersOnHit", function(ply, grp, dmginfo)
             net.Send(ply)
         end
 
-        -- Flinch logic...
-        local group = nil
-        local hitpos = {
-            [HITGROUP_HEAD] = ACT_FLINCH_HEAD,
-            [HITGROUP_CHEST] = ACT_FLINCH_STOMACH,
-            [HITGROUP_STOMACH] = ACT_FLINCH_STOMACH,
-            [HITGROUP_LEFTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_l")),
-            [HITGROUP_RIGHTARM] = ply:GetSequenceActivity(ply:LookupSequence("flinch_shoulder_r")),
-            [HITGROUP_LEFTLEG] = ply:GetSequenceActivity(ply:LookupSequence("flinch_01")),
-            [HITGROUP_RIGHTLEG] = ply:GetSequenceActivity(ply:LookupSequence("flinch_02"))
-        }
-        if hitpos[grp] == nil then
-            group = ACT_FLINCH_PHYSICS
-        elseif hitpos[grp] then
-            group = hitpos[grp]
-        else
-            group = ACT_FLINCH_PHYSICS
-        end
-
-        net.Start("DoPlayerFlinch")
-        net.WriteInt(group, 32)
-        net.WriteEntity(ply)
-        net.Broadcast()
+        local dir = (ply:GetPos() - dmginfo:GetDamagePosition()):GetNormalized()
+        net.Start("PlayerFlinchDirectional")
+        net.WriteVector(dir)
+        net.Send(ply)
     end
 end)
 

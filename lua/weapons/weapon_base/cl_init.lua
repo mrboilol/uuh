@@ -109,23 +109,7 @@ end
 	Name: SWEP:ViewModelDrawn( viewModel )
 	Desc: Called straight after the viewmodel has been drawn
 -----------------------------------------------------------]]
-function SWEP:ViewModelDrawn( vm )
-	if _G.suppression_shake and _G.suppression_shake > 0 then
-		local shake_intensity = _G.suppression_shake * 0.5
-		local rand_ang = Angle(math.Rand(-1, 1) * shake_intensity, math.Rand(-1, 1) * shake_intensity, math.Rand(-1, 1) * shake_intensity)
-		local rand_pos = Vector(math.Rand(-0.1, 0.1) * shake_intensity, math.Rand(-0.1, 0.1) * shake_intensity, math.Rand(-0.1, 0.1) * shake_intensity)
 
-		for i = 0, vm:GetBoneCount() - 1 do
-			vm:ManipulateBoneAngles(i, rand_ang)
-			vm:ManipulateBonePosition(i, rand_pos)
-		end
-	else
-		for i = 0, vm:GetBoneCount() - 1 do
-			vm:ManipulateBoneAngles(i, Angle(0,0,0))
-			vm:ManipulateBonePosition(i, Vector(0,0,0))
-		end
-	end
-end
 
 --[[---------------------------------------------------------
 	Name: OnRestore

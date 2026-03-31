@@ -1,3 +1,7 @@
+local randomgovno = {
+	"Shit.. I missed...",
+	"Fuck.. I dropped it...",
+}
 --
 local CurTime = CurTime
 util.AddNetworkString("hgwep reload")

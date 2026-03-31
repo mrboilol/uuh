@@ -221,6 +221,9 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 				local severity = math.max(0, 1 - (dist / 512))
 				net.Start("PlayerSuppressed")
 				net.WriteFloat(severity)
+				net.WriteFloat(bullet.Damage)
+				net.WriteVector(dir_to_bullet)
+				net.WriteFloat(ply.organism and ply.organism.fear or 0)
 				net.Send(ply)
 			end
 		end

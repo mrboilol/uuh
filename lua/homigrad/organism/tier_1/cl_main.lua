@@ -579,10 +579,10 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 	local ent = IsValid(lply.FakeRagdoll) and lply.FakeRagdoll or lply
 
 	if otrub then
-		--[[render.PushFilterMag( TEXFILTER.ANISOTROPIC )
+		render.PushFilterMag( TEXFILTER.ANISOTROPIC )
 		render.PushFilterMin( TEXFILTER.ANISOTROPIC )
 
-		local textOtrub = "You are unconscious. "
+		local textOtrub = "OTRUB"
 		local textOtrub2 =  
 			( critical and "You can't be saved." ) or 
 			( incapacitated and "You will not get up without someone's help." ) or 
@@ -597,25 +597,15 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 
 		local parsed = markup.Parse( 
 			"<font=HomigradFontMedium>"..
-			( critical and "You're criticaly injured." or textOtrub )..
+			( textOtrub )..
 			"\n<colour=255,"..( critical and 25 or 255 )..","..( critical and 25 or 255 ) ..",255>"..
 			( textOtrub2 ).."</colour></font>" 
 		)
-		--((critical and "You can not be saved.") or 
-		--(incapacitated and "You will not get up without someone's help.") or 
-		--( "You will probably wake up in " .. (pain < 50 and "about a minute.") ) or 
-		--((pain < 100 and "about two minutes.") or "a few minutes.")) -- WTF???
-		
-		--surface.SetTextColor(255,255,255,255)
-		--surface.SetFont("HomigradFontMedium")
-		--local txtSizeX, txtSizeY = surface.GetTextSize(textOtrub)
-		--surface.SetTextPos(ScrW()/2 - (txtSizeX/2),ScrH()/1.1 - (txtSizeY/2))
-		--surface.DrawText(textOtrub)
 
 		parsed:Draw( ScrW()/2, ScrH()/1.1, TEXT_ALIGN_CENTER, nil, nil, TEXT_ALIGN_CENTER )
 		
 		render.PopFilterMag()
-		render.PopFilterMin()--]]
+		render.PopFilterMin()
 	end
 	
 	if IsValid(ent) and ent.Blinking and lply:Alive() then

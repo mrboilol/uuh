@@ -460,7 +460,15 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 
 	local just_went_uncon = not org.otrub and org.needotrub
 	local just_woke_up = not org.needotrub and org.otrub and (org.uncon_timer or 0) > 6
-	if isPly and just_went_uncon then hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) end
+	if isPly and just_went_uncon then
+		net.Start("headtrauma_flash")
+		net.WriteVector(owner:EyePos())
+		net.WriteFloat(1.5)
+		net.WriteInt(20, 20)
+		net.WriteString("headhit.mp3")
+		net.Send(owner)
+		hook.Run("HG_OnOtrub", owner); hook.Run("PlayerDropWeapon", owner) 
+	end
 	if isPly and just_woke_up then hook.Run("HG_OnWakeOtrub", owner) end
 
 	if org.partially_broken_spine_treated then

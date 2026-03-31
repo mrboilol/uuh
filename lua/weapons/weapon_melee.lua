@@ -819,7 +819,6 @@ function SWEP:Attack(owner, ent, vellen, attacktype, inattackLength)
             local drop_chance = ((tired_threshold - stamina) / tired_threshold) * 0.02 -- max 2% chance when stamina is 0
             drop_chance = drop_chance + (fear * 0.10) -- add up to 10% chance from fear
             if math.random() < drop_chance then
-                owner:DropWeapon(self)
                 owner:Notify(hg.fear_thoughts[math.random(#hg.fear_thoughts)], 10, "melee_drop", 0, nil, Color(200, 200, 200, 255))
                 self:SetInAttack(false) -- Stop the attack
                 return

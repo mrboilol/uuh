@@ -26,7 +26,4 @@ net.Receive("hg_skull_destroyed_effect", function()
         end
     end
     emitter:Finish()
-
-     org.owner:EmitSound("owfuck"..math.random(1,4)..".ogg", 100, 100)
-     org.owner:EmitSound("flesh"..math.random(1,10)..".wav", 100, 100)
 end)
