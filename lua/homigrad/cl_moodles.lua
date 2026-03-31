@@ -61,7 +61,7 @@ local VITAL_MOODLES = {
 local MOODLE_INFO = {
     ["amputation"] = { title = "Amputation", desc = "One of your limbs is missing!" },
     ["bleeding_1"] = { title = "Minor Bleeding", desc = "Blood is leaking out of you, but it should be alright." },
-    ["bleeding_2"] = { title = "Moderate Bleeding", desc = "You are losing blood, But if you are healthy then its ok." },
+    ["bleeding_2"] = { title = "Moderate Bleeding", desc = "Losing more blood than usual, this one probably wont clot." },
     ["bleeding_3"] = { title = "Severe Bleeding", desc = "Blood is leaking out of you, patch it up!" },
     ["bleeding_4"] = { title = "Catastrophic Bleeding", desc = "Why are you looking at this? Go find a bandage!" },
     ["bradycardia"] = { title = "Bradycardia", desc = "Your heart rate is low, something might be wrong..." },
@@ -368,9 +368,9 @@ hook.Add("HUDPaint", "Moodle_Draw", function()
         local id = moodle.id
         local data = moodle.data
 
-        if is_otrub and not VITAL_MOODLES[id] and not CRITICAL_MOODLES[id] then
+        --[[if is_otrub and not VITAL_MOODLES[id] and not CRITICAL_MOODLES[id] then
             if not data.remove_time then data.remove_time = CurTime() end
-        end
+        end]]
 
         local dt = CurTime() - (data.spawn or (CurTime() - 10))
 

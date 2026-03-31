@@ -415,18 +415,18 @@ net.Receive("PlayerSuppressed", function()
     local wep_damage = net.ReadFloat()
 	local dir_to_bullet = net.ReadVector()
     suppression_fade_time = math.min((suppression_fade_time or 0) + 1.0 * severity, 3.0)
-    suppression_effect_time = math.min((suppression_effect_time or 0) + 1.5 * severity, 4.0)
+    suppression_effect_time = math.min((suppression_effect_time or 0) + 4.5 * severity, 8.0)
 
     -- New effects are now based on the total accumulated suppression
-    suppression_chromatic_aberration = _G.suppression_severity * 0.1 -- Reduced
+    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.05, 1.0)
 
     suppression_dof = _G.suppression_severity * 0.75 -- Increased
-    suppression_vignette = _G.suppression_severity * 50
+    suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
 
     if severity > 0.8 then -- Only for close bullets
-        suppression_dirt = math.min(severity * 0.5, 1.0) -- Apply dirty lens effect if the shot is close
+        suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.1, 1.0) -- Apply dirty lens effect if the shot is close
     else
-        suppression_dirt = 0
+        --suppression_dirt = 0
     damage_blur_time = 0
     damage_blur_time = 0
     end
@@ -435,16 +435,16 @@ net.Receive("PlayerSuppressed", function()
     --_G.suppression_shake = severity
 
     -- Flinching based on incoming severity to avoid excessive shake
-	local eye_angles = LocalPlayer():EyeAngles()
-	local forward = eye_angles:Forward()
-	local right = eye_angles:Right()
-	local up = eye_angles:Up()
+	--local eye_angles = LocalPlayer():EyeAngles()
+	--local forward = eye_angles:Forward()
+	--local right = eye_angles:Right()
+	--local up = eye_angles:Up()
 
-	local pitch = -dir_to_bullet:Dot(up) * 10 * severity
-	local yaw = -dir_to_bullet:Dot(right) * 10 * severity
+	--local pitch = -dir_to_bullet:Dot(up) * 10 * severity
+	--local yaw = -dir_to_bullet:Dot(right) * 10 * severity
 
-    local punch = Angle(pitch, yaw, math.Rand(-2, 2) * severity)
-    ViewPunch(punch)
+    --local punch = Angle(pitch, yaw, math.Rand(-2, 2) * severity)
+    --ViewPunch(punch)
 
     -- Ragdoll on high suppression and damage
     local should_ragdoll = false
@@ -507,11 +507,7 @@ net.Receive("hg_PlayTinnitus", function()
     end
 end)
 
-hook.Add("Think", "hg_suppression_shake_decay", function()
-    if _G.suppression_shake and _G.suppression_shake > 0 then
-        _G.suppression_shake = math.max(0, _G.suppression_shake - FrameTime() * 2.0)
-    end
-end)
+
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
     if _G.suppression_severity and _G.suppression_severity > 0 then
@@ -519,11 +515,15 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_chromatic_aberration > 0 then
-        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.1)
+        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.02)
     end
 
     if suppression_dirt > 0 then
-        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.1)
+        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.02)
+    end
+
+    if suppression_vignette > 0 then
+        suppression_vignette = math.max(0, suppression_vignette - FrameTime() * 12.5)
     end
 
     if suppression_fade_time > 0 then
@@ -795,7 +795,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     local c_intensity = 0
     c_intensity = c_intensity + (pain / 100)
     c_intensity = c_intensity + (suppression * 2.5) -- Increased intensity
-    c_intensity = c_intensity + (adrenaline * 5.0) -- Increased intensity
+    c_intensity = c_intensity + (adrenaline * 10.0) -- Increased intensity
     c_intensity = c_intensity + (fear * 1.5) -- Increased intensity
     if c_intensity > 0 then
         local args = {
@@ -806,7 +806,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
     -- Vignette
     vignette_intensity_target = vignette_intensity_target + (fear * 5)
-    vignette_intensity_target = vignette_intensity_target + (suppression * 15)
     vignette_intensity_lerped = Lerp(FrameTime() * 2, vignette_intensity_lerped, vignette_intensity_target)
 
     if vignette_intensity_lerped > 0.01 then
@@ -836,7 +835,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
     -- Dirty Lens
     if suppression > 0.6 then
-        sdle.Damage(suppression * 2, math.Rand(0.5, 1), true, true)
+        sdle.Damage(suppression * 1.0, math.Rand(0.5, 1), true, true)
     end
 
     -- Flinching

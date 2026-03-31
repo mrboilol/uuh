@@ -167,10 +167,10 @@ local function SyncMoodles(ply)
         manageMoodleState(ply, "bleeding_4", true, "materials/moodles/Bleeding_4.png")
     else
         manageHierarchicalMoodle(ply, "bleeding", {
-            { threshold = 0.05, texture = "materials/moodles/Bleeding_1.png" },
-            { threshold = 0.1, texture = "materials/moodles/Bleeding_2.png" },
-            { threshold = 0.15, texture = "materials/moodles/Bleeding_3.png" },
-            { threshold = 0.2, texture = "materials/moodles/Bleeding_4.png" },
+            { threshold = 0.01, texture = "materials/moodles/Bleeding_1.png" },
+            { threshold = 0.025, texture = "materials/moodles/Bleeding_2.png" },
+            { threshold = 0.05, texture = "materials/moodles/Bleeding_3.png" },
+            { threshold = 0.065, texture = "materials/moodles/Bleeding_4.png" },
         }, bleedRate)
     end
 

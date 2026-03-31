@@ -569,14 +569,11 @@ function SWEP:PrimaryShoot()
             if not IsValid(ply) then return end
 
             self:SendWeaponAnim(ACT_VM_THROW)
-            ply:SetAnimation(PLAYER_ATTACK1)
-
-            self:EmitSound("svrkdstuff/Bubbles_fly.mp3")
-
             timer.Simple(0.2, function()
 
                 local angrybird = ents.Create("prop_physics")
                 if not IsValid(angrybird) then return end
+				angrybird:EmitSound("svrkdstuff/Bubbles_fly.mp3")
 
                 angrybird:SetPos(ply:EyePos() + ply:GetAimVector() * 128)
                 angrybird:SetAngles(ply:EyeAngles())

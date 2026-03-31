@@ -565,11 +565,10 @@ function SWEP:PrimaryShoot()
             self:SendWeaponAnim(ACT_VM_THROW)
             ply:SetAnimation(PLAYER_ATTACK1)
             
-            self:EmitSound("svrkdstuff/red_fly.wav")
-
             timer.Simple(0.2, function()
                 local angrybird = ents.Create("prop_physics")
                 if not IsValid(angrybird) then return end
+                angrybird:EmitSound("svrkdstuff/red_fly.wav")
 
                 angrybird:SetPos(ply:EyePos() + (ply:GetAimVector() * 128))
                 angrybird:SetModel("models/svrkdstuff/redbird.mdl")
