@@ -219,6 +219,7 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			if ply ~= self:GetOwner() and ply:GetPos():Distance(hitPos) < 512 then
 				local dist = ply:GetPos():Distance(hitPos)
 				local severity = math.max(0, 1 - (dist / 512))
+				local dir_to_bullet = (hitPos - ply:GetPos()):GetNormalized()
 				net.Start("PlayerSuppressed")
 				net.WriteFloat(severity)
 				net.WriteFloat(bullet.Damage)

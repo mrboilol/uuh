@@ -609,7 +609,10 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.owner:SetNetVar("arterialwounds", org.arterialwounds)
 
 		if isPly and owner:Alive() then
-			send_organism(org, owner)
+			timer.Simple(0, function()
+				if not IsValid(owner) then return end
+				send_organism(org, owner)
+			end)
 		end
 	end
 end)

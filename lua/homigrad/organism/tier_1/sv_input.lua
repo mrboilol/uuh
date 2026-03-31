@@ -1046,7 +1046,9 @@ hook.Add("EntityTakeDamage", "homigrad-damage", function(ent, dmgInfo)
 						effectdata:SetOrigin(dmgPos)
 						effectdata:SetScale(2)
 						util.Effect("BloodImpact", effectdata, true, true)
-						rag:EmitSound("owfuck"..math.random(1,4)..".ogg")
+						                        net.Start("hg_PlayPainSound")
+                        net.WriteString("owfuck"..math.random(1,4)..".ogg")
+                        net.Send(ply)
 						rag:EmitSound("flesh"..math.random(1,10)..".wav")
 					end
 

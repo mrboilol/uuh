@@ -236,11 +236,11 @@ local function SyncMoodles(ply)
         { threshold = 0.95, texture = "materials/moodles/Depression_4.png" },
     }, desensitized)
 
-    -- Clear happy moodles, as they are no longer driven by the mood system
-    manageMoodleState(ply, "happy_1", false, nil, nil, true)
-    manageMoodleState(ply, "happy_2", false, nil, nil, true)
-    manageMoodleState(ply, "happy_3", false, nil, nil, true)
-    manageMoodleState(ply, "happy_4", false, nil, nil, true)
+    -- The mood system was removed, but the happy moodles are still used in other parts of the code.
+    -- manageMoodleState(ply, "happy_1", false, nil, nil, true)
+    -- manageMoodleState(ply, "happy_2", false, nil, nil, true)
+    -- manageMoodleState(ply, "happy_3", false, nil, nil, true)
+    -- manageMoodleState(ply, "happy_4", false, nil, nil, true)
 
     -- Dislocated Spine
     local dislocated_spine_1_2 = (org.spine1dislocation or org.spine2dislocation) or ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))

@@ -413,6 +413,7 @@ local suppression_dof = 0
 local suppression_vignette = 0
 local suppression_dirt = 0
 _G.suppression_severity = 0
+_G.damage_overlay_intensity = 0
 
 local dirtMat = Material("dlenstexture/dlensmat", "noclamp")
 local chromaticMat = Material("effects/shaders/merc_chromaticaberration")
@@ -424,11 +425,11 @@ local damage_fade_time = 0
 
 net.Receive("PlayerSuppressed", function()
     local severity = net.ReadFloat()
-    _G.suppression_severity = math.min((_G.suppression_severity or 0) + severity, 2.0)
+    _G.suppression_severity = math.min(severity, 1.0)
 
     local wep_damage = net.ReadFloat()
 	local dir_to_bullet = net.ReadVector()
-    suppression_fade_time = math.min((suppression_fade_time or 0) + 1.0 * severity, 3.0)
+    suppression_fade_time = math.min(severity * 0.5, 0.8)
     suppression_effect_time = math.min((suppression_effect_time or 0) + 7.5 * severity, 15.0) -- Longer effect time
 
     -- New effects are now based on the total accumulated suppression
@@ -436,6 +437,7 @@ net.Receive("PlayerSuppressed", function()
 
     suppression_dof = _G.suppression_severity * 1.5 -- Increased
     suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
+    _G.damage_overlay_intensity = math.min((_G.damage_overlay_intensity or 0) + severity * 0.5, 1.0)
 
     if severity > 0.5 then -- Only for close bullets
         suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.025, 0.5) -- Less severe, apply more often
@@ -487,10 +489,8 @@ net.Receive("headtrauma_flash", function()
     local lply = LocalPlayer()
 	if not IsValid(lply) then return end
 	if sound ~= "" then
-		timer.Simple(0.1, function()
-			lply:EmitSound(sound)
-		end)
-	end
+			surface.PlaySound(sound)
+		end
     hg.AddFlash(lply:EyePos(), 1, pos, time, size)
 end)
 
@@ -523,6 +523,11 @@ net.Receive("hg_PlayTinnitus", function()
     if IsValid(tinnitus_sound) then
         tinnitus_sound:Play()
     end
+end)
+
+net.Receive("hg_PlayPainSound", function()
+    local sound_name = net.ReadString()
+    surface.PlaySound(sound_name)
 end)
 
 
@@ -580,23 +585,29 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
+    if _G.damage_overlay_intensity > 0 then
+        _G.damage_overlay_intensity = math.max(0, _G.damage_overlay_intensity - FrameTime() * 0.5)
+        local alpha = 200 * _G.damage_overlay_intensity
+        
+        surface.SetDrawColor(255, 255, 255, alpha)
+        surface.SetMaterial(hurtoverlay_blood)
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
+
+        -- Vignette
+        render.UpdateScreenEffectTexture()
+        vignetteMat:SetFloat("$c1_y", _G.damage_overlay_intensity * 10)
+        render.SetMaterial(vignetteMat)
+        render.DrawScreenQuad()
+    end
+
 
 
     damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.3, 0)
     if show_red_trauma_time > 0 then -- normal damage
         show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
-        local duration = RED_TRAUMA_DURATION
-        local timer = show_red_trauma_time
-        
-        -- Lobotomy mat with fadeout for normal damage
-        if lobotomy_index > 0 and lobotomy_mats[lobotomy_index] then
-            local fade_alpha = math.Clamp(timer / duration, 0, 1) * 255
-            surface.SetDrawColor(255, 255, 255, fade_alpha)
-            surface.SetMaterial(lobotomy_mats[lobotomy_index])
-			local x = ScrW()/2 + lobotomy_dir.x * ScrW()/2
-			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
-            surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
-        end
+        local red_fade_alpha = 75 * (show_red_trauma_time / 1.0) -- Use the ratio
+        surface.SetDrawColor(255, 0, 0, red_fade_alpha)
+        surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
     if blood_effect_time > 0 then
@@ -844,13 +855,18 @@ hook.Add("Post Post Processing", "ItHurts", function()
     local suppression = _G.suppression_severity or 0
     local blood = org.blood or 5000
 
+    if org.blood < 4000 then
+        local blood_deficiency = (4000 - org.blood) / 1000
+        _G.damage_overlay_intensity = math.min((_G.damage_overlay_intensity or 0) + blood_deficiency * FrameTime(), 1.0)
+    end
+
     -- Chromatic Aberration
     local c_intensity = 0
     c_intensity = c_intensity + (pain / 100)
     c_intensity = c_intensity + (suppression * 2.5) -- Increased intensity
     c_intensity = c_intensity + (adrenaline * 10.0) -- Increased intensity
     c_intensity = c_intensity + (fear * 1.5) -- Increased intensity
-    if c_intensity > 0 then
+    if c_intensity > 0 and merc_chromaticaberration then
         local args = {
             aberration = c_intensity
         }
@@ -862,7 +878,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     vignette_intensity_target = vignette_intensity_target + (fear * 5)
     vignette_intensity_lerped = Lerp(FrameTime() * 2, vignette_intensity_lerped, vignette_intensity_target)
 
-    if vignette_intensity_lerped > 0.01 then
+    if vignette_intensity_lerped > 0.01 and merc_vignette then
         local args = {
             vignette_intensity = vignette_intensity_lerped
         }
@@ -880,7 +896,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
     grayscale_intensity_lerped = Lerp(FrameTime() * 2, grayscale_intensity_lerped, desaturation_intensity_target)
 
-    if grayscale_intensity_lerped > 0.01 then
+    if grayscale_intensity_lerped > 0.01 and merc_grayscale then
         local args = {
             grayscale = grayscale_intensity_lerped
         }
@@ -909,11 +925,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
 
         -- Dirt
-        if suppression_dirt > 0 then
+        --[[if suppression_dirt > 0 then
             surface.SetDrawColor(255, 255, 255, suppression_dirt * 150) -- Reduced intensity
             surface.SetMaterial(dirtMat)
             surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
-        end
+        end)]]
 
         --[[ Grain/Pixelation
         if _G.suppression_severity > 0.5 then
