@@ -436,9 +436,9 @@ net.Receive("PlayerSuppressed", function()
     suppression_effect_time = math.min((suppression_effect_time or 0) + 7.5 * severity, 15.0) -- Longer effect time
 
     -- New effects are now based on the total accumulated suppression
-    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.02, 0.7) -- More severe start, longer lasting
+    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.5, 1.5) -- More severe start, longer lasting
 
-    suppression_dof = _G.suppression_severity * 1.5 -- Increased
+    suppression_dof = _G.suppression_severity * 3.5 -- Increased
     suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
     _G.damage_overlay_intensity = math.min((_G.damage_overlay_intensity or 0) + severity * 0.5, 1.0)
 
@@ -492,7 +492,10 @@ net.Receive("headtrauma_flash", function()
     local lply = LocalPlayer()
 	if not IsValid(lply) then return end
 	if sound ~= "" then
-			surface.PlaySound(sound)
+			local sound_obj = CreateSound(lply, sound)
+			if IsValid(sound_obj) then
+				sound_obj:Play()
+			end
 		end
     hg.AddFlash(lply:EyePos(), 1, pos, time, size)
 end)
@@ -565,37 +568,39 @@ hook.Add("Think", "hg_DamageWatcher", function()
 end)
 
 hook.Add("HUDPaint", "hg_damage_flash", function()
+    local lply = LocalPlayer()
+    local fade_multiplier = (IsValid(lply) and lply:Alive()) and 1 or 5
     if _G.suppression_severity and _G.suppression_severity > 0 then
-        _G.suppression_severity = math.max(0, _G.suppression_severity - FrameTime() * 0.5)
+        _G.suppression_severity = math.max(0, _G.suppression_severity - FrameTime() * 0.5 * fade_multiplier)
     end
 
     if suppression_chromatic_aberration > 0 then
         local fade_rate
-        if suppression_chromatic_aberration > 0.6 then
-            fade_rate = 0.5
+        if suppression_chromatic_aberration > 1.0 then
+            fade_rate = 0.1
         else
-            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 0.6, 0.2, 0.05)
+            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 1.0, 0.1, 0.01)
         end
-        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * fade_rate)
+        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * fade_rate * fade_multiplier)
     end
 
     if suppression_dirt > 0 then
-        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.5) -- Faster fade
+        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.5 * fade_multiplier) -- Faster fade
     end
 
     if suppression_vignette > 0 then
-        suppression_vignette = math.max(0, suppression_vignette - FrameTime() * 2.5)
+        suppression_vignette = math.max(0, suppression_vignette - FrameTime() * 2.5 * fade_multiplier)
     end
 
     if suppression_fade_time > 0 then
-        suppression_fade_time = math.max(suppression_fade_time - FrameTime() * 0.25, 0)
+        suppression_fade_time = math.max(suppression_fade_time - FrameTime() * 0.25 * fade_multiplier, 0)
         local black_fade_alpha = 255 * suppression_fade_time
         surface.SetDrawColor(0, 0, 0, black_fade_alpha)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
     if _G.damage_overlay_intensity > 0 then
-        _G.damage_overlay_intensity = math.max(0, _G.damage_overlay_intensity - FrameTime() * 0.5)
+        _G.damage_overlay_intensity = math.max(0, _G.damage_overlay_intensity - FrameTime() * 0.5 * fade_multiplier)
         local alpha = 255 * _G.damage_overlay_intensity
         
         surface.SetDrawColor(255, 255, 255, alpha)
@@ -604,14 +609,14 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 
         -- Vignette
         render.UpdateScreenEffectTexture()
-        vignetteMat:SetFloat("$c1_y", _G.damage_overlay_intensity * 20)
+        vignetteMat:SetFloat("$c1_y", _G.damage_overlay_intensity * 40)
         render.SetMaterial(vignetteMat)
         render.DrawScreenQuad()
     end
 
 
 
-    damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.3, 0)
+    damage_blur_time = math.max(damage_blur_time - FrameTime() * 0.1 * fade_multiplier, 0)
     if show_red_trauma_time > 0 then -- normal damage
         show_red_trauma_time = math.max(show_red_trauma_time - FrameTime(), 0)
         local red_fade_alpha = 75 * (show_red_trauma_time / 1.0) -- Use the ratio
@@ -1412,7 +1417,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
 					station:Play()
 					BrainTraumaStation = station
 					BrainTraumaStation_name = sound_name
-					station:EnableLooping(true)
 				end
 			end)
 		end
@@ -1746,6 +1750,7 @@ end)
 
 local suppression_sway_intensity = 0
 local concussion_disorientation = 0
+local disorientation_sway_intensity = 0
 
 hook.Add("CalcView", "SuppressionSway", function(ply, pos, angles, fov)
     if not IsValid(ply) or not ply:Alive() then return end
@@ -1754,18 +1759,29 @@ hook.Add("CalcView", "SuppressionSway", function(ply, pos, angles, fov)
     suppression_sway_intensity = Lerp(FrameTime() * 1, suppression_sway_intensity, suppression)
 
     local org = ply.organism
-    if org and (org.concussion_severity or 0) > 0 then
-        concussion_disorientation = Lerp(FrameTime() * 0.5, concussion_disorientation, org.concussion_severity / 10)
-        if concussion_disorientation > 0.1 then
-            ply.tinnitus = CurTime() + concussion_disorientation * 5
+    if org then
+        if (org.concussion_severity or 0) > 0 then
+            concussion_disorientation = Lerp(FrameTime() * 0.5, concussion_disorientation, org.concussion_severity / 10)
+            if concussion_disorientation > 0.1 then
+                ply.tinnitus = CurTime() + concussion_disorientation * 5
+            end
+        else
+            concussion_disorientation = Lerp(FrameTime() * 1, concussion_disorientation, 0)
+        end
+        
+        if (org.disorientation or 0) > 0 then
+            disorientation_sway_intensity = Lerp(FrameTime() * 0.5, disorientation_sway_intensity, org.disorientation / 10)
+        else
+            disorientation_sway_intensity = Lerp(FrameTime() * 1, disorientation_sway_intensity, 0)
         end
     else
         concussion_disorientation = Lerp(FrameTime() * 1, concussion_disorientation, 0)
+        disorientation_sway_intensity = Lerp(FrameTime() * 1, disorientation_sway_intensity, 0)
     end
 
-    if suppression_sway_intensity > 0.01 or concussion_disorientation > 0.01 then
+    if suppression_sway_intensity > 0.01 or concussion_disorientation > 0.01 or disorientation_sway_intensity > 0.01 then
         local curTime = CurTime()
-        local sway_amount = (suppression_sway_intensity * 2) + (concussion_disorientation * 5)
+        local sway_amount = (suppression_sway_intensity * 2) + (concussion_disorientation * 5) + (disorientation_sway_intensity * 5)
         angles.p = angles.p + math.sin(curTime * 0.7 + math.cos(curTime * 0.2) * 0.5) * sway_amount * 0.5
         angles.y = angles.y + math.cos(curTime * 0.5 + math.sin(curTime * 0.3) * 0.5) * sway_amount
         angles.r = angles.r + math.sin(curTime * 0.3) * sway_amount * 1.5

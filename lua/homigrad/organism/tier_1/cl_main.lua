@@ -138,7 +138,10 @@ end
 
 local function StartOtrubEffect()
     timer.Simple(0.1, function()
-        surface.PlaySound("owfuck.ogg")
+        local sound_obj = CreateSound(LocalPlayer(), "owfuck.ogg")
+        if IsValid(sound_obj) then
+            sound_obj:Play()
+        end
     end)
     hook.Add("PostDrawHUD", "DrawOtrubVignette", DrawOtrubVignette)
 end
@@ -582,7 +585,7 @@ hook.Add("Post Post Pre Post Processing", "organism-effects", function()
 		render.PushFilterMag( TEXFILTER.ANISOTROPIC )
 		render.PushFilterMin( TEXFILTER.ANISOTROPIC )
 
-		local textOtrub = "OTRUB"
+		local textOtrub = "Unconscious"
 		local textOtrub2 =  
 			( critical and "You can't be saved." ) or 
 			( incapacitated and "You will not get up without someone's help." ) or 
