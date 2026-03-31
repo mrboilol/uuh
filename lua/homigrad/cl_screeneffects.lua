@@ -441,8 +441,7 @@ net.Receive("PlayerSuppressed", function()
         suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.025, 0.5) -- Less severe, apply more often
     else
         --suppression_dirt = 0
-    damage_blur_time = 0
-    damage_blur_time = 0
+
     end
 
     damage_blur_time = suppression_dof
