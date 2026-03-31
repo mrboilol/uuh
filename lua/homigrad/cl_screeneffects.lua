@@ -211,7 +211,10 @@ hook.Add("RenderScreenspaceEffects", "homigrad", function()
 	//DrawSharpen(addtiveLayer.sharpen, addtiveLayer.sharpen_dist)
 	//if not brain_motionblur then DrawMotionBlur(addtiveLayer.blur_addalpha, addtiveLayer.blur_drawalpha, addtiveLayer.blur_delay) end
     if damage_blur_time > 0 then
-        DrawToyTown(damage_blur_time * 4, 0.6)
+        -- DrawMotionBlur(0, math.min(damage_blur_time, 0.9), 0.01)
+        local blur_amount = math.min(damage_blur_time, 0.9)
+        local focus_size = 1 - blur_amount
+        DrawToyTown(0.5 - focus_size / 2, 0.5 + focus_size / 2)
     end
 	//DrawToyTown(addtiveLayer.toytown, addtiveLayer.toytown_h * ScrH())
 	tab["$pp_colour_brightness"] = addtiveLayer.brightness
@@ -567,7 +570,13 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_chromatic_aberration > 0 then
-        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.005) -- Slower fade
+        local fade_rate
+        if suppression_chromatic_aberration > 0.6 then
+            fade_rate = 0.5
+        else
+            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 0.6, 0.2, 0.05)
+        end
+        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * fade_rate)
     end
 
     if suppression_dirt > 0 then
@@ -575,7 +584,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_vignette > 0 then
-        suppression_vignette = math.max(0, suppression_vignette - FrameTime() * 12.5)
+        suppression_vignette = math.max(0, suppression_vignette - FrameTime() * 2.5)
     end
 
     if suppression_fade_time > 0 then
@@ -587,7 +596,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 
     if _G.damage_overlay_intensity > 0 then
         _G.damage_overlay_intensity = math.max(0, _G.damage_overlay_intensity - FrameTime() * 0.5)
-        local alpha = 200 * _G.damage_overlay_intensity
+        local alpha = 255 * _G.damage_overlay_intensity
         
         surface.SetDrawColor(255, 255, 255, alpha)
         surface.SetMaterial(hurtoverlay_blood)
@@ -595,7 +604,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 
         -- Vignette
         render.UpdateScreenEffectTexture()
-        vignetteMat:SetFloat("$c1_y", _G.damage_overlay_intensity * 10)
+        vignetteMat:SetFloat("$c1_y", _G.damage_overlay_intensity * 20)
         render.SetMaterial(vignetteMat)
         render.DrawScreenQuad()
     end
@@ -1392,6 +1401,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
 			if IsValid(BrainTraumaStation) then
 				BrainTraumaStation:Stop()
 			end
+			if IsValid(Tinnitus) then
+				Tinnitus:Stop()
+				Tinnitus = nil
+			end
+			lply.tinnitus = 0
 			sound.PlayFile(sound_name, "noblock noplay", function(station, err)
 				if IsValid(station) then
 					station:SetVolume(1)
@@ -1402,11 +1416,13 @@ hook.Add("Post Post Processing", "ItHurts", function()
 				end
 			end)
 		end
+		hg.AddFlash(lply:EyePos(), 1, lply:EyePos(), 4, 500)
+
 		-- Apply a more severe long term concussion
-		org.concussion_severity = (org.concussion_severity or 0) + 5
-		concussion_effect_time = math.max(concussion_effect_time, 30)
+		org.concussion_severity = (org.concussion_severity or 0) + 15
+		concussion_effect_time = math.max(concussion_effect_time, 60)
 		-- More visuals
-		show_some_images_time = 500
+		show_some_images_time = 1000
 	elseif brain > 0.01 then
 		local chooser = 1
 		for i, choose in ipairs(stations) do
@@ -1740,13 +1756,16 @@ hook.Add("CalcView", "SuppressionSway", function(ply, pos, angles, fov)
     local org = ply.organism
     if org and (org.concussion_severity or 0) > 0 then
         concussion_disorientation = Lerp(FrameTime() * 0.5, concussion_disorientation, org.concussion_severity / 10)
+        if concussion_disorientation > 0.1 then
+            ply.tinnitus = CurTime() + concussion_disorientation * 5
+        end
     else
         concussion_disorientation = Lerp(FrameTime() * 1, concussion_disorientation, 0)
     end
 
     if suppression_sway_intensity > 0.01 or concussion_disorientation > 0.01 then
         local curTime = CurTime()
-        local sway_amount = (suppression_sway_intensity * 2) + (concussion_disorientation * 3)
+        local sway_amount = (suppression_sway_intensity * 2) + (concussion_disorientation * 5)
         angles.p = angles.p + math.sin(curTime * 0.7 + math.cos(curTime * 0.2) * 0.5) * sway_amount * 0.5
         angles.y = angles.y + math.cos(curTime * 0.5 + math.sin(curTime * 0.3) * 0.5) * sway_amount
         angles.r = angles.r + math.sin(curTime * 0.3) * sway_amount * 1.5

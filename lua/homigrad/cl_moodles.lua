@@ -261,10 +261,7 @@ end)
 
 net.Receive("Moodle_Remove", function()
     local id = net.ReadString()
-    local ply = LocalPlayer()
-    if IsValid(ply) and ply:GetNWBool("otrub", false) and not VITAL_MOODLES[id] and not CRITICAL_MOODLES[id] then return end
-
-    if id == "*" then 
+    if id == "*" then
         if IsDebugDrawEnabled() then MsgC(DEBUG_COLOR_CL_REMOVE, "[MM] - Clearing all moodles\n") end
         for k, v in pairs(CLIENT_MOODLES) do
             v.remove_time = CurTime()
