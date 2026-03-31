@@ -415,16 +415,16 @@ net.Receive("PlayerSuppressed", function()
     local wep_damage = net.ReadFloat()
 	local dir_to_bullet = net.ReadVector()
     suppression_fade_time = math.min((suppression_fade_time or 0) + 1.0 * severity, 3.0)
-    suppression_effect_time = math.min((suppression_effect_time or 0) + 4.5 * severity, 8.0)
+    suppression_effect_time = math.min((suppression_effect_time or 0) + 7.5 * severity, 15.0) -- Longer effect time
 
     -- New effects are now based on the total accumulated suppression
-    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.05, 1.0)
+    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.01, 0.5) -- Less severe start
 
-    suppression_dof = _G.suppression_severity * 0.75 -- Increased
+    suppression_dof = _G.suppression_severity * 1.5 -- Increased
     suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
 
-    if severity > 0.8 then -- Only for close bullets
-        suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.1, 1.0) -- Apply dirty lens effect if the shot is close
+    if severity > 0.5 then -- Only for close bullets
+        suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.05, 0.7) -- Less severe, apply more often
     else
         --suppression_dirt = 0
     damage_blur_time = 0
@@ -435,16 +435,16 @@ net.Receive("PlayerSuppressed", function()
     --_G.suppression_shake = severity
 
     -- Flinching based on incoming severity to avoid excessive shake
-	--local eye_angles = LocalPlayer():EyeAngles()
-	--local forward = eye_angles:Forward()
-	--local right = eye_angles:Right()
-	--local up = eye_angles:Up()
+	local eye_angles = LocalPlayer():EyeAngles()
+	local forward = eye_angles:Forward()
+	local right = eye_angles:Right()
+	local up = eye_angles:Up()
 
-	--local pitch = -dir_to_bullet:Dot(up) * 10 * severity
-	--local yaw = -dir_to_bullet:Dot(right) * 10 * severity
+	local pitch = -dir_to_bullet:Dot(up) * 15 * severity
+	local yaw = -dir_to_bullet:Dot(right) * 15 * severity
 
-    --local punch = Angle(pitch, yaw, math.Rand(-2, 2) * severity)
-    --ViewPunch(punch)
+    local punch = Angle(pitch, yaw, math.Rand(-3, 3) * severity)
+    ViewPunch(punch)
 
     -- Ragdoll on high suppression and damage
     local should_ragdoll = false
@@ -457,8 +457,10 @@ net.Receive("PlayerSuppressed", function()
     end
 
     if should_ragdoll then
-        net.Start("RequestRagdoll")
-        net.SendToServer()
+        timer.Simple(0, function()
+            net.Start("RequestRagdoll")
+            net.SendToServer()
+        end)
     end
 end)
 
@@ -472,7 +474,9 @@ net.Receive("headtrauma_flash", function()
     local lply = LocalPlayer()
 	if not IsValid(lply) then return end
 	if sound ~= "" then
-		lply:EmitSound(sound)
+		timer.Simple(0.1, function()
+			lply:EmitSound(sound)
+		end)
 	end
     hg.AddFlash(lply:EyePos(), 1, pos, time, size)
 end)
@@ -509,17 +513,46 @@ end)
 
 
 
+local blood_effect_time = 0
+local last_health = 100
+local last_damage_time = 0
+local damage_cooldown = 0.25
+local hurtoverlay_blood = Material("zcity/neurotrauma/damageOverlay.png", "smooth")
+
+hook.Add("Think", "hg_DamageWatcher", function()
+    local ply = LocalPlayer()
+    if not IsValid(ply) then return end
+
+    if not ply:Alive() then
+        last_health = 100
+        return
+    end
+
+    local current_health = ply:Health()
+    if current_health < last_health then
+        if CurTime() > last_damage_time + damage_cooldown then
+            blood_effect_time = 1.0 -- duration of the effect
+            last_damage_time = CurTime()
+            
+            -- Play sound
+            local sounds = {"physics/flesh/flesh_impact_bullet1.wav", "physics/flesh/flesh_impact_bullet2.wav", "physics/flesh/flesh_impact_bullet3.wav"}
+            ply:EmitSound(sounds[math.random(#sounds)])
+        end
+    end
+    last_health = current_health
+end)
+
 hook.Add("HUDPaint", "hg_damage_flash", function()
     if _G.suppression_severity and _G.suppression_severity > 0 then
         _G.suppression_severity = math.max(0, _G.suppression_severity - FrameTime() * 0.5)
     end
 
     if suppression_chromatic_aberration > 0 then
-        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.02)
+        suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * 0.01) -- Slower fade
     end
 
     if suppression_dirt > 0 then
-        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.02)
+        suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.01) -- Slower fade
     end
 
     if suppression_vignette > 0 then
@@ -527,12 +560,8 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_fade_time > 0 then
-        suppression_fade_time = math.max(suppression_fade_time - FrameTime() * 1.5, 0)
-        local fade_alpha = 150 * suppression_fade_time
-        surface.SetDrawColor(255, 0, 0, fade_alpha)
-        surface.DrawRect(0, 0, ScrW(), ScrH())
-
-		local black_fade_alpha = 255 * suppression_fade_time
+        suppression_fade_time = math.max(suppression_fade_time - FrameTime() * 0.5, 0)
+        local black_fade_alpha = 255 * suppression_fade_time
         surface.SetDrawColor(0, 0, 0, black_fade_alpha)
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
@@ -554,6 +583,15 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 			local y = ScrH()/2 + lobotomy_dir.y * ScrH()/2
             surface.DrawTexturedRect(x - ScrW()/2, y - ScrH()/2, ScrW(), ScrH())
         end
+    end
+
+    if blood_effect_time > 0 then
+        blood_effect_time = math.max(0, blood_effect_time - FrameTime() * 2)
+        local alpha = 200 * blood_effect_time
+        
+        surface.SetDrawColor(255, 255, 255, alpha)
+        surface.SetMaterial(hurtoverlay_blood)
+        surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
     end
 end)
 
@@ -805,6 +843,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
 
     -- Vignette
+    local vignette_intensity_target = 0
     vignette_intensity_target = vignette_intensity_target + (fear * 5)
     vignette_intensity_lerped = Lerp(FrameTime() * 2, vignette_intensity_lerped, vignette_intensity_target)
 
@@ -838,11 +877,11 @@ hook.Add("Post Post Processing", "ItHurts", function()
         sdle.Damage(suppression * 1.0, math.Rand(0.5, 1), true, true)
     end
 
-    -- Flinching
-    if pain > 10 then
-        local punch = Angle(math.Rand(-1, 1) * (pain / 320), math.Rand(-1, 1) * (pain / 320), 0) -- Reduced intensity
-        ViewPunch(punch)
-    end
+    -- Flinching (removed pain flinch)
+    -- if pain > 10 then
+    --     local punch = Angle(math.Rand(-1, 1) * (pain / 320), math.Rand(-1, 1) * (pain / 320), 0) -- Reduced intensity
+    --     ViewPunch(punch)
+    -- end
     if suppression_effect_time > 0 then
         -- Chromatic Aberration
         if suppression_chromatic_aberration > 0 then
@@ -856,7 +895,7 @@ hook.Add("Post Post Processing", "ItHurts", function()
 
         -- Dirt
         if suppression_dirt > 0 then
-            surface.SetDrawColor(255, 255, 255, suppression_dirt * 200)
+            surface.SetDrawColor(255, 255, 255, suppression_dirt * 150) -- Reduced intensity
             surface.SetMaterial(dirtMat)
             surface.DrawTexturedRect(0, 0, ScrW(), ScrH())
         end

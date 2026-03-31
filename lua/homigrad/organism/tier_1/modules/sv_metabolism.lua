@@ -5,7 +5,7 @@ local max, min, Round, Lerp, halfValue2 = math.max, math.min, math.Round, Lerp, 
 hg.organism.module.metabolism = {}
 local module = hg.organism.module.metabolism
 module[1] = function(org)
-	org.satiety = 0
+	org.satiety = 100
     org.hungry = 0
     org.hungryDmgCd = 0
 end
@@ -13,7 +13,7 @@ end
 local colorRed = Color(125,25,25)
 module[2] = function(owner, org, timeValue)
     if org.satiety <= 0 and hg_hungersystem:GetBool() then 
-        org.hungry = min(max(org.hungry + timeValue * 0.01, 0),100)
+        org.hungry = min(max(org.hungry + timeValue * 0.1, 0),100)
         //if org.isPly and not org.otrub and org.hungry > 25 and org.hungry < 45 then org.owner:Notify(table.Random(pharse),60,"hungry",6) end
         org.hungryDmgCd = org.hungryDmgCd or 0
         if org.alive and org.hungryDmgCd < CurTime() and org.hungry > 45 then

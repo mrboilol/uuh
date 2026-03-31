@@ -553,54 +553,51 @@ SWEP.DrawCrosshair = true
 
 SWEP.ActiveRed = nil
 
-function SWEP:PrimaryShoot()
+
+function SWEP:PrimaryAttack()
     self:EmitSound("svrkdstuff/red_ready.wav")
 
     if SERVER then
         self:SendWeaponAnim(ACT_VM_PULLPIN)
         
-        timer.Simple(0, function()
-            local ply = self:GetOwner()
-            if not IsValid(ply) then return end
-            self:SendWeaponAnim(ACT_VM_THROW)
-            ply:SetAnimation(PLAYER_ATTACK1)
-            
-            timer.Simple(0.2, function()
-                local angrybird = ents.Create("prop_physics")
-                if not IsValid(angrybird) then return end
-                angrybird:EmitSound("svrkdstuff/red_fly.wav")
+        local ply = self:GetOwner()
+        if not IsValid(ply) then return end
+        self:SendWeaponAnim(ACT_VM_THROW)
+        ply:SetAnimation(PLAYER_ATTACK1)
+        
+        local angrybird = ents.Create("prop_physics")
+        if not IsValid(angrybird) then return end
+        angrybird:EmitSound("svrkdstuff/red_fly.wav")
 
-                angrybird:SetPos(ply:EyePos() + (ply:GetAimVector() * 128))
-                angrybird:SetModel("models/svrkdstuff/redbird.mdl")
-                angrybird:SetAngles(ply:EyeAngles())
-                angrybird:Spawn()
+        angrybird:SetPos(ply:EyePos() + (ply:GetAimVector() * 128))
+        angrybird:SetModel("models/svrkdstuff/redbird.mdl")
+        angrybird:SetAngles(ply:EyeAngles())
+        angrybird:Spawn()
 
-                local phys = angrybird:GetPhysicsObject()
-                if IsValid(phys) then
-                    phys:SetVelocity(ply:GetAimVector() * 3500)
-                end
+        local phys = angrybird:GetPhysicsObject()
+        if IsValid(phys) then
+            phys:SetVelocity(ply:GetAimVector() * 3500)
+        end
 				
-				self.ActiveRed = angrybird
+		self.ActiveRed = angrybird
 
-                MakeHeavyThrowable(angrybird, ply, 300, 2000)
+        MakeHeavyThrowable(angrybird, ply, 300, 2000)
 
-                timer.Simple(10, function()
-                    if IsValid(angrybird) then
-                        angrybird:Remove()
-                    end
-                end)
-            end)
-
-            timer.Simple(0.35, function()
-                if IsValid(self) then
-                    self:SendWeaponAnim(ACT_VM_DRAW)
-                end
-            end)
-
-            if self:Ammo1() <= 0 then
-                ply:StripWeapon(self:GetClass())
+        timer.Simple(10, function()
+            if IsValid(angrybird) then
+                angrybird:Remove()
             end
         end)
+
+        timer.Simple(0.15, function()
+            if IsValid(self) then
+                self:SendWeaponAnim(ACT_VM_DRAW)
+            end
+        end)
+
+        if self:Ammo1() <= 0 then
+            ply:StripWeapon(self:GetClass())
+        end
     end
 end
 

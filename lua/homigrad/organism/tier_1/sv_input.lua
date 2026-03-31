@@ -148,6 +148,7 @@ local limbs = {
 	["rleg"] = "ValveBiped.Bip01_R_Calf",
 	["larm"] = "ValveBiped.Bip01_L_Forearm",
 	["rarm"] = "ValveBiped.Bip01_R_Forearm",
+	["head"] = "ValveBiped.Bip01_Head1",
 }
 
 local sounds = {
@@ -161,14 +162,19 @@ local sounds = {
 
 local ents_Create = ents.Create
 function hg.organism.AmputateLimb(org, limb)
-	if org[limb.."amputated"] == nil then return end
+	if org[limb.."amputated"] then return end
 
-	local bone = limbs[limb]
+	local bone_name = limbs[limb]
+	if not bone_name then return end
+	
+	local bone = org.owner:LookupBone(bone_name)
+	if not bone then return end
+
 	if !IsValid(org.owner) then return end
-	local len = org.owner:BoneLength(org.owner:LookupBone(bone))
+	local len = org.owner:BoneLength(bone)
 	local vec = Vector(len, 0, 0)
 	local ang = Angle()
-	local boneup = org.owner:GetBoneName(org.owner:LookupBone(bone) - 1)
+	local boneup = org.owner:GetBoneName(org.owner:GetBoneParent(bone))
 	
 	local wnds = {}
 
@@ -189,12 +195,14 @@ function hg.organism.AmputateLimb(org, limb)
 	end
 
 	local dmgInfo = DamageInfo()
-	hg.organism.input_list[limb.."up"](org, 0, 5, dmgInfo)
+	if limb ~= "head" then
+		hg.organism.input_list[limb.."up"](org, 0, 5, dmgInfo)
+	end
 
 	org.owner:EmitSound(sounds[math.random(#sounds)], 70, math.random(95, 105), 2)
 	
 	local ent = hg.GetCurrentCharacter(org.owner)
-	SpawnMeatGore(ent, select(1, ent:GetBonePosition(ent:LookupBone(bone))), 4)
+	SpawnMeatGore(ent, select(1, ent:GetBonePosition(bone)), 4)
 
 	hook.Run("OnAmputateLimb", org, ent, limb)
 

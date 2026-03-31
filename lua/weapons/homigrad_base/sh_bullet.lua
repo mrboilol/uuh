@@ -225,16 +225,15 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 			end
 		end
 
-		if math.random(5) == 1 then -- 20% chance for custom ricochet sound
+		if math.random(2) == 1 then -- 50% chance for custom ricochet sound
 			local customRicSounds = {
 				"bullet/ricochet1.ogg", "bullet/ricochet2.ogg", "bullet/ricochet3.ogg", "bullet/ricochet4.ogg"
 			}
 			local rndSound = customRicSounds[math.random(#customRicSounds)]
 			sound.Play(rndSound, hitPos, 75, math.random(90, 110))
 		else
-			local rnd = math.random(12)
-			if rnd == 8 then rnd = 9 end
-			sound.Play("arc9_eft_shared/ricochet/ricochet" .. rnd .. ".ogg", hitPos, 75, math.random(90, 110))
+			local rnd = math.random(3)
+			sound.Play("bullet/ric_stone" .. rnd .. ".ogg", hitPos, 75, math.random(90, 110))
 		end
 		--sound.Play("snd_jack_hmcd_ricochet_" .. math.random(1, 2) .. ".wav", hitPos, 75, math.random(90, 110))
 		--sound.Play("weapons/arccw/ricochet0" .. math.random(1, 5) .. "_quiet.wav", hitPos, 75, math.random(90, 110))
@@ -295,23 +294,53 @@ local function callbackBullet(self, tr, dmg, force, bullet, penetration)
 		if CLIENT then return end
 		local matType = tr.MatType
 		local impactSounds = {
-			[MAT_FLESH] = {"physics/flesh/flesh1.wav", "physics/flesh/flesh2.wav", "physics/flesh/flesh3.wav", "physics/flesh/flesh4.wav", "physics/flesh/flesh5.wav", "physics/flesh/flesh6.wav", "physics/flesh/flesh7.wav", "physics/flesh/flesh8.wav", "physics/flesh/flesh9.wav", "physics/flesh/flesh10.wav", "zbattle/zclassic/owfuck1.ogg", "zbattle/zclassic/owfuck2.ogg", "zbattle/zclassic/owfuck3.ogg", "zbattle/zclassic/owfuck4.ogg"},
-			[MAT_ALIENFLESH] = {"bullet/ric_flesh1.ogg", "bullet/ric_flesh2.ogg", "bullet/ric_flesh3.ogg", "bullet/ric_flesh4.ogg"},
-			[MAT_DIRT] = {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"},
-			[MAT_SAND] = {"bullet/ric_sand1.ogg", "bullet/ric_sand2.ogg", "bullet/ric_sand3.ogg"},
-			[MAT_CONCRETE] = {"bullet/ric_conc1.ogg", "bullet/ric_conc2.ogg", "bullet/ric_conc3.ogg"},
-			[MAT_TILE] = {"bullet/ric_conc1.ogg", "bullet/ric_conc2.ogg", "bullet/ric_conc3.ogg"},
-			[MAT_METAL] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
-			[MAT_VENT] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
-			[MAT_GRATE] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
-			[MAT_COMPUTER] = {"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"},
-			[MAT_WOOD] = {"bullet/ric_wood1.ogg", "bullet/ric_wood2.ogg", "bullet/ric_wood3.ogg", "bullet/ric_wood4.ogg"},
-			[MAT_FOLIAGE] = {"bullet/ric_wood1.ogg", "bullet/ric_wood2.ogg", "bullet/ric_wood3.ogg", "bullet/ric_wood4.ogg"},
-			[MAT_GLASS] = {"bullet/ric_glass1.ogg", "bullet/ric_glass2.ogg", "bullet/ric_glass3.ogg"},
-			[MAT_PLASTIC] = {"bullet/ric_plastic1.ogg", "bullet/ric_plastic2.ogg", "bullet/ric_plastic3.ogg"},
-			[MAT_SLOSH] = {"bullet/ric_water1.ogg", "bullet/ric_water2.ogg", "bullet/ric_water3.ogg"} -- Fallback
+			[MAT_FLESH] = {
+				"bullet/ric_flesh1.ogg", "bullet/ric_flesh2.ogg", "bullet/ric_flesh3.ogg", "bullet/ric_flesh4.ogg"
+			},
+			[MAT_ALIENFLESH] = {
+				"bullet/ric_flesh1.ogg", "bullet/ric_flesh2.ogg", "bullet/ric_flesh3.ogg", "bullet/ric_flesh4.ogg"
+			},
+			[MAT_DIRT] = {
+				"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"
+			},
+			[MAT_SAND] = {
+				"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"
+			},
+			[MAT_CONCRETE] = {
+				"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"
+			},
+			[MAT_TILE] = {
+				"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"
+			},
+			[MAT_METAL] = {
+				"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"
+			},
+			[MAT_VENT] = {
+				"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"
+			},
+			[MAT_GRATE] = {
+				"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"
+			},
+			[MAT_COMPUTER] = {
+				"bullet/ric_metal1.ogg", "bullet/ric_metal2.ogg", "bullet/ric_metal3.ogg", "bullet/ric_metal4.ogg", "bullet/ric_metal5.ogg"
+			},
+			[MAT_WOOD] = {
+				"bullet/ric_wood1.ogg", "bullet/ric_wood2.ogg", "bullet/ric_wood3.ogg", "bullet/ric_wood4.ogg"
+			},
+			[MAT_FOLIAGE] = {
+				"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"
+			},
+			[MAT_GLASS] = {
+				"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"
+			},
+			[MAT_PLASTIC] = {
+				"bullet/ric_stone1.ogg", "bullet/ric_stone2.ogg", "bullet/ric_stone3.ogg"
+			},
+			[MAT_SLOSH] = {
+				"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg", "bullet/ric_ground4.ogg", "bullet/ric_ground5.ogg"
+			}
 		}
-		local sounds = impactSounds[matType] or {"bullet/ric_ground1.ogg", "bullet/ric_ground2.ogg", "bullet/ric_ground3.ogg"}
+        local sounds = impactSounds[matType] or impactSounds[MAT_CONCRETE]
 		local rndImpactSound = sounds[math.random(#sounds)]
 		sound.Play(rndImpactSound, hitPos, 75, math.random(90, 110))
 	end
@@ -809,27 +838,29 @@ function SWEP:FireBullet()
 		bullet.Diameter = ammotype.Diameter or 1
 
 		-- Suppression for near misses
-		for _, ply in ipairs(player.GetAll()) do
-			if ply ~= owner and ply:Alive() and not ply:InVehicle() then
-				local eyePos = ply:EyePos()
-				local aimDir = bullet.Dir
-				local toPlayer = (eyePos - bullet.Src):GetNormalized()
-				local dot = aimDir:Dot(toPlayer)
+		if SERVER then
+			for _, ply in ipairs(player.GetAll()) do
+				if ply ~= owner and ply:Alive() and not ply:InVehicle() then
+					local eyePos = ply:EyePos()
+					local aimDir = bullet.Dir
+					local toPlayer = (eyePos - bullet.Src):GetNormalized()
+					local dot = aimDir:Dot(toPlayer)
 
-				if dot > 0.98 then -- Player is in the path of the bullet
-					local distToPath = (eyePos - bullet.Src):Cross(aimDir):Length()
-					                    local suppression_range = 128 + (bullet.Diameter or 1) * 10
-                    if distToPath < suppression_range then -- Bullet is close to the player
-                        local severity = math.max(0, 1 - (distToPath / suppression_range))
-						local closest_point = bullet.Src + aimDir * ((eyePos - bullet.Src):Dot(aimDir))
-						local dir_to_bullet = (closest_point - eyePos):GetNormalized()
+					if dot > 0.98 then -- Player is in the path of the bullet
+						local distToPath = (eyePos - bullet.Src):Cross(aimDir):Length()
+											local suppression_range = 128 + (bullet.Diameter or 1) * 10
+						if distToPath < suppression_range then -- Bullet is close to the player
+							local severity = math.max(0, 1 - (distToPath / suppression_range))
+							local closest_point = bullet.Src + aimDir * ((eyePos - bullet.Src):Dot(aimDir))
+							local dir_to_bullet = (closest_point - eyePos):GetNormalized()
 
-                        net.Start("PlayerSuppressed")
-                        net.WriteFloat(severity)
-                        net.WriteFloat(bullet.Damage)
-						net.WriteVector(dir_to_bullet)
-                        net.Send(ply)
-                    end
+							net.Start("PlayerSuppressed")
+							net.WriteFloat(severity)
+							net.WriteFloat(bullet.Damage)
+							net.WriteVector(dir_to_bullet)
+							net.Send(ply)
+						end
+					end
 				end
 			end
 		end

@@ -355,6 +355,10 @@ hook.Add("CanListenOthers", "CantHaveShitInDetroit", function(output, input, isC
 end)
 
 input_list.skull = function(org, bone, dmg, dmgInfo, boneindex, dir, hit, ricochet)
+	if (dmgInfo:IsDamageType(DMG_SLASH) or dmgInfo:IsDamageType(DMG_CLUB)) and dmg > 6 and !org.headamputated then
+		hg.organism.AmputateLimb(org, "head")
+		return 0
+	end
 	local oldDmg = org.skull
 	
 	local result, vecrand = damageBone(org, 0.25, dmg, dmgInfo, "skull", boneindex, dir, hit, ricochet)

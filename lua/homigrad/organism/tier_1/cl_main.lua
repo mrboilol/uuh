@@ -137,7 +137,9 @@ local function DrawOtrubVignette()
 end
 
 local function StartOtrubEffect()
-    surface.PlaySound("owfuck.ogg")
+    timer.Simple(0.1, function()
+        surface.PlaySound("owfuck.ogg")
+    end)
     hook.Add("PostDrawHUD", "DrawOtrubVignette", DrawOtrubVignette)
 end
 

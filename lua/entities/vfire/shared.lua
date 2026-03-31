@@ -1103,7 +1103,7 @@ if CLIENT then
 				"vFire_Flames_"..size..LODStr,
 				0,
 				0,
-				nil
+				Vector(0, 0, 0)
 			)
 
 		else
@@ -1141,7 +1141,7 @@ if CLIENT then
 						"vFire_Flames_"..size..LODStr,
 						0,
 						0,
-						nil
+						Vector(0, 0, 0)
 					)
 				end
 
@@ -1150,7 +1150,8 @@ if CLIENT then
 					self,
 					"vFire_Flames_"..size..LODStr,
 					0,
-					0
+					0,
+					Vector(0, 0, 0)
 				)
 			end
 

@@ -31,8 +31,6 @@ module[1] = function(org)
 	org.bleedStart = 0
 	org.wounds = {}
 	org.arterialwounds = {}
-	org.veinwounds = {}
-	org.veins = 0
 	org.wantToVomit = 0
 	org.vomitInThroat = nil
 
@@ -107,8 +105,9 @@ module[2] = function(owner, org, mulTime)
 		end
 	end
 
-	if org.arteria == 1 then
-		org.o2[1] = math.max(org.o2[1] - mulTime * 5,0)
+	for i, wound in pairs(org.arterialwounds) do
+		local artery_size = wound[1] or 0
+		org.o2[1] = math.max(org.o2[1] - mulTime * (artery_size / 2), 0)
 	end
 
 	org.consciousness = math.min(org.consciousness, math.min(org.blood / 3000, 1) * math.Clamp(((org.temperature < 30 and org.temperature - 30 or 0) * 0.25 + 1), 0.25, 1))
@@ -182,30 +181,7 @@ module[2] = function(owner, org, mulTime)
 			end
 		end
 	end
-	local bleedoutspeed3 = 0
-	for i, wound in pairs(org.veinwounds) do
-		bleedoutspeed3 = bleedoutspeed3 + wound[1] * mulTime * 0.1 * math.max(org.pulse, 20) / 80
 
-		if wound[5] + next_arterypump * 4 < time then
-			local pos, ang = ent:GetBonePosition(ent:LookupBone(wound[4]))
-			wound[5] = time
-			org.blood = max(org.blood - wound[1] * mulTime * 2.25 * math.max(org.pulse, 20) / 80, 1)
-			if (owner:IsPlayer() and owner:Alive()) or not owner:IsPlayer() then
-				local dir = wound[6]
-				local len = dir:Length()
-				local _, dir = LocalToWorld(vecZero, dir:Angle(), vecZero, ang)
-				dir = -dir:Forward() * len
-				hg.organism.BloodDroplet2(owner, org, wound, owner:GetVelocity() + VectorRand(-15, 15) + dir * 1.2, false)
-			end
-
-			if wound[1] == 0 then
-				table.remove(org.veinwounds, i)
-				owner:SetNetVar("veinwounds", org.veinwounds)
-
-				org[wound[7]] = 0
-			end
-		end
-	end
 	bleedoutspeed2 = bleedoutspeed2 / next_arterypump
 
 	if org.blood < (2400 / (adrenaline / 3 + 1)) * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) then org.needotrub = true end
@@ -235,7 +211,7 @@ module[2] = function(owner, org, mulTime)
 		hg.organism.Vomit(owner)
 	end
 
-	org.bleed = (bleedoutspeed + bleedoutspeed2 + bleedoutspeed3 + bleed)--в секунду
+	org.bleed = (bleedoutspeed + bleedoutspeed2 + bleed)--в секунду
 	
 	local timetouncon = (org.blood - 2500) / org.bleed
 	
@@ -255,7 +231,7 @@ module[2] = function(owner, org, mulTime)
 		org.critical = false
 	end
 
-	org.bleed = (bleedoutspeed + bleedoutspeed2 + bleedoutspeed3)
+	org.bleed = (bleedoutspeed + bleedoutspeed2)
 end
 
 util.AddNetworkString("bloodsquirt2")

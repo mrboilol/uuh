@@ -167,6 +167,7 @@ local function getlocalshit(ent, bone, dmgInfo, dir, hit)
 	end
 end
 
+
 local arterySize = {
 	["arteria"] = 14,
 	["rarmartery"] = 6,
@@ -176,38 +177,11 @@ local arterySize = {
 	["spineartery"] = 10,
 }
 
-local veinSize = {
-	["rarmvein"] = 3,
-	["larmvein"] = 3,
-	["rlegvein"] = 4,
-	["llegvein"] = 4,
-}
-
 local arteryMessages = {
 	"I can feel blood rushing from my neck...",
 	"My neck.. it's... pumping out blood.",
 	"I'm bleeding out of my neck!"
 }
-
-local function hitVein(vein, org, dmg, dmgInfo, boneindex, dir, hit)
-	if isCrush(dmgInfo) then return 1 end
-	if dmgInfo:IsDamageType(DMG_BLAST) then return 1 end
-	if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
-	org.painadd = org.painadd + dmg * 0.5
-	if org[vein] == 1 then return 0 end
-	if org[string.Replace(vein, "vein", "").. "amputated"] then return end
-
-	hg.AddHarmToAttacker(dmgInfo, 2, "Random vein punctured harm")
-
-	org[vein] = math.min((org[vein] or 0) + 1, 1)
-
-	local owner = org.owner
-	local bonea = owner:LookupBone(boneindex)
-	local localPos, localAng, dir2 = getlocalshit(owner, bonea, dmgInfo, dir, hit)
-	table.insert(org.veinwounds, {veinSize[vein], localPos, localAng, boneindex, CurTime(), dir2 * 50, vein})
-	owner:SetNetVar("veinwounds", org.veinwounds)
-	return 0
-end
 
 local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 	if isCrush(dmgInfo) then return 1 end
@@ -215,7 +189,7 @@ local function hitArtery(artery, org, dmg, dmgInfo, boneindex, dir, hit)
 	if dmgInfo:IsDamageType(DMG_SLASH) and (math.random(5) != 1) and dmg < 2 then return end
 	org.painadd = org.painadd + dmg * 1
 	if org[artery] == 1 then return 0 end
-	if org[string.Replace(artery, "artery", "").."amputated"] then return end
+	if org[string.Replace(artery, "artery", "") .. "amputated"] then return end
 
 	if artery ~= "arteria" then
 		hg.AddHarmToAttacker(dmgInfo, 4, "Random artery punctured harm")//((1 - org[artery]) - math.max((1 - org[artery]) - dmg,0)) / 4
@@ -248,10 +222,6 @@ input_list.rlegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) r
 input_list.llegartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("llegartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.spineartery = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitArtery("spineartery", org, dmg, dmgInfo, boneindex, dir, hit) end
 
-input_list.rarmvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("rarmvein", org, dmg, dmgInfo, boneindex, dir, hit) end
-input_list.larmvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("larmvein", org, dmg, dmgInfo, boneindex, dir, hit) end
-input_list.rlegvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("rlegvein", org, dmg, dmgInfo, boneindex, dir, hit) end
-input_list.llegvein = function(org, bone, dmg, dmgInfo, boneindex, dir, hit) return hitVein("llegvein", org, dmg, dmgInfo, boneindex, dir, hit) end
 input_list.lungsL = function(org, bone, dmg, dmgInfo)
 	local prot = math.max(0.3 - org.lungsL[1],0)
 	local oldval = org.lungsL[1]

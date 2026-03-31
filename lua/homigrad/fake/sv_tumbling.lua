@@ -7,11 +7,11 @@ local CurTime = CurTime
 
 local TUMBLE_SPEED_THRESHOLD = 250
 local TUMBLE_COOLDOWN = 2
-local GAP_CHECK_DIST = 50 
+local GAP_CHECK_DIST = 30 
 local WALL_CHECK_DIST = 20
 local WALL_CHECK_HEIGHT = 10 
 
-local BASE_TRIP_CHANCE = 0.05
+local BASE_TRIP_CHANCE = 0.1
 local MAX_TRIP_CHANCE = 0.8
 
 hook.Add("Think", "stanleytumbler", function()
@@ -39,7 +39,7 @@ hook.Add("Think", "stanleytumbler", function()
 
         if speed < effectiveThreshold then continue end
 
-        local tripChance = 0
+        local tripChance = BASE_TRIP_CHANCE
         local shouldTrip = false
         local tripType = "none"
         local trHighHit = false
@@ -82,7 +82,7 @@ hook.Add("Think", "stanleytumbler", function()
                      
                      local wallChance = speedFactor
                      if not trHigh.Hit then
-                         wallChance = wallChance * 0.1
+                         wallChance = wallChance * 0.3
                      end
                      
                      if wallChance > 0 then
@@ -106,7 +106,7 @@ hook.Add("Think", "stanleytumbler", function()
             if not trGround.Hit then
                 shouldTrip = true
                 tripType = "gap"
-                tripChance = tripChance + 0.2
+                tripChance = tripChance + 0.4
             end
         end
 

@@ -223,6 +223,9 @@ module[2] = function(owner, org, timeValue)
 		local regen = Lerp(lerp, 0, o2.regen * oxygenate * math.Rand(0.95, 1.05))
 
 		org.CO = min(org.CO + (org.COregen > 0 and timeValue * 1.5 or 0), 30)
+		if org.o2[1] < 10 then
+			org.CO = min(org.CO + timeValue * 0.5, 30)
+		end
 
 		org.consciousness = math.min(org.consciousness, (30 - org.CO) / 30)
 
