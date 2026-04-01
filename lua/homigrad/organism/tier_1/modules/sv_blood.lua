@@ -186,12 +186,25 @@ module[2] = function(owner, org, mulTime)
 
 	if org.blood < (2400 / (adrenaline / 3 + 1)) * ((math.cos(CurTime()/2) + 1) / 2 * 0.1 + 1) then org.needotrub = true end
 
-	local bleed = org.internalBleed / 14 -- + org.lungsR[3] + org.lungsL[3]
+	    local bleed = org.internalBleed / 14
+    if org.internalBleed > 2.50 then
+        bleed = bleed + (org.internalBleed * 0.1)
+    end
 	org.internalBleed = math.Approach(org.internalBleed, 0, org.internalBleedHeal > 0 and mulTime / 2 or mulTime / 55)
 	coagulatespeed = coagulatespeed + mulTime
 	org.internalBleedHeal = math.Approach(org.internalBleedHeal, 0, mulTime / 2)
 	
-	if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end
+	    if org.internalBleed > 0 then
+        if math.random() < (org.internalBleed / 100) then
+            org.hemothorax = true
+        end
+    end
+
+    if org.hemothorax and not org.needle then
+        org.pneumothorax = (org.pneumothorax or 0) + (mulTime * 0.05)
+    end
+
+    if bleed > 0 then org.blood = max(org.blood - bleed * mulTime * 10 * org.pulse / 70, 1) end
 	
 	if (org.internalBleed > 1 or org.pneumothorax > 0) and org.blood > 2000 and org.o2[1] > 0 then
 		org.wantToVomit = org.wantToVomit or 0

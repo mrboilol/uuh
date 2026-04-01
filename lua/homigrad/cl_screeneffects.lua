@@ -437,7 +437,7 @@ net.Receive("PlayerSuppressed", function()
     suppression_effect_time = math.min((suppression_effect_time or 0) + 7.5 * severity, 15.0) -- Longer effect time
 
     -- New effects are now based on the total accumulated suppression
-        suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.1, 0.5) -- waaay less
+        suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.05, 0.3) -- even less
 
         suppression_dof = _G.suppression_severity * 5.0 -- Increased
     suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
@@ -451,7 +451,7 @@ net.Receive("PlayerSuppressed", function()
     end
 
     damage_blur_time = suppression_dof
-    --_G.suppression_shake = severity
+
 
     -- Flinching based on incoming severity to avoid excessive shake
 	local eye_angles = LocalPlayer():EyeAngles()
@@ -577,10 +577,10 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 
     if suppression_chromatic_aberration > 0 then
         local fade_rate
-                if suppression_chromatic_aberration > 0.4 then
-            fade_rate = 0.2
+                if suppression_chromatic_aberration > 0.2 then
+            fade_rate = 0.5
         else
-            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 0.4, 0.05, 0.01)
+            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 0.2, 0.1, 0.05)
         end
         suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * fade_rate * fade_multiplier)
     end
@@ -600,7 +600,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         surface.DrawRect(0, 0, ScrW(), ScrH())
     end
 
-    if _G.damage_overlay_intensity > 0 then
+        if _G.damage_overlay_intensity > 0 then
         _G.damage_overlay_intensity = math.max(0, _G.damage_overlay_intensity - FrameTime() * 0.5 * fade_multiplier)
         local alpha = 255 * _G.damage_overlay_intensity
         
@@ -610,9 +610,16 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 
         -- Vignette
         render.UpdateScreenEffectTexture()
-        vignetteMat:SetFloat("$c1_y", _G.damage_overlay_intensity * 40)
+        vignetteMat:SetFloat("$c1_y", 20 + (_G.damage_overlay_intensity * 40))
         render.SetMaterial(vignetteMat)
         render.DrawScreenQuad()
+    end
+
+    if suppression_dof > 0 then
+        suppression_dof = math.max(0, suppression_dof - FrameTime() * 0.5 * fade_multiplier)
+        local blur_amount = math.min(suppression_dof, 0.9)
+        local focus_size = 1 - blur_amount
+        DrawToyTown(0.5 - focus_size / 2, 0.5 + focus_size / 2)
     end
 
 
