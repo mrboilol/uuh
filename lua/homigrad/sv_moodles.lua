@@ -468,9 +468,7 @@ local function ClearMoodles(ply)
     net.Send(ply)
 end
 
-hook.Add("PlayerSpawn", "Moodle_ClearSpawn", function(ply)
-    timer.Simple(0.05, function() ClearMoodles(ply) end)
-end)
+
 
 hook.Add("PlayerDeath", "Moodle_ClearDeath", function(ply)
     ClearMoodles(ply)

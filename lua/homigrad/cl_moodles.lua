@@ -280,7 +280,7 @@ end)
 hook.Add("HUDPaint", "Moodle_Draw", function()
     local mx, my = gui.MouseX(), gui.MouseY()
     local ply = LocalPlayer()
-    if not IsValid(ply) or not ply:Alive() then 
+    if not IsValid(ply) then 
         CLIENT_MOODLES = {} 
         return 
     end
