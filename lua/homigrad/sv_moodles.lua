@@ -43,7 +43,7 @@ local function manageMoodleState(ply, moodle, active, material, count, bypass_co
     end
 
     local current_moodle = ply.MoodleStates[moodle]
-    local changed = (current_moodle == nil) ~= active
+    local changed = (current_moodle ~= nil) ~= active
     local count_changed = active and current_moodle and current_moodle.count ~= (count or 1)
 
     if changed or count_changed then

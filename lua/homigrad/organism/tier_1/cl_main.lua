@@ -138,10 +138,7 @@ end
 
 local function StartOtrubEffect()
     timer.Simple(0.1, function()
-        local sound_obj = CreateSound(LocalPlayer(), "owfuck.ogg")
-        if IsValid(sound_obj) then
-            sound_obj:Play()
-        end
+        surface.PlaySound("owfuck.ogg")
     end)
     hook.Add("PostDrawHUD", "DrawOtrubVignette", DrawOtrubVignette)
 end

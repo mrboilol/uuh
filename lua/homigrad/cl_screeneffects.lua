@@ -16,16 +16,10 @@ local BrainTraumaStation_name = nil
 local tired_sound
 local sleepy_sound
 local bloodvomit_sound
-local criticalloop_sound
+
 local criticalloop_sound_name
 
-hook.Add("PlayerDeath", "StopCriticalLoopOnDeath", function(victim, inflictor, attacker)
-    if victim == LocalPlayer() and IsValid(criticalloop_sound) then
-        criticalloop_sound:FadeOut(0.5)
-        criticalloop_sound = nil
-        criticalloop_sound_name = nil
-    end
-end)
+
 
 net.Receive("PlayerFlinchDirectional", function()
     local dir = net.ReadVector()
@@ -102,13 +96,7 @@ hook.Add("PostDrawPlayerAppearance", "DesensitizedFaceEffect", function(ent, ply
     cam.End3D()
 end)
 
-hook.Add("PlayerSpawn", "StopCriticalLoopOnSpawn", function(ply)
-    if ply == LocalPlayer() and IsValid(criticalloop_sound) then
-        criticalloop_sound:Stop()
-        criticalloop_sound = nil
-        criticalloop_sound_name = nil
-    end
-end)
+
 
 local function DrawSunEffect()
 	local sun = util.GetSunInfo()
@@ -493,11 +481,8 @@ net.Receive("headtrauma_flash", function()
     local lply = LocalPlayer()
 	if not IsValid(lply) then return end
 	if sound ~= "" then
-			local sound_obj = CreateSound(lply, sound)
-			if IsValid(sound_obj) then
-				sound_obj:Play()
-			end
-		end
+        surface.PlaySound(sound)
+    end
     hg.AddFlash(lply:EyePos(), 1, pos, time, size)
 end)
 
@@ -837,11 +822,7 @@ _G.stopthings = function()
 		Tinnitus = nil
 	end
 
-    if IsValid(criticalloop_sound) then
-        criticalloop_sound:Stop()
-        criticalloop_sound = nil
-		criticalloop_sound_name = nil
-    end
+
 
 	if IsValid(AssimilationStation) then
 		AssimilationStation:Stop()
@@ -1158,41 +1139,23 @@ hook.Add("Post Post Processing", "ItHurts", function()
     end
 
     -- Critical condition sounds
-    local is_critical = org.critical or org.incapacitated
+
     local has_pulse = org.pulse and org.pulse > 0
     local last_sound_change = 0
 
-        if is_critical and has_pulse and not org.heartstop and (lply:Alive() or org.otrub) then
-        local volume = (org.incapacitated and not org.critical) and 0.4 or 1.0
+        if org.critical and has_pulse and not org.heartstop and (lply:Alive() or org.otrub) then
         local sound_to_play = (org.consciousness or 1) > 0.4 and "criticalloop.ogg" or "criticalloop-unconscious.ogg"
 
         if org.otrub then
             sound_to_play = "criticalloop-unconscious.ogg"
-            volume = 1.0
         end
 
         if (not criticalloop_sound or criticalloop_sound_name ~= sound_to_play) and (last_sound_change == 0 or last_sound_change < CurTime() - 2) then
-            if IsValid(criticalloop_sound) then criticalloop_sound:FadeOut(0.5) end
-
-            criticalloop_sound = CreateSound(ply, sound_to_play)
-            if criticalloop_sound then
-                criticalloop_sound:Play()
-                criticalloop_sound_name = sound_to_play
-                last_sound_change = CurTime()
-            end
+            surface.PlaySound(sound_to_play)
+            criticalloop_sound_name = sound_to_play
+            last_sound_change = CurTime()
         end
-
-        if IsValid(criticalloop_sound) and criticalloop_sound:IsPlaying() then
-            criticalloop_sound:ChangeVolume(volume, 0.5)
-        end
-    elseif IsValid(criticalloop_sound) then
-        if org.heartstop then
-            criticalloop_sound:FadeOut(2) -- Fade out over 2 seconds
-        else
-            criticalloop_sound:FadeOut(0.5)
-        end
-        criticalloop_sound = nil
-        criticalloop_sound_name = nil
+    end
     end
 	local brain = org.brain or 0
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
@@ -1408,9 +1371,9 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//end
 	end
 
-		if brain > 0.05 then
+		if org and brain > 0.05 then
 		if CurTime() > robotomy_sound_played_time then
-			surface.PlaySound("sound/robotomy.ogg")
+			surface.PlaySound("robotomy.ogg")
 			robotomy_sound_played_time = CurTime() + 15 -- 15 second cooldown
 			
 			hg.AddFlash(lply:EyePos(), 1, lply:EyePos(), 4, 500)
