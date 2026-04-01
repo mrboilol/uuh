@@ -1,3 +1,4 @@
+
 --local Organism = hg.organism
 local function isCrush(dmgInfo)
 	return (not dmgInfo:IsDamageType(DMG_BULLET + DMG_BUCKSHOT + DMG_BLAST)) or dmgInfo:GetInflictor().RubberBullets
@@ -207,16 +208,15 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 
 	local result, vecrand = damageBone(org, 0.1, isCrush(dmgInfo) and dmg * 2 or dmg * 2, dmgInfo, name, boneindex, dir, hit, ricochet)
 	
-	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
-	
-	if (name == "spine3" || name == "spine2") then
-		hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 8, "Broken spine harm")
-	end
+	local current_dmg = org[name]
 
-	if org[name] >= hg.organism[name2] and org.isPly then
-		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
-		if org.owner:IsPlayer() then
-			org.owner:Notify(huyasd[name], true, name, 2)
+	if current_dmg >= hg.organism[name2] then -- Broken
+		org[name] = hg.organism[name2]
+		if org.isPly then
+			org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+			if org.owner:IsPlayer() then
+				org.owner:Notify(huyasd[name], true, name, 2)
+			end
 		end
 		org.painadd = org.painadd + 25
 		if math.random(3) == 1 then
@@ -227,6 +227,17 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 				if rag.organism then rag.organism.spasm, rag.organism.spasmType = true, stype end
 			end
 		end
+	elseif current_dmg > 0.5 then -- Dislocated
+		org[name.."dislocation"] = true
+		org.painadd = org.painadd + 35
+		org.owner:AddNaturalAdrenaline(0.5)
+		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+	end
+
+	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
+	
+	if (name == "spine3" or name == "spine2") then
+		hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 8, "Broken spine harm")
 	end
 	
 	if dmg > 0.2 then

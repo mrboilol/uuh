@@ -7,6 +7,8 @@ module[1] = function(org)
 	org.heartstop = false
 	org.pulse = 70 -- that's the blood pressure
 	org.heartbeat = 70
+	org.arrhythmia = 0
+	org.arrhythmia_time = 0
 
 	org.tempchanging = 0
 	org.heatbuff = 30 -- seconds of heat supply
@@ -60,9 +62,43 @@ module[2] = function(owner, org, timeValue)
 	heartbeat = heartbeat - 160 * (1 - math.Clamp(math.Remap(org.temperature, 28, 36.7, 0, 1), 0, 1))
 
 	org.heartbeat = math.Approach(org.heartbeat, heartbeat, heartbeat > org.heartbeat and timeValue * 5 or timeValue * 3)
-	
-	if org.heartbeat > 300 then -- fibrillation into cardiac arrest
+
+	-- Arrhythmia
+	local arrhythmia_risk = 0
+	if org.heartbeat > 150 or org.heartbeat < 40 then
+		org.arrhythmia_time = math.min(org.arrhythmia_time + timeValue, 30)
+	else
+		org.arrhythmia_time = math.max(org.arrhythmia_time - timeValue, 0)
+	end
+
+	if org.arrhythmia_time > 15 then
+		arrhythmia_risk = arrhythmia_risk + (org.arrhythmia_time - 15) / 15
+	end
+
+	local pulse_heart_diff = math.abs(org.pulse - org.heartbeat) / 100
+	arrhythmia_risk = arrhythmia_risk + pulse_heart_diff
+
+	if arrhythmia_risk > 0 then
+		org.arrhythmia = math.min(org.arrhythmia + (arrhythmia_risk * timeValue) / 20, 1)
+	else
+		org.arrhythmia = math.max(org.arrhythmia - timeValue / 10, 0)
+	end
+
+	if org.adrenaline > 0 and org.arrhythmia > 0 then
+		org.arrhythmia = math.max(org.arrhythmia - timeValue * 0.1 * org.adrenaline, 0)
+	end
+
+	if org.arrhythmia > 0 then
+		org.heartbeat = org.heartbeat + math.sin(CurTime() * 20) * 15 * org.arrhythmia
+	end
+
+	if org.arrhythmia > 0.95 and math.random() < 0.1 * timeValue then
 		org.heartstop = true
+	end
+
+	
+	if org.heartbeat > 250 then -- fibrillation
+		org.arrhythmia = math.min(org.arrhythmia + timeValue * 0.5, 1)
 	end
 
 	if org.heartstop then
@@ -109,7 +145,7 @@ module[2] = function(owner, org, timeValue)
 
 		org.adrenaline_try = CurTime() + 0.1
 
-		if chance > rand then org.heartstop = false end
+		if chance > rand then org.heartstop = false; org.arrhythmia = math.max(org.arrhythmia - 0.5, 0) end
 	end
 
 	if org.heartstop then

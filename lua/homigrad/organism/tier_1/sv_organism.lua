@@ -342,6 +342,32 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		org.ownerFake = false
 	end
 
+    -- Spine paralysis logic
+    local is_spine_injured = (org.spine1 and org.spine1 >= 0.75) or (org.spine2 and org.spine2 >= 0.75) or (org.spine3 and org.spine3 >= 0.75) or org.spine1dislocation or org.spine2dislocation or org.spine3dislocation
+    if is_spine_injured then
+        if not org.spine_paralysis_timer then
+            org.spine_paralysis_timer = CurTime() + 45
+        end
+
+        if CurTime() >= org.spine_paralysis_timer then
+            org.spine_paralysis_timer = CurTime() + 45 -- Reset timer
+
+            if math.random() < 0.3 then -- 30% chance for paralysis
+                org.immobilization = (org.immobilization or 0) + 15 -- Immobilize for some time
+                owner:Notify("A sharp pain shoots down your spine and your legs go numb!", 1)
+                timer.Simple(10, function()
+                    if IsValid(owner) and owner.organism then
+                        owner.organism.immobilization = math.max(0, (owner.organism.immobilization or 0) - 15)
+                    end
+                end)
+            end
+        end
+    else
+        org.spine_paralysis_timer = nil
+    end
+
+
+
 	org.timeValue = timeValue
 	org.incapacitated = false
 	org.critical = false
@@ -479,8 +505,11 @@ hook.Add("Org Think", "Main", function(owner, org, timeValue)
 		if org.spine2 > 0.75 and org.spine2 < 1 then
 			org.spine2 = math.max(org.spine2 - heal_amount, 0)
 		end
+		if org.spine3 > 0.75 and org.spine3 < 1 then
+			org.spine3 = math.max(org.spine3 - heal_amount, 0)
+		end
 
-		if not ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1)) then
+		if not ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1) or (org.spine3 > 0.75 and org.spine3 < 1)) then
 			org.partially_broken_spine_treated = nil
 		end
 	end
@@ -872,6 +901,14 @@ concommand.Add("hg_fixdislocation", function(ply, cmd, args)
 	elseif math.Round(tonumber(args[1])) == 3 then
 		if org.jawdislocation then
 			fixlimb(org, "jaw", fixer)
+		end
+	elseif math.Round(tonumber(args[1])) == 4 then
+		if org.spine1dislocation then
+			fixlimb(org, "spine1", fixer)
+		elseif org.spine2dislocation then
+			fixlimb(org, "spine2", fixer)
+		elseif org.spine3dislocation then
+			fixlimb(org, "spine3", fixer)
 		end
 	end
 end)

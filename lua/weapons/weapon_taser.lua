@@ -198,15 +198,47 @@ function SWEP:Shoot(override)
 				ply:ExitVehicle()
 			end
 
-			local drugged = ply.organism and ply.organism.analgesia > 0.5
+            local org = ply.organism
+            if not org then return end
 
-            local time = math.random(5,7) * (drugged and 0.2 or 1)
-			
-			hg.StunPlayer(ply, time + 3 * (drugged and 0.2 or 1))
+            local time = 0
 
-			if IsValid(ply) and ply:Alive() then
-                local org = ply.organism
+            if org.heartstop then
+                if math.random() < 0.33 then -- 33% chance to restart heart
+                    org.heartstop = false
+                    org.arrhythmia = 0
+                    if ply:IsPlayer() then
+                        --ply:Notify("The shock restarted your heart!", 10)
+                    end
+                else
+                    if ply:IsPlayer() then
+                        --ply:Notify("The shock did not restart your heart.", 10)
+                    end
+                end
+            else
+                local drugged = org.analgesia > 0.5
+
+                time = math.random(5,7) * (drugged and 0.2 or 1)
+                
+                hg.StunPlayer(ply, time + 3 * (drugged and 0.2 or 1))
+
                 org.tasered = CurTime() + time
+
+                if org.arrhythmia > 0 then
+                    if math.random() < 0.5 then
+                        org.arrhythmia = 0
+                        --ply:Notify("The shock stabilized your heart rhythm.", 10)
+                    else
+                        org.arrhythmia = math.min(org.arrhythmia + 0.3, 1)
+                        --ply:Notify("The shock worsened your heart rhythm!", 10)
+                        if org.arrhythmia > 0.9 then
+                            org.heartstop = true
+                        end
+                    end
+                elseif math.random() < 0.1 then -- 10% chance to induce arrhythmia on a healthy person
+                    org.arrhythmia = math.min(org.arrhythmia + 0.4, 1)
+                    --ply:Notify("The shock caused an arrhythmia!", 10)
+                end
             end
 
             ent:EmitSound("tazer.wav")

@@ -1156,7 +1156,6 @@ hook.Add("Post Post Processing", "ItHurts", function()
             last_sound_change = CurTime()
         end
     end
-    end
 	local brain = org.brain or 0
 	O2Lerp = LerpFT(0.01, O2Lerp, (30 - o2) * (org.otrub and 2 or 10) + (brain * 100) * (org.otrub and 1 or 5))
 

@@ -554,7 +554,7 @@ if SERVER then
 		local mul = ((owner.Profession == "doctor") and 0.2 or 1)
 		local amt = 25 * mul
 
-		local is_partially_broken = ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
+		local is_partially_broken = ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1) or (org.spine3 > 0.75 and org.spine3 < 1))
 		if is_partially_broken and self.modeValues[1] >= amt then
 			org.partially_broken_spine_treated = true
 			self.modeValues[1] = self.modeValues[1] - amt

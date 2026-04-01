@@ -243,9 +243,7 @@ local function SyncMoodles(ply)
     -- manageMoodleState(ply, "happy_4", false, nil, nil, true)
 
     -- Dislocated Spine
-    local dislocated_spine_1_2 = (org.spine1dislocation or org.spine2dislocation) or ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1))
-    local dislocated_spine_3 = org.spine3dislocation and (org.spine3 > 0.5 and org.spine3 < 0.75)
-    local dislocated_spine = dislocated_spine_1_2 or dislocated_spine_3
+    local dislocated_spine = org.spine1dislocation or org.spine2dislocation or org.spine3dislocation
     manageMoodleState(ply, "dislocated_spine", dislocated_spine, "materials/moodles/Dislocated_spine.png")
 
     -- Broken Neck

@@ -335,6 +335,7 @@ function SWEP:ApplyForce()
 							org.pulse = math.min(org.pulse + 5 * (ply.Profession == "doctor" and 2 or 1),70)
 							org.CO = math.Approach(org.CO, 0, (ply.Profession == "doctor" and 2 or 1))
 							org.COregen = math.Approach(org.COregen, 0, (ply.Profession == "doctor" and 2 or 1))
+							org.arrhythmia = math.max(org.arrhythmia - 0.1, 0)
 
 							if math_random(3) == 1 then
 								org.lungsfunction = true
