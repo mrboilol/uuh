@@ -551,7 +551,7 @@ SWEP.SlotPos = 3
 SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
-function SWEP:PrimaryShoot()
+function SWEP:PrimaryAttack()
     if self:Ammo1() < 1 then
         return
     end
@@ -559,12 +559,15 @@ function SWEP:PrimaryShoot()
     self:SetNextPrimaryFire(CurTime() + 2)
     self:TakePrimaryAmmo(1)
 
+    self:EmitSound("svrkdstuff/theblues_ready.wav")
+
     if SERVER then
         self:SendWeaponAnim(ACT_VM_PULLPIN)
         
         timer.Simple(0, function()
             local ply = self:GetOwner()
             if not IsValid(ply) then return end
+            ply:SetAnimation(PLAYER_ATTACK1)
             self:SendWeaponAnim(ACT_VM_THROW)
             timer.Simple(0.2, function()
                 local angrybird = ents.Create("prop_physics")

@@ -561,7 +561,7 @@ function SWEP:PrimaryAttack()
     self:SetNextPrimaryFire(CurTime() + 2)
     self:TakePrimaryAmmo(1)
 
-    self:EmitSound("svrkdstuff/red_ready.wav")
+    self:EmitSound("svrkdstuff/terence_ready.wav")
 
     if SERVER then
         self:SendWeaponAnim(ACT_VM_PULLPIN)

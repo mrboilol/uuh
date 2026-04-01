@@ -8,6 +8,7 @@ include("postprocess/merc_grayscale.lua")
 local homigrad_damage_convar = CreateClientConVar("homigrad_damage", "0", true, false)
 
 local concussion_effect_time = 0
+local robotomy_sound_played_time = 0
 local suppression_effect_time = 0
 local concussion_dsp_set = false
 local BrainTraumaStation_name = nil
@@ -436,9 +437,9 @@ net.Receive("PlayerSuppressed", function()
     suppression_effect_time = math.min((suppression_effect_time or 0) + 7.5 * severity, 15.0) -- Longer effect time
 
     -- New effects are now based on the total accumulated suppression
-    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.5, 1.5) -- More severe start, longer lasting
+        suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.1, 0.5) -- waaay less
 
-    suppression_dof = _G.suppression_severity * 3.5 -- Increased
+        suppression_dof = _G.suppression_severity * 5.0 -- Increased
     suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
     _G.damage_overlay_intensity = math.min((_G.damage_overlay_intensity or 0) + severity * 0.5, 1.0)
 
@@ -576,10 +577,10 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
 
     if suppression_chromatic_aberration > 0 then
         local fade_rate
-        if suppression_chromatic_aberration > 1.0 then
-            fade_rate = 0.1
+                if suppression_chromatic_aberration > 0.4 then
+            fade_rate = 0.2
         else
-            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 1.0, 0.1, 0.01)
+            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 0.4, 0.05, 0.01)
         end
         suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * fade_rate * fade_multiplier)
     end
@@ -588,8 +589,8 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
         suppression_dirt = math.max(0, suppression_dirt - FrameTime() * 0.5 * fade_multiplier) -- Faster fade
     end
 
-    if suppression_vignette > 0 then
-        suppression_vignette = math.max(0, suppression_vignette - FrameTime() * 2.5 * fade_multiplier)
+        if suppression_vignette > 0 then
+        suppression_vignette = math.max(0, suppression_vignette - FrameTime() * 15 * fade_multiplier)
     end
 
     if suppression_fade_time > 0 then
@@ -1400,33 +1401,19 @@ hook.Add("Post Post Processing", "ItHurts", function()
 		//end
 	end
 
-	if brain > 0.055 then
-		local sound_name = "sound/robotomy.ogg"
-		if not IsValid(BrainTraumaStation) or BrainTraumaStation_name ~= sound_name then
-			if IsValid(BrainTraumaStation) then
-				BrainTraumaStation:Stop()
-			end
-			if IsValid(Tinnitus) then
-				Tinnitus:Stop()
-				Tinnitus = nil
-			end
-			lply.tinnitus = 0
-			sound.PlayFile(sound_name, "noblock noplay", function(station, err)
-				if IsValid(station) then
-					station:SetVolume(1)
-					station:Play()
-					BrainTraumaStation = station
-					BrainTraumaStation_name = sound_name
-				end
-			end)
-		end
-		hg.AddFlash(lply:EyePos(), 1, lply:EyePos(), 4, 500)
+		if brain > 0.05 then
+		if CurTime() > robotomy_sound_played_time then
+			surface.PlaySound("sound/robotomy.ogg")
+			robotomy_sound_played_time = CurTime() + 15 -- 15 second cooldown
+			
+			hg.AddFlash(lply:EyePos(), 1, lply:EyePos(), 4, 500)
 
-		-- Apply a more severe long term concussion
-		org.concussion_severity = (org.concussion_severity or 0) + 15
-		concussion_effect_time = math.max(concussion_effect_time, 60)
-		-- More visuals
-		show_some_images_time = 1000
+			-- Apply a more severe long term concussion
+			org.concussion_severity = (org.concussion_severity or 0) + 15
+			concussion_effect_time = math.max(concussion_effect_time, 60)
+			-- More visuals
+			show_some_images_time = 1000
+		end
 	elseif brain > 0.01 then
 		local chooser = 1
 		for i, choose in ipairs(stations) do

@@ -552,7 +552,7 @@ SWEP.SlotPos = 3
 SWEP.DrawAmmo = false
 SWEP.DrawCrosshair = true
 
-function SWEP:PrimaryShoot()
+function SWEP:PrimaryAttack()
     if self:Ammo1() < 1 then return end
 
     self:SetNextPrimaryFire(CurTime() + 2)
@@ -567,7 +567,7 @@ function SWEP:PrimaryShoot()
             if not IsValid(self) then return end
             local ply = self:GetOwner()
             if not IsValid(ply) then return end
-
+            ply:SetAnimation(PLAYER_ATTACK1)
             self:SendWeaponAnim(ACT_VM_THROW)
             timer.Simple(0.2, function()
 

@@ -413,7 +413,7 @@ local function ExplodeBird(ent, ply)
     ent:Remove()
 end
 
-function SWEP:PrimaryShoot()
+function SWEP:PrimaryAttack()
     if self:Ammo1() < 1 then return end
 
     self:SetNextPrimaryFire(CurTime() + 2)

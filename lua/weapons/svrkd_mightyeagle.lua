@@ -560,6 +560,7 @@ function SWEP:PrimaryAttack()
 
     self:SetNextPrimaryFire(CurTime() + 2)
     self:TakePrimaryAmmo(1)
+    self:EmitSound("svrkdstuff/mightyeagle_ready.wav")
 
     if SERVER then
         self:SendWeaponAnim(ACT_VM_PULLPIN)
@@ -567,6 +568,7 @@ function SWEP:PrimaryAttack()
         timer.Simple(0, function()
             local ply = self:GetOwner()
             if not IsValid(ply) then return end
+            ply:SetAnimation(PLAYER_ATTACK1)
             self:SendWeaponAnim(ACT_VM_THROW)
             timer.Simple(0.2, function()
                 local angrybird = ents.Create("prop_physics")
