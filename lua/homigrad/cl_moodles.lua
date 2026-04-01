@@ -85,12 +85,10 @@ local MOODLE_INFO = {
     ["depression_3"] = { title = "Depressed", desc = "Life isnt fair." },
     ["depression_4"] = { title = "Desensitized", desc = "Life stopped making sense." },
 
-    ["spine_damage_3"] = { title = "Severe Spine Damage", desc = "You can barely move, breathe, or even think straight." },
-    ["spine_damage_4"] = { title = "Broken Spine", desc = "You are paralyzed from the neck down." },
-    ["spine_damage_1"] = { title = "Minor Spine Damage", desc = "Your back hurts, moving is difficult." },
-    ["spine_damage_2"] = { title = "Moderate Spine Damage", desc = "Your arms and back are in immense pain, making it hard to fight." },
-    ["spine_damage_3"] = { title = "Severe Spine Damage", desc = "You can barely move, breathe, or even think straight." },
-    ["spine_damage_4"] = { title = "Broken Spine", desc = "You are paralyzed from the neck down." },
+
+    ["fractured_neck"] = { title = "Broken Spine", desc = "You are paralyzed." },
+    ["dislocated_spine"] = { title = "Dislocated Spine", desc = "A part of your spine is out of place. You should fix it before it gets worse." },
+    ["partial_spine_break"] = { title = "Partially Broken Spine", desc = "Your spine is fractured. Movement is severely impaired and painful." },
     ["dislocated_jaw"] = { title = "Dislocated Jaw", desc = "Your jaw is out of place, put it back in!" },
     ["dislocated_jaw_and_fractured_skull"] = { title = "Jaw and Skull Trauma", desc = "Your jaw is dislocated and your skull is fractured." },
     ["fractured_skull"] = { title = "Fractured Skull", desc = "WHERES YO HEAD AT??????????" },

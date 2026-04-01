@@ -31,9 +31,6 @@ function hg.organism.paincheck(org)
 end
 
 module[2] = function(owner, org, timeValue)
-	if org.spine1dislocation or org.spine2dislocation or org.spine3dislocation then
-		org.painadd = org.painadd + 30
-	end
 
 	local adrenalineMul = min(max(1 + org.adrenaline, 1), 1.2)
 	local adrenaline = org.adrenaline

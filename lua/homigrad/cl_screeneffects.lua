@@ -6,6 +6,7 @@ include("postprocess/merc_vignette.lua")
 include("postprocess/merc_grayscale.lua")
 
 local homigrad_damage_convar = CreateClientConVar("homigrad_damage", "0", true, false)
+local homigrad_suppression_damageoverlay = CreateClientConVar("homigrad_suppression_damageoverlay", "1", true, false, "Enable damage overlay on suppression")
 
 local concussion_effect_time = 0
 local robotomy_sound_played_time = 0
@@ -417,7 +418,7 @@ local damage_fade_time = 0
 
 net.Receive("PlayerSuppressed", function()
     local severity = net.ReadFloat()
-    _G.suppression_severity = math.min(severity, 1.0)
+    _G.suppression_severity = math.min((_G.suppression_severity or 0) + severity, 1.5)
 
     local wep_damage = net.ReadFloat()
 	local dir_to_bullet = net.ReadVector()
@@ -425,11 +426,13 @@ net.Receive("PlayerSuppressed", function()
     suppression_effect_time = math.min((suppression_effect_time or 0) + 7.5 * severity, 15.0) -- Longer effect time
 
     -- New effects are now based on the total accumulated suppression
-        suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.05, 0.3) -- even less
+    suppression_chromatic_aberration = math.min((suppression_chromatic_aberration or 0) + severity * 0.02, 0.2) -- even less
 
-        suppression_dof = _G.suppression_severity * 5.0 -- Increased
+    suppression_dof = _G.suppression_severity * 5.0 -- Increased
     suppression_vignette = math.min((suppression_vignette or 0) + severity * 25, 100)
-    _G.damage_overlay_intensity = math.min((_G.damage_overlay_intensity or 0) + severity * 0.5, 1.0)
+    if homigrad_suppression_damageoverlay:GetBool() then
+        _G.damage_overlay_intensity = math.min((_G.damage_overlay_intensity or 0) + severity * 0.5, 1.0)
+    end
 
     if severity > 0.5 then -- Only for close bullets
         suppression_dirt = math.min((suppression_dirt or 0) + severity * 0.025, 0.5) -- Less severe, apply more often
@@ -561,12 +564,7 @@ hook.Add("HUDPaint", "hg_damage_flash", function()
     end
 
     if suppression_chromatic_aberration > 0 then
-        local fade_rate
-                if suppression_chromatic_aberration > 0.2 then
-            fade_rate = 0.5
-        else
-            fade_rate = math.Remap(suppression_chromatic_aberration, 0, 0.2, 0.1, 0.05)
-        end
+        local fade_rate = math.Remap(suppression_chromatic_aberration, 0, 0.2, 0.05, 0.025)
         suppression_chromatic_aberration = math.max(0, suppression_chromatic_aberration - FrameTime() * fade_rate * fade_multiplier)
     end
 
@@ -828,6 +826,9 @@ _G.stopthings = function()
 		AssimilationStation:Stop()
 		AssimilationStation = nil
 	end
+	vignette_intensity_lerped = 0
+    grayscale_intensity_lerped = 0
+    _G.damage_overlay_intensity = 0
 end
 
 local stations = {

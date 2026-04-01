@@ -246,9 +246,13 @@ local function SyncMoodles(ply)
     local dislocated_spine = org.spine1dislocation or org.spine2dislocation or org.spine3dislocation
     manageMoodleState(ply, "dislocated_spine", dislocated_spine, "materials/moodles/Dislocated_spine.png")
 
-    -- Broken Neck
-    local broken_neck = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 > 0.75)
-    manageMoodleState(ply, "broken_neck", broken_neck, "materials/moodles/Fractured_neck.png")
+    -- Partially Broken Spine
+    local is_partially_broken = ((org.spine1 > 0.75 and org.spine1 < 1) or (org.spine2 > 0.75 and org.spine2 < 1) or (org.spine3 > 0.75 and org.spine3 < 1))
+    manageMoodleState(ply, "partial_spine_break", is_partially_broken, "materials/moodles/Fractured_neck.png")
+
+    -- Broken Spine
+    local broken_spine = (org.spine1 == 1) or (org.spine2 == 1) or (org.spine3 == 1)
+    manageMoodleState(ply, "fractured_neck", broken_spine, "materials/moodles/Fractured_neck.png")
 
     local has_jaw = org.jawdislocation
     local has_skull = (org.skull or 0) >= 0.6

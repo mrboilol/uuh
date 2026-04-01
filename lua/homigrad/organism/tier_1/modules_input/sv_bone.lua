@@ -229,9 +229,18 @@ local function spine(org, bone, dmg, dmgInfo, number, boneindex, dir, hit, ricoc
 		end
 	elseif current_dmg > 0.5 then -- Dislocated
 		org[name.."dislocation"] = true
-		org.painadd = org.painadd + 35
+		--org.painadd = org.painadd + 150 whoa
 		org.owner:AddNaturalAdrenaline(0.5)
 		org.owner:EmitSound("bones/bone"..math.random(8)..".mp3", 75, 100, 1, CHAN_AUTO)
+		if math.random() < 0.3 then
+			org.owner:Notify("A sharp pain shoots down your spine and your legs go numb!", 1)
+			org.temp_paralysis = true
+			timer.Simple(15, function()
+				if IsValid(org.owner) and org.owner:Alive() and org.owner.organism then
+					org.owner.organism.temp_paralysis = false
+				end
+			end)
+		end
 	end
 
 	hg.AddHarmToAttacker(dmgInfo, (org[name] - oldDmg) * 5, "Spine bone damage harm")
