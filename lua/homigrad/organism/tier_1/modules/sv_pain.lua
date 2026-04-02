@@ -60,7 +60,6 @@ module[2] = function(owner, org, timeValue)
 
 	if adrenaline > 0.5 then
 		sub = sub * math.max(1 - adrenaline, 0.05) / 1.5// / (adrenaline >= 2 and 16 or 8)
-		add = add * math.max(1 - adrenaline, 0.05) / 1.5// / (adrenaline >= 2 and 16 or 8)
 	end
 
 	if org.pain > 60 and not org.otrub then
@@ -106,7 +105,7 @@ module[2] = function(owner, org, timeValue)
 	if !org.lasthit or org.lasthit + 1 < CurTime() then org.avgpain = max(org.avgpain - sub, 0) end
 	org.painlessen = sub
 
-	org.pain = org.avgpain * math.max(1 - adrenaline / 4, 0.75) * math.max(1 - org.analgesia, 0)
+	org.pain = org.avgpain * math.max(1 - adrenaline, 0.05) * math.max(1 - org.analgesia, 0)
 
 	org.painadd = min(max(org.painadd - add * analgesiaMul, 0), 150)
 
@@ -136,9 +135,8 @@ module[2] = function(owner, org, timeValue)
 
 	org.adrenalineAdd = Approach(org.adrenalineAdd, 0, org.adrenalineAdd < 0 and timeValue / 30 or timeValue / 5)
 
-		if org.pain > 40 then
-		local adrenaline_target = math.min((org.pain - 40) / 60, 1)
-		org.adrenaline = Approach(org.adrenaline, adrenaline_target, timeValue / 15)
+	if org.pain > 20 then
+		org.adrenaline = Approach(org.adrenaline, 0, timeValue / 5) -- wears off quickly
 	else
 		org.adrenaline = Approach(org.adrenaline, 0, timeValue / 25)
 	end
